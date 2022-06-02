@@ -1,12 +1,13 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { SafeAreaView, Text } from 'react-native';
+import { SafeAreaView } from 'react-native';
+import { FileList } from './components';
 
 export const App = () => {
   return (
     <NavigationContainer>
       <SafeAreaView>
-        <Text testID="app-name">File Manager App</Text>
+        <FileList />
       </SafeAreaView>
     </NavigationContainer>
   );
