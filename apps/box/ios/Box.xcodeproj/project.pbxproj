@@ -321,6 +321,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.formidable.fx.land;
 				PRODUCT_NAME = Box;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -348,6 +349,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.formidable.fx.land;
 				PRODUCT_NAME = Box;
 				SWIFT_VERSION = 5.0;

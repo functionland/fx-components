@@ -21,6 +21,7 @@ import { clamp, withBouncing } from 'react-native-redash';
 import { isEmulatorSync } from 'react-native-device-info';
 import { useIsConnectedToBox } from '../../hooks/useIsConnectedToBox';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
+import { Blox } from '../../components/Blox';
 
 const ReanimatedBox = Reanimated.createAnimatedComponent(FxBox);
 
@@ -156,6 +157,10 @@ export const WelcomeScreen = () => {
       <FxText padding="m" textAlign="center" variant="body">
         Box Setup Up
       </FxText>
+      <FxText padding="m" textAlign="center" variant="body">
+        Hello World!
+      </FxText>
+      <Blox />
       <FxBox
         flex={3}
         marginHorizontal="m"
