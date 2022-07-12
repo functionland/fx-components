@@ -2,6 +2,7 @@ export { FxBox } from './lib/box/box';
 export { FxButton } from './lib/button/button';
 export { FxChevronDownIcon } from './lib/icons/icons';
 export { FxFoldableContent } from './lib/foldable-content/foldableContent';
+export { FxLineChart } from './lib/line-chart/lineChart';
 export { FxPicker, FxPickerItem } from './lib/picker/picker';
 export { FxSafeAreaBox } from './lib/safe-area-box/safeAreaBox';
 export { FxSpacer } from './lib/spacer/spacer';
