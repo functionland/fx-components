@@ -14,7 +14,10 @@ export const NavContainer = ({ children }: NavContainerProps) => {
     <NavigationContainer
       theme={{
         ...DefaultTheme,
-        colors: { ...DefaultTheme.colors, background: theme.colors.background },
+        colors: {
+          ...DefaultTheme.colors,
+          background: theme.colors.appBackground,
+        },
       }}
     >
       {children}

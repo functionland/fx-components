@@ -1,20 +1,25 @@
 import { createTheme } from '@shopify/restyle';
 
-const palette = {
+export const palette = {
   green: '#06B597',
   blue: '#187AF9',
   white: 'white',
-  gray0: '#212529',
 };
 
 const paletteDark = {
   grayscale700: '#F8F9FA',
   grayscale500: '#CED4DA',
+  grayscale400: '#868E96',
+  grayscale0: '#343A40',
+  appBackground: '#212529',
 };
 
 const paletteLight = {
   grayscale700: '#343A40',
   grayscale500: '#6F767D',
+  grayscale400: '#CED4DA',
+  grayscale0: '#F8F9FA',
+  appBackground: '#FFFFFF',
 };
 
 const fxLightTheme = createTheme({
@@ -22,9 +27,11 @@ const fxLightTheme = createTheme({
     white: palette.white,
     primary: palette.green,
     secondary: palette.blue,
-    background: palette.gray0,
+    appBackground: paletteLight.appBackground,
+    backgroundPrimary: paletteLight.grayscale0,
     content1: paletteLight.grayscale700,
     content3: paletteLight.grayscale500,
+    border: paletteLight.grayscale400,
   },
   spacing: {
     s: 8,
@@ -63,9 +70,11 @@ const fxDarkTheme: FxTheme = {
     white: 'white',
     primary: palette.green,
     secondary: palette.blue,
-    background: palette.gray0,
+    appBackground: paletteDark.appBackground,
+    backgroundPrimary: paletteDark.grayscale0,
     content1: paletteDark.grayscale700,
     content3: paletteDark.grayscale500,
+    border: paletteDark.grayscale400,
   },
 };
 
