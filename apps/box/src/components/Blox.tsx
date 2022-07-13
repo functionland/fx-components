@@ -5,11 +5,13 @@ import {
   MeshProps,
   Vector3,
   useThree,
+  Euler,
 } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { useTheme } from '@shopify/restyle';
 import { FxTheme } from '@functionland/component-library';
 import { mockTowerData as data } from '../api/tower';
+import { a, useSpring } from '@react-spring/three';
 
 interface TowerMeshProps extends MeshProps {
   towerId?: string;
@@ -92,9 +94,18 @@ interface BloxMeshProps {
 
 const BloxMesh = ({ colors }: BloxMeshProps) => {
   const [selectedTowerId, setSelectedTowerId] = useState<string | null>(null);
-  const { size } = useThree();
+  const isPanning = useRef(false);
   const rotationRef = useRef(null);
   const offset = useRef({ x: 0, y: 0 });
+  const euler = useMemo(() => new THREE.Euler(), []);
+  const [spring, set] = useSpring(() => ({
+    config: {
+      mass: 1,
+      tension: 100,
+      friction: 25,
+    },
+    rotation: [0, 0, 0],
+  }));
   const lazySusan = useRef(true);
   const towers = useMemo(
     () =>
@@ -113,50 +124,61 @@ const BloxMesh = ({ colors }: BloxMeshProps) => {
     () => lazySusan.current && (rotationRef.current.rotation.y -= 0.005)
   );
 
+  const handleDeselectTower = () => {
+    if (isPanning.current) {
+      isPanning.current = false;
+      return;
+    }
+    setSelectedTowerId(null);
+  };
+
   const onPointerDown = (event) => {
-    const { offsetX: x, offsetY: y } = event.touches[0];
+    const { offsetX: x, offsetY: y } = event.changedTouches[0];
     offset.current = { x, y };
+    euler.y = rotationRef.current.rotation.y;
+    euler.x = rotationRef.current.rotation.x;
+    set({ rotation: euler.toArray().slice(0, 3), immediate: true });
     if (lazySusan.current) lazySusan.current = false;
   };
 
   const onPointerMove = (event) => {
-    const { offsetX: x } = event.touches[0];
-    const currentYRot = rotationRef.current.rotation.y;
-    const speed = 5;
-    const deltaYDeg = ((offset.current.x - x) / size.width) * speed;
+    const { offsetX: x, offsetY: y } = event.changedTouches[0];
+    const speed = 0.75;
+    const dy = offset.current.y - y;
+    const dx = offset.current.x - x;
 
-    rotationRef.current.rotation.y =
-      currentYRot - THREE.MathUtils.degToRad(deltaYDeg);
+    isPanning.current = true;
+    offset.current = { x, y };
+    euler.y -= THREE.MathUtils.degToRad(dx * speed);
+    euler.x -= THREE.MathUtils.degToRad(dy * speed);
+    euler.x = THREE.MathUtils.clamp(euler.x, 0, Math.PI / 6);
+    set({ rotation: euler.toArray().slice(0, 3) });
   };
 
   return (
     <>
       <BackgroundMesh
-        onClick={() => setSelectedTowerId(null)}
+        onClick={handleDeselectTower}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
       />
-      <mesh
-        ref={rotationRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-      >
+      <a.group ref={rotationRef} rotation={spring.rotation as unknown as Euler}>
         {towers.map((props, i) => (
           <TowerMesh key={`tower-${i}`} {...props} />
         ))}
-      </mesh>
+      </a.group>
     </>
   );
 };
 
 export const Blox = () => {
   const { colors } = useTheme<FxTheme>();
+
   return (
-    <Canvas camera={{ fov: 75, near: 0.1, far: 1000, position: [7, 10, 7] }}>
+    <Canvas camera={{ fov: 75, near: 0.1, far: 1000, position: [0, 7, 10] }}>
       <ambientLight intensity={0.5} />
-      <pointLight position={[5, 2.5, 5]} />
-      <pointLight position={[2.5, 2.5, 2.5]} />
-      <pointLight position={[10, 2.5, 5]} intensity={0.5} />
+      <pointLight position={[5, 1.5, 5]} />
+      <pointLight position={[5, 1.5, 10]} intensity={0.5} />
       <BloxMesh colors={colors} />
     </Canvas>
   );

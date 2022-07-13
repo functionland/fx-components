@@ -3610,6 +3610,52 @@
   dependencies:
     nanoid "^3.1.23"
 
+"@react-spring/animated@~9.5.0":
+  version "9.5.0"
+  resolved "https://registry.yarnpkg.com/@react-spring/animated/-/animated-9.5.0.tgz#bedc9301ec81a29331327aa25e37125a94080f48"
+  integrity sha512-FgotFIRQsgxFTgNZhsqi19GUO8isFAeUF/Ica6TeBkR87LQelHGWOg+wW5S3kaX9pzUgC4LOfzj0fRoMFaQKmA==
+  dependencies:
+    "@react-spring/shared" "~9.5.0"
+    "@react-spring/types" "~9.5.0"
+
+"@react-spring/core@~9.5.0":
+  version "9.5.0"
+  resolved "https://registry.yarnpkg.com/@react-spring/core/-/core-9.5.0.tgz#0f3ba069237ce08752e319aac71c621adc37500b"
+  integrity sha512-/5uopqj3NztZ8g2tD7jhtpSlUFSCr+WbLs0sb6ylwjuOJB050LCpYTJ8iurPf/wuhkYd7Q2xLK0Kr5PO0v53eQ==
+  dependencies:
+    "@react-spring/animated" "~9.5.0"
+    "@react-spring/rafz" "~9.5.0"
+    "@react-spring/shared" "~9.5.0"
+    "@react-spring/types" "~9.5.0"
+
+"@react-spring/rafz@~9.5.0":
+  version "9.5.0"
+  resolved "https://registry.yarnpkg.com/@react-spring/rafz/-/rafz-9.5.0.tgz#25ee5ad7dbac2b7486b3a0dd23aa0a6880793d9f"
+  integrity sha512-jvelJ/YNeVTkPIRnVu6mD/lopZqixiAY5omCgQM8kT1kAnRPeyuGfHAb73HTnqOzcIL8vOluNfTfUM/xcPm3RQ==
+
+"@react-spring/shared@~9.5.0":
+  version "9.5.0"
+  resolved "https://registry.yarnpkg.com/@react-spring/shared/-/shared-9.5.0.tgz#d80df5a6496fe4d414e608a7bcef448598e4ffee"
+  integrity sha512-XuRFgWiiV6LRd3JMQAVhsMnDIBF+M1Z3MeNI6Y+5oIf6mINQHLNPWjYt/lcLZ4cuKYi+OOce4G9zJx003b9w4g==
+  dependencies:
+    "@react-spring/rafz" "~9.5.0"
+    "@react-spring/types" "~9.5.0"
+
+"@react-spring/three@^9.5.0":
+  version "9.5.0"
+  resolved "https://registry.yarnpkg.com/@react-spring/three/-/three-9.5.0.tgz#74c919c93c26b7255ded8c69f3a02f5730cb198c"
+  integrity sha512-tr5qgW4jvWrodAVc5gL0vu7+yDD9cnqut7tEIQELgrk4ffTlt+biPh2p2sW/KTVAu51ZO+aK/8caqt26DzqpFQ==
+  dependencies:
+    "@react-spring/animated" "~9.5.0"
+    "@react-spring/core" "~9.5.0"
+    "@react-spring/shared" "~9.5.0"
+    "@react-spring/types" "~9.5.0"
+
+"@react-spring/types@~9.5.0":
+  version "9.5.0"
+  resolved "https://registry.yarnpkg.com/@react-spring/types/-/types-9.5.0.tgz#5ef3af4edc4a5d667f202b9581ac0dfc20889cfb"
+  integrity sha512-qrLwe77qa1LdS/tjCZKljzoXDSg9WPAgrfAkl8x1w8y9E8jHnCr2Z8UkM/sXvFlCZvMfsGes4XnE4oUNdjNuNQ==
+
 "@react-three/fiber@^8.1.0":
   version "8.1.0"
   resolved "https://registry.yarnpkg.com/@react-three/fiber/-/fiber-8.1.0.tgz#b48a875aea126bd81d87a98c3893f7ff60da90ad"

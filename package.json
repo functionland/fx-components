@@ -19,6 +19,7 @@
     "@react-navigation/bottom-tabs": "^6.3.1",
     "@react-navigation/native": "^6.0.10",
     "@react-navigation/native-stack": "^6.6.2",
+    "@react-spring/three": "^9.5.0",
     "@react-three/fiber": "^8.1.0",
     "@shopify/react-native-skia": "^0.1.136",
     "@shopify/restyle": "^2.1.0",

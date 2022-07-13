@@ -34,6 +34,7 @@
     "expo-three": "*",
     "three": "*",
     "@visx/scale": "*",
-    "@shopify/react-native-skia": "*"
+    "@shopify/react-native-skia": "*",
+    "@react-spring/three": "*"
   }
 }
