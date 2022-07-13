@@ -16,7 +16,7 @@ export const NavContainer = ({ children }: NavContainerProps) => {
         ...DefaultTheme,
         colors: {
           ...DefaultTheme.colors,
-          background: theme.colors.appBackground,
+          background: theme.colors.backgroundApp,
         },
       }}
     >

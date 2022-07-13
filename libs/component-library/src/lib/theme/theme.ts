@@ -6,32 +6,35 @@ export const palette = {
   white: 'white',
 };
 
-const paletteDark = {
-  grayscale700: '#F8F9FA',
-  grayscale500: '#CED4DA',
-  grayscale400: '#868E96',
-  grayscale0: '#343A40',
-  appBackground: '#212529',
-};
-
 const paletteLight = {
+  appBackground: '#FFFFFF',
   grayscale700: '#343A40',
   grayscale500: '#6F767D',
   grayscale400: '#CED4DA',
-  grayscale0: '#F8F9FA',
-  appBackground: '#FFFFFF',
+  grayscale100: '#E9ECEF',
+  grayscale000: '#F8F9FA',
+};
+
+const paletteDark = {
+  appBackground: '#212529',
+  grayscale700: '#F8F9FA',
+  grayscale500: '#CED4DA',
+  grayscale400: '#868E96',
+  grayscale100: '#495057',
+  grayscale000: '#343A40',
 };
 
 const fxLightTheme = createTheme({
   colors: {
-    white: palette.white,
-    primary: palette.green,
-    secondary: palette.blue,
-    appBackground: paletteLight.appBackground,
-    backgroundPrimary: paletteLight.grayscale0,
+    backgroundApp: paletteLight.appBackground,
+    backgroundPrimary: paletteLight.grayscale000,
+    backgroundSecondary: paletteLight.grayscale100,
+    border: paletteLight.grayscale400,
     content1: paletteLight.grayscale700,
     content3: paletteLight.grayscale500,
-    border: paletteLight.grayscale400,
+    primary: palette.green,
+    secondary: palette.blue,
+    white: palette.white,
   },
   spacing: {
     s: 8,
@@ -67,14 +70,15 @@ type FxTheme = typeof fxLightTheme;
 const fxDarkTheme: FxTheme = {
   ...fxLightTheme,
   colors: {
-    white: 'white',
-    primary: palette.green,
-    secondary: palette.blue,
-    appBackground: paletteDark.appBackground,
-    backgroundPrimary: paletteDark.grayscale0,
+    backgroundApp: paletteDark.appBackground,
+    backgroundPrimary: paletteDark.grayscale000,
+    backgroundSecondary: paletteDark.grayscale100,
+    border: paletteDark.grayscale400,
     content1: paletteDark.grayscale700,
     content3: paletteDark.grayscale500,
-    border: paletteDark.grayscale400,
+    primary: palette.green,
+    secondary: palette.blue,
+    white: 'white',
   },
 };
 

@@ -32,6 +32,8 @@
     "@react-three/fiber": "*",
     "expo-gl": "*",
     "expo-three": "*",
-    "three": "*"
+    "three": "*",
+    "@visx/scale": "*",
+    "@shopify/react-native-skia": "*"
   }
 }
