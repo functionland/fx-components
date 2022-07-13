@@ -10,6 +10,11 @@ PODS:
     - ExpoModulesCore
   - EXFont (10.2.0):
     - ExpoModulesCore
+  - EXGL (11.4.0):
+    - EXGL_CPP
+    - ExpoModulesCore
+  - EXGL_CPP (11.4.0):
+    - React-jsi
   - Expo (46.0.0-alpha.2):
     - ExpoModulesCore
   - ExpoKeepAwake (10.2.0):
@@ -451,6 +456,8 @@ DEPENDENCIES:
   - EXConstants (from `../../../node_modules/expo-constants/ios`)
   - EXFileSystem (from `../../../node_modules/expo-file-system/ios`)
   - EXFont (from `../../../node_modules/expo-font/ios`)
+  - EXGL (from `../../../node_modules/expo-gl/ios`)
+  - EXGL_CPP (from `../../../node_modules/expo-gl-cpp/cpp`)
   - Expo (from `../../../node_modules/expo`)
   - ExpoKeepAwake (from `../../../node_modules/expo-keep-awake/ios`)
   - ExpoModulesCore (from `../../../node_modules/expo-modules-core/ios`)
@@ -555,6 +562,10 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/expo-file-system/ios"
   EXFont:
     :path: "../../../node_modules/expo-font/ios"
+  EXGL:
+    :path: "../../../node_modules/expo-gl/ios"
+  EXGL_CPP:
+    :path: "../../../node_modules/expo-gl-cpp/cpp"
   Expo:
     :path: "../../../node_modules/expo"
   ExpoKeepAwake:
@@ -658,6 +669,8 @@ SPEC CHECKSUMS:
   EXConstants: 5cc0bd3c9650d7e59576cf174e4f53e0ae8b6108
   EXFileSystem: 927e0a8885aa9c49e50fc38eaba2c2389f2f1019
   EXFont: a5d80bd9b3452b2d5abbce2487da89b0150e6487
+  EXGL: af303c96595c2879a83d0cdc429ee12639f6d78c
+  EXGL_CPP: 26d0d7639ec8fcf9133c2883926ca7a005625ee6
   Expo: 4f811e96eee0bf7b3a136f092368db88cc5791cf
   ExpoKeepAwake: 0e8f18142e71bbf2c7f6aa66ebed249ba1420320
   ExpoModulesCore: 57238de258c497245e3e612642611e25d2ae30ec

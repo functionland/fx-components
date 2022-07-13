@@ -28,6 +28,10 @@
     "react-native-screens": "*",
     "react-native-svg": "*",
     "react-native-wifi-reborn": "*",
-    "zustand": "*"
+    "zustand": "*",
+    "@react-three/fiber": "*",
+    "expo-gl": "*",
+    "expo-three": "*",
+    "three": "*"
   }
 }
