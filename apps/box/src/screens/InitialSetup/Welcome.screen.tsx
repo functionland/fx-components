@@ -9,6 +9,7 @@ import {
 import { isEmulatorSync } from 'react-native-device-info';
 import { useIsConnectedToBox } from '../../hooks/useIsConnectedToBox';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
+import { Blox } from '../../components/Blox';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -56,6 +57,7 @@ export const WelcomeScreen = () => {
       <FxText padding="m" textAlign="center" variant="body">
         Box Setup Up
       </FxText>
+      <Blox />
       <FxBox>
         <FxButton
           testID="app-name"
