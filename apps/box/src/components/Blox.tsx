@@ -124,7 +124,7 @@ const BloxMesh = ({ colors }: BloxMeshProps) => {
     () => lazySusan.current && (rotationRef.current.rotation.y -= 0.005)
   );
 
-  const handleDeselectTower = () => {
+  const handleTowerDeselection = () => {
     if (isPanning.current) {
       isPanning.current = false;
       return;
@@ -137,7 +137,7 @@ const BloxMesh = ({ colors }: BloxMeshProps) => {
     offset.current = { x, y };
     euler.y = rotationRef.current.rotation.y;
     euler.x = rotationRef.current.rotation.x;
-    set({ rotation: euler.toArray().slice(0, 3), immediate: true });
+    set.start({ rotation: euler.toArray().slice(0, 3), immediate: true });
     if (lazySusan.current) lazySusan.current = false;
   };
 
@@ -152,13 +152,13 @@ const BloxMesh = ({ colors }: BloxMeshProps) => {
     euler.y -= THREE.MathUtils.degToRad(dx * speed);
     euler.x -= THREE.MathUtils.degToRad(dy * speed);
     euler.x = THREE.MathUtils.clamp(euler.x, 0, Math.PI / 6);
-    set({ rotation: euler.toArray().slice(0, 3) });
+    set.start({ rotation: euler.toArray().slice(0, 3) });
   };
 
   return (
     <>
       <BackgroundMesh
-        onClick={handleDeselectTower}
+        onClick={handleTowerDeselection}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
       />
