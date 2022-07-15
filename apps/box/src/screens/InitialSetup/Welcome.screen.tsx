@@ -54,7 +54,7 @@ export const WelcomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.flex1}>
-      <FxText padding="m" textAlign="center" variant="body">
+      <FxText padding="16" textAlign="center" variant="body">
         Box Setup Up
       </FxText>
       <Blox />

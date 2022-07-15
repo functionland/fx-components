@@ -37,9 +37,9 @@ export const WalletDetails = () => {
   const walletConnect = useWalletConnect();
 
   return (
-    <FxBox flex={1} padding="m">
+    <FxBox flex={1} padding="16">
       <FxText variant="body">Wallet Details</FxText>
-      <FxText variant="body" paddingVertical="m">
+      <FxText variant="body" paddingVertical="16">
         Connected to {walletConnect.peerMeta.name} wallet
       </FxText>
       <Image
