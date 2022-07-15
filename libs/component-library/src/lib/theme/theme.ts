@@ -42,10 +42,37 @@ const fxLightTheme = createTheme({
   },
   breakpoints: {},
   textVariants: {
-    defaults: {},
+    defaults: {
+      color: 'content1',
+    },
     body: {
       fontSize: 16,
-      color: 'primary',
+    },
+    eyebrow2: {
+      fontFamily: 'Montserrat-Medium',
+      fontSize: 8,
+      lineHeight: 10,
+      textTransform: 'uppercase',
+    },
+    bodyXSLight: {
+      fontFamily: 'OpenSans-Light',
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    bodyXSSemibold: {
+      fontFamily: 'OpenSans-Semibold',
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    bodySmallRegular: {
+      fontFamily: 'OpenSans-Regular',
+      fontSize: 14,
+      lineHeight: 24,
+    },
+    bodyLargeLight: {
+      fontFamily: 'OpenSans-Light',
+      fontSize: 20,
+      lineHeight: 30,
     },
   },
   borderRadii: {
