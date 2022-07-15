@@ -88,6 +88,11 @@ const fxLightTheme = createTheme({
       fontSize: 12,
       lineHeight: 16,
     },
+    bodyXSRegular: {
+      fontFamily: 'OpenSans-Regular',
+      fontSize: 12,
+      lineHeight: 16,
+    },
     bodyXSSemibold: {
       fontFamily: 'OpenSans-Semibold',
       fontSize: 12,
@@ -100,6 +105,11 @@ const fxLightTheme = createTheme({
     },
     bodyLargeLight: {
       fontFamily: 'OpenSans-Light',
+      fontSize: 20,
+      lineHeight: 30,
+    },
+    bodyLargeRegular: {
+      fontFamily: 'OpenSans-Regular',
       fontSize: 20,
       lineHeight: 30,
     },
