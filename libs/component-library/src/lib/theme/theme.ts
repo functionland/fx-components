@@ -7,21 +7,37 @@ const palette = {
 };
 
 const paletteLight = {
+  // GRAYSCALE
   appBackground: '#FFFFFF',
   grayscale700: '#343A40',
   grayscale500: '#6F767D',
   grayscale400: '#CED4DA',
   grayscale100: '#E9ECEF',
   grayscale000: '#F8F9FA',
+
+  // GREEN
+  green700: '#038082',
+  green600: '#049B8F',
+  green500: '#06B597',
+  green400: '#97F7CC',
+  green100: '#CAFBE0',
 };
 
 const paletteDark = {
+  // GRAYSCALE
   appBackground: '#212529',
   grayscale700: '#F8F9FA',
   grayscale500: '#CED4DA',
   grayscale400: '#868E96',
   grayscale100: '#495057',
   grayscale000: '#343A40',
+
+  // GREEN
+  green700: '#038082',
+  green600: '#049B8F',
+  green500: '#06B597',
+  green200: '#035B4C',
+  green100: '#02362D',
 };
 
 const fxLightTheme = createTheme({
@@ -32,6 +48,9 @@ const fxLightTheme = createTheme({
     border: paletteLight.grayscale400,
     content1: paletteLight.grayscale700,
     content3: paletteLight.grayscale500,
+
+    greenBase: paletteLight.green600,
+
     primary: palette.green,
     secondary: palette.blue,
     white: palette.white,
@@ -81,7 +100,7 @@ const fxLightTheme = createTheme({
   },
   buttonVariants: {
     defaults: {
-      backgroundColor: 'primary',
+      backgroundColor: 'greenBase',
     },
     inverted: {
       backgroundColor: undefined,
@@ -103,6 +122,9 @@ const fxDarkTheme: FxTheme = {
     border: paletteDark.grayscale400,
     content1: paletteDark.grayscale700,
     content3: paletteDark.grayscale500,
+
+    greenBase: paletteDark.green600,
+
     primary: palette.green,
     secondary: palette.blue,
     white: 'white',
