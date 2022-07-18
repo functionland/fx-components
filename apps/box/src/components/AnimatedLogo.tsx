@@ -108,7 +108,7 @@ export const AnimatedLogo = () => {
   return (
     <FxBox
       flex={3}
-      marginHorizontal="m"
+      marginHorizontal="16"
       justifyContent="center"
       alignItems="center"
       onLayout={(evt) => {

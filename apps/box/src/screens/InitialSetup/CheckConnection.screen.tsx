@@ -74,10 +74,10 @@ export const CheckConnectionScreen = ({ route }) => {
 
   return (
     <SafeAreaView>
-      <FxText variant="body" margin="m" color="primary">
+      <FxText variant="body" margin="16" color="primary">
         Verifying connection with {ssid}
       </FxText>
-      <FxText variant="body" margin="m" color="secondary">
+      <FxText variant="body" margin="16" color="secondary">
         {statusMessage}
       </FxText>
     </SafeAreaView>

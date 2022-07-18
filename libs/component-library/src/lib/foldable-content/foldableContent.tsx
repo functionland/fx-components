@@ -17,19 +17,25 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { FxChevronDownIcon } from '../icons/icons';
 
-type FxFoldableContentProps = {
-  onPress?: (expanded: boolean) => void;
-  header: React.ReactElement;
-  children: React.ReactElement;
-};
-
 const ANIMATION_DURATION = 300;
 const RestyledPressable = createBox<FxTheme, PressableProps>(Pressable);
+
+type FxFoldableContentProps = Omit<
+  React.ComponentProps<typeof RestyledPressable>,
+  'onPress'
+> & {
+  header: React.ReactElement;
+  onPress?: (expanded: boolean) => void;
+  iconSize?: number;
+  children: React.ReactElement;
+};
 
 export const FxFoldableContent = ({
   onPress,
   header,
+  iconSize = 18,
   children,
+  ...rest
 }: FxFoldableContentProps) => {
   const theme = useTheme<FxTheme>();
   const [expanded, setExpanded] = React.useState(false);
@@ -54,12 +60,11 @@ export const FxFoldableContent = ({
   };
 
   return (
-    <RestyledPressable padding="m" onPress={pressHandler}>
+    <RestyledPressable onPress={pressHandler} {...rest}>
       <FxBox flexDirection="row">
         <Reanimated.View style={[styles.icon, iconAnimatedStyles]}>
-          <FxChevronDownIcon color={theme.colors.content1} size={18} />
+          <FxChevronDownIcon color={theme.colors.content1} size={iconSize} />
         </Reanimated.View>
-        <FxSpacer width={20} />
         <FxBox flex={1}>{header}</FxBox>
       </FxBox>
       {expanded && (

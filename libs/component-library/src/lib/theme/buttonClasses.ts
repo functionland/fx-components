@@ -14,15 +14,15 @@ export const FxButtonClasses: Record<'default' | 'inverted', ButtonClassType> =
     default: {
       button: { variant: undefined },
       text: {
-        variant: 'body',
-        color: 'white',
+        variant: 'bodyXSSemibold',
+        color: 'content1',
       },
     },
     inverted: {
       button: { variant: 'inverted' },
       text: {
-        variant: 'body',
-        color: 'primary',
+        variant: 'bodyXSSemibold',
+        color: 'greenBase',
       },
     },
   };

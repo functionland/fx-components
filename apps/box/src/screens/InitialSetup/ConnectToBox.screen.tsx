@@ -18,10 +18,10 @@ export const ConnectToBoxScreen = () => {
 
   return (
     <SafeAreaView>
-      <FxText variant="body" color="primary" margin="m">
+      <FxText variant="body" color="primary" margin="16">
         Make sure your Box is turned on and in range of your mobile device.
       </FxText>
-      <FxText variant="body" color="secondary" margin="m">
+      <FxText variant="body" color="secondary" margin="16">
         {connectionStatus}
       </FxText>
     </SafeAreaView>

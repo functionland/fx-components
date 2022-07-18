@@ -42,19 +42,19 @@ export const SetupWifiScreen = () => {
   return (
     <SafeAreaView>
       {loading && (
-        <FxText variant="body" color="secondary" margin="m">
+        <FxText variant="body" color="secondary" margin="16">
           Loading Network List...
         </FxText>
       )}
       {error && (
-        <FxText variant="body" color="secondary" margin="m">
+        <FxText variant="body" color="secondary" margin="16">
           {error.message}
         </FxText>
       )}
       {!loading && !error && (
         <>
           <FxPicker
-            margin="s"
+            margin="8"
             color="primary"
             selectedValue={ssid ?? uniqueSsids[0]}
             onValueChange={onNetworkChange}
@@ -64,8 +64,8 @@ export const SetupWifiScreen = () => {
             ))}
           </FxPicker>
           <FxTextInput
-            margin="m"
-            padding="m"
+            margin="16"
+            padding="16"
             textAlign="center"
             color="primary"
             backgroundColor="white"

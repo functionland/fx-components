@@ -16,6 +16,10 @@
     {
       "path": "assets/fonts/OpenSans-Regular.ttf",
       "sha1": "73b8e80d4ff1cf32806a12f296754819c17d4eff"
+    },
+    {
+      "path": "assets/fonts/OpenSans-SemiBold.ttf",
+      "sha1": "3df643fd98caf2f73b816ce98580d5716581f9d1"
     }
   ]
 }

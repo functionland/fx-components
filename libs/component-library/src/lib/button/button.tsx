@@ -40,8 +40,8 @@ const FxButton = ({
   return (
     <FxButtonBase
       {...FxButtonClasses[buttonClass].button}
-      padding="m"
-      margin="m"
+      paddingVertical="12"
+      margin="8"
       alignItems="center"
       borderRadius="s"
       style={(args) => [
