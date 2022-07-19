@@ -12,7 +12,7 @@ import {
   SettingsIcon,
   UserIcon,
   WalletIcon,
-} from '../components/Icons';
+} from '../components';
 import { useTheme } from '@shopify/restyle';
 import { FxTheme } from '@functionland/component-library';
 
