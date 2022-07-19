@@ -1,5 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useTheme } from '@shopify/restyle';
+import { FxTheme } from '@functionland/component-library';
 import { BoxScreen } from '../screens/Box.screen';
 import { MainTabsParamList } from './navigatonConfig';
 import { WalletScreen } from '../screens/Wallet.screen';
@@ -13,16 +15,15 @@ import {
   UserIcon,
   WalletIcon,
 } from '../components';
-import { useTheme } from '@shopify/restyle';
-import { FxTheme } from '@functionland/component-library';
 
 export const MainTabsNavigator = () => {
   const theme = useTheme<FxTheme>();
-
   return (
     <MainTabs.Navigator
       screenOptions={() => ({
         tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.content3,
+        tabBarBackground: () => <></>,
       })}
     >
       <MainTabs.Screen
@@ -30,7 +31,7 @@ export const MainTabsNavigator = () => {
         component={BoxScreen}
         options={{
           // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <BoxIcon color={color} />,
+          tabBarIcon: ({ color }) => <BoxIcon fill={color} />,
         }}
       />
       <MainTabs.Screen
@@ -38,7 +39,7 @@ export const MainTabsNavigator = () => {
         component={WalletScreen}
         options={{
           // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <WalletIcon color={color} />,
+          tabBarIcon: ({ color }) => <WalletIcon fill={color} />,
         }}
       />
       <MainTabs.Screen
@@ -46,7 +47,7 @@ export const MainTabsNavigator = () => {
         component={SettingsScreen}
         options={{
           // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <SettingsIcon color={color} />,
+          tabBarIcon: ({ color }) => <SettingsIcon fill={color} />,
         }}
       />
       <MainTabs.Screen
@@ -54,7 +55,7 @@ export const MainTabsNavigator = () => {
         component={PoolScreen}
         options={{
           // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <PoolIcon color={color} />,
+          tabBarIcon: ({ color }) => <PoolIcon fill={color} />,
         }}
       />
       <MainTabs.Screen
@@ -62,7 +63,7 @@ export const MainTabsNavigator = () => {
         component={UserScreen}
         options={{
           // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <UserIcon color={color} />,
+          tabBarIcon: ({ color }) => <UserIcon fill={color} />,
         }}
       />
     </MainTabs.Navigator>

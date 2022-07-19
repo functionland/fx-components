@@ -6,7 +6,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { FxBox } from '../box/box';
-import { createBox, useTheme } from '@shopify/restyle';
+import { createBox } from '@shopify/restyle';
 import { FxTheme } from '../theme/theme';
 import { FxSpacer } from '../spacer/spacer';
 import Reanimated, {
@@ -37,7 +37,6 @@ export const FxFoldableContent = ({
   children,
   ...rest
 }: FxFoldableContentProps) => {
-  const theme = useTheme<FxTheme>();
   const [expanded, setExpanded] = React.useState(false);
   const rotation = useSharedValue(0);
 
@@ -63,7 +62,11 @@ export const FxFoldableContent = ({
     <RestyledPressable onPress={pressHandler} {...rest}>
       <FxBox flexDirection="row">
         <Reanimated.View style={[styles.icon, iconAnimatedStyles]}>
-          <FxChevronDownIcon color={theme.colors.content1} size={iconSize} />
+          <FxChevronDownIcon
+            color="content1"
+            width={iconSize}
+            height={iconSize}
+          />
         </Reanimated.View>
         <FxBox flex={1}>{header}</FxBox>
       </FxBox>
