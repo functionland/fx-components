@@ -9,3 +9,4 @@ export { FxSpacer } from './lib/spacer/spacer';
 export { FxText } from './lib/text/text';
 export { FxTextInput } from './lib/input/input';
 export { FxTheme, fxDarkTheme, fxLightTheme } from './lib/theme/theme';
+export { FxPressableOpacity } from './lib/pressable-opacity/pressableOpacity';
