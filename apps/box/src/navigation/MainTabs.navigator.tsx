@@ -23,7 +23,9 @@ export const MainTabsNavigator = () => {
       screenOptions={() => ({
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.content3,
-        tabBarBackground: () => <></>,
+        tabBarStyle: {
+          backgroundColor: theme.colors.backgroundApp,
+        },
       })}
     >
       <MainTabs.Screen
