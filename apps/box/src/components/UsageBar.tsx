@@ -1,16 +1,15 @@
 import {
   FxBox,
   FxDownArrowIcon,
-  FxText,
+  FxReText,
 } from '@functionland/component-library';
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet } from 'react-native';
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import Reanimated, {
-  runOnJS,
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useDerivedValue,
@@ -40,9 +39,9 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
         (boundsX.value.high + TOUCHABLE_WIDTH / 2)) *
       100
   );
-  const [poolUsage, setPoolUsage] = useState(0);
-
-  const calculatePoolUsage = () => setPoolUsage(Math.round(usagePercent.value));
+  const poolPercentText = useDerivedValue(
+    () => `Pool Usage: ${Math.round(usagePercent.value)}%`
+  );
 
   const onGestureEvent = useAnimatedGestureHandler<
     PanGestureHandlerGestureEvent,
@@ -59,8 +58,6 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
         boundsX.value.low,
         boundsX.value.high
       );
-
-      runOnJS(calculatePoolUsage)();
     },
   });
 
@@ -89,7 +86,6 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
             low: -TOUCHABLE_WIDTH / 2,
             high: layout.width - TOUCHABLE_WIDTH / 2,
           };
-          setTimeout(() => calculatePoolUsage(), 0);
         }}
       >
         {isEditable && (
@@ -125,7 +121,7 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
           borderBottomRightRadius="s"
         />
       </FxBox>
-      <FxText>Pool Usage: {poolUsage}%</FxText>
+      <FxReText text={poolPercentText} />
     </>
   );
 };
