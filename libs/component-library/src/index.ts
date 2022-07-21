@@ -1,4 +1,4 @@
-export { FxBox } from './lib/box/box';
+export { FxBox, FxBoxProps } from './lib/box/box';
 export { FxButton } from './lib/button/button';
 export { FxCard } from './lib/card/card';
 export { FxChevronDownIcon, FxDownArrowIcon } from './lib/icons/icons';
