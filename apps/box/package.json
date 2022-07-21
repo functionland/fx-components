@@ -35,6 +35,7 @@
     "three": "*",
     "@visx/scale": "*",
     "@shopify/react-native-skia": "*",
-    "@react-spring/three": "*"
+    "@react-spring/three": "*",
+    "@gorhom/bottom-sheet": "*"
   }
 }
