@@ -135,7 +135,7 @@ export const AnimatedLogo = () => {
     >
       <PanGestureHandler onGestureEvent={onGestureEvent}>
         <ReanimatedBox style={panStyle}>
-          <Logo />
+          <Logo color="greenBase" />
         </ReanimatedBox>
       </PanGestureHandler>
     </FxBox>

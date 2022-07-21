@@ -1,10 +1,11 @@
-import { FxBox, FxText } from '@functionland/component-library';
+import { FxBox } from '@functionland/component-library';
 import React from 'react';
+import { UsageBar } from '../components';
 
 export const BoxScreen = () => {
   return (
-    <FxBox>
-      <FxText variant="body">Box Dashboard</FxText>
+    <FxBox paddingVertical="24">
+      <UsageBar isEditable />
     </FxBox>
   );
 };

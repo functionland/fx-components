@@ -49,7 +49,9 @@ const fxLightTheme = createTheme({
     content1: paletteLight.grayscale700,
     content3: paletteLight.grayscale500,
 
+    greenPressed: paletteLight.green700,
     greenBase: paletteLight.green600,
+    greenHover: paletteLight.green500,
 
     primary: palette.green,
     secondary: palette.blue,
@@ -115,8 +117,9 @@ const fxLightTheme = createTheme({
     },
   },
   borderRadii: {
-    s: 8,
-    m: 16,
+    s: 4,
+    m: 6,
+    l: 20,
   },
   buttonVariants: {
     defaults: {
@@ -128,7 +131,9 @@ const fxLightTheme = createTheme({
       borderWidth: 2,
     },
   },
-  zIndices: {},
+  zIndices: {
+    foreground: 1000,
+  },
 });
 
 type FxTheme = typeof fxLightTheme;
@@ -143,7 +148,9 @@ const fxDarkTheme: FxTheme = {
     content1: paletteDark.grayscale700,
     content3: paletteDark.grayscale500,
 
+    greenPressed: paletteDark.green700,
     greenBase: paletteDark.green600,
+    greenHover: paletteDark.green500,
 
     primary: palette.green,
     secondary: palette.blue,
