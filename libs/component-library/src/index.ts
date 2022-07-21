@@ -10,3 +10,4 @@ export { FxSvg, FxSvgProps } from './lib/svg/svg';
 export { FxText, FxReText } from './lib/text/text';
 export { FxTextInput } from './lib/input/input';
 export { FxTheme, fxDarkTheme, fxLightTheme } from './lib/theme/theme';
+export { FxPressableOpacity } from './lib/pressable-opacity/pressableOpacity';
