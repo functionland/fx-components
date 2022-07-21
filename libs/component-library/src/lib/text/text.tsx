@@ -10,11 +10,11 @@ import { FxTheme } from '../theme/theme';
 
 export const FxText = createText<FxTheme>();
 
-interface ReTextProps extends TextProps<FxTheme> {
+interface FxReTextProps extends TextProps<FxTheme> {
   text: Animated.SharedValue<string>;
 }
 
-export const FxReText = createRestyleComponent<ReTextProps, FxTheme>(
+export const FxReText = createRestyleComponent<FxReTextProps, FxTheme>(
   [...textRestyleFunctions],
   ReText
 );
