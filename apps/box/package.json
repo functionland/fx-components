@@ -36,6 +36,8 @@
     "@visx/scale": "*",
     "@shopify/react-native-skia": "*",
     "@react-spring/three": "*",
-    "@gorhom/bottom-sheet": "*"
+    "@gorhom/bottom-sheet": "*",
+    "react-native-wheel-color-picker": "*",
+    "@react-native-community/slider": "*"
   }
 }
