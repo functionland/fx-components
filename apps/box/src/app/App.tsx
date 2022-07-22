@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavContainer } from '../navigation/NavContainer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Platform, StyleSheet, UIManager } from 'react-native';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -19,17 +20,19 @@ export const App = () => {
 
   return (
     <ThemeProvider theme={isDarkTheme ? fxDarkTheme : fxLightTheme}>
-      <WalletConnectProvider
-        redirectUrl={'yourappscheme://'}
-        storageOptions={{
-          // @ts-ignore
-          asyncStorage: AsyncStorage,
-        }}
-      >
-        <GestureHandlerRootView style={styles.flex1}>
-          <AppContent />
-        </GestureHandlerRootView>
-      </WalletConnectProvider>
+      <BottomSheetModalProvider>
+        <WalletConnectProvider
+          redirectUrl={'yourappscheme://'}
+          storageOptions={{
+            // @ts-ignore
+            asyncStorage: AsyncStorage,
+          }}
+        >
+          <GestureHandlerRootView style={styles.flex1}>
+            <AppContent />
+          </GestureHandlerRootView>
+        </WalletConnectProvider>
+      </BottomSheetModalProvider>
     </ThemeProvider>
   );
 };

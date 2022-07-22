@@ -11,12 +11,14 @@ import {
 import { FxTheme } from '../theme/theme';
 import { FxTextInputClasses } from '../theme/inputClasses';
 import { TextInput, TextInputProps } from 'react-native';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
 type FxTextInputProps = TextProps<FxTheme> &
   BoxProps<FxTheme> &
   TextInputProps & {
     disabled?: boolean;
     error?: boolean;
+    isBottomSheetInput?: boolean;
   };
 
 type FxTextInputRestyleProps = Omit<FxTextInputProps, 'disabled' | 'error'>;
@@ -35,16 +37,20 @@ const FxTextInput = ({ disabled, error, ...rest }: FxTextInputProps) => {
     return 'default';
   }, [disabled, error, isFocused]);
   const variantStyles = FxTextInputClasses[variant];
-  const { onFocus, onBlur, ...restyleProps } = useRestyle(restyleFunctions, {
-    ...variantStyles,
-    ...rest,
-  } as FxTextInputRestyleProps);
+  const { onFocus, onBlur, isBottomSheetInput, ...restyleProps } = useRestyle(
+    restyleFunctions,
+    {
+      ...variantStyles,
+      ...rest,
+    } as FxTextInputRestyleProps
+  );
   const { colors } = useTheme<FxTheme>();
   const placeHolderTextColor = colors[variantStyles.placeholderTextColor];
   const selectionColor = colors[variantStyles.selectionColor];
+  const Input = isBottomSheetInput ? BottomSheetTextInput : TextInput;
 
   return (
-    <TextInput
+    <Input
       onFocus={(e) => {
         setIsFocused(true);
         if (onFocus) onFocus(e);

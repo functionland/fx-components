@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  FxBottomSheetModal,
   FxBox,
   FxCard,
   FxError,
@@ -14,10 +15,10 @@ import { StyleSheet } from 'react-native';
 import ColorPicker from 'react-native-wheel-color-picker';
 
 export const ColorSettingsCard = () => {
+  const colorPickerRef = useRef(null);
   const [color, setColor] = useState('#3250EF'.toLowerCase());
   const [colorInput, setColorInput] = useState(color);
   const [colorError, setColorError] = useState('');
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const [brightness, setBrightness] = useState(5);
 
   useEffect(() => {
@@ -65,15 +66,15 @@ export const ColorSettingsCard = () => {
             ))}
           </FxBox>
         ))}
-        <FxBox flexDirection="row" justifyContent="space-between">
+        <FxPressableOpacity
+          flexDirection="row"
+          justifyContent="space-between"
+          onPress={() => colorPickerRef.current?.present({ position: 440 })}
+        >
           <FxText variant="bodySmallRegular" color="content3" lineHeight={18}>
             Custom color
           </FxText>
-          <FxPressableOpacity
-            flexDirection="row"
-            alignItems="center"
-            onPress={() => setShowColorPicker(!showColorPicker)}
-          >
+          <FxBox flexDirection="row" alignItems="center">
             <ColorDot color={color} />
             <FxText
               variant="bodySmallRegular"
@@ -83,11 +84,11 @@ export const ColorSettingsCard = () => {
             >
               {color}
             </FxText>
-          </FxPressableOpacity>
-        </FxBox>
-        {showColorPicker && (
-          <FxBox>
-            <FxBox marginBottom="16">
+          </FxBox>
+        </FxPressableOpacity>
+        <FxBottomSheetModal ref={colorPickerRef} title="Custom Color">
+          <FxBox alignItems="center">
+            <FxBox width={265} height={280} marginBottom="16">
               <ColorPicker
                 color={color}
                 onColorChangeComplete={setColor}
@@ -99,18 +100,20 @@ export const ColorSettingsCard = () => {
               />
             </FxBox>
             <FxTextInput
+              width={120}
               height={32}
-              paddingHorizontal="12"
               value={colorInput}
               onChangeText={onColorTextInputChange}
               onSubmitEditing={resetColor}
               onBlur={resetColor}
               error={!!colorError}
               placeholder="#000000"
+              textAlign="center"
+              isBottomSheetInput
             />
             <FxError error={colorError} />
           </FxBox>
-        )}
+        </FxBottomSheetModal>
         <FxHorizontalRule marginVertical="16" />
         <FxBox
           flexDirection="row"
