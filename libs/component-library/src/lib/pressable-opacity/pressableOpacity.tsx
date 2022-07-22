@@ -14,13 +14,14 @@ export const FxPressableOpacity = ({
 }: FxPressableOpacityProps) => {
   return (
     <PressableBox
-      {...props}
+      hitSlop={16}
       style={(args) => [
         typeof style === 'function' ? style(args) : style,
         args.pressed && {
           opacity: 0.5,
         },
       ]}
+      {...props}
     >
       {children}
     </PressableBox>
