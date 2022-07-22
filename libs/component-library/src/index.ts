@@ -1,7 +1,16 @@
+export {
+  FxBottomSheet,
+  FxBottomSheetMethods,
+} from './lib/bottom-sheet/bottomSheet';
 export { FxBox, FxBoxProps } from './lib/box/box';
 export { FxButton } from './lib/button/button';
 export { FxCard } from './lib/card/card';
-export { FxChevronDownIcon, FxDownArrowIcon } from './lib/icons/icons';
+export {
+  FxChevronDownIcon,
+  FxCloseIcon,
+  FxDownArrowIcon,
+  FxFilterIcon,
+} from './lib/icons/icons';
 export { FxFoldableContent } from './lib/foldable-content/foldableContent';
 export { FxLineChart } from './lib/line-chart/lineChart';
 export { FxPicker, FxPickerItem } from './lib/picker/picker';
