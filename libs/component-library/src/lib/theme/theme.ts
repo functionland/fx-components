@@ -99,11 +99,6 @@ const fxLightTheme = createTheme({
     body: {
       fontSize: 16,
     },
-    h200: {
-      fontFamily: 'Montserrat-SemiBold',
-      fontSize: 18,
-      lineHeight: 24,
-    },
     eyebrow2: {
       fontFamily: 'Montserrat-Medium',
       fontSize: 8,
@@ -149,6 +144,11 @@ const fxLightTheme = createTheme({
       fontFamily: 'OpenSans-Regular',
       fontSize: 16,
       lineHeight: 28,
+    },
+    h200: {
+      fontFamily: 'Montserrat-SemiBold',
+      fontSize: 18,
+      lineHeight: 24,
     },
     h300: {
       fontFamily: 'Montserrat-Semibold',
