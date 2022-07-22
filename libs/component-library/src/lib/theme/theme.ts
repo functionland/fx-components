@@ -21,6 +21,13 @@ const paletteLight = {
   green500: '#06B597',
   green400: '#97F7CC',
   green100: '#CAFBE0',
+
+  // ERROR
+  error700: '#E03131',
+  error600: '#FA4343',
+  error500: '#FF6B6B',
+  error200: '#FFE3E3',
+  error100: '#FFF5F5',
 };
 
 const paletteDark = {
@@ -38,6 +45,13 @@ const paletteDark = {
   green500: '#06B597',
   green200: '#035B4C',
   green100: '#02362D',
+
+  // ERROR
+  error700: '#E03131',
+  error600: '#FA5252',
+  error500: '#FF6B6B',
+  error200: '#7D2929',
+  error100: '#4B1919',
 };
 
 const fxLightTheme = createTheme({
@@ -53,6 +67,8 @@ const fxLightTheme = createTheme({
     greenBase: paletteLight.green600,
     greenHover: paletteLight.green500,
 
+    errorBase: paletteLight.error600,
+
     primary: palette.green,
     secondary: palette.blue,
     white: palette.white,
@@ -62,6 +78,7 @@ const fxLightTheme = createTheme({
     '8': 8,
     '12': 12,
     '16': 16,
+    '20': 20,
     '24': 24,
     '32': 32,
     '40': 40,
@@ -78,6 +95,11 @@ const fxLightTheme = createTheme({
     },
     body: {
       fontSize: 16,
+    },
+    h200: {
+      fontFamily: 'Montserrat-SemiBold',
+      fontSize: 18,
+      lineHeight: 24,
     },
     eyebrow2: {
       fontFamily: 'Montserrat-Medium',
@@ -141,6 +163,7 @@ type FxTheme = typeof fxLightTheme;
 const fxDarkTheme: FxTheme = {
   ...fxLightTheme,
   colors: {
+    ...fxLightTheme.colors,
     backgroundApp: paletteDark.appBackground,
     backgroundPrimary: paletteDark.grayscale000,
     backgroundSecondary: paletteDark.grayscale100,
@@ -152,9 +175,7 @@ const fxDarkTheme: FxTheme = {
     greenBase: paletteDark.green600,
     greenHover: paletteDark.green500,
 
-    primary: palette.green,
-    secondary: palette.blue,
-    white: 'white',
+    errorBase: paletteDark.error600,
   },
 };
 
