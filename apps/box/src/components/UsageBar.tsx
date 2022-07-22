@@ -1,6 +1,7 @@
 import {
   FxBox,
   FxDownArrowIcon,
+  FxReanimatedBox,
   FxReText,
 } from '@functionland/component-library';
 import React from 'react';
@@ -9,7 +10,7 @@ import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
-import Reanimated, {
+import {
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useDerivedValue,
@@ -17,7 +18,6 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { clamp } from 'react-native-redash';
 
-const ReanimatedBox = Reanimated.createAnimatedComponent(FxBox);
 const HEIGHT = 40;
 const TOUCHABLE_WIDTH = 40;
 
@@ -79,9 +79,8 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
         height={HEIGHT}
         flexDirection="row"
         marginVertical="8"
-        marginHorizontal="24"
-        onLayout={(evt) => {
-          const layout = evt.nativeEvent.layout;
+        onLayout={(e) => {
+          const layout = e.nativeEvent.layout;
           boundsX.value = {
             low: -TOUCHABLE_WIDTH / 2,
             high: layout.width - TOUCHABLE_WIDTH / 2,
@@ -90,7 +89,7 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
       >
         {isEditable && (
           <PanGestureHandler onGestureEvent={onGestureEvent}>
-            <ReanimatedBox
+            <FxReanimatedBox
               style={panStyle}
               zIndex="foreground"
               position="absolute"
@@ -99,7 +98,7 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
             />
           </PanGestureHandler>
         )}
-        <ReanimatedBox
+        <FxReanimatedBox
           style={poolUsageStyle}
           backgroundColor="greenPressed"
           borderTopLeftRadius="s"
@@ -121,7 +120,7 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
           borderBottomRightRadius="s"
         />
       </FxBox>
-      <FxReText text={poolPercentText} />
+      <FxReText text={poolPercentText} marginBottom="24" />
     </>
   );
 };
