@@ -10,6 +10,7 @@ const paletteLight = {
   // GRAYSCALE
   appBackground: '#FFFFFF',
   grayscale700: '#343A40',
+  grayscale600: '#495057',
   grayscale500: '#6F767D',
   grayscale400: '#CED4DA',
   grayscale100: '#E9ECEF',
@@ -27,6 +28,7 @@ const paletteDark = {
   // GRAYSCALE
   appBackground: '#212529',
   grayscale700: '#F8F9FA',
+  grayscale600: '#E9ECEF',
   grayscale500: '#CED4DA',
   grayscale400: '#868E96',
   grayscale100: '#495057',
@@ -47,6 +49,7 @@ const fxLightTheme = createTheme({
     backgroundSecondary: paletteLight.grayscale100,
     border: paletteLight.grayscale400,
     content1: paletteLight.grayscale700,
+    content2: paletteLight.grayscale600,
     content3: paletteLight.grayscale500,
 
     greenPressed: paletteLight.green700,
@@ -115,6 +118,21 @@ const fxLightTheme = createTheme({
       fontSize: 20,
       lineHeight: 30,
     },
+    bodyMediumLight: {
+      fontFamily: 'OpenSans-Light',
+      fontSize: 16,
+      lineHeight: 28,
+    },
+    bodyMediumRegular: {
+      fontFamily: 'OpenSans-Regular',
+      fontSize: 16,
+      lineHeight: 28,
+    },
+    h300: {
+      fontFamily: 'Montserrat-Semibold',
+      fontSize: 24,
+      lineHeight: 36,
+    },
   },
   borderRadii: {
     s: 4,
@@ -146,6 +164,7 @@ const fxDarkTheme: FxTheme = {
     backgroundSecondary: paletteDark.grayscale100,
     border: paletteDark.grayscale400,
     content1: paletteDark.grayscale700,
+    content2: paletteDark.grayscale600,
     content3: paletteDark.grayscale500,
 
     greenPressed: paletteDark.green700,
