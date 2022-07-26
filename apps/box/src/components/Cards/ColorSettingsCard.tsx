@@ -69,7 +69,7 @@ export const ColorSettingsCard = () => {
         <FxPressableOpacity
           flexDirection="row"
           justifyContent="space-between"
-          onPress={() => colorPickerRef.current?.present({ position: 440 })}
+          onPress={() => colorPickerRef.current?.present()}
         >
           <FxText variant="bodySmallRegular" color="content3" lineHeight={18}>
             Custom color
@@ -87,7 +87,7 @@ export const ColorSettingsCard = () => {
           </FxBox>
         </FxPressableOpacity>
         <FxBottomSheetModal ref={colorPickerRef} title="Custom Color">
-          <FxBox alignItems="center">
+          <FxBox alignItems="center" paddingBottom="40">
             <FxBox width={265} height={280} marginBottom="16">
               <ColorPicker
                 color={color}

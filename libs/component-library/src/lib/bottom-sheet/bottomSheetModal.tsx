@@ -1,12 +1,12 @@
 import React from 'react';
-import { Dimensions, Keyboard, StyleSheet } from 'react-native';
+import { Dimensions, Keyboard } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
   BottomSheetScrollView,
+  useBottomSheetDynamicSnapPoints,
 } from '@gorhom/bottom-sheet';
-import { WithSpringConfig, WithTimingConfig } from 'react-native-reanimated';
 import { useTheme } from '@shopify/restyle';
 import { FxTheme } from '../theme/theme';
 import { FxBox } from '../box/box';
@@ -19,18 +19,12 @@ type FxBottomSheetModalProps = {
   children: React.ReactElement;
 };
 
-const snapPoints = ['30', '70%', '90%'];
+const snapPoints = ['CONTENT_HEIGHT'];
 const INSET = Dimensions.get('window').height * 0.1;
 
-type FxSnapConfig = {
-  index?: number;
-  position?: number | string;
-  animationConfig?: WithSpringConfig | WithTimingConfig;
-};
-
 type FxBottomSheetModalMethods = {
-  present: (config?: FxSnapConfig) => void;
-  dismiss: () => void;
+  present: () => void;
+  close: () => void;
 };
 
 export const FxBottomSheetModal = React.forwardRef<
@@ -39,7 +33,12 @@ export const FxBottomSheetModal = React.forwardRef<
 >(({ title, children }, ref) => {
   const theme = useTheme<FxTheme>();
   const bottomSheetModalRef = React.useRef<BottomSheetModal>(null);
-  const position = React.useRef<number | string>(0);
+  const {
+    animatedHandleHeight,
+    animatedSnapPoints,
+    animatedContentHeight,
+    handleContentLayout,
+  } = useBottomSheetDynamicSnapPoints(snapPoints);
 
   const renderBackdrop = (props: BottomSheetBackdropProps) => {
     return (
@@ -59,29 +58,11 @@ export const FxBottomSheetModal = React.forwardRef<
   React.useImperativeHandle(
     ref,
     (): FxBottomSheetModalMethods => ({
-      present: (config) => {
+      present: () => {
         bottomSheetModalRef.current?.present();
-
-        if (config) {
-          setTimeout(() => {
-            if (config.index) {
-              position.current = snapPoints[config.index];
-              bottomSheetModalRef.current?.snapToIndex(
-                config.index,
-                config.animationConfig
-              );
-            } else if (config.position) {
-              position.current = config.position;
-              bottomSheetModalRef.current?.snapToPosition(
-                config.position,
-                config.animationConfig
-              );
-            }
-          }, 100);
-        }
       },
-      dismiss: () => {
-        bottomSheetModalRef.current?.dismiss();
+      close: () => {
+        bottomSheetModalRef.current?.close();
       },
     })
   );
@@ -90,7 +71,7 @@ export const FxBottomSheetModal = React.forwardRef<
     const keyboardWillHideListener = Keyboard.addListener(
       'keyboardWillHide',
       () => {
-        bottomSheetModalRef.current?.snapToPosition(position.current);
+        bottomSheetModalRef.current?.snapToIndex(0);
       }
     );
 
@@ -102,17 +83,19 @@ export const FxBottomSheetModal = React.forwardRef<
   return (
     <BottomSheetModal
       ref={bottomSheetModalRef}
-      snapPoints={snapPoints}
-      index={-1}
+      snapPoints={animatedSnapPoints}
+      handleHeight={animatedHandleHeight}
+      contentHeight={animatedContentHeight}
+      index={0}
       backdropComponent={renderBackdrop}
       topInset={INSET}
       backgroundStyle={{ backgroundColor: theme.colors.backgroundApp }}
-      enableContentPanningGesture={false}
-      enableHandlePanningGesture={false}
-      enablePanDownToClose={true}
-      handleIndicatorStyle={styles.handleIndicator}
+      // handleIndicatorStyle={styles.handleIndicator}
     >
-      <BottomSheetScrollView stickyHeaderIndices={[0]}>
+      <BottomSheetScrollView
+        stickyHeaderIndices={[0]}
+        onLayout={handleContentLayout}
+      >
         <FxBox
           flexDirection="row"
           backgroundColor="backgroundApp"
@@ -133,10 +116,4 @@ export const FxBottomSheetModal = React.forwardRef<
       </BottomSheetScrollView>
     </BottomSheetModal>
   );
-});
-
-const styles = StyleSheet.create({
-  handleIndicator: {
-    display: 'none',
-  },
 });
