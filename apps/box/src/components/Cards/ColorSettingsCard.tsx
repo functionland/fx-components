@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   FxBottomSheetModal,
+  FxBottomSheetModalMethods,
   FxBox,
   FxCard,
   FxError,
@@ -15,7 +16,7 @@ import { StyleSheet } from 'react-native';
 import ColorPicker from 'react-native-wheel-color-picker';
 
 export const ColorSettingsCard = () => {
-  const colorPickerRef = useRef(null);
+  const colorPickerRef = useRef<FxBottomSheetModalMethods>(null);
   const [color, setColor] = useState('#3250EF'.toLowerCase());
   const [colorInput, setColorInput] = useState(color);
   const [colorError, setColorError] = useState('');

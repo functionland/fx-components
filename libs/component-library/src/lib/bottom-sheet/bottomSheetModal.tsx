@@ -22,7 +22,7 @@ type FxBottomSheetModalProps = {
 const snapPoints = ['CONTENT_HEIGHT'];
 const INSET = Dimensions.get('window').height * 0.1;
 
-type FxBottomSheetModalMethods = {
+export type FxBottomSheetModalMethods = {
   present: () => void;
   close: () => void;
 };
@@ -90,7 +90,6 @@ export const FxBottomSheetModal = React.forwardRef<
       backdropComponent={renderBackdrop}
       topInset={INSET}
       backgroundStyle={{ backgroundColor: theme.colors.backgroundApp }}
-      // handleIndicatorStyle={styles.handleIndicator}
     >
       <BottomSheetScrollView
         stickyHeaderIndices={[0]}
