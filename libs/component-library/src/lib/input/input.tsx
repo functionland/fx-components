@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useMemo, useState } from 'react';
 import {
   BoxProps,
@@ -15,7 +16,7 @@ import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
 type FxTextInputProps = TextProps<FxTheme> &
   BoxProps<FxTheme> &
-  TextInputProps & {
+  Omit<TextInputProps, 'placeholderTextColor' | 'selectionColor'> & {
     disabled?: boolean;
     error?: boolean;
     isBottomSheetInput?: boolean;
@@ -36,17 +37,16 @@ const FxTextInput = ({ disabled, error, ...rest }: FxTextInputProps) => {
     else if (isFocused) return 'active';
     return 'default';
   }, [disabled, error, isFocused]);
-  const variantStyles = FxTextInputClasses[variant];
+  const { placeholderTextColor, selectionColor, textAlign, ...variantStyles } =
+    FxTextInputClasses[variant];
   const { onFocus, onBlur, isBottomSheetInput, ...restyleProps } = useRestyle(
     restyleFunctions,
     {
       ...variantStyles,
       ...rest,
-    } as FxTextInputRestyleProps
+    }
   );
   const { colors } = useTheme<FxTheme>();
-  const placeHolderTextColor = colors[variantStyles.placeholderTextColor];
-  const selectionColor = colors[variantStyles.selectionColor];
   const Input = isBottomSheetInput ? BottomSheetTextInput : TextInput;
 
   return (
@@ -60,8 +60,8 @@ const FxTextInput = ({ disabled, error, ...rest }: FxTextInputProps) => {
         if (onBlur) onBlur(e);
       }}
       editable={!disabled}
-      placeholderTextColor={placeHolderTextColor}
-      selectionColor={selectionColor}
+      placeholderTextColor={colors[placeholderTextColor]}
+      selectionColor={colors[selectionColor]}
       blurOnSubmit
       {...restyleProps}
     />
