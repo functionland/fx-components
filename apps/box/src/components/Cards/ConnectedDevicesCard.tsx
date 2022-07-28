@@ -33,7 +33,14 @@ const DeviceCard = ({
   ...rest
 }: DeviceCardProps) => {
   return (
-    <FxCard {...rest} paddingVertical="24">
+    <FxCard
+      {...rest}
+      paddingVertical="24"
+      /**
+       * @todo: Replace console.log() with <DeviceCardBottomSheet />
+       */
+      onPress={() => console.log(`Open ${name} bottom sheet`)}
+    >
       <FxText color="content1" variant="bodyLargeRegular" marginBottom="8">
         {name}
       </FxText>
