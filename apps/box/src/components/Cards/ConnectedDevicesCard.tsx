@@ -7,6 +7,7 @@ import {
   FxButton,
   FxCard,
   FxHorizontalRule,
+  FxLoadingSpinner,
   FxTag,
   FxText,
 } from '@functionland/component-library';
@@ -62,9 +63,14 @@ const DeviceCard = ({
         <FxText color="content1" variant="bodySmallRegular">
           Status
         </FxText>
-        <FxText color="content2" variant="bodySmallLight">
-          {convertPascalToSentence(DeviceStatus[status])}
-        </FxText>
+        <FxBox flexDirection="row" alignItems="center">
+          <FxText color="content2" variant="bodySmallLight">
+            {convertPascalToSentence(DeviceStatus[status])}
+          </FxText>
+          {status === DeviceStatus.BackingUp && (
+            <FxLoadingSpinner marginLeft="4" />
+          )}
+        </FxBox>
       </FxBox>
       <FxHorizontalRule marginVertical="12" />
       <FxButton disabled={status === DeviceStatus.BackingUp}>Eject</FxButton>
