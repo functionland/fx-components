@@ -183,6 +183,9 @@ const fxLightTheme = createTheme({
     disabled: {
       backgroundColor: 'backgroundSecondary',
     },
+    pressed: {
+      backgroundColor: 'greenPressed',
+    },
   },
   zIndices: {
     foreground: 1000,

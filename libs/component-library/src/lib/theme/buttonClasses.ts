@@ -10,14 +10,14 @@ type ButtonClassType = {
 };
 
 export const FxButtonClasses: Record<
-  'default' | 'inverted' | 'disabled',
+  'default' | 'inverted' | 'disabled' | 'pressed',
   ButtonClassType
 > = {
   default: {
     button: { variant: undefined },
     text: {
       variant: 'bodyXSSemibold',
-      color: 'content1',
+      color: 'white',
     },
   },
   inverted: {
@@ -32,6 +32,13 @@ export const FxButtonClasses: Record<
     text: {
       variant: 'bodyXSSemibold',
       color: 'border',
+    },
+  },
+  pressed: {
+    button: { variant: 'pressed' },
+    text: {
+      variant: 'bodyXSSemibold',
+      color: 'white',
     },
   },
 };

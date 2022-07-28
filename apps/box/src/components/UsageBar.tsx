@@ -127,9 +127,7 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
 
 const Divider = () => (
   <FxBox position="absolute" top={-12}>
-    <FxBox style={styles.dividerArrow}>
-      <FxDownArrowIcon color="content1" />
-    </FxBox>
+    <FxDownArrowIcon color="content1" style={styles.dividerArrow} />
     <FxBox
       backgroundColor="white"
       width={1}
