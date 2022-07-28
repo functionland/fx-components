@@ -3,6 +3,7 @@ import { CardHeader } from './CardHeader';
 import {
   convertMegabyteToGigabyte,
   convertPascalToSentence,
+  FxBottomSheetModal,
   FxBox,
   FxButton,
   FxCard,
@@ -12,6 +13,7 @@ import {
   FxText,
 } from '@functionland/component-library';
 import { CardCarousel } from './CardCarousel';
+import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 
 enum DeviceStatus {
   InUse = 0,
@@ -33,14 +35,13 @@ const DeviceCard = ({
   status,
   ...rest
 }: DeviceCardProps) => {
+  const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
   return (
     <FxCard
       {...rest}
       paddingVertical="24"
-      /**
-       * @todo: Replace console.log() with <DeviceCardBottomSheet />
-       */
-      onPress={() => console.log(`Open ${name} bottom sheet`)}
+      onLongPress={() => bottomSheetRef.current?.present()}
+      delayLongPress={200}
     >
       <FxText color="content1" variant="bodyLargeRegular" marginBottom="8">
         {name}
@@ -74,6 +75,16 @@ const DeviceCard = ({
       </FxBox>
       <FxHorizontalRule marginVertical="12" />
       <FxButton disabled={status === DeviceStatus.BackingUp}>Eject</FxButton>
+      <FxBottomSheetModal ref={bottomSheetRef} title="Device Bottom Sheet">
+        <FxBox
+          height={200}
+          justifyContent="center"
+          alignItems="center"
+          padding="20"
+        >
+          <FxText>This bottom sheet needs to be completed</FxText>
+        </FxBox>
+      </FxBottomSheetModal>
     </FxCard>
   );
 };
