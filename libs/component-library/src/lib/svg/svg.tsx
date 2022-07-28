@@ -1,11 +1,57 @@
 import React from 'react';
-import { ColorProps, useTheme } from '@shopify/restyle';
+import {
+  ColorProps,
+  composeRestyleFunctions,
+  spacing,
+  SpacingProps,
+  useRestyle,
+  useTheme,
+} from '@shopify/restyle';
+import Reanimated from 'react-native-reanimated';
 import Svg, { SvgProps } from 'react-native-svg';
 import { FxTheme } from '../theme/theme';
 
-export type FxSvgProps = ColorProps<FxTheme> & Omit<SvgProps, 'color'>;
+const ReanimatedSvg = Reanimated.createAnimatedComponent(Svg);
 
-export const FxSvg = ({ color, fill, ...rest }: FxSvgProps) => {
+export type FxSvgProps = ColorProps<FxTheme> &
+  SpacingProps<FxTheme> &
+  Omit<SvgProps, 'color'>;
+
+const restyleFunctions = composeRestyleFunctions<
+  FxTheme,
+  Omit<
+    FxSvgProps,
+    | 'color'
+    | 'fill'
+    | 'opacity'
+    | 'fontSize'
+    | 'fontStyle'
+    | 'fontWeight'
+    | 'letterSpacing'
+  >
+>([spacing]);
+
+export const FxSvg = ({
+  color,
+  fill,
+  opacity,
+  fontSize,
+  fontStyle,
+  fontWeight,
+  letterSpacing,
+  ...rest
+}: FxSvgProps) => {
   const { colors } = useTheme<FxTheme>();
-  return <Svg fill={color ? colors[color] : fill} {...rest} />;
+  const props = useRestyle(restyleFunctions, rest);
+  return (
+    <ReanimatedSvg
+      fill={color ? colors[color] : fill}
+      opacity={opacity}
+      fontSize={fontSize}
+      fontStyle={fontStyle}
+      fontWeight={fontWeight}
+      letterSpacing={letterSpacing}
+      {...props}
+    />
+  );
 };
