@@ -38,6 +38,7 @@
     "@react-spring/three": "*",
     "@gorhom/bottom-sheet": "*",
     "react-native-wheel-color-picker": "*",
-    "@react-native-community/slider": "*"
+    "@react-native-community/slider": "*",
+    "react-native-reanimated-carousel": "*"
   }
 }
