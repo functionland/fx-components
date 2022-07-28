@@ -5,7 +5,7 @@ import { FxTheme } from '../theme/theme';
 
 const PressableBox = createBox<FxTheme, PressableProps>(Pressable);
 
-export type FxPressableOpacityProps = React.ComponentProps<typeof PressableBox>;
+type FxPressableOpacityProps = React.ComponentProps<typeof PressableBox>;
 
 export const FxPressableOpacity = ({
   style,
