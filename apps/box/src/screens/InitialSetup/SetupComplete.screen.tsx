@@ -10,8 +10,9 @@ export const SetupCompleteScreen = () => {
   const navigation = useInitialSetupNavigation();
   const rootNavigation = useRootNavigation();
   return (
-    <FxBox>
+    <FxBox padding="20">
       <FxButton
+        marginBottom="8"
         onPress={() =>
           rootNavigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })
         }

@@ -105,6 +105,11 @@ const fxLightTheme = createTheme({
       lineHeight: 10,
       textTransform: 'uppercase',
     },
+    bodyXXSRegular: {
+      fontFamily: 'OpenSans-Regular',
+      fontSize: 10,
+      lineHeight: 14,
+    },
     bodyXSLight: {
       fontFamily: 'OpenSans-Light',
       fontSize: 12,
@@ -119,6 +124,11 @@ const fxLightTheme = createTheme({
       fontFamily: 'OpenSans-Semibold',
       fontSize: 12,
       lineHeight: 16,
+    },
+    bodySmallLight: {
+      fontFamily: 'OpenSans-Light',
+      fontSize: 14,
+      lineHeight: 24,
     },
     bodySmallRegular: {
       fontFamily: 'OpenSans-Regular',
@@ -169,6 +179,9 @@ const fxLightTheme = createTheme({
       backgroundColor: undefined,
       borderColor: 'primary',
       borderWidth: 2,
+    },
+    disabled: {
+      backgroundColor: 'backgroundSecondary',
     },
   },
   zIndices: {

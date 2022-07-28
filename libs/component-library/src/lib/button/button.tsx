@@ -35,13 +35,14 @@ const FxButton = ({
   buttonClass = 'default',
   children,
   style,
+  disabled,
   ...rest
 }: FxButtonProps) => {
+  const className = disabled ? 'disabled' : buttonClass;
   return (
     <FxButtonBase
-      {...FxButtonClasses[buttonClass].button}
+      {...FxButtonClasses[className].button}
       paddingVertical="12"
-      margin="8"
       alignItems="center"
       borderRadius="s"
       style={(args) => [
@@ -50,9 +51,10 @@ const FxButton = ({
           opacity: 0.5,
         },
       ]}
+      disabled={disabled}
       {...rest}
     >
-      <FxText {...FxButtonClasses[buttonClass].text}>{children}</FxText>
+      <FxText {...FxButtonClasses[className].text}>{children}</FxText>
     </FxButtonBase>
   );
 };
