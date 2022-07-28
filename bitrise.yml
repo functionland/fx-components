@@ -1,98 +1,125 @@
 ---
 format_version: '11'
-default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+default_step_lib_source: 'https://github.com/bitrise-io/bitrise-steplib.git'
 project_type: react-native
 workflows:
   android:
-    description: |
+    description: >
       Installs dependencies.
 
-      Next steps:
-      - Add tests to your project and configure the workflow to run them.
-      - Check out [Getting started with Expo apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-expo-apps.html).
-    steps:
-    - activate-ssh-key@4: {}
-    - git-clone@6: {}
-    - yarn@0:
-        inputs:
-        - command: install
-    - npm@1:
-        inputs:
-        - command: run ensure:symlink
-        title: Ensure Symlink
-    - script@1:
-        inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            # fail if any commands fails
-            #set -e
-            # make pipelines' return status equal the last command to exit with a non-zero status, or zero if all commands exit #successfully
-            #set -o pipefail
-            # debug log
-            set -x
 
-            # write your script here
-            sdkmanager --install "cmake;3.10.2.4988404"
-            yes | sdkmanager --licenses
-        title: Install CMake
-    - android-build@1:
-        inputs:
-        - variant: release
-        - module: app
-        - project_location: "$BITRISE_SOURCE_DIR/apps/box/android"
+      Next steps:
+
+      - Add tests to your project and configure the workflow to run them.
+
+      - Check out [Getting started with Expo
+      apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-expo-apps.html).
+    steps:
+      - activate-ssh-key@4: {}
+      - git-clone@6: {}
+      - yarn@0:
+          inputs:
+            - command: install
+      - npm@1:
+          inputs:
+            - command: 'run ensure:symlink'
+          title: Ensure Symlink
+      - script@1:
+          inputs:
+            - content: >-
+                #!/usr/bin/env bash
+
+                # fail if any commands fails
+
+                #set -e
+
+                # make pipelines' return status equal the last command to exit with
+                a non-zero status, or zero if all commands exit #successfully
+
+                #set -o pipefail
+
+                # debug log
+
+                set -x
+
+
+                # write your script here
+
+                sdkmanager --install "cmake;3.10.2.4988404"
+
+                yes | sdkmanager --licenses
+          title: Install CMake
+      - android-build@1:
+          inputs:
+            - variant: release
+            - module: app
+            - project_location: $BITRISE_SOURCE_DIR/apps/box/android
+      - deploy-to-bitrise-io@2: {}
   deploy:
-    description: |
+    description: >
       Runs a build on Expo Application Services (EAS).
 
-      Next steps:
-      - Configure the `Run Expo Application Services (EAS) build` Step's `Access Token` input.
-      - Check out [Getting started with Expo apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-expo-apps.html).
-      - For an alternative deploy workflow checkout the [(React Native) Expo: Build using Turtle CLI recipe](https://github.com/bitrise-io/workflow-recipes/blob/main/recipes/rn-expo-turtle-build.md).
-    steps:
-    - activate-ssh-key@4: {}
-    - git-clone@6: {}
-    - yarn@0:
-        inputs:
-        - workdir: "/"
-        - command: install
-    - run-eas-build@0:
-        inputs:
-        - platform: "$PLATFORM"
-        - work_dir: apps/box
-    - deploy-to-bitrise-io@2: {}
-  ios:
-    description: |
-      Installs dependencies.
 
       Next steps:
-      - Add tests to your project and configure the workflow to run them.
-      - Check out [Getting started with Expo apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-expo-apps.html).
+
+      - Configure the `Run Expo Application Services (EAS) build` Step's `Access
+      Token` input.
+
+      - Check out [Getting started with Expo
+      apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-expo-apps.html).
+
+      - For an alternative deploy workflow checkout the [(React Native) Expo:
+      Build using Turtle CLI
+      recipe](https://github.com/bitrise-io/workflow-recipes/blob/main/recipes/rn-expo-turtle-build.md).
     steps:
-    - activate-ssh-key@4: {}
-    - git-clone@6: {}
-    - yarn@0:
-        inputs:
-        - command: install
-    - npm@1:
-        inputs:
-        - command: run ensure:symlink
-        title: Ensure Symlink
-    - cocoapods-install@2:
-        inputs:
-        - podfile_path: "$BITRISE_SOURCE_DIR/apps/box/ios/Podfile"
-        - source_root_path: "$BITRISE_SOURCE_DIR/apps/box/ios/"
-    - xcode-archive@4:
-        inputs:
-        - certificate_url_list: ''
-        - scheme: Box
-        - project_path: "$BITRISE_SOURCE_DIR/apps/box/ios/Box.xcworkspace"
-        - distribution_method: ad-hoc
+      - activate-ssh-key@4: {}
+      - git-clone@6: {}
+      - yarn@0:
+          inputs:
+            - workdir: /
+            - command: install
+      - run-eas-build@0:
+          inputs:
+            - platform: $PLATFORM
+            - work_dir: apps/box
+      - deploy-to-bitrise-io@2: {}
+  ios:
+    description: >
+      Installs dependencies.
+
+
+      Next steps:
+
+      - Add tests to your project and configure the workflow to run them.
+
+      - Check out [Getting started with Expo
+      apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-expo-apps.html).
+    steps:
+      - activate-ssh-key@4: {}
+      - git-clone@6: {}
+      - yarn@0:
+          inputs:
+            - command: install
+      - npm@1:
+          inputs:
+            - command: 'run ensure:symlink'
+          title: Ensure Symlink
+      - cocoapods-install@2:
+          inputs:
+            - podfile_path: $BITRISE_SOURCE_DIR/apps/box/ios/Podfile
+            - source_root_path: $BITRISE_SOURCE_DIR/apps/box/ios/
+      - xcode-archive@4:
+          inputs:
+            - certificate_url_list: ''
+            - scheme: Box
+            - project_path: $BITRISE_SOURCE_DIR/apps/box/ios/Box.xcworkspace
+            - distribution_method: ad-hoc
 meta:
   bitrise.io:
     stack: osx-xcode-13.2.x
     machine_type_id: g2.4core
 app:
   envs:
-  - opts:
-      is_expand: false
-    PLATFORM: android
+    - opts:
+        is_expand: false
+      PLATFORM: android
