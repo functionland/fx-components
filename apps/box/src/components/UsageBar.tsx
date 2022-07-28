@@ -120,7 +120,7 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
           borderBottomRightRadius="s"
         />
       </FxBox>
-      <FxReText text={poolPercentText} marginBottom="24" />
+      <FxReText text={poolPercentText} />
     </>
   );
 };
