@@ -23,8 +23,10 @@ export const WalletConnectScreen = () => {
   };
 
   return (
-    <FxBox flex={1}>
-      <FxButton onPress={handleConnectWallet}>{walletAction}</FxButton>
+    <FxBox flex={1} padding="20">
+      <FxButton marginBottom="8" onPress={handleConnectWallet}>
+        {walletAction}
+      </FxButton>
       <FxButton onPress={() => navigation.navigate('Setup Complete')}>
         Nav to Complete
       </FxButton>

@@ -15,8 +15,8 @@ import { FxCloseIcon } from '../icons/icons';
 import { FxPressableOpacity } from '../pressable-opacity/pressableOpacity';
 
 type FxBottomSheetModalProps = {
-  title: string;
-  children: React.ReactElement;
+  title?: string;
+  children?: React.ReactElement;
 };
 
 const snapPoints = ['CONTENT_HEIGHT'];

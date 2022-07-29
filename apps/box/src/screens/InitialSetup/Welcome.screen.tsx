@@ -62,14 +62,16 @@ export const WelcomeScreen = () => {
         Box Setup Up
       </FxText>
       <Blox />
-      <FxBox>
+      <FxBox padding="20">
         <FxButton
+          marginBottom="8"
           testID="app-name"
           onPress={() => navigation.navigate('Wallet Connect')}
         >
           Setup Wallet
         </FxButton>
         <FxButton
+          marginBottom="8"
           testID="app-name"
           onPress={onConnectToBox}
           disabled={!hasCheckedLocationPermission}
