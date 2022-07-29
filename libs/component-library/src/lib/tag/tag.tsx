@@ -28,7 +28,7 @@ const FxTag = (props: FxTagProps) => {
       paddingHorizontal="8"
       {...rest}
     >
-      <FxText color="content1" variant="bodyXXSRegular" lineHeight={0}>
+      <FxText color="content1" variant="bodyXXSRegular">
         {children}
       </FxText>
     </FxBox>

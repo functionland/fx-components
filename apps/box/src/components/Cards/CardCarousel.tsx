@@ -1,10 +1,12 @@
-import { FxBox } from '@functionland/component-library';
+import {
+  APP_HORIZONTAL_PADDING,
+  FxBox,
+  WINDOW_WIDTH,
+} from '@functionland/component-library';
 import React from 'react';
-import { Dimensions } from 'react-native';
 import Carousel, { TCarouselProps } from 'react-native-reanimated-carousel';
 
 const SCALE = 0.85;
-const HORIZONTAL_PADDING = 20;
 const CARD_SPACING = 16;
 
 type CardCarouselProps = Omit<
@@ -19,27 +21,26 @@ export const CardCarousel = ({
   height,
   ...rest
 }: CardCarouselProps) => {
-  const windowWidth = Dimensions.get('window').width;
   return (
     <FxBox
       style={{
-        marginLeft: -HORIZONTAL_PADDING,
-        width: windowWidth + HORIZONTAL_PADDING,
+        marginLeft: -APP_HORIZONTAL_PADDING,
+        width: WINDOW_WIDTH + APP_HORIZONTAL_PADDING,
       }}
     >
       <Carousel
         loop={false}
-        width={(windowWidth - CARD_SPACING) * SCALE}
+        width={(WINDOW_WIDTH - CARD_SPACING) * SCALE}
         height={height}
         style={{
-          width: windowWidth,
+          width: WINDOW_WIDTH,
         }}
         renderItem={({ item }) => (
           <Elem
             {...item}
             style={{
-              marginLeft: HORIZONTAL_PADDING,
-              marginRight: CARD_SPACING - HORIZONTAL_PADDING,
+              marginLeft: APP_HORIZONTAL_PADDING,
+              marginRight: CARD_SPACING - APP_HORIZONTAL_PADDING,
               height,
             }}
           />
