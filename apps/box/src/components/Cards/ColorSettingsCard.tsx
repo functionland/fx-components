@@ -32,9 +32,9 @@ export const ColorSettingsCard = () => {
   }, [color]);
 
   const onColorTextInputChange = (value: string) => {
-    setColorInput(value.toLowerCase());
+    setColorInput(value);
     if (/^#[0-9A-F]{6}$/i.test(value)) {
-      setColor(value.toLowerCase());
+      setColor(value);
       setColorError('');
     } else {
       setColorError('Invalid Hex Color');
@@ -62,7 +62,7 @@ export const ColorSettingsCard = () => {
                 key={dotColor}
                 color={dotColor}
                 isSelected={color === dotColor.toLowerCase()}
-                onPress={() => setColor(dotColor)}
+                onPress={() => setColor(dotColor.toLowerCase())}
               />
             ))}
           </FxBox>
