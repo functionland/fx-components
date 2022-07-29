@@ -48,7 +48,7 @@ const DeviceCard = ({
       </FxText>
       <FxBox flexDirection="row" marginBottom="16">
         {associatedDevices.map((deviceName) => (
-          <FxTag key={deviceName} marginRight="8">
+          <FxTag key={`${name}-${deviceName}`} marginRight="8">
             {deviceName}
           </FxTag>
         ))}
