@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dimensions, Keyboard } from 'react-native';
+import { Dimensions } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -20,7 +20,7 @@ type FxBottomSheetModalProps = {
 };
 
 const snapPoints = ['CONTENT_HEIGHT'];
-const INSET = Dimensions.get('window').height * 0.1;
+const INSET = Dimensions.get('window').height * 0.05;
 
 export type FxBottomSheetModalMethods = {
   present: () => void;
@@ -67,25 +67,13 @@ export const FxBottomSheetModal = React.forwardRef<
     })
   );
 
-  React.useEffect(() => {
-    const keyboardWillHideListener = Keyboard.addListener(
-      'keyboardWillHide',
-      () => {
-        bottomSheetModalRef.current?.snapToIndex(0);
-      }
-    );
-
-    return () => {
-      keyboardWillHideListener.remove();
-    };
-  }, []);
-
   return (
     <BottomSheetModal
       ref={bottomSheetModalRef}
       snapPoints={animatedSnapPoints}
       handleHeight={animatedHandleHeight}
       contentHeight={animatedContentHeight}
+      keyboardBlurBehavior="restore"
       index={0}
       backdropComponent={renderBackdrop}
       topInset={INSET}
