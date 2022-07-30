@@ -1,4 +1,5 @@
 import { BoxProps, TextProps } from '@shopify/restyle';
+import { Platform } from 'react-native';
 import { FxTheme } from './theme';
 
 type TextInputClassType = BoxProps<FxTheme> &
@@ -14,8 +15,8 @@ const defaultProps: TextInputClassType = {
   borderWidth: 1,
   color: 'content1',
   height: 52,
-  justifyContent: 'center',
-  lineHeight: 0,
+  lineHeight: Platform.OS === 'ios' ? 0 : undefined,
+  paddingVertical: '0',
   paddingHorizontal: '20',
   placeholderTextColor: 'content3',
   selectionColor: 'secondary',
