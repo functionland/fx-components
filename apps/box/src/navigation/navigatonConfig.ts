@@ -7,7 +7,7 @@ export type RootStackParamList = {
 
 export type MainTabsParamList = {
   Box: undefined;
-  Wallet: undefined;
+  Rewards: undefined;
   Settings: undefined;
   User: undefined;
   Pool: undefined;

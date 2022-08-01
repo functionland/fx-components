@@ -4,7 +4,6 @@ import { useTheme } from '@shopify/restyle';
 import { FxTheme } from '@functionland/component-library';
 import { BoxScreen } from '../screens/Box.screen';
 import { MainTabsParamList } from './navigatonConfig';
-import { WalletScreen } from '../screens/Wallet.screen';
 import { SettingsScreen } from '../screens/Settings.screen';
 import { PoolScreen } from '../screens/Pool.screen';
 import { UserScreen } from '../screens/User.screen';
@@ -15,6 +14,7 @@ import {
   UserIcon,
   WalletIcon,
 } from '../components';
+import { RewardsScreen } from '../screens/Rewards.screen';
 
 export const MainTabsNavigator = () => {
   const theme = useTheme<FxTheme>();
@@ -37,8 +37,8 @@ export const MainTabsNavigator = () => {
         }}
       />
       <MainTabs.Screen
-        name="Wallet"
-        component={WalletScreen}
+        name="Rewards"
+        component={RewardsScreen}
         options={{
           // eslint-disable-next-line react/no-unstable-nested-components
           tabBarIcon: ({ color }) => <WalletIcon fill={color} />,
