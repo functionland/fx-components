@@ -85,6 +85,7 @@ workflows:
             - certificate_url_list: ''
             - scheme: Box
             - project_path: $BITRISE_SOURCE_DIR/apps/box/ios/Box.xcworkspace
+            - configuration: Release
             - distribution_method: ad-hoc
 meta:
   bitrise.io:
