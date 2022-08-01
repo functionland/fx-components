@@ -3,7 +3,7 @@ format_version: '11'
 default_step_lib_source: 'https://github.com/bitrise-io/bitrise-steplib.git'
 project_type: react-native
 workflows:
-  android:
+  FxBlox Android:
     description: >
       Installs dependencies.
 
@@ -55,7 +55,7 @@ workflows:
             - module: app
             - project_location: $BITRISE_SOURCE_DIR/apps/box/android
       - deploy-to-bitrise-io@2: {}
-  ios:
+  FxBlox iOS:
     description: >
       Installs dependencies.
 
