@@ -20,19 +20,19 @@ export const App = () => {
 
   return (
     <ThemeProvider theme={isDarkTheme ? fxDarkTheme : fxLightTheme}>
-      <BottomSheetModalProvider>
-        <WalletConnectProvider
-          redirectUrl={'yourappscheme://'}
-          storageOptions={{
-            // @ts-ignore
-            asyncStorage: AsyncStorage,
-          }}
-        >
-          <GestureHandlerRootView style={styles.flex1}>
+      <WalletConnectProvider
+        redirectUrl={'yourappscheme://'}
+        storageOptions={{
+          // @ts-ignore
+          asyncStorage: AsyncStorage,
+        }}
+      >
+        <GestureHandlerRootView style={styles.flex1}>
+          <BottomSheetModalProvider>
             <AppContent />
-          </GestureHandlerRootView>
-        </WalletConnectProvider>
-      </BottomSheetModalProvider>
+          </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+      </WalletConnectProvider>
     </ThemeProvider>
   );
 };
