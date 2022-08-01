@@ -77,6 +77,7 @@ const fxLightTheme = createTheme({
     white: palette.white,
   },
   spacing: {
+    '0': 0,
     '4': 4,
     '8': 8,
     '12': 12,

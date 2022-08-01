@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   FxBottomSheetModal,
   FxBottomSheetModalMethods,
@@ -21,6 +21,10 @@ export const ColorSettingsCard = () => {
   const [colorInput, setColorInput] = useState(color);
   const [colorError, setColorError] = useState('');
   const [brightness, setBrightness] = useState(5);
+  const isCustomSelected = useMemo(
+    () => !colorDots.flat().find((c) => c.toLowerCase() === color),
+    [color]
+  );
 
   useEffect(() => {
     if (color !== colorInput) onColorTextInputChange(color);
@@ -28,9 +32,9 @@ export const ColorSettingsCard = () => {
   }, [color]);
 
   const onColorTextInputChange = (value: string) => {
-    setColorInput(value.toLowerCase());
+    setColorInput(value);
     if (/^#[0-9A-F]{6}$/i.test(value)) {
-      setColor(value.toLowerCase());
+      setColor(value);
       setColorError('');
     } else {
       setColorError('Invalid Hex Color');
@@ -54,16 +58,12 @@ export const ColorSettingsCard = () => {
             justifyContent="space-between"
           >
             {row.map((dotColor) => (
-              <FxPressableOpacity
+              <ColorDot
                 key={dotColor}
-                width={24}
-                height={24}
-                justifyContent="center"
-                alignItems="center"
-                onPress={() => setColor(dotColor)}
-              >
-                <ColorDot color={dotColor} />
-              </FxPressableOpacity>
+                color={dotColor}
+                isSelected={color === dotColor.toLowerCase()}
+                onPress={() => setColor(dotColor.toLowerCase())}
+              />
             ))}
           </FxBox>
         ))}
@@ -76,11 +76,11 @@ export const ColorSettingsCard = () => {
             Custom color
           </FxText>
           <FxBox flexDirection="row" alignItems="center">
-            <ColorDot color={color} />
+            <ColorDot color={color} disabled isSelected={isCustomSelected} />
             <FxText
               variant="bodySmallRegular"
               color="content3"
-              marginLeft="8"
+              marginLeft={isCustomSelected ? '8' : '0'}
               lineHeight={18}
             >
               {color}
@@ -115,7 +115,7 @@ export const ColorSettingsCard = () => {
             <FxError error={colorError} />
           </FxBox>
         </FxBottomSheetModal>
-        <FxHorizontalRule marginVertical="16" />
+        <FxHorizontalRule marginTop="4" marginBottom="16" />
         <FxBox
           flexDirection="row"
           justifyContent="space-between"
@@ -163,16 +163,28 @@ const colorDots = [
   ],
 ];
 
-type ColorDotProps = {
+type ColorDotProps = React.ComponentProps<typeof FxPressableOpacity> & {
   color: string;
+  isSelected: boolean;
 };
 
-const ColorDot = ({ color }: ColorDotProps) => (
-  <FxBox
-    width={12}
-    height={12}
-    style={{ backgroundColor: color, ...styles.colorDot }}
-  />
+const ColorDot = ({ color, isSelected, ...rest }: ColorDotProps) => (
+  <FxPressableOpacity
+    width={24}
+    height={24}
+    justifyContent="center"
+    alignItems="center"
+    borderColor="border"
+    borderRadius="s"
+    borderWidth={isSelected ? 1 : 0}
+    {...rest}
+  >
+    <FxBox
+      width={12}
+      height={12}
+      style={{ backgroundColor: color, ...styles.colorDot }}
+    />
+  </FxPressableOpacity>
 );
 
 const styles = StyleSheet.create({
