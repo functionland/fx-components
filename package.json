@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "ios": "nx run-ios",
+    "android": "nx run-android",
     "start": "nx serve",
     "build": "nx build",
     "test": "nx run-many --all --skip-nx-cache --target=test",
