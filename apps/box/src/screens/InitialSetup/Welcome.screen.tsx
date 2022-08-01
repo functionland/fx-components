@@ -8,11 +8,15 @@ import {
 } from 'react-native';
 import { isEmulatorSync } from 'react-native-device-info';
 import { useIsConnectedToBox } from '../../hooks/useIsConnectedToBox';
-import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
-import { Blox } from '../../components/Blox';
+import {
+  useInitialSetupNavigation,
+  useRootNavigation,
+} from '../../hooks/useTypedNavigation';
+import { Blox } from '../../components';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
+  const rootNavigation = useRootNavigation();
   const isAndroid = Platform.OS === 'android';
   const [hasLocationPermission, setHasLocationPermission] = useState(
     !isAndroid
@@ -58,19 +62,28 @@ export const WelcomeScreen = () => {
         Box Setup Up
       </FxText>
       <Blox />
-      <FxBox>
+      <FxBox padding="20">
         <FxButton
+          marginBottom="8"
           testID="app-name"
           onPress={() => navigation.navigate('Wallet Connect')}
         >
           Setup Wallet
         </FxButton>
         <FxButton
+          marginBottom="8"
           testID="app-name"
           onPress={onConnectToBox}
           disabled={!hasCheckedLocationPermission}
         >
           Connect To Box
+        </FxButton>
+        <FxButton
+          onPress={() =>
+            rootNavigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })
+          }
+        >
+          Setup Complete
         </FxButton>
       </FxBox>
     </SafeAreaView>

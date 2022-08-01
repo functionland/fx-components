@@ -1,7 +1,3 @@
-/**
- * Example Button Component to demonstrate component library
- */
-
 import React from 'react';
 import {
   createBox,
@@ -34,25 +30,31 @@ type FxButtonProps = Omit<
 const FxButton = ({
   buttonClass = 'default',
   children,
-  style,
+  disabled,
+  onPressIn,
+  onPressOut,
   ...rest
 }: FxButtonProps) => {
+  const [isPressed, setIsPressed] = React.useState(false);
+  const className = disabled ? 'disabled' : isPressed ? 'pressed' : buttonClass;
   return (
     <FxButtonBase
-      {...FxButtonClasses[buttonClass].button}
+      {...FxButtonClasses[className].button}
       paddingVertical="12"
-      margin="8"
       alignItems="center"
       borderRadius="s"
-      style={(args) => [
-        typeof style === 'function' ? style(args) : style,
-        args.pressed && {
-          opacity: 0.5,
-        },
-      ]}
+      disabled={disabled}
+      onPressIn={(e) => {
+        setIsPressed(true);
+        if (onPressIn) onPressIn(e);
+      }}
+      onPressOut={(e) => {
+        setIsPressed(false);
+        if (onPressOut) onPressOut(e);
+      }}
       {...rest}
     >
-      <FxText {...FxButtonClasses[buttonClass].text}>{children}</FxText>
+      <FxText {...FxButtonClasses[className].text}>{children}</FxText>
     </FxButtonBase>
   );
 };

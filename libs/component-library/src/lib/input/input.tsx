@@ -1,25 +1,71 @@
-import React from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useMemo, useState } from 'react';
 import {
-  composeRestyleFunctions,
-  useRestyle,
-  textRestyleFunctions,
-  boxRestyleFunctions,
-  TextProps,
   BoxProps,
+  boxRestyleFunctions,
+  composeRestyleFunctions,
+  TextProps,
+  textRestyleFunctions,
+  useRestyle,
+  useTheme,
 } from '@shopify/restyle';
-import { TextInput, TextInputProps } from 'react-native';
 import { FxTheme } from '../theme/theme';
+import { FxTextInputClasses } from '../theme/inputClasses';
+import { TextInput, TextInputProps } from 'react-native';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
-type FxTextInputProps = TextProps<FxTheme> & BoxProps<FxTheme> & TextInputProps;
+type FxTextInputProps = TextProps<FxTheme> &
+  BoxProps<FxTheme> &
+  Omit<TextInputProps, 'placeholderTextColor' | 'selectionColor'> & {
+    disabled?: boolean;
+    error?: boolean;
+    isBottomSheetInput?: boolean;
+  };
 
-const restyleFunctions = composeRestyleFunctions<FxTheme, FxTextInputProps>([
-  ...textRestyleFunctions,
-  ...boxRestyleFunctions,
-]);
+type FxTextInputRestyleProps = Omit<FxTextInputProps, 'disabled' | 'error'>;
 
-const FxTextInput = ({ ...rest }: FxTextInputProps) => {
-  const props = useRestyle(restyleFunctions, rest);
-  return <TextInput {...props} />;
+const restyleFunctions = composeRestyleFunctions<
+  FxTheme,
+  FxTextInputRestyleProps
+>([...textRestyleFunctions, ...boxRestyleFunctions]);
+
+const FxTextInput = ({ disabled, error, ...rest }: FxTextInputProps) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const variant = useMemo(() => {
+    if (disabled) return 'disabled';
+    else if (error) return 'error';
+    else if (isFocused) return 'active';
+    return 'default';
+  }, [disabled, error, isFocused]);
+  const { placeholderTextColor, selectionColor, textAlign, ...variantStyles } =
+    FxTextInputClasses[variant];
+  const { onFocus, onBlur, isBottomSheetInput, ...restyleProps } = useRestyle(
+    restyleFunctions,
+    {
+      ...variantStyles,
+      ...rest,
+    }
+  );
+  const { colors } = useTheme<FxTheme>();
+  const Input = isBottomSheetInput ? BottomSheetTextInput : TextInput;
+
+  return (
+    <Input
+      onFocus={(e) => {
+        setIsFocused(true);
+        if (onFocus) onFocus(e);
+      }}
+      onBlur={(e) => {
+        setIsFocused(false);
+        if (onBlur) onBlur(e);
+      }}
+      editable={!disabled}
+      placeholderTextColor={colors[placeholderTextColor]}
+      selectionColor={colors[selectionColor]}
+      blurOnSubmit
+      {...restyleProps}
+    />
+  );
 };
 
 export { FxTextInput };

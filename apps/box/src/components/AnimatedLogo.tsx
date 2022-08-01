@@ -1,6 +1,6 @@
-import { FxBox } from '@functionland/component-library';
+import { FxBox, FxReanimatedBox } from '@functionland/component-library';
 import React from 'react';
-import Reanimated, {
+import {
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
@@ -16,7 +16,6 @@ import { clamp, withBouncing } from 'react-native-redash';
 /**
  * This is an example component of how to utilize react-native-gesture-handler with react-native-reanimated
  */
-const ReanimatedBox = Reanimated.createAnimatedComponent(FxBox);
 
 type Bounds = {
   low: number;
@@ -134,9 +133,9 @@ export const AnimatedLogo = () => {
       }}
     >
       <PanGestureHandler onGestureEvent={onGestureEvent}>
-        <ReanimatedBox style={panStyle}>
-          <Logo />
-        </ReanimatedBox>
+        <FxReanimatedBox style={panStyle}>
+          <Logo color="greenBase" />
+        </FxReanimatedBox>
       </PanGestureHandler>
     </FxBox>
   );

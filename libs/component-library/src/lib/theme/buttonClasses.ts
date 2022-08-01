@@ -9,20 +9,36 @@ type ButtonClassType = {
     Pick<TextProps<FxTheme>, 'color'>;
 };
 
-export const FxButtonClasses: Record<'default' | 'inverted', ButtonClassType> =
-  {
-    default: {
-      button: { variant: undefined },
-      text: {
-        variant: 'bodyXSSemibold',
-        color: 'content1',
-      },
+export const FxButtonClasses: Record<
+  'default' | 'inverted' | 'disabled' | 'pressed',
+  ButtonClassType
+> = {
+  default: {
+    button: { variant: undefined },
+    text: {
+      variant: 'bodyXSSemibold',
+      color: 'white',
     },
-    inverted: {
-      button: { variant: 'inverted' },
-      text: {
-        variant: 'bodyXSSemibold',
-        color: 'greenBase',
-      },
+  },
+  inverted: {
+    button: { variant: 'inverted' },
+    text: {
+      variant: 'bodyXSSemibold',
+      color: 'greenBase',
     },
-  };
+  },
+  disabled: {
+    button: { variant: 'disabled' },
+    text: {
+      variant: 'bodyXSSemibold',
+      color: 'border',
+    },
+  },
+  pressed: {
+    button: { variant: 'pressed' },
+    text: {
+      variant: 'bodyXSSemibold',
+      color: 'white',
+    },
+  },
+};

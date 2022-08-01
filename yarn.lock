@@ -2503,6 +2503,23 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.3.tgz#555193ab2e3bb3b6adc3d551c9c030d9e860daf6"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
+"@gorhom/bottom-sheet@^4":
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/@gorhom/bottom-sheet/-/bottom-sheet-4.4.2.tgz#16e4a1271574c13c0b6ab970256767262c1cd35f"
+  integrity sha512-KpHWP/DYMGk3T+i6NshrPWpe9M/WzBlNk34Hadvw9+7MZPOkKJVDYcmuSfUzCG2kRNaPnGGbJJFO8dhwtOYbig==
+  dependencies:
+    "@gorhom/portal" "1.0.13"
+    invariant "^2.2.4"
+    nanoid "^3.3.3"
+    react-native-redash "^16.1.1"
+
+"@gorhom/portal@1.0.13":
+  version "1.0.13"
+  resolved "https://registry.yarnpkg.com/@gorhom/portal/-/portal-1.0.13.tgz#da3af4d427e1fa68d264107de4b3072a4adf35ce"
+  integrity sha512-ViClKPkyGnj8HVMW45OGQSnGbWBVh8i3tgMOkGqpm6Cv0WVcDfUL7SER6zyGQy8Wdoj3GUDpAJFMqVOxpmRpzw==
+  dependencies:
+    nanoid "^3.3.1"
+
 "@graphql-typed-document-node/core@^3.1.0", "@graphql-typed-document-node/core@^3.1.1":
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@graphql-typed-document-node/core/-/core-3.1.1.tgz#076d78ce99822258cf813ecc1e7fa460fa74d052"
@@ -3539,6 +3556,11 @@
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@react-native-community/eslint-plugin/-/eslint-plugin-1.2.0.tgz#7d6d789ae8edf73dc9bed1246cd48277edea8066"
   integrity sha512-o6aam+0Ug1xGK3ABYmBm0B1YuEKfM/5kaoZO0eHbZwSpw9UzDX4G5y4Nx/K20FHqUmJHkZmLvOUFYwN4N+HqKA==
+
+"@react-native-community/slider@^4.2.4":
+  version "4.2.4"
+  resolved "https://registry.yarnpkg.com/@react-native-community/slider/-/slider-4.2.4.tgz#8d88adceeb32f7997a122feba48d7186fca80346"
+  integrity sha512-uY51UoipQW4ELnFWMU6rTHRc4EUYaW+Z1O9Teijej6NYVYdUcUKq+t7WeBGjMAEc1ipyooMeBqRXToWO5zAU2Q==
 
 "@react-native-picker/picker@^2.4.2":
   version "2.4.2"
@@ -11850,7 +11872,7 @@ nan@^2.14.0:
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.15.0.tgz#3f34a473ff18e15c1b5626b62903b5ad6e665fee"
   integrity sha512-8ZtvEnA2c5aYCZYd1cvgdnU6cqwixRoYg70xPLWUws5ORTa/lnw+u4amixRS/Ac5U5mQVgp9pnlSUnbNWFaWZQ==
 
-nanoid@^3.1.23, nanoid@^3.3.4:
+nanoid@^3.1.23, nanoid@^3.3.1, nanoid@^3.3.3, nanoid@^3.3.4:
   version "3.3.4"
   resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.4.tgz#730b67e3cd09e2deacf03c027c81c9d9dbc5e8ab"
   integrity sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==
@@ -13416,6 +13438,11 @@ react-native-device-info@^9.0.2:
   resolved "https://registry.yarnpkg.com/react-native-device-info/-/react-native-device-info-9.0.2.tgz#00c7ab139a620ac9650852cd0ef0fb69d9a4418d"
   integrity sha512-+IfYZ/OuKjnFf7SFfgIzEqynSeFngrIHc5KgHUIfXusLDXIFJ+LhRBCD7skqnraHrfmESUOMjLbNcvy4SVdwSA==
 
+react-native-elevation@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/react-native-elevation/-/react-native-elevation-1.0.0.tgz#2a091c688290ac9b08b5842d1a8e8a00fc84233e"
+  integrity sha512-BWIKcEYtzjRV6GpkX0Km5/w2E7fgIcywiQOT7JZTc5NSbv/YI9kpFinB9lRFsOoRVGmiqq/O3VfP/oH2clIiBA==
+
 react-native-gesture-handler@^2.5.0:
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.5.0.tgz#61385583570ed0a45a9ed142425e35f8fe8274fb"
@@ -13461,6 +13488,11 @@ react-native-randombytes@^3.5.1, react-native-randombytes@^3.6.1:
     buffer "^4.9.1"
     sjcl "^1.0.3"
 
+react-native-reanimated-carousel@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/react-native-reanimated-carousel/-/react-native-reanimated-carousel-3.0.3.tgz#b19b3909fa2ed7c35716fd7f1d2f4aff91345db3"
+  integrity sha512-KdidXIBNQb4F/JmXn4tV+2yr/6BhYUQCii0QwBtv64QYiYiBIn+3K8yKJpLTOoy7e3dB3HFKD69VwCCw8ujd2w==
+
 react-native-reanimated@^3.0.0-rc.0:
   version "3.0.0-rc.0"
   resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-3.0.0-rc.0.tgz#05edcb2d9ca99c50d6e0ce378b74a5a0661bba93"
@@ -13474,7 +13506,7 @@ react-native-reanimated@^3.0.0-rc.0:
     setimmediate "^1.0.5"
     string-hash-64 "^1.0.3"
 
-react-native-redash@^17.0.0:
+react-native-redash@^16.1.1, react-native-redash@^17.0.0:
   version "17.0.0"
   resolved "https://registry.yarnpkg.com/react-native-redash/-/react-native-redash-17.0.0.tgz#51ad4195c0f3de27307334ee94de51e36a63a309"
   integrity sha512-nkBHo+j+KQvvZICqFGdNiRCOiixZdtvbT33OjmBKcdD0icSedIar7JMkSzsb6lbHuRobeysiuk3RwyDz4+OmTA==
@@ -13512,6 +13544,13 @@ react-native-svg@12.3.0, react-native-svg@9.6.4:
   dependencies:
     css-select "^4.2.1"
     css-tree "^1.0.0-alpha.39"
+
+react-native-wheel-color-picker@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/react-native-wheel-color-picker/-/react-native-wheel-color-picker-1.2.0.tgz#56ba38fc57411edececb0fb6a8f049e91160b015"
+  integrity sha512-j4IcN7so9dZAkXyrPTTaPqCKsjkGBZkd5F7HqLo0OTRB1EZX3Ww5VMKsKjloxv6Omv193wGOhwfG20ec2KnxJQ==
+  dependencies:
+    react-native-elevation "^1.0.0"
 
 react-native-wifi-reborn@^4.6.0:
   version "4.6.0"

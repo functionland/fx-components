@@ -35,6 +35,10 @@
     "three": "*",
     "@visx/scale": "*",
     "@shopify/react-native-skia": "*",
-    "@react-spring/three": "*"
+    "@react-spring/three": "*",
+    "@gorhom/bottom-sheet": "*",
+    "react-native-wheel-color-picker": "*",
+    "@react-native-community/slider": "*",
+    "react-native-reanimated-carousel": "*"
   }
 }
