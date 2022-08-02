@@ -1,10 +1,9 @@
-import { FxText } from '@functionland/component-library';
+import { FxText, FxTextProps } from '@functionland/component-library';
 import React from 'react';
-import { TextProps } from 'react-native';
 
-export const HeaderText = (props: TextProps) => (
+export const HeaderText = (props: FxTextProps) => (
   <FxText variant="h400" color="content1" {...props} />
 );
-export const SubHeaderText = (props: TextProps) => (
+export const SubHeaderText = (props: FxTextProps) => (
   <FxText variant="h200" color="content1" {...props} />
 );
