@@ -7,6 +7,7 @@
     "build": "nx build",
     "test": "nx run-many --all --skip-nx-cache --target=test",
     "lint": "nx run-many --all --skip-nx-cache --target=lint",
+    "ensure:symlink": "nx ensure-symlink box && nx ensure-symlink file-manager",
     "check-app-types": "tsc --noEmit --project apps/box/tsconfig.app.json && tsc --noEmit --project apps/file-manager/tsconfig.app.json",
     "check-lib-types": "tsc --noEmit --project libs/component-library/tsconfig.lib.json",
     "check": "yarn lint && yarn test && yarn check-app-types && yarn check-lib-types",

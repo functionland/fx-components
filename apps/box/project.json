@@ -25,7 +25,7 @@
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "ios",
-        "bundleOutput": "dist/apps/box/ios/main.jsbundle"
+        "bundleOutput": "apps/box/ios/main.jsbundle"
       }
     },
     "run-android": {

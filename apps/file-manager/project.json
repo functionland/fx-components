@@ -27,7 +27,7 @@
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "ios",
-        "bundleOutput": "dist/apps/file-manager/ios/main.jsbundle"
+        "bundleOutput": "apps/file-manager/ios/main.jsbundle"
       }
     },
     "run-android": {
