@@ -368,6 +368,7 @@
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 656TD8GM9B;
+				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Box/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
