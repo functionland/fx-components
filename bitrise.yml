@@ -87,6 +87,8 @@ workflows:
             - scheme: Box
             - project_path: $BITRISE_SOURCE_DIR/apps/box/ios/Box.xcworkspace
             - configuration: Release
+            - upload_bitcode: 'no'
+            - compile_bitcode: 'no'
             - distribution_method: ad-hoc
 meta:
   bitrise.io:
