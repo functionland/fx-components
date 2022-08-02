@@ -185,17 +185,29 @@ const fxLightTheme = createTheme({
   buttonVariants: {
     defaults: {
       backgroundColor: 'greenBase',
+      borderRadius: 's',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     inverted: {
       backgroundColor: undefined,
       borderColor: 'primary',
       borderWidth: 2,
+      borderRadius: 's',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     disabled: {
       backgroundColor: 'backgroundSecondary',
+      borderRadius: 's',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     pressed: {
       backgroundColor: 'greenPressed',
+      borderRadius: 's',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
   },
   zIndices: {

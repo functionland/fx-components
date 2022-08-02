@@ -40,9 +40,6 @@ const FxButton = ({
   return (
     <FxButtonBase
       {...FxButtonClasses[className].button}
-      paddingVertical="12"
-      alignItems="center"
-      borderRadius="s"
       disabled={disabled}
       onPressIn={(e) => {
         setIsPressed(true);
