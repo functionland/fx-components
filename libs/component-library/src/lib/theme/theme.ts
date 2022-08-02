@@ -136,6 +136,11 @@ const fxLightTheme = createTheme({
       fontSize: 14,
       lineHeight: 24,
     },
+    bodySmallSemibold: {
+      fontFamily: 'OpenSans-Semibold',
+      fontSize: 14,
+      lineHeight: 24,
+    },
     bodyLargeLight: {
       fontFamily: 'OpenSans-Light',
       fontSize: 20,
@@ -165,6 +170,11 @@ const fxLightTheme = createTheme({
       fontFamily: 'Montserrat-Semibold',
       fontSize: 24,
       lineHeight: 36,
+    },
+    h400: {
+      fontFamily: 'Montserrat-Semibold',
+      fontSize: 28,
+      lineHeight: 40,
     },
   },
   borderRadii: {

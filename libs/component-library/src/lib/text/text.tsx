@@ -9,6 +9,7 @@ import { ReText } from 'react-native-redash';
 import { FxTheme } from '../theme/theme';
 
 export const FxText = createText<FxTheme>();
+export type FxTextProps = React.ComponentProps<typeof FxText>;
 
 interface FxReTextProps extends TextProps<FxTheme> {
   text: Animated.SharedValue<string>;

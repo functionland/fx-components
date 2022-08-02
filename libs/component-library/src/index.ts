@@ -25,7 +25,7 @@ export { FxSlider } from './lib/slider/slider';
 export { FxSpacer } from './lib/spacer/spacer';
 export { FxSvg, FxSvgProps } from './lib/svg/svg';
 export { FxTag } from './lib/tag/tag';
-export { FxText, FxReText } from './lib/text/text';
+export { FxText, FxReText, FxTextProps } from './lib/text/text';
 export { FxTextInput } from './lib/input/input';
 export { FxTheme, fxDarkTheme, fxLightTheme } from './lib/theme/theme';
 export { FxPressableOpacity } from './lib/pressable-opacity/pressableOpacity';
