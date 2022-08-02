@@ -80,11 +80,7 @@ workflows:
           inputs:
             - podfile_path: $BITRISE_SOURCE_DIR/apps/box/ios/Podfile
             - source_root_path: $BITRISE_SOURCE_DIR/apps/box/ios/
-      - manage-ios-code-signing@1:
-          inputs:
-            - configuration: Release
-            - distribution_method: ad-hoc
-          is_always_run: true
+      - certificate-and-profile-installer@1: {}
       - xcode-archive@4:
           inputs:
             - certificate_url_list: ''
