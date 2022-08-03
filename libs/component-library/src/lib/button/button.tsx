@@ -9,6 +9,9 @@ import { Pressable, PressableProps } from 'react-native';
 import { FxTheme } from '../theme/theme';
 import { FxText } from '../text/text';
 import { FxButtonClasses } from '../theme/buttonClasses';
+import { FxSvgProps } from '../svg/svg';
+import { FxBox } from '../box/box';
+import { FxSpacer } from '../spacer/spacer';
 
 const buttonVariant = createVariant({ themeKey: 'buttonVariants' });
 const PressableBox = createBox<FxTheme, PressableProps>(Pressable);
@@ -24,6 +27,7 @@ type FxButtonProps = Omit<
   'variant'
 > & {
   buttonClass?: keyof typeof FxButtonClasses;
+  iconLeft?: React.ReactElement<FxSvgProps>;
   children?: React.ReactNode | string;
 };
 
@@ -33,10 +37,12 @@ const FxButton = ({
   disabled,
   onPressIn,
   onPressOut,
+  iconLeft,
   ...rest
 }: FxButtonProps) => {
   const [isPressed, setIsPressed] = React.useState(false);
   const className = disabled ? 'disabled' : isPressed ? 'pressed' : buttonClass;
+
   return (
     <FxButtonBase
       {...FxButtonClasses[className].button}
@@ -54,7 +60,21 @@ const FxButton = ({
       }}
       {...rest}
     >
-      <FxText {...FxButtonClasses[className].text}>{children}</FxText>
+      <FxBox flexDirection="row" alignItems="center">
+        {iconLeft &&
+          React.createElement<FxSvgProps>(
+            iconLeft.type,
+
+            {
+              height: 25,
+              width: 25,
+              color: FxButtonClasses[className].text.color,
+              ...iconLeft.props,
+            }
+          )}
+        <FxSpacer width={8} />
+        <FxText {...FxButtonClasses[className].text}>{children}</FxText>
+      </FxBox>
     </FxButtonBase>
   );
 };
