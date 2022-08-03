@@ -6,7 +6,7 @@ import { WalletConnectProvider } from '@walletconnect/react-native-dapp/dist/pro
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavContainer } from '../navigation/NavContainer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Platform, StyleSheet, UIManager } from 'react-native';
+import { Platform, StatusBar, StyleSheet, UIManager } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 if (Platform.OS === 'android') {
@@ -17,9 +17,10 @@ if (Platform.OS === 'android') {
 
 export const App = () => {
   const [isDarkTheme] = React.useState<boolean>(true);
+  const theme = isDarkTheme ? fxDarkTheme : fxLightTheme;
 
   return (
-    <ThemeProvider theme={isDarkTheme ? fxDarkTheme : fxLightTheme}>
+    <ThemeProvider theme={theme}>
       <WalletConnectProvider
         redirectUrl={'yourappscheme://'}
         storageOptions={{
@@ -28,6 +29,10 @@ export const App = () => {
         }}
       >
         <GestureHandlerRootView style={styles.flex1}>
+          <StatusBar
+            backgroundColor={theme.colors.backgroundApp}
+            barStyle={isDarkTheme ? 'light-content' : 'dark-content'}
+          />
           <BottomSheetModalProvider>
             <AppContent />
           </BottomSheetModalProvider>
