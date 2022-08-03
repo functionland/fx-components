@@ -32,6 +32,9 @@ export const CardCarousel = ({
         loop={false}
         width={(WINDOW_WIDTH - CARD_SPACING) * SCALE}
         height={height}
+        panGestureHandlerProps={{
+          activeOffsetX: [-10, 10],
+        }}
         style={{
           width: WINDOW_WIDTH,
         }}
