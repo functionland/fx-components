@@ -8,12 +8,12 @@ In the project root run `yarn install`, this will install all the required depen
 
 #### To run the iOS apps in development
 
-- `npx nx run-ios file-manager`
-- `npx nx run-ios box`
+- `yarn ios file-manager`
+- `yarn ios box`
 
 #### To run the Android apps in development
 
-- `npx nx run-android file-manager`
-- `npx nx run-android box`
+- `yarn android file-manager`
+- `yarn android box`
 
 Running these commands will install the required the native dependencies via Gradle or Cocoapods.
