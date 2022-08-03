@@ -39,7 +39,7 @@ const UserHeader = () => {
       <FxText variant="bodyXSRegular">Connected wallet: TrustWallet</FxText>
       <FxSpacer marginTop="32" />
       <FxBox width="100%">
-        <FxButton onPress={copyHandler} iconLeft={<CopyIcon />}>
+        <FxButton onPress={copyHandler} size="large" iconLeft={<CopyIcon />}>
           {`DID: ${did}`}
         </FxButton>
       </FxBox>

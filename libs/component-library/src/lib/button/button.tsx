@@ -3,11 +3,15 @@ import {
   createBox,
   createRestyleComponent,
   createVariant,
+  useTheme,
   VariantProps,
 } from '@shopify/restyle';
 import { Pressable, PressableProps } from 'react-native';
 import { FxTheme } from '../theme/theme';
 import { FxText } from '../text/text';
+import { FxSvgProps } from '../svg/svg';
+import { FxBox } from '../box/box';
+import { FxSpacer } from '../spacer/spacer';
 
 const buttonVariant = createVariant({
   themeKey: 'buttonVariants',
@@ -43,6 +47,7 @@ const FxButtonText = createRestyleComponent<
 >([buttonTextVariant, buttonTextSize], FxText);
 
 type FxButtonProps = React.ComponentProps<typeof FxButtonBase> & {
+  iconLeft?: React.ReactElement<FxSvgProps>;
   children?: React.ReactNode | string;
 };
 const FxButton = ({
@@ -52,10 +57,13 @@ const FxButton = ({
   onPressOut,
   variant,
   size,
+  iconLeft,
   ...rest
 }: FxButtonProps) => {
+  const theme = useTheme<FxTheme>();
   const [isPressed, setIsPressed] = React.useState(false);
   const type = disabled ? 'disabled' : isPressed ? 'pressed' : variant;
+
   return (
     <FxButtonBase
       variant={type}
@@ -71,9 +79,23 @@ const FxButton = ({
       }}
       {...rest}
     >
-      <FxButtonText size={size} type={type}>
-        {children}
-      </FxButtonText>
+      <FxBox flexDirection="row" alignItems="center">
+        {iconLeft &&
+          React.createElement<FxSvgProps>(
+            iconLeft.type,
+
+            {
+              height: 25,
+              width: 25,
+              color: theme.buttonTextVariants[type || 'defaults'].color,
+              ...iconLeft.props,
+            }
+          )}
+        <FxSpacer width={8} />
+        <FxButtonText size={size} type={type}>
+          {children}
+        </FxButtonText>
+      </FxBox>
     </FxButtonBase>
   );
 };
