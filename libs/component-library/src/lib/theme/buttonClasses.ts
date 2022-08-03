@@ -1,5 +1,5 @@
 import { BoxProps, TextProps, VariantProps } from '@shopify/restyle';
-import { merge, cloneDeep } from 'lodash';
+import { merge } from 'lodash';
 import { FxTheme } from './theme';
 
 type ButtonClassType = {
@@ -67,12 +67,12 @@ export const FxButtonClasses: Record<
   | 'pressedLarge',
   ButtonClassType
 > = {
-  default: merge(cloneDeep(type.default), size.default),
-  inverted: merge(cloneDeep(type.inverted), size.default),
-  disabled: merge(cloneDeep(type.disabled), size.default),
-  pressed: merge(cloneDeep(type.pressed), size.default),
-  defaultLarge: merge(cloneDeep(type.default), size.large),
-  invertedLarge: merge(cloneDeep(type.inverted), size.large),
-  disabledLarge: merge(cloneDeep(type.disabled), size.large),
-  pressedLarge: merge(cloneDeep(type.pressed), size.large),
+  default: merge({}, type.default, size.default),
+  inverted: merge({}, type.inverted, size.default),
+  disabled: merge({}, type.disabled, size.default),
+  pressed: merge({}, type.pressed, size.default),
+  defaultLarge: merge({}, type.default, size.large),
+  invertedLarge: merge({}, type.inverted, size.large),
+  disabledLarge: merge({}, type.disabled, size.large),
+  pressedLarge: merge({}, type.pressed, size.large),
 };
