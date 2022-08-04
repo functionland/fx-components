@@ -8,41 +8,58 @@ import {
 import { Pressable, PressableProps } from 'react-native';
 import { FxTheme } from '../theme/theme';
 import { FxText } from '../text/text';
-import { FxButtonClasses } from '../theme/buttonClasses';
 
-const buttonVariant = createVariant({ themeKey: 'buttonVariants' });
+const buttonVariant = createVariant({
+  themeKey: 'buttonVariants',
+  property: 'variant',
+});
+const buttonSize = createVariant({
+  themeKey: 'buttonSizes',
+  property: 'size',
+});
 const PressableBox = createBox<FxTheme, PressableProps>(Pressable);
 
 const FxButtonBase = createRestyleComponent<
   React.ComponentProps<typeof PressableBox> &
-    VariantProps<FxTheme, 'buttonVariants'>,
+    VariantProps<FxTheme, 'buttonVariants', 'variant'> &
+    VariantProps<FxTheme, 'buttonSizes', 'size'>,
   FxTheme
->([buttonVariant], PressableBox);
+>([buttonVariant, buttonSize], PressableBox);
 
-type FxButtonProps = Omit<
-  React.ComponentProps<typeof FxButtonBase>,
-  'variant'
-> & {
-  buttonClass?: keyof typeof FxButtonClasses;
+const buttonTextVariant = createVariant({
+  themeKey: 'buttonTextVariants',
+  property: 'type',
+});
+const buttonTextSize = createVariant({
+  themeKey: 'buttonTextSizes',
+  property: 'size',
+});
+
+const FxButtonText = createRestyleComponent<
+  React.ComponentProps<typeof FxText> &
+    VariantProps<FxTheme, 'buttonTextVariants', 'type'> &
+    VariantProps<FxTheme, 'buttonTextSizes', 'size'>,
+  FxTheme
+>([buttonTextVariant, buttonTextSize], FxText);
+
+type FxButtonProps = React.ComponentProps<typeof FxButtonBase> & {
   children?: React.ReactNode | string;
 };
-
 const FxButton = ({
-  buttonClass = 'default',
   children,
   disabled,
   onPressIn,
   onPressOut,
+  variant,
+  size,
   ...rest
 }: FxButtonProps) => {
   const [isPressed, setIsPressed] = React.useState(false);
-  const className = disabled ? 'disabled' : isPressed ? 'pressed' : buttonClass;
+  const type = disabled ? 'disabled' : isPressed ? 'pressed' : variant;
   return (
     <FxButtonBase
-      {...FxButtonClasses[className].button}
-      paddingVertical="12"
-      alignItems="center"
-      borderRadius="s"
+      variant={type}
+      size={size}
       disabled={disabled}
       onPressIn={(e) => {
         setIsPressed(true);
@@ -54,7 +71,9 @@ const FxButton = ({
       }}
       {...rest}
     >
-      <FxText {...FxButtonClasses[className].text}>{children}</FxText>
+      <FxButtonText size={size} type={type}>
+        {children}
+      </FxButtonText>
     </FxButtonBase>
   );
 };

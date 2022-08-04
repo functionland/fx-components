@@ -39,6 +39,7 @@
     "@gorhom/bottom-sheet": "*",
     "react-native-wheel-color-picker": "*",
     "@react-native-community/slider": "*",
-    "react-native-reanimated-carousel": "*"
+    "react-native-reanimated-carousel": "*",
+    "lodash": "*"
   }
 }
