@@ -2,7 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { InitialSetupNavigator } from './InitialSetup.navigator';
 import { MainTabsNavigator } from './MainTabs.navigator';
-import { RootStackParamList } from './navigatonConfig';
+import { RootStackParamList } from './navigationConfig';
 
 export const RootNavigator = () => {
   return (
