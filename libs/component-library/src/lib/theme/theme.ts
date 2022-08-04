@@ -99,6 +99,7 @@ const BaseTheme = {
     l: 20,
   },
 };
+type BaseThemeType = typeof BaseTheme;
 
 const textVariants = {
   defaults: {
@@ -185,7 +186,8 @@ const textVariants = {
   },
 };
 
-const buttonTheme = {
+type ButtonThemeColorType = { color: keyof BaseThemeType['colors'] };
+const buttonTheme /*: ButtonThemeType*/ = {
   container: {
     types: {
       defaults: {
@@ -217,10 +219,10 @@ const buttonTheme = {
   },
   text: {
     types: {
-      defaults: { color: 'white' },
-      inverted: { color: 'greenBase' },
-      disabled: { color: 'border' },
-      pressed: { color: 'white' },
+      defaults: { color: 'white' } as ButtonThemeColorType,
+      inverted: { color: 'greenBase' } as ButtonThemeColorType,
+      disabled: { color: 'border' } as ButtonThemeColorType,
+      pressed: { color: 'white' } as ButtonThemeColorType,
     },
     sizes: {
       defaults: { ...textVariants.bodyXSSemibold },

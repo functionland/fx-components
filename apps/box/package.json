@@ -40,6 +40,7 @@
     "react-native-wheel-color-picker": "*",
     "@react-native-community/slider": "*",
     "react-native-reanimated-carousel": "*",
-    "lodash": "*"
+    "lodash": "*",
+    "@react-native-clipboard/clipboard": "*"
   }
 }

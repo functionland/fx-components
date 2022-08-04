@@ -6,7 +6,7 @@ import { BoxScreen } from '../screens/Box.screen';
 import { MainTabsParamList } from './navigatonConfig';
 import { SettingsScreen } from '../screens/Settings.screen';
 import { PoolScreen } from '../screens/Pool.screen';
-import { UserScreen } from '../screens/User.screen';
+import { UsersScreen } from '../screens/Users/Users.screen';
 import { BoxIcon, PoolIcon, SettingsIcon, UserIcon } from '../components';
 
 export const MainTabsNavigator = () => {
@@ -19,6 +19,7 @@ export const MainTabsNavigator = () => {
         tabBarStyle: {
           backgroundColor: theme.colors.backgroundApp,
         },
+        headerShown: false,
       })}
     >
       <MainTabs.Screen
@@ -46,8 +47,8 @@ export const MainTabsNavigator = () => {
         }}
       />
       <MainTabs.Screen
-        name="User"
-        component={UserScreen}
+        name="Users"
+        component={UsersScreen}
         options={{
           // eslint-disable-next-line react/no-unstable-nested-components
           tabBarIcon: ({ color }) => <UserIcon fill={color} />,
