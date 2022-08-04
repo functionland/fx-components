@@ -56,7 +56,7 @@ const paletteDark = {
   error100: '#4B1919',
 };
 
-const fxLightTheme = createTheme({
+const BaseTheme = {
   colors: {
     backgroundApp: paletteLight.appBackground,
     backgroundPrimary: paletteLight.grayscale000,
@@ -93,111 +93,149 @@ const fxLightTheme = createTheme({
     '80': 80,
   },
   breakpoints: {},
-  textVariants: {
-    defaults: {
-      color: 'content1',
-    },
-    body: {
-      fontSize: 16,
-    },
-    eyebrow2: {
-      fontFamily: 'Montserrat-Medium',
-      fontSize: 8,
-      lineHeight: 10,
-      textTransform: 'uppercase',
-    },
-    bodyXXSRegular: {
-      fontFamily: 'OpenSans-Regular',
-      fontSize: 10,
-      lineHeight: 14,
-    },
-    bodyXSLight: {
-      fontFamily: 'OpenSans-Light',
-      fontSize: 12,
-      lineHeight: 16,
-    },
-    bodyXSRegular: {
-      fontFamily: 'OpenSans-Regular',
-      fontSize: 12,
-      lineHeight: 16,
-    },
-    bodyXSSemibold: {
-      fontFamily: 'OpenSans-Semibold',
-      fontSize: 12,
-      lineHeight: 16,
-    },
-    bodySmallLight: {
-      fontFamily: 'OpenSans-Light',
-      fontSize: 14,
-      lineHeight: 24,
-    },
-    bodySmallRegular: {
-      fontFamily: 'OpenSans-Regular',
-      fontSize: 14,
-      lineHeight: 24,
-    },
-    bodySmallSemibold: {
-      fontFamily: 'OpenSans-Semibold',
-      fontSize: 14,
-      lineHeight: 24,
-    },
-    bodyLargeLight: {
-      fontFamily: 'OpenSans-Light',
-      fontSize: 20,
-      lineHeight: 30,
-    },
-    bodyLargeRegular: {
-      fontFamily: 'OpenSans-Regular',
-      fontSize: 20,
-      lineHeight: 30,
-    },
-    bodyMediumLight: {
-      fontFamily: 'OpenSans-Light',
-      fontSize: 16,
-      lineHeight: 28,
-    },
-    bodyMediumRegular: {
-      fontFamily: 'OpenSans-Regular',
-      fontSize: 16,
-      lineHeight: 28,
-    },
-    h200: {
-      fontFamily: 'Montserrat-SemiBold',
-      fontSize: 18,
-      lineHeight: 24,
-    },
-    h300: {
-      fontFamily: 'Montserrat-Semibold',
-      fontSize: 24,
-      lineHeight: 36,
-    },
-    h400: {
-      fontFamily: 'Montserrat-Semibold',
-      fontSize: 28,
-      lineHeight: 40,
-    },
-  },
   borderRadii: {
     s: 4,
     m: 6,
     l: 20,
   },
-  buttonVariants: {
-    defaults: {
-      backgroundColor: 'greenBase',
+};
+
+const textVariants = {
+  defaults: {
+    color: 'content1',
+  },
+  body: {
+    fontSize: 16,
+  },
+  eyebrow2: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 8,
+    lineHeight: 10,
+    textTransform: 'uppercase',
+  },
+  bodyXXSRegular: {
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 10,
+    lineHeight: 14,
+  },
+  bodyXSLight: {
+    fontFamily: 'OpenSans-Light',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  bodyXSRegular: {
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  bodyXSSemibold: {
+    fontFamily: 'OpenSans-Semibold',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  bodySmallLight: {
+    fontFamily: 'OpenSans-Light',
+    fontSize: 14,
+    lineHeight: 24,
+  },
+  bodySmallRegular: {
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 14,
+    lineHeight: 24,
+  },
+  bodySmallSemibold: {
+    fontFamily: 'OpenSans-Semibold',
+    fontSize: 14,
+    lineHeight: 24,
+  },
+  bodyLargeLight: {
+    fontFamily: 'OpenSans-Light',
+    fontSize: 20,
+    lineHeight: 30,
+  },
+  bodyLargeRegular: {
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 20,
+    lineHeight: 30,
+  },
+  bodyMediumLight: {
+    fontFamily: 'OpenSans-Light',
+    fontSize: 16,
+    lineHeight: 28,
+  },
+  bodyMediumRegular: {
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 16,
+    lineHeight: 28,
+  },
+  h200: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  h300: {
+    fontFamily: 'Montserrat-Semibold',
+    fontSize: 24,
+    lineHeight: 36,
+  },
+  h400: {
+    fontFamily: 'Montserrat-Semibold',
+    fontSize: 28,
+    lineHeight: 40,
+  },
+};
+
+const buttonTheme = {
+  container: {
+    types: {
+      defaults: {
+        backgroundColor: 'greenBase',
+        borderRadius: 's',
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      inverted: {
+        backgroundColor: undefined,
+        borderColor: 'primary',
+        borderWidth: 2,
+      },
+      disabled: {
+        backgroundColor: 'backgroundSecondary',
+      },
+      pressed: {
+        backgroundColor: 'greenPressed',
+      },
     },
-    inverted: {
-      backgroundColor: undefined,
-      borderColor: 'primary',
-      borderWidth: 2,
-    },
-    disabled: {
-      backgroundColor: 'backgroundSecondary',
-    },
-    pressed: {
-      backgroundColor: 'greenPressed',
+    sizes: {
+      defaults: {
+        height: 40,
+      },
+      large: {
+        height: 60,
+      },
     },
   },
+  text: {
+    types: {
+      defaults: { color: 'white' },
+      inverted: { color: 'greenBase' },
+      disabled: { color: 'border' },
+      pressed: { color: 'white' },
+    },
+    sizes: {
+      defaults: { ...textVariants.bodyXSSemibold },
+      large: { ...textVariants.bodySmallSemibold },
+    },
+  },
+};
+
+const fxLightTheme = createTheme({
+  ...BaseTheme,
+  textVariants,
+  buttonVariants: { ...buttonTheme.container.types },
+  buttonSizes: { ...buttonTheme.container.sizes },
+  buttonTextVariants: { ...buttonTheme.text.types },
+  buttonTextSizes: { ...buttonTheme.text.sizes },
   zIndices: {
     foreground: 1000,
   },
