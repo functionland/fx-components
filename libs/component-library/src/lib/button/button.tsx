@@ -64,6 +64,21 @@ const FxButton = ({
   const [isPressed, setIsPressed] = React.useState(false);
   const type = disabled ? 'disabled' : isPressed ? 'pressed' : variant;
 
+  const icon = React.useMemo(() => {
+    if (!iconLeft) return null;
+
+    return React.createElement<FxSvgProps>(
+      iconLeft.type,
+
+      {
+        height: 25,
+        width: 25,
+        color: theme.buttonTextVariants[type || 'defaults'].color,
+        ...iconLeft.props,
+      }
+    );
+  }, [iconLeft, type, theme.buttonTextVariants]);
+
   return (
     <FxButtonBase
       variant={type}
@@ -80,17 +95,7 @@ const FxButton = ({
       {...rest}
     >
       <FxBox flexDirection="row" alignItems="center">
-        {iconLeft &&
-          React.createElement<FxSvgProps>(
-            iconLeft.type,
-
-            {
-              height: 25,
-              width: 25,
-              color: theme.buttonTextVariants[type || 'defaults'].color,
-              ...iconLeft.props,
-            }
-          )}
+        {icon}
         <FxSpacer width={8} />
         <FxButtonText size={size} type={type}>
           {children}
