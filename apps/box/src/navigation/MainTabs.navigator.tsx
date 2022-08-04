@@ -4,7 +4,7 @@ import { useTheme } from '@shopify/restyle';
 import { FxTheme } from '@functionland/component-library';
 import { BoxScreen } from '../screens/Box.screen';
 import { MainTabsParamList } from './navigatonConfig';
-import { SettingsScreen } from '../screens/Settings.screen';
+import { SettingsScreen } from '../screens/Settings';
 import { PoolScreen } from '../screens/Pool.screen';
 import { UsersScreen } from '../screens/Users/Users.screen';
 import { BoxIcon, PoolIcon, SettingsIcon, UserIcon } from '../components';
