@@ -55,7 +55,7 @@
     "react-native-wifi-reborn": "^4.6.0",
     "three": "^0.142.0",
     "tslib": "^2.3.0",
-    "zustand": "3.7.2"
+    "zustand": "^4.0.0"
   },
   "devDependencies": {
     "@nrwl/cli": "14.3.6",
