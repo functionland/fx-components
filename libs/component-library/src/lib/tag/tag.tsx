@@ -26,6 +26,7 @@ const FxTag = (props: FxTagProps) => {
       height={26}
       justifyContent="center"
       paddingHorizontal="8"
+      alignSelf="flex-start"
       {...rest}
     >
       <FxText color="content1" variant="bodyXXSRegular">
