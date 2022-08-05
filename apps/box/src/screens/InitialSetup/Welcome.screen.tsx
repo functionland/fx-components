@@ -65,6 +65,7 @@ export const WelcomeScreen = () => {
       <FxBox padding="20">
         <FxButton
           marginBottom="8"
+          size="large"
           testID="app-name"
           onPress={() => navigation.navigate('Wallet Connect')}
         >
@@ -73,12 +74,14 @@ export const WelcomeScreen = () => {
         <FxButton
           marginBottom="8"
           testID="app-name"
+          size="large"
           onPress={onConnectToBox}
           disabled={!hasCheckedLocationPermission}
         >
           Connect To Box
         </FxButton>
         <FxButton
+          size="large"
           onPress={() =>
             rootNavigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })
           }
