@@ -11,7 +11,7 @@ import {
   FxText,
   FxTextInput,
 } from '@functionland/component-library';
-import { CardHeader } from './CardHeader';
+import { CardHeader } from './fields/CardHeader';
 import { StyleSheet } from 'react-native';
 import ColorPicker from 'react-native-wheel-color-picker';
 

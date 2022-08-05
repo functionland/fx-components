@@ -1,5 +1,5 @@
 import React from 'react';
-import { CardHeader } from './CardHeader';
+import { CardHeader } from './fields/CardHeader';
 import {
   convertMegabyteToGigabyte,
   convertPascalToSentence,
@@ -7,13 +7,13 @@ import {
   FxBox,
   FxButton,
   FxCard,
-  FxHorizontalRule,
   FxLoadingSpinner,
   FxTag,
   FxText,
 } from '@functionland/component-library';
-import { CardCarousel } from './CardCarousel';
+import { CardCarousel } from './fields/CardCarousel';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
+import { CardRow, CardRowData, CardRowTitle } from './fields/CardRow';
 
 enum DeviceStatus {
   InUse = 0,
@@ -39,7 +39,6 @@ const DeviceCard = ({
   return (
     <FxCard
       {...rest}
-      paddingVertical="24"
       onLongPress={() => bottomSheetRef.current?.present()}
       delayLongPress={200}
     >
@@ -53,29 +52,21 @@ const DeviceCard = ({
           </FxTag>
         ))}
       </FxBox>
-      <FxBox flexDirection="row" justifyContent="space-between">
-        <FxText color="content1" variant="bodySmallRegular">
-          Capacity
-        </FxText>
-        <FxText color="content2" variant="bodySmallLight">
-          {convertMegabyteToGigabyte(capacity)} GB
-        </FxText>
-      </FxBox>
-      <FxHorizontalRule marginVertical="12" />
-      <FxBox flexDirection="row" justifyContent="space-between">
-        <FxText color="content1" variant="bodySmallRegular">
-          Status
-        </FxText>
+      <CardRow>
+        <CardRowTitle>Capacity</CardRowTitle>
+        <CardRowData>{convertMegabyteToGigabyte(capacity)} GB</CardRowData>
+      </CardRow>
+      <CardRow>
+        <CardRowTitle>Status</CardRowTitle>
         <FxBox flexDirection="row" alignItems="center">
-          <FxText color="content2" variant="bodySmallLight">
+          <CardRowData>
             {convertPascalToSentence(DeviceStatus[status])}
-          </FxText>
+          </CardRowData>
           {status === DeviceStatus.BackingUp && (
             <FxLoadingSpinner marginLeft="4" />
           )}
         </FxBox>
-      </FxBox>
-      <FxHorizontalRule marginVertical="12" />
+      </CardRow>
       <FxButton disabled={status === DeviceStatus.BackingUp}>Eject</FxButton>
       <FxBottomSheetModal ref={bottomSheetRef} title="Device Bottom Sheet">
         <FxBox
