@@ -89,30 +89,14 @@ const SettingsNavigator = () => {
         headerTitle: '',
       })}
     >
-      <SettingsStack.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{ headerShown: false }}
-      />
+      <SettingsStack.Screen name="Settings" component={SettingsScreen} />
       <SettingsStack.Screen
         name="ConnectedDApps"
         component={ConnectedDAppsScreen}
       />
-      <SettingsStack.Screen
-        name="Mode"
-        component={ModeScreen}
-        options={{ headerShown: false }}
-      />
-      <SettingsStack.Screen
-        name="Pools"
-        component={PoolsScreen}
-        options={{ headerShown: false }}
-      />
-      <SettingsStack.Screen
-        name="About"
-        component={AboutScreen}
-        options={{ headerShown: false }}
-      />
+      <SettingsStack.Screen name="Mode" component={ModeScreen} />
+      <SettingsStack.Screen name="Pools" component={PoolsScreen} />
+      <SettingsStack.Screen name="About" component={AboutScreen} />
     </SettingsStack.Navigator>
   );
 };
