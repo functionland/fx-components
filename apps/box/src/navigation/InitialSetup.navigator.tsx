@@ -8,7 +8,7 @@ import {
   SetupCompleteScreen,
   CheckConnectionScreen,
 } from '../screens/InitialSetup';
-import { InitialSetupStackParamList } from './navigatonConfig';
+import { InitialSetupStackParamList } from './navigationConfig';
 
 export const InitialSetupNavigator = () => {
   return (

@@ -3,7 +3,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   InitialSetupStackParamList,
   RootStackParamList,
-} from '../navigation/navigatonConfig';
+} from '../navigation/navigationConfig';
 
 export const useRootNavigation = () =>
   useNavigation<NativeStackNavigationProp<RootStackParamList>>();
