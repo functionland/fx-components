@@ -61,6 +61,7 @@ export const FxCard = ({
       delayLongPress={delayLongPress}
       disabled={(!onPress && !onLongPress) || disabled}
       padding="16"
+      paddingVertical="24"
       backgroundColor="backgroundPrimary"
       borderRadius="s"
       opacity={isPressed ? 0.5 : 1}
