@@ -7,13 +7,7 @@ export {
 export { FxBox, FxReanimatedBox, FxBoxProps } from './lib/box/box';
 export { FxButton } from './lib/button/button';
 export { FxCard } from './lib/card/card';
-export {
-  FxChevronDownIcon,
-  FxCloseIcon,
-  FxDownArrowIcon,
-  FxExclamationIcon,
-  FxFilterIcon,
-} from './lib/icons/icons';
+export * from './lib/icons/icons';
 export { FxError } from './lib/error/error';
 export { FxFoldableContent } from './lib/foldable-content/foldableContent';
 export { FxHorizontalRule } from './lib/horizontal-rule/horizontalRule';

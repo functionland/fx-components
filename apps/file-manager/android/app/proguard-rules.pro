@@ -14,3 +14,9 @@
 -keep class com.facebook.jni.** { *; }
 -keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
+
+### react-native-device-info
+## Install Referrer tracking
+-keepclassmembers class com.android.installreferrer.api.** {
+  *;
+}

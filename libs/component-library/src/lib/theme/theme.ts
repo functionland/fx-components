@@ -5,7 +5,7 @@ const palette = {
   blue: '#187AF9',
   white: 'white',
 };
-
+// Light and Dark color palettes are broken out into separate palettes since they are broken out in the figame-ui library.
 const paletteLight = {
   // GRAYSCALE
   appBackground: '#FFFFFF',
