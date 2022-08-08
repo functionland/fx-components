@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  LayoutAnimation,
-  Pressable,
-  PressableProps,
-  StyleSheet,
-} from 'react-native';
+import { Pressable, PressableProps, StyleSheet } from 'react-native';
 import { FxBox } from '../box/box';
 import { createBox } from '@shopify/restyle';
 import { FxTheme } from '../theme/theme';
@@ -16,6 +11,7 @@ import Reanimated, {
   withTiming,
 } from 'react-native-reanimated';
 import { FxChevronDownIcon } from '../icons/icons';
+import { configureEaseInOutLayoutAnimation } from '../utils/animations';
 
 const ANIMATION_DURATION = 300;
 const RestyledPressable = createBox<FxTheme, PressableProps>(Pressable);
@@ -78,13 +74,6 @@ export const FxFoldableContent = ({
       )}
     </RestyledPressable>
   );
-};
-
-const configureEaseInOutLayoutAnimation = (duration = 150) => {
-  LayoutAnimation.configureNext({
-    ...LayoutAnimation.Presets.easeInEaseOut,
-    duration,
-  });
 };
 
 const styles = StyleSheet.create({

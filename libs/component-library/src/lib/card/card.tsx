@@ -5,7 +5,7 @@ import { FxTheme } from '../theme/theme';
 
 const PressableBox = createBox<FxTheme, PressableProps>(Pressable);
 
-type FxCardProps = React.ComponentProps<typeof PressableBox>;
+export type FxCardProps = React.ComponentProps<typeof PressableBox>;
 
 export const FxCard = ({
   onPress,

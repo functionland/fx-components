@@ -21,20 +21,17 @@ enum DeviceStatus {
   NotInUse = 2,
 }
 
-interface DeviceCardProps extends React.ComponentProps<typeof FxBox> {
+type DeviceData = {
   name: string;
   capacity: number; // megabytes
   status: DeviceStatus;
   associatedDevices: string[];
-}
+};
 
-const DeviceCard = ({
-  name,
-  associatedDevices,
-  capacity,
-  status,
-  ...rest
-}: DeviceCardProps) => {
+type DeviceCardProps = React.ComponentProps<typeof FxBox> & {
+  data: DeviceData;
+};
+const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
   return (
     <FxCard
@@ -43,31 +40,33 @@ const DeviceCard = ({
       delayLongPress={200}
     >
       <FxText color="content1" variant="bodyLargeRegular" marginBottom="8">
-        {name}
+        {data.name}
       </FxText>
       <FxBox flexDirection="row" marginBottom="16">
-        {associatedDevices.map((deviceName) => (
-          <FxTag key={`${name}-${deviceName}`} marginRight="8">
+        {data.associatedDevices.map((deviceName) => (
+          <FxTag key={`${data.name}-${deviceName}`} marginRight="8">
             {deviceName}
           </FxTag>
         ))}
       </FxBox>
       <CardRow>
         <CardRowTitle>Capacity</CardRowTitle>
-        <CardRowData>{convertMegabyteToGigabyte(capacity)} GB</CardRowData>
+        <CardRowData>{convertMegabyteToGigabyte(data.capacity)} GB</CardRowData>
       </CardRow>
       <CardRow>
         <CardRowTitle>Status</CardRowTitle>
         <FxBox flexDirection="row" alignItems="center">
           <CardRowData>
-            {convertPascalToSentence(DeviceStatus[status])}
+            {convertPascalToSentence(DeviceStatus[data.status])}
           </CardRowData>
-          {status === DeviceStatus.BackingUp && (
+          {data.status === DeviceStatus.BackingUp && (
             <FxLoadingSpinner marginLeft="4" />
           )}
         </FxBox>
       </CardRow>
-      <FxButton disabled={status === DeviceStatus.BackingUp}>Eject</FxButton>
+      <FxButton disabled={data.status === DeviceStatus.BackingUp}>
+        Eject
+      </FxButton>
       <FxBottomSheetModal ref={bottomSheetRef} title="Device Bottom Sheet">
         <FxBox
           height={200}
@@ -85,7 +84,7 @@ const DeviceCard = ({
 /**
  * @todo: Replace ENTRIES with api data
  */
-const ENTRIES: DeviceCardProps[] = [
+const ENTRIES: DeviceData[] = [
   {
     name: 'Expansion Card 1',
     capacity: 921600,
@@ -126,7 +125,7 @@ export const ConnectedDevicesCard = () => {
           </FxText>
         </FxBox>
       ) : ENTRIES.length === 1 ? (
-        <DeviceCard {...ENTRIES[0]} />
+        <DeviceCard data={ENTRIES[0]} />
       ) : (
         <CardCarousel
           data={ENTRIES}
