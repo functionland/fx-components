@@ -90,7 +90,13 @@ export const UsersScreen = () => {
           ) : (
             <>
               {mockFriendData.map((friend) => {
-                return <UserCardCondensed marginTop="16" userData={friend} />;
+                return (
+                  <UserCardCondensed
+                    key={friend.decentralizedId}
+                    marginTop="16"
+                    userData={friend}
+                  />
+                );
               })}
             </>
           )}
