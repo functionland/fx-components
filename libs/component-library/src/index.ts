@@ -11,6 +11,7 @@ export { FxCard, FxCardProps } from './lib/card/card';
 export { FxSwitch } from './lib/switch/switch';
 export * from './lib/icons/icons';
 export { FxError } from './lib/error/error';
+export { FxRadioButton } from './lib/radio-button';
 export { FxFoldableContent } from './lib/foldable-content/foldableContent';
 export { FxHorizontalRule } from './lib/horizontal-rule/horizontalRule';
 export { FxLineChart } from './lib/line-chart/lineChart';
