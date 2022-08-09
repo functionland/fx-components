@@ -60,8 +60,6 @@ const UserCard = ({ data, ...rest }: UserCardType) => {
   );
 };
 
-const ENTRIES: number[] = [1, 2, 3, 4];
-
 type UsersCardCarouselProps = {
   data: Friend[];
 };
