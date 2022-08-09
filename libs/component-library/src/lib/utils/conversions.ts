@@ -13,4 +13,12 @@ const convertPascalToSentence = (str: string) => {
   return stringWithSpaces.charAt(0) + stringWithSpaces.slice(1).toLowerCase();
 };
 
-export { convertMegabyteToGigabyte, convertPascalToSentence };
+function capitalizeFirstLetter(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+export {
+  convertMegabyteToGigabyte,
+  convertPascalToSentence,
+  capitalizeFirstLetter,
+};
