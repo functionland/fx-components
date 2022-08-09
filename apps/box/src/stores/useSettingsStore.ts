@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
 
 type Modes = ['light', 'dark', 'auto'];
-type ColorScheme = 'light' | 'dark';
+export type ColorScheme = 'light' | 'dark';
 type Mode = Modes[number];
 interface ModeSlice {
   _hasHydrated: boolean;
@@ -14,6 +14,7 @@ interface ModeSlice {
   getMode: () => ColorScheme;
   isAuto: boolean;
   colorScheme: ColorScheme;
+  toggleIsAuto: () => void;
   setColorScheme: (colorScheme: ColorScheme) => void;
 }
 const createModeSlice: StateCreator<
@@ -35,7 +36,7 @@ const createModeSlice: StateCreator<
     colorScheme: 'light',
     setColorScheme: (colorScheme: ColorScheme) =>
       set(() => ({ colorScheme: colorScheme })),
-    switchIsAuto: () => set((state) => ({ isAuto: !state.isAuto })),
+    toggleIsAuto: () => set((state) => ({ isAuto: !state.isAuto })),
     getMode: () => {
       const { isAuto, colorScheme } = get();
       const systemColorScheme = useColorScheme(); // eslint-disable-line react-hooks/rules-of-hooks
