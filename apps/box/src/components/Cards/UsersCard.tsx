@@ -11,10 +11,10 @@ import {
 import { CardRow, CardRowData, CardRowTitle } from './fields/CardRow';
 import { Image, StyleSheet } from 'react-native';
 import { CopyIcon } from '../Icons';
-import Clipboard from '@react-native-clipboard/clipboard';
 import { CardCarousel } from './fields/CardCarousel';
 import { Friend } from '../../api/users';
 import { getUserUsageDetails } from '../../utils/users';
+import { copyToClipboard } from '../../utils/clipboard';
 
 const USER_CARD_HEIGHT = 286;
 type UserCardType = React.ComponentProps<typeof FxCard> & {
@@ -22,10 +22,6 @@ type UserCardType = React.ComponentProps<typeof FxCard> & {
 };
 const UserCard = ({ data, ...rest }: UserCardType) => {
   const usageStats = getUserUsageDetails(data);
-
-  const copyHandler = () => {
-    Clipboard.setString(data.decentralizedId);
-  };
 
   return (
     <FxCard {...rest}>
@@ -54,7 +50,10 @@ const UserCard = ({ data, ...rest }: UserCardType) => {
         <CardRowData>{new Date(data.connectionDate).toISOString()}</CardRowData>
       </CardRow>
       <FxSpacer marginTop="12" />
-      <FxButton onPress={copyHandler} iconLeft={<CopyIcon />}>
+      <FxButton
+        onPress={() => copyToClipboard(data.decentralizedId)}
+        iconLeft={<CopyIcon />}
+      >
         {`DID: ${data.decentralizedId}`}
       </FxButton>
     </FxCard>
@@ -88,8 +87,6 @@ export const UsersCardCarousel = ({ data }: UsersCardCarouselProps) => {
             No "connected devices"
           </FxText>
         </FxBox>
-      ) : ENTRIES.length === 1 ? (
-        <UserCard data={data[0]} />
       ) : (
         <CardCarousel
           data={data}

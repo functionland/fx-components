@@ -1,5 +1,4 @@
 import React from 'react';
-import Clipboard from '@react-native-clipboard/clipboard';
 import { CopyIcon } from '../../components';
 import { User } from '../../api/users';
 import {
@@ -9,15 +8,12 @@ import {
   FxText,
 } from '@functionland/component-library';
 import { Image } from 'react-native';
+import { copyToClipboard } from '../../utils/clipboard';
 
 type UserHeaderProps = {
   userData: User;
 };
 export const UserHeader = ({ userData }: UserHeaderProps) => {
-  const copyHandler = () => {
-    Clipboard.setString(userData.decentralizedId);
-  };
-
   return (
     <FxBox alignItems="center">
       <Image source={Number(userData.imageUrl)} />
@@ -33,7 +29,11 @@ export const UserHeader = ({ userData }: UserHeaderProps) => {
       </FxText>
       <FxSpacer marginTop="32" />
       <FxBox width="100%">
-        <FxButton onPress={copyHandler} size="large" iconLeft={<CopyIcon />}>
+        <FxButton
+          onPress={() => copyToClipboard(userData.decentralizedId)}
+          size="large"
+          iconLeft={<CopyIcon />}
+        >
           {`DID: ${userData.decentralizedId}`}
         </FxButton>
       </FxBox>

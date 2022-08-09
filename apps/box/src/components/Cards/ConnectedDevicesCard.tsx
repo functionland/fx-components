@@ -124,8 +124,6 @@ export const ConnectedDevicesCard = () => {
             No "connected devices"
           </FxText>
         </FxBox>
-      ) : ENTRIES.length === 1 ? (
-        <DeviceCard data={ENTRIES[0]} />
       ) : (
         <CardCarousel
           data={ENTRIES}
