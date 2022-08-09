@@ -33,6 +33,8 @@ type DeviceCardProps = React.ComponentProps<typeof FxBox> & {
 };
 const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
+  const { name, capacity, status, associatedDevices } = data;
+
   return (
     <FxCard
       {...rest}
@@ -40,33 +42,31 @@ const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
       delayLongPress={200}
     >
       <FxText color="content1" variant="bodyLargeRegular" marginBottom="8">
-        {data.name}
+        {name}
       </FxText>
       <FxBox flexDirection="row" marginBottom="16">
-        {data.associatedDevices.map((deviceName) => (
-          <FxTag key={`${data.name}-${deviceName}`} marginRight="8">
+        {associatedDevices.map((deviceName) => (
+          <FxTag key={`${name}-${deviceName}`} marginRight="8">
             {deviceName}
           </FxTag>
         ))}
       </FxBox>
       <CardRow>
         <CardRowTitle>Capacity</CardRowTitle>
-        <CardRowData>{convertMegabyteToGigabyte(data.capacity)} GB</CardRowData>
+        <CardRowData>{convertMegabyteToGigabyte(capacity)} GB</CardRowData>
       </CardRow>
       <CardRow>
         <CardRowTitle>Status</CardRowTitle>
         <FxBox flexDirection="row" alignItems="center">
           <CardRowData>
-            {convertPascalToSentence(DeviceStatus[data.status])}
+            {convertPascalToSentence(DeviceStatus[status])}
           </CardRowData>
-          {data.status === DeviceStatus.BackingUp && (
+          {status === DeviceStatus.BackingUp && (
             <FxLoadingSpinner marginLeft="4" />
           )}
         </FxBox>
       </CardRow>
-      <FxButton disabled={data.status === DeviceStatus.BackingUp}>
-        Eject
-      </FxButton>
+      <FxButton disabled={status === DeviceStatus.BackingUp}>Eject</FxButton>
       <FxBottomSheetModal ref={bottomSheetRef} title="Device Bottom Sheet">
         <FxBox
           height={200}
