@@ -3,14 +3,10 @@ import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
 
-type Modes = ['light', 'dark', 'auto'];
 export type ColorScheme = 'light' | 'dark';
-type Mode = Modes[number];
 interface ModeSlice {
   _hasHydrated: boolean;
   setHasHydrated: (isHydrated: boolean) => void;
-  modes: Modes;
-  currentMode: Mode;
   getMode: () => ColorScheme;
   isAuto: boolean;
   colorScheme: ColorScheme;
@@ -30,10 +26,8 @@ const createModeSlice: StateCreator<
         _hasHydrated: isHydrated,
       });
     },
-    modes: ['light', 'dark', 'auto'],
-    currentMode: 'auto',
     isAuto: true,
-    colorScheme: 'light',
+    colorScheme: 'dark',
     setColorScheme: (colorScheme: ColorScheme) =>
       set(() => ({ colorScheme: colorScheme })),
     toggleIsAuto: () => set((state) => ({ isAuto: !state.isAuto })),
@@ -44,7 +38,7 @@ const createModeSlice: StateCreator<
     },
   }),
   {
-    name: 'mode',
+    name: 'modeSlice',
     getStorage: () => AsyncStorage,
     serialize: (state) => JSON.stringify(state),
     deserialize: (str) => JSON.parse(str),
