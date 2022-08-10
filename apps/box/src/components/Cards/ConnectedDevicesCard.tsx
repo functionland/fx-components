@@ -21,21 +21,20 @@ enum DeviceStatus {
   NotInUse = 2,
 }
 
-interface DeviceCardProps extends React.ComponentProps<typeof FxBox> {
+type DeviceData = {
   name: string;
   capacity: number; // megabytes
   status: DeviceStatus;
   associatedDevices: string[];
-}
+};
 
-const DeviceCard = ({
-  name,
-  associatedDevices,
-  capacity,
-  status,
-  ...rest
-}: DeviceCardProps) => {
+type DeviceCardProps = React.ComponentProps<typeof FxBox> & {
+  data: DeviceData;
+};
+const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
+  const { name, capacity, status, associatedDevices } = data;
+
   return (
     <FxCard
       {...rest}
@@ -85,7 +84,7 @@ const DeviceCard = ({
 /**
  * @todo: Replace ENTRIES with api data
  */
-const ENTRIES: DeviceCardProps[] = [
+const ENTRIES: DeviceData[] = [
   {
     name: 'Expansion Card 1',
     capacity: 921600,
@@ -125,8 +124,6 @@ export const ConnectedDevicesCard = () => {
             No "connected devices"
           </FxText>
         </FxBox>
-      ) : ENTRIES.length === 1 ? (
-        <DeviceCard {...ENTRIES[0]} />
       ) : (
         <CardCarousel
           data={ENTRIES}

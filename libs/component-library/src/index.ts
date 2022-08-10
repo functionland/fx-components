@@ -1,3 +1,4 @@
+export * from './lib/utils/animations';
 export * from './lib/utils/constants';
 export * from './lib/utils/conversions';
 export {
@@ -6,7 +7,7 @@ export {
 } from './lib/bottom-sheet/bottomSheetModal';
 export { FxBox, FxReanimatedBox, FxBoxProps } from './lib/box/box';
 export { FxButton } from './lib/button/button';
-export { FxCard } from './lib/card/card';
+export { FxCard, FxCardProps } from './lib/card/card';
 export * from './lib/icons/icons';
 export { FxError } from './lib/error/error';
 export { FxFoldableContent } from './lib/foldable-content/foldableContent';
