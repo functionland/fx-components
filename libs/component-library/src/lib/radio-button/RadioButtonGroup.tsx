@@ -37,8 +37,8 @@ export const useRadioButtonContext = () => React.useContext(RadioButtonContext);
  * ## Usage
  * ```jsx
  * import React from 'react';
- * import { View } from 'react-native';
- * import { RadioButton, Text } from 'components';
+ * import { View, Text } from 'react-native';
+ * import { RadioButton } from '@functionland/component-library';
  *
  * const MyComponent = () => {
  *   const [value, setValue] = React.useState('first');

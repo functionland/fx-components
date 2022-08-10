@@ -65,7 +65,7 @@ const BORDER_WIDTH_CHECKED = 6;
  * ```js
  * import * as React from 'react';
  * import { View } from 'react-native';
- * import { RadioButton } from 'react-native-paper';
+ * import { RadioButton } from '@functionland/component-library';
  *
  * const MyComponent = () => {
  *   const [checked, setChecked] = React.useState('first');
