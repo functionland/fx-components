@@ -7,6 +7,10 @@ export type ColorScheme = 'light' | 'dark';
 interface ModeSlice {
   _hasHydrated: boolean;
   setHasHydrated: (isHydrated: boolean) => void;
+  /**
+   * Only use in Functional Components, under the hood its using a hooks to get your system
+   * @returns 'light' or 'dark'
+   */
   getMode: () => ColorScheme;
   isAuto: boolean;
   colorScheme: ColorScheme;
