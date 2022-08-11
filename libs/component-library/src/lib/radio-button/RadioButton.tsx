@@ -1,24 +1,18 @@
-import { createBox, useTheme } from '@shopify/restyle';
+import { useTheme } from '@shopify/restyle';
 import * as React from 'react';
+import { Animated, View, StyleSheet } from 'react-native';
 import {
-  Animated,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  TouchableOpacityProps,
-} from 'react-native';
+  FxPressableOpacity,
+  FxPressableOpacityProps,
+} from '../pressable-opacity/pressableOpacity';
 import { FxTheme } from '../theme/theme';
 
-import type { $RemoveChildren } from './../types';
+import type { $Omit } from './../types';
 
 import { useRadioButtonContext } from './RadioButtonGroup';
 import { handlePress, isChecked } from './utils';
 
-const TouchableBox = createBox<FxTheme, TouchableOpacityProps>(
-  TouchableOpacity
-);
-
-type Props = $RemoveChildren<typeof TouchableBox> & {
+type Props = $Omit<FxPressableOpacityProps, 'children'> & {
   /**
    * Value of the radio button
    */
@@ -32,7 +26,7 @@ type Props = $RemoveChildren<typeof TouchableBox> & {
    */
   disabled?: boolean;
   /**
-   * Function to execute on press.
+   * Function to execute on internal onPress.
    */
   onPress?: () => void;
   /**
@@ -155,8 +149,8 @@ const RadioButton = ({ disabled, onPress, value, status, ...rest }: Props) => {
   }
 
   return (
-    <TouchableBox
-      style={s.container}
+    <FxPressableOpacity
+      borderRadius="l"
       accessibilityRole="radio"
       accessibilityState={{ disabled, checked }}
       accessibilityLiveRegion="polite"
@@ -197,16 +191,13 @@ const RadioButton = ({ disabled, onPress, value, status, ...rest }: Props) => {
           </View>
         ) : null}
       </Animated.View>
-    </TouchableBox>
+    </FxPressableOpacity>
   );
 };
 
 RadioButton.displayName = 'RadioButton';
 
 const s = StyleSheet.create({
-  container: {
-    borderRadius: 18,
-  },
   radioContainer: {
     alignItems: 'center',
     justifyContent: 'center',
