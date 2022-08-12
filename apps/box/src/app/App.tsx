@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Platform, StatusBar, StyleSheet, UIManager } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useSettingsStore } from '../stores';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -16,9 +17,15 @@ if (Platform.OS === 'android') {
   }
 }
 
+const fullTheme = {
+  light: fxLightTheme,
+  dark: fxDarkTheme,
+};
+
 export const App = () => {
   const [isDarkTheme] = React.useState<boolean>(true);
-  const theme = isDarkTheme ? fxDarkTheme : fxLightTheme;
+  const mode = useSettingsStore().getMode();
+  const theme = fullTheme[mode];
 
   return (
     <ThemeProvider theme={theme}>
