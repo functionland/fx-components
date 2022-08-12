@@ -8,6 +8,7 @@ import { NavContainer } from '../navigation/NavContainer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Platform, StatusBar, StyleSheet, UIManager } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -34,7 +35,9 @@ export const App = () => {
             barStyle={isDarkTheme ? 'light-content' : 'dark-content'}
           />
           <BottomSheetModalProvider>
-            <AppContent />
+            <SafeAreaProvider>
+              <AppContent />
+            </SafeAreaProvider>
           </BottomSheetModalProvider>
         </GestureHandlerRootView>
       </WalletConnectProvider>
