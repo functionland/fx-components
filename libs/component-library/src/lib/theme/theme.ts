@@ -69,6 +69,8 @@ const BaseTheme = {
     greenPressed: paletteLight.green700,
     greenBase: paletteLight.green600,
     greenHover: paletteLight.green500,
+    greenBorder: paletteLight.green400,
+    greenBackground: paletteLight.green100,
 
     errorBase: paletteLight.error600,
 
@@ -260,6 +262,8 @@ const fxDarkTheme: FxTheme = {
     greenPressed: paletteDark.green700,
     greenBase: paletteDark.green600,
     greenHover: paletteDark.green500,
+    greenBorder: paletteDark.green200,
+    greenBackground: paletteDark.green100,
 
     errorBase: paletteDark.error600,
   },
