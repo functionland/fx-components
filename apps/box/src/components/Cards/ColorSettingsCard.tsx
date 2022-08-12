@@ -88,7 +88,7 @@ export const ColorSettingsCard = () => {
           </FxBox>
         </FxPressableOpacity>
         <FxBottomSheetModal ref={colorPickerRef} title="Custom Color">
-          <FxBox alignItems="center" paddingBottom="40">
+          <FxBox alignItems="center">
             <FxBox width={265} height={280} marginBottom="16">
               <ColorPicker
                 color={color}

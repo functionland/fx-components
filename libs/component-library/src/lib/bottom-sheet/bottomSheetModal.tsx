@@ -13,6 +13,7 @@ import { FxBox } from '../box/box';
 import { FxText } from '../text/text';
 import { FxCloseIcon } from '../icons/icons';
 import { FxPressableOpacity } from '../pressable-opacity/pressableOpacity';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type FxBottomSheetModalProps = {
   title?: string;
@@ -32,6 +33,7 @@ export const FxBottomSheetModal = React.forwardRef<
   FxBottomSheetModalProps
 >(({ title, children }, ref) => {
   const theme = useTheme<FxTheme>();
+  const insets = useSafeAreaInsets();
   const bottomSheetModalRef = React.useRef<BottomSheetModal>(null);
   const {
     animatedHandleHeight,
@@ -82,6 +84,9 @@ export const FxBottomSheetModal = React.forwardRef<
       <BottomSheetScrollView
         stickyHeaderIndices={[0]}
         onLayout={handleContentLayout}
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + 20,
+        }}
       >
         <FxBox
           flexDirection="row"
