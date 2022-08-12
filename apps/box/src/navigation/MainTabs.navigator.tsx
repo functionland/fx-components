@@ -82,7 +82,7 @@ const SettingsNavigator = () => {
       screenOptions={() => ({
         headerBackTitleVisible: false,
         headerBackImageSource: require('../../assets/icons/back.png'),
-        headerTintColor: theme.colors.white,
+        headerTintColor: theme.colors.content1,
         headerStyle: {
           backgroundColor: theme.colors.backgroundApp,
         },
