@@ -4,12 +4,16 @@ import {
   FxBox,
   FxCard,
   FxText,
+  capitalizeFirstLetter,
 } from '@functionland/component-library';
 import { SettingsStackNavigationProps } from '../../navigation/navigationConfig';
 import { useNavigation } from '@react-navigation/native';
+import { useSettingsStore } from '../../stores';
 
 export const SettingsMenu = () => {
   const navigation = useNavigation<SettingsStackNavigationProps<'Settings'>>();
+  const mode = useSettingsStore().getMode();
+
   const menuItems = [
     {
       name: 'Connected dApps',
@@ -18,7 +22,7 @@ export const SettingsMenu = () => {
     },
     {
       name: 'Mode',
-      detail: `Current: Dark`,
+      detail: `Current: ${capitalizeFirstLetter(mode)}`,
       onPress: () => navigation.navigate('Mode'),
     }, // TODO: pull in mode from store when store is implemented
     {
