@@ -8,23 +8,30 @@ import { FxTheme } from '../theme/theme';
 
 export type FxGridSelectorProps = {
   isList: boolean;
+  disabled?: boolean;
   setIsList: React.Dispatch<React.SetStateAction<boolean>>;
 } & React.ComponentProps<typeof FxBox>;
 
 export const FxGridSelector = ({
   isList,
   setIsList,
+  disabled,
   ...rest
 }: FxGridSelectorProps) => {
   const { colors } = useTheme<FxTheme>();
+  const disabledColor = disabled ? colors.backgroundPrimary : undefined;
   return (
     <FxBox alignItems={'center'} flexDirection="row" {...rest}>
-      <FxPressableOpacity onPress={() => setIsList(true)}>
-        <ListIcon fill={isList ? colors.greenBase : colors.content3} />
+      <FxPressableOpacity disabled={disabled} onPress={() => setIsList(true)}>
+        <ListIcon
+          fill={disabledColor || (isList ? colors.greenBase : colors.content3)}
+        />
       </FxPressableOpacity>
       <FxSpacer width={12} />
-      <FxPressableOpacity onPress={() => setIsList(false)}>
-        <GridIcon fill={isList ? colors.content3 : colors.greenBase} />
+      <FxPressableOpacity disabled={disabled} onPress={() => setIsList(false)}>
+        <GridIcon
+          fill={disabledColor || (isList ? colors.content3 : colors.greenBase)}
+        />
       </FxPressableOpacity>
     </FxBox>
   );
