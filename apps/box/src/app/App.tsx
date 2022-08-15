@@ -23,8 +23,8 @@ const fullTheme = {
 };
 
 const barStyles = {
-  light: 'light-content',
-  dark: 'dark-content',
+  light: 'dark-content',
+  dark: 'light-content',
 } as const;
 
 export const App = () => {
