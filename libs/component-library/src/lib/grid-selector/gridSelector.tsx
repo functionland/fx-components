@@ -11,7 +11,11 @@ export type FxGridSelectorProps = {
   setIsList: React.Dispatch<React.SetStateAction<boolean>>;
 } & React.ComponentProps<typeof FxBox>;
 
-const GridSelector = ({ isList, setIsList, ...rest }: FxGridSelectorProps) => {
+export const FxGridSelector = ({
+  isList,
+  setIsList,
+  ...rest
+}: FxGridSelectorProps) => {
   const { colors } = useTheme<FxTheme>();
   return (
     <FxBox alignItems={'center'} flexDirection="row" {...rest}>
@@ -25,5 +29,3 @@ const GridSelector = ({ isList, setIsList, ...rest }: FxGridSelectorProps) => {
     </FxBox>
   );
 };
-
-export { GridSelector };
