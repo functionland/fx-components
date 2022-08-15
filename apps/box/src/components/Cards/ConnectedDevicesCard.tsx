@@ -72,7 +72,7 @@ const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
           height={200}
           justifyContent="center"
           alignItems="center"
-          padding="20"
+          paddingHorizontal="20"
         >
           <FxText>This bottom sheet needs to be completed</FxText>
         </FxBox>
