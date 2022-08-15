@@ -9,6 +9,7 @@ export { FxBox, FxReanimatedBox, FxBoxProps } from './lib/box/box';
 export { FxButton } from './lib/button/button';
 export { FxCard, FxCardProps } from './lib/card/card';
 export { FxSwitch } from './lib/switch/switch';
+export { GridSelector } from './lib/grid-selector/gridSelector';
 export * from './lib/icons/icons';
 export { FxError } from './lib/error/error';
 export { FxRadioButton } from './lib/radio-button';
