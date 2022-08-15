@@ -47,6 +47,7 @@ const FxButtonText = createRestyleComponent<
 >([buttonTextVariant, buttonTextSize], FxText);
 
 type FxButtonProps = React.ComponentProps<typeof FxButtonBase> & {
+  icon?: React.ReactElement<FxSvgProps>;
   iconLeft?: React.ReactElement<FxSvgProps>;
   iconRight?: React.ReactElement<FxSvgProps>;
   children?: React.ReactNode | string;
@@ -58,6 +59,7 @@ const FxButton = ({
   onPressOut,
   variant,
   size,
+  icon,
   iconLeft,
   iconRight,
   ...rest
@@ -66,7 +68,7 @@ const FxButton = ({
   const [isPressed, setIsPressed] = React.useState(false);
   const type = disabled ? 'disabled' : isPressed ? 'pressed' : variant;
 
-  const icon = (_icon: React.ReactElement<FxSvgProps>) => {
+  const renderIcon = (_icon: React.ReactElement<FxSvgProps>) => {
     return React.createElement<FxSvgProps>(
       _icon.type,
 
@@ -84,6 +86,8 @@ const FxButton = ({
       variant={type}
       size={size}
       disabled={disabled}
+      alignItems="center"
+      justifyContent="center"
       onPressIn={(e) => {
         setIsPressed(true);
         if (onPressIn) onPressIn(e);
@@ -94,20 +98,25 @@ const FxButton = ({
       }}
       {...rest}
     >
-      <FxBox flexDirection="row" alignItems="center">
+      <FxBox flexDirection="row" alignItems="center" justifyContent="center">
         {iconLeft && (
           <>
-            {icon(iconLeft)}
+            {renderIcon(iconLeft)}
             <FxSpacer width={8} />
           </>
         )}
-        <FxButtonText size={size} type={type}>
-          {children}
-        </FxButtonText>
+        {icon ? (
+          <>{renderIcon(icon)}</>
+        ) : (
+          <FxButtonText size={size} type={type}>
+            {children}
+          </FxButtonText>
+        )}
+
         {iconRight && (
           <>
             <FxSpacer width={8} />
-            {icon(iconRight)}
+            {renderIcon(iconRight)}
           </>
         )}
       </FxBox>
