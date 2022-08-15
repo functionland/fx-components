@@ -22,8 +22,12 @@ const fullTheme = {
   dark: fxDarkTheme,
 };
 
+const barStyles = {
+  light: 'light-content',
+  dark: 'dark-content',
+} as const;
+
 export const App = () => {
-  const [isDarkTheme] = React.useState<boolean>(true);
   const mode = useSettingsStore().getMode();
   const theme = fullTheme[mode];
 
@@ -39,7 +43,7 @@ export const App = () => {
         <GestureHandlerRootView style={styles.flex1}>
           <StatusBar
             backgroundColor={theme.colors.backgroundApp}
-            barStyle={isDarkTheme ? 'light-content' : 'dark-content'}
+            barStyle={barStyles[mode]}
           />
           <BottomSheetModalProvider>
             <SafeAreaProvider>
