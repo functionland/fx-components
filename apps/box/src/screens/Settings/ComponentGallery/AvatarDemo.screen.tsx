@@ -4,7 +4,7 @@ import {
   FxSafeAreaBox,
   FxSpacer,
 } from '@functionland/component-library';
-import { HeaderText } from 'apps/box/src/components/Text';
+import { HeaderText } from '../../../components/Text';
 import React from 'react';
 
 export const AvatarDemoScreen = () => {
