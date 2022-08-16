@@ -1,6 +1,7 @@
 export * from './lib/utils/animations';
 export * from './lib/utils/constants';
 export * from './lib/utils/conversions';
+export { FxAvatar } from './lib/avatar/avatar';
 export {
   FxBottomSheetModal,
   FxBottomSheetModalMethods,
