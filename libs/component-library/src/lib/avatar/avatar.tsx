@@ -105,19 +105,19 @@ export const FxAvatar = ({
             left={radius + iconX - ICON_WITH_BORDER / 2}
             top={radius - iconY - ICON_WITH_BORDER / 2}
             borderColor="content1"
-            borderWidth={2}
+            borderWidth={ICON_BORDER}
+            width={ICON_WITH_BORDER}
+            height={ICON_WITH_BORDER}
             backgroundColor={IconDefs[icon].backgroundColor}
             style={{ borderRadius: ICON_SIZE / 2 + ICON_BORDER }}
           >
-            <FxBox width={ICON_SIZE} height={ICON_SIZE}>
-              {IconElem && (
-                <IconElem
-                  width="100%"
-                  height="100%"
-                  color={IconDefs[icon].iconColor}
-                />
-              )}
-            </FxBox>
+            {IconElem && (
+              <IconElem
+                width="100%"
+                height="100%"
+                color={IconDefs[icon].iconColor}
+              />
+            )}
           </FxBox>
         )}
       </FxBox>
