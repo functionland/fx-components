@@ -33,16 +33,16 @@ const AvatarSizeMap: Record<AvatarSize, number> = {
   xl: 96,
 };
 
-const RADIAN_CONVERION = Math.PI / 180;
+const RADIAN_CONVERSION = Math.PI / 180;
 const ICON_SIZE = 16;
 const ICON_BORDER = 2;
 const ICON_WITH_BORDER = ICON_SIZE + ICON_BORDER;
 
 const IconOffsetMap: Record<AvatarSize, number> = {
-  small: -20 * RADIAN_CONVERION,
-  medium: -30 * RADIAN_CONVERION,
-  large: -40 * RADIAN_CONVERION,
-  xl: -45 * RADIAN_CONVERION,
+  small: -20 * RADIAN_CONVERSION,
+  medium: -30 * RADIAN_CONVERSION,
+  large: -40 * RADIAN_CONVERSION,
+  xl: -45 * RADIAN_CONVERSION,
 };
 
 const IconDefs: Record<
@@ -71,14 +71,13 @@ type FxAvatarProps = {
   source: ImageSourcePropType;
   size: AvatarSize;
   icon?: Icon;
-} & Pick<FxPressableOpacityProps, 'onPress' | 'disabled'>;
+} & FxPressableOpacityProps;
 
 export const FxAvatar = ({
   source,
   size,
   icon = 'none',
-  disabled,
-  onPress,
+  ...rest // FxPressableOpacityProps
 }: FxAvatarProps) => {
   const avatarSize = AvatarSizeMap[size];
   const iconOffset = IconOffsetMap[size];
@@ -88,7 +87,7 @@ export const FxAvatar = ({
   const IconElem = IconDefs[icon].icon;
 
   return (
-    <FxPressableOpacity disabled={disabled} onPress={onPress}>
+    <FxPressableOpacity {...rest}>
       <FxBox>
         <Image
           source={source}
@@ -98,7 +97,7 @@ export const FxAvatar = ({
             borderRadius: avatarSize,
           }}
         />
-        {IconElem && (
+        {IconDefs[icon].backgroundColor && (
           <FxBox
             justifyContent="center"
             alignItems="center"
@@ -110,11 +109,15 @@ export const FxAvatar = ({
             backgroundColor={IconDefs[icon].backgroundColor}
             style={{ borderRadius: ICON_SIZE / 2 + ICON_BORDER }}
           >
-            <IconElem
-              width={ICON_SIZE}
-              height={ICON_SIZE}
-              color={IconDefs[icon].iconColor}
-            />
+            <FxBox width={ICON_SIZE} height={ICON_SIZE}>
+              {IconElem && (
+                <IconElem
+                  width="100%"
+                  height="100%"
+                  color={IconDefs[icon].iconColor}
+                />
+              )}
+            </FxBox>
           </FxBox>
         )}
       </FxBox>
