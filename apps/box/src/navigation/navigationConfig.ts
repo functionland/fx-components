@@ -23,6 +23,8 @@ export type SettingsStackParamList = {
   Mode: undefined;
   Pools: undefined;
   About: undefined;
+  'Component Gallery': undefined;
+  'Avatar Demo': undefined;
 };
 
 export type InitialSetupStackParamList = {

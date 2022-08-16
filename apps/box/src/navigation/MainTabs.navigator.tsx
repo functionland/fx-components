@@ -15,6 +15,8 @@ import {
   ModeScreen,
   ConnectedDAppsScreen,
 } from '../screens/Settings';
+import { ComponentGalleryScreen } from '../screens/Settings/ComponentGallery.screen';
+import { AvatarDemoScreen } from '../screens/Settings/ComponentGallery/AvatarDemo.screen';
 
 export const MainTabsNavigator = () => {
   const theme = useTheme<FxTheme>();
@@ -97,6 +99,12 @@ const SettingsNavigator = () => {
       <SettingsStack.Screen name="Mode" component={ModeScreen} />
       <SettingsStack.Screen name="Pools" component={PoolsScreen} />
       <SettingsStack.Screen name="About" component={AboutScreen} />
+
+      <SettingsStack.Screen
+        name="Component Gallery"
+        component={ComponentGalleryScreen}
+      />
+      <SettingsStack.Screen name="Avatar Demo" component={AvatarDemoScreen} />
     </SettingsStack.Navigator>
   );
 };
