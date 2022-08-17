@@ -9,7 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { FlatList, ListRenderItem, StyleSheet } from 'react-native';
 import { HeaderText } from '../../components/Text';
-import { SettingsStackNavigationProps } from '../../navigation/navigationConfig';
+import { ComponentGalleryStackNavigationProps } from '../../navigation/navigationConfig';
 
 type GalleryItemType = {
   name: string;
@@ -18,12 +18,12 @@ type GalleryItemType = {
 
 export const ComponentGalleryScreen = () => {
   const navigation =
-    useNavigation<SettingsStackNavigationProps<'Component Gallery'>>();
+    useNavigation<ComponentGalleryStackNavigationProps<'Component Gallery'>>();
   const galleryItems: GalleryItemType[] = [
     {
       name: 'Avatars',
       onPress: () => {
-        navigation.navigate('Avatar Demo');
+        navigation.navigate('Avatars');
       },
     },
   ];
