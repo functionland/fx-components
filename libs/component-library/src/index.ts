@@ -14,6 +14,7 @@ export {
   FxGridSelector,
   FxGridSelectorProps,
 } from './lib/grid-selector/gridSelector';
+export { FxHeader, FxHeaderProps } from './lib/header/header';
 export * from './lib/icons/icons';
 export { FxError } from './lib/error/error';
 export { FxRadioButton } from './lib/radio-button';
