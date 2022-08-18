@@ -23,7 +23,12 @@ export const FxHeader = ({
   ...rest
 }: FxHeaderProps) => {
   return (
-    <FxBox flexDirection="row" justifyContent="space-between" {...rest}>
+    <FxBox
+      flexDirection="row"
+      alignItems="center"
+      justifyContent="space-between"
+      {...rest}
+    >
       <FxText color="content1" variant="h200">
         {title}
       </FxText>
