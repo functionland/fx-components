@@ -90,7 +90,12 @@ export const FxBottomSheetModal = React.forwardRef<
               {title}
             </FxText>
           )}
-          <FxPressableOpacity onPress={closeHandler}>
+          <FxPressableOpacity
+            position="absolute"
+            right={20}
+            top={0}
+            onPress={closeHandler}
+          >
             <FxCloseIcon color="content1" />
           </FxPressableOpacity>
         </FxBox>
