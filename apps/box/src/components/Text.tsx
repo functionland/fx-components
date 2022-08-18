@@ -4,6 +4,9 @@ import React from 'react';
 export const HeaderText = (props: FxTextProps) => (
   <FxText variant="h400" color="content1" {...props} />
 );
+export const SmallHeaderText = (props: FxTextProps) => (
+  <FxText variant="h300" color="content1" {...props} />
+);
 export const SubHeaderText = (props: FxTextProps) => (
   <FxText variant="h200" color="content1" {...props} />
 );
