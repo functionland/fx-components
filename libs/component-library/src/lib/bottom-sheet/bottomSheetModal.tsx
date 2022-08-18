@@ -23,13 +23,10 @@ type FxBottomSheetModalProps = {
 const snapPoints = ['CONTENT_HEIGHT'];
 const INSET = Dimensions.get('window').height * 0.05;
 
-export type FxBottomSheetModalMethods = {
-  present: () => void;
-  close: () => void;
-};
+export type FxBottomSheetModalMethods = BottomSheetModal;
 
 export const FxBottomSheetModal = React.forwardRef<
-  FxBottomSheetModalMethods,
+  BottomSheetModal,
   FxBottomSheetModalProps
 >(({ title, children }, ref) => {
   const theme = useTheme<FxTheme>();
@@ -57,16 +54,9 @@ export const FxBottomSheetModal = React.forwardRef<
     bottomSheetModalRef.current?.close();
   };
 
-  React.useImperativeHandle(
+  React.useImperativeHandle<BottomSheetModal | null, BottomSheetModal | null>(
     ref,
-    (): FxBottomSheetModalMethods => ({
-      present: () => {
-        bottomSheetModalRef.current?.present();
-      },
-      close: () => {
-        bottomSheetModalRef.current?.close();
-      },
-    })
+    () => bottomSheetModalRef.current
   );
 
   return (
@@ -100,7 +90,12 @@ export const FxBottomSheetModal = React.forwardRef<
               {title}
             </FxText>
           )}
-          <FxPressableOpacity onPress={closeHandler}>
+          <FxPressableOpacity
+            position="absolute"
+            right={20}
+            top={0}
+            onPress={closeHandler}
+          >
             <FxCloseIcon color="content1" />
           </FxPressableOpacity>
         </FxBox>
