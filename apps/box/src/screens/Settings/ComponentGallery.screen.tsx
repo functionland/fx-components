@@ -18,7 +18,7 @@ type GalleryItemType = {
 
 export const ComponentGalleryScreen = () => {
   const navigation =
-    useNavigation<ComponentGalleryStackNavigationProps<'Component Gallery'>>();
+    useNavigation<ComponentGalleryStackNavigationProps<'Gallery'>>();
   const galleryItems: GalleryItemType[] = [
     {
       name: 'Avatars',
