@@ -10,11 +10,18 @@ import { ComponentGalleryStackParamList } from './navigationConfig';
 type ComponentGalleryBackProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   navigation: any;
+  tintColor: string;
 };
-const ComponentGalleryBack = ({ navigation }: ComponentGalleryBackProps) => {
+const ComponentGalleryBack = ({
+  navigation,
+  tintColor,
+}: ComponentGalleryBackProps) => {
   return (
     <FxPressableOpacity onPress={() => navigation.goBack()}>
-      <Image source={require('../../assets/icons/back.png')} />
+      <Image
+        source={require('../../assets/icons/back.png')}
+        style={{ tintColor: tintColor }}
+      />
     </FxPressableOpacity>
   );
 };
@@ -32,11 +39,16 @@ export const ComponentGalleryNavigator = () => {
         },
         headerTitle: '',
         // eslint-disable-next-line react/no-unstable-nested-components
-        headerLeft: () => <ComponentGalleryBack navigation={navigation} />,
+        headerLeft: () => (
+          <ComponentGalleryBack
+            navigation={navigation}
+            tintColor={theme.colors.content1}
+          />
+        ),
       })}
     >
       <ComponentGalleryStack.Screen
-        name="Component Gallery"
+        name="Gallery"
         component={ComponentGalleryScreen}
       />
       <ComponentGalleryStack.Screen
