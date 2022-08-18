@@ -5,6 +5,7 @@ import React from 'react';
 import { Image } from 'react-native';
 import { ComponentGalleryScreen } from '../screens/Settings/ComponentGallery.screen';
 import { AvatarDemoScreen } from '../screens/Settings/ComponentGallery/AvatarDemo.screen';
+import { ButtonGroupDemoScreen } from '../screens/Settings/ComponentGallery/ButtonGroupDemo.screen';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 
 type ComponentGalleryBackProps = {
@@ -54,6 +55,10 @@ export const ComponentGalleryNavigator = () => {
       <ComponentGalleryStack.Screen
         name="Avatars"
         component={AvatarDemoScreen}
+      />
+      <ComponentGalleryStack.Screen
+        name="Button Groups"
+        component={ButtonGroupDemoScreen}
       />
     </ComponentGalleryStack.Navigator>
   );
