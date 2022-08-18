@@ -2,7 +2,6 @@ import {
   FxBox,
   FxDownArrowIcon,
   FxReanimatedBox,
-  FxReText,
 } from '@functionland/component-library';
 import React from 'react';
 import { StyleSheet } from 'react-native';
@@ -11,10 +10,11 @@ import {
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import {
+  runOnJS,
+  SharedValue,
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useDerivedValue,
-  useSharedValue,
 } from 'react-native-reanimated';
 import { clamp } from 'react-native-redash';
 
@@ -22,26 +22,91 @@ const HEIGHT = 40;
 const TOUCHABLE_WIDTH = 40;
 
 type Bounds = {
-  low: number;
-  high: number;
+  low: number; // screen coord
+  high: number; // screen coord
+};
+
+export type UsageBarUsage = {
+  usage: number;
+  color: string;
+};
+
+// converts percentage into x coordinate value based on bounds of usage bar
+const fromPercentage = (_percentage: number, _bounds: Bounds) => {
+  'worklet';
+  const usageWidth = _bounds.high - _bounds.low;
+  return _bounds.low + (usageWidth * _percentage) / 100;
+};
+
+// converts x coordinate into percentage value based on bounds of usage bar
+const toPercentage = (_pos: number, _bounds: Bounds) => {
+  'worklet';
+  return (
+    ((_pos + TOUCHABLE_WIDTH / 2) / (_bounds.high + TOUCHABLE_WIDTH / 2)) * 100
+  );
+};
+
+// converts the space usage percentage into width value based on size of the
+// usage bar.
+const calculateLayoutWidth = (
+  totalCapacity: number,
+  space: number,
+  bounds: Bounds
+) => {
+  'worklet';
+  const width = bounds.high - bounds.low;
+  const spacePercent = space / totalCapacity;
+  return width * spacePercent;
 };
 
 interface UsageBarProps {
   isEditable?: boolean;
+  divisionPercent: SharedValue<number>; //percentage. eg: 50
+  totalCapacity: number;
+  usages: [UsageBarUsage[], UsageBarUsage[]];
+  onEditStart?: () => void;
+  onEditEnd?: () => void;
 }
+export const UsageBar = ({
+  isEditable,
+  divisionPercent,
+  usages,
+  totalCapacity,
+  onEditStart,
+  onEditEnd,
+}: UsageBarProps) => {
+  const [usageFirst, usageSecond] = usages;
+  const [boundsX, setBoundsX] = React.useState<Bounds>({ low: 0, high: 0 });
 
-export const UsageBar = ({ isEditable }: UsageBarProps) => {
-  const boundsX = useSharedValue<Bounds>({ low: 0, high: 0 });
-  const translateX = useSharedValue(200); // arbitrarily initialized; needs to be replaced with real data
-  const usagePercent = useDerivedValue(
-    () =>
-      ((translateX.value + TOUCHABLE_WIDTH / 2) /
-        (boundsX.value.high + TOUCHABLE_WIDTH / 2)) *
-      100
-  );
-  const poolPercentText = useDerivedValue(
-    () => `Pool Usage: ${Math.round(usagePercent.value)}%`
-  );
+  const dividerX = useDerivedValue(() => {
+    return fromPercentage(divisionPercent.value, boundsX);
+  });
+
+  const editStartHandler = () => {
+    onEditStart && onEditStart();
+  };
+  const editEndHandler = () => {
+    onEditEnd && onEditEnd();
+  };
+
+  // calculates the bounds of the division split so that
+  // the divider isn't dragged into used space.
+  const clampBoundaries = useDerivedValue<Bounds>(() => {
+    const low =
+      boundsX.low +
+      usageFirst.reduce((prev, cur) => {
+        return prev + calculateLayoutWidth(totalCapacity, cur.usage, boundsX);
+      }, 0);
+    const high =
+      boundsX.high -
+      usageSecond.reduce((prev, cur) => {
+        return prev + calculateLayoutWidth(totalCapacity, cur.usage, boundsX);
+      }, 0);
+    return {
+      low: toPercentage(low, boundsX),
+      high: toPercentage(high, boundsX),
+    };
+  }, [boundsX, usageFirst, usageSecond]);
 
   const onGestureEvent = useAnimatedGestureHandler<
     PanGestureHandlerGestureEvent,
@@ -50,69 +115,104 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
     }
   >({
     onStart: (_, ctx) => {
-      ctx.offsetX = translateX.value;
+      ctx.offsetX = dividerX.value;
+      runOnJS(editStartHandler)();
     },
     onActive: (event, ctx) => {
-      translateX.value = clamp(
-        ctx.offsetX + event.translationX,
-        boundsX.value.low,
-        boundsX.value.high
+      divisionPercent.value = clamp(
+        toPercentage(ctx.offsetX + event.translationX, boundsX),
+        clampBoundaries.value.low,
+        clampBoundaries.value.high
       );
+    },
+    onEnd: () => {
+      runOnJS(editEndHandler)();
     },
   });
 
   const panStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: translateX.value,
+        translateX: dividerX.value,
       },
     ],
   }));
 
+  const dividerStyle = useAnimatedStyle(() => ({
+    left: dividerX.value + TOUCHABLE_WIDTH / 2 - 1,
+  }));
+
   const poolUsageStyle = useAnimatedStyle(() => ({
-    width: `${usagePercent.value}%`,
+    width: `${divisionPercent.value}%`,
   }));
 
   return (
-    <>
-      <FxBox
-        height={HEIGHT}
+    <FxBox
+      height={HEIGHT}
+      flexDirection="row"
+      marginVertical="8"
+      onLayout={(e) => {
+        const layout = e.nativeEvent.layout;
+        const newBounds = {
+          low: -TOUCHABLE_WIDTH / 2,
+          high: layout.width - TOUCHABLE_WIDTH / 2,
+        };
+
+        setBoundsX(newBounds);
+      }}
+    >
+      {isEditable && (
+        <PanGestureHandler onGestureEvent={onGestureEvent}>
+          <FxReanimatedBox
+            style={panStyle}
+            zIndex="foreground"
+            position="absolute"
+            alignItems="center"
+            width={TOUCHABLE_WIDTH}
+            height="100%"
+          />
+        </PanGestureHandler>
+      )}
+      <FxReanimatedBox
+        style={poolUsageStyle}
+        backgroundColor="greenPressed"
+        borderTopLeftRadius="s"
+        borderBottomLeftRadius="s"
+        overflow="hidden"
         flexDirection="row"
-        marginVertical="8"
-        onLayout={(e) => {
-          const layout = e.nativeEvent.layout;
-          boundsX.value = {
-            low: -TOUCHABLE_WIDTH / 2,
-            high: layout.width - TOUCHABLE_WIDTH / 2,
-          };
-        }}
       >
-        {isEditable && (
-          <PanGestureHandler onGestureEvent={onGestureEvent}>
-            <FxReanimatedBox
-              style={panStyle}
-              zIndex="foreground"
-              position="absolute"
-              width={TOUCHABLE_WIDTH}
-              height="100%"
-            />
-          </PanGestureHandler>
-        )}
-        <FxReanimatedBox
-          style={poolUsageStyle}
-          backgroundColor="greenPressed"
-          borderTopLeftRadius="s"
-          borderBottomLeftRadius="s"
-          overflow="hidden"
-        />
-        <FxBox
-          backgroundColor="backgroundSecondary"
-          width={isEditable ? 2 : 1}
-          zIndex="foreground"
-          pointerEvents="none"
-        >
-          {isEditable && <Divider />}
-        </FxBox>
+        {usageFirst.map((u, idx) => (
+          <FxBox
+            key={idx}
+            width={calculateLayoutWidth(totalCapacity, u.usage, boundsX)}
+            style={{ backgroundColor: u.color }}
+          />
+        ))}
+      </FxReanimatedBox>
+      <FxReanimatedBox
+        backgroundColor="backgroundSecondary"
+        width={isEditable ? 2 : 1}
+        zIndex="foreground"
+        pointerEvents="none"
+        position="absolute"
+        style={dividerStyle}
+      >
+        {isEditable && <Divider />}
+      </FxReanimatedBox>
+      <FxBox
+        borderTopRightRadius="s"
+        borderBottomRightRadius="s"
+        overflow="hidden"
+        flexDirection="row"
+        flex={1}
+      >
+        {usageSecond.map((u, idx) => (
+          <FxBox
+            key={idx}
+            width={calculateLayoutWidth(totalCapacity, u.usage, boundsX)}
+            style={{ backgroundColor: u.color }}
+          />
+        ))}
         <FxBox
           backgroundColor="greenHover"
           flexGrow={1}
@@ -120,8 +220,7 @@ export const UsageBar = ({ isEditable }: UsageBarProps) => {
           borderBottomRightRadius="s"
         />
       </FxBox>
-      <FxReText text={poolPercentText} />
-    </>
+    </FxBox>
   );
 };
 
