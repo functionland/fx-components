@@ -23,6 +23,7 @@ export type SettingsStackParamList = {
   Mode: undefined;
   Pools: undefined;
   About: undefined;
+  'Component Gallery': NavigatorScreenParams<ComponentGalleryStackParamList>;
 };
 
 export type InitialSetupStackParamList = {
@@ -34,6 +35,10 @@ export type InitialSetupStackParamList = {
   'Setup Complete': undefined;
 };
 
+export type ComponentGalleryStackParamList = {
+  'Component Gallery': undefined;
+  Avatars: undefined;
+};
 type MainTabsNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabsParamList>,
   NativeStackNavigationProp<RootStackParamList>
@@ -44,4 +49,11 @@ export type SettingsStackNavigationProps<
 > = CompositeNavigationProp<
   NativeStackNavigationProp<SettingsStackParamList, T>,
   MainTabsNavigationProp
+>;
+
+export type ComponentGalleryStackNavigationProps<
+  T extends keyof ComponentGalleryStackParamList
+> = CompositeNavigationProp<
+  NativeStackNavigationProp<ComponentGalleryStackParamList, T>,
+  NativeStackNavigationProp<SettingsStackParamList>
 >;

@@ -35,6 +35,11 @@ export const SettingsMenu = () => {
       detail: null,
       onPress: () => navigation.navigate('About'),
     },
+    {
+      name: 'Component Gallery',
+      detail: null,
+      onPress: () => navigation.navigate('Component Gallery'),
+    },
   ];
 
   return (
