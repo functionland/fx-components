@@ -46,7 +46,7 @@ const FxButtonText = createRestyleComponent<
   FxTheme
 >([buttonTextVariant, buttonTextSize], FxText);
 
-type FxButtonProps = React.ComponentProps<typeof FxButtonBase> & {
+export type FxButtonProps = React.ComponentProps<typeof FxButtonBase> & {
   icon?: React.ReactElement<FxSvgProps>;
   iconLeft?: React.ReactElement<FxSvgProps>;
   iconRight?: React.ReactElement<FxSvgProps>;
