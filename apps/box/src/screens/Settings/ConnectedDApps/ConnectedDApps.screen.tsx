@@ -9,6 +9,7 @@ import {
 import { SmallHeaderText } from '../../../components/Text';
 
 import { AddDAppModal, DAppSettingsModal } from './modals';
+import useCallbackState from './../../../hooks/useCallbackState';
 import {
   mockConnectedDAppsData,
   imageMap,
@@ -22,13 +23,14 @@ export const ConnectedDAppsScreen = () => {
   const dAppSettingsModalRef = useRef<FxBottomSheetModalMethods>(null);
   const clearDAppDataModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [bloxIndex] = React.useState(0);
-  const [selectedDAppKey, setSelectedDAppKey] = React.useState<DApps>(null);
+  const [selectedDAppKey, setSelectedDAppKey] = useCallbackState<DApps>(null);
 
   const blox = mockConnectedDAppsData[bloxIndex];
 
   const showDAppSettingsModal = (key: DApps) => {
-    setSelectedDAppKey(key);
-    dAppSettingsModalRef.current?.present({ key, bloxIndex });
+    setSelectedDAppKey(key, () =>
+      dAppSettingsModalRef.current?.present({ key, bloxIndex })
+    );
   };
 
   return (
