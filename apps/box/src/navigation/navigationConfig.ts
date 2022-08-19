@@ -36,7 +36,7 @@ export type InitialSetupStackParamList = {
 };
 
 export type ComponentGalleryStackParamList = {
-  'Component Gallery': undefined;
+  Gallery: undefined;
   Avatars: undefined;
 };
 type MainTabsNavigationProp = CompositeNavigationProp<
