@@ -4,7 +4,10 @@ import { useTheme } from '@shopify/restyle';
 import React from 'react';
 import { Image } from 'react-native';
 import { ComponentGalleryScreen } from '../screens/Settings/ComponentGallery.screen';
-import { AvatarDemoScreen } from '../screens/Settings/ComponentGallery/AvatarDemo.screen';
+import {
+  AvatarDemoScreen,
+  ProgressBarDemoScreen,
+} from '../screens/Settings/ComponentGallery';
 import { ButtonGroupDemoScreen } from '../screens/Settings/ComponentGallery/ButtonGroupDemo.screen';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 
@@ -59,6 +62,10 @@ export const ComponentGalleryNavigator = () => {
       <ComponentGalleryStack.Screen
         name="Button Groups"
         component={ButtonGroupDemoScreen}
+      />
+      <ComponentGalleryStack.Screen
+        name="Progress Bar"
+        component={ProgressBarDemoScreen}
       />
     </ComponentGalleryStack.Navigator>
   );

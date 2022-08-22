@@ -39,6 +39,7 @@ export type ComponentGalleryStackParamList = {
   Gallery: undefined;
   Avatars: undefined;
   'Button Groups': undefined;
+  'Progress Bar': undefined;
 };
 type MainTabsNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabsParamList>,
