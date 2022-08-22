@@ -23,11 +23,11 @@ const CancelButton = (props: Omit<FxButtonProps, 'onPress'>) => {
   );
 };
 
-type ClearDAppModalProps = {};
+type ClearDAppModalProps = unknown;
 const ClearDAppModal = React.forwardRef<
   FxBottomSheetModalMethods,
   ClearDAppModalProps
->(({ ...props }, ref) => {
+>((_, ref) => {
   return (
     <FxBottomSheetModal ref={ref}>
       <SubHeaderText textAlign="center" marginTop="32">

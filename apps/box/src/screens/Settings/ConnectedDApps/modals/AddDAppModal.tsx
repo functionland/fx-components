@@ -21,11 +21,11 @@ const addDAppModalData = [
   },
 ];
 
-type AddDAppModalProps = {};
+type AddDAppModalProps = unknown;
 const AddDAppModal = React.forwardRef<
   FxBottomSheetModalMethods,
   AddDAppModalProps
->(({ ...props }, ref) => {
+>((_, ref) => {
   return (
     <FxBottomSheetModal ref={ref}>
       <FxBox>
