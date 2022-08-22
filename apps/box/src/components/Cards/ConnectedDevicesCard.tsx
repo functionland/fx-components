@@ -81,6 +81,23 @@ const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
   );
 };
 
+const DeviceCardEmpty = () => (
+  <FxBox
+    alignItems="center"
+    borderColor="backgroundSecondary"
+    borderRadius="s"
+    borderStyle="dashed"
+    borderWidth={1}
+    height={DEVICE_CARD_HEIGHT}
+    justifyContent="center"
+    paddingHorizontal="24"
+  >
+    <FxText color="content1" variant="bodyMediumRegular" textAlign="center">
+      No "connected devices"
+    </FxText>
+  </FxBox>
+);
+
 /**
  * @todo: Replace ENTRIES with api data
  */
@@ -106,24 +123,7 @@ export const ConnectedDevicesCard = () => {
     <>
       <CardHeader>Connected Devices</CardHeader>
       {ENTRIES.length === 0 ? (
-        <FxBox
-          alignItems="center"
-          borderColor="backgroundSecondary"
-          borderRadius="s"
-          borderStyle="dashed"
-          borderWidth={1}
-          height={DEVICE_CARD_HEIGHT}
-          justifyContent="center"
-          paddingHorizontal="24"
-        >
-          <FxText
-            color="content1"
-            variant="bodyMediumRegular"
-            textAlign="center"
-          >
-            No "connected devices"
-          </FxText>
-        </FxBox>
+        <DeviceCardEmpty />
       ) : (
         <CardCarousel
           data={ENTRIES}
