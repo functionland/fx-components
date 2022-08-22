@@ -6,7 +6,7 @@ import {
   FxButtonProps,
   FxText,
 } from '@functionland/component-library';
-import { SubHeaderText } from '@box/components/Text';
+import { SubHeaderText } from '../../../../components/Text';
 import { useBottomSheet } from '@gorhom/bottom-sheet';
 
 const CancelButton = (props: Omit<FxButtonProps, 'onPress'>) => {
