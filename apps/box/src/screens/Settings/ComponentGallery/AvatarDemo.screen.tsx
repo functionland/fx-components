@@ -18,7 +18,7 @@ export const AvatarDemoScreen = () => {
           size="small"
           icon="none"
           onPress={() => {
-            console.log('image pressed');
+            return;
           }}
         />
         <FxSpacer marginTop="16" />
@@ -27,7 +27,7 @@ export const AvatarDemoScreen = () => {
           size="medium"
           icon="deselected"
           onPress={() => {
-            console.log('image pressed');
+            return;
           }}
         />
         <FxSpacer marginTop="16" />
@@ -36,7 +36,7 @@ export const AvatarDemoScreen = () => {
           size="large"
           icon="selected"
           onPress={() => {
-            console.log('image pressed');
+            return;
           }}
         />
         <FxSpacer marginTop="16" />
@@ -45,7 +45,7 @@ export const AvatarDemoScreen = () => {
           size="xl"
           icon="edit"
           onPress={() => {
-            console.log('image pressed');
+            return;
           }}
         />
       </FxBox>

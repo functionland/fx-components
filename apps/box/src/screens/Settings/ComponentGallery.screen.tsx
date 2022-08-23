@@ -26,6 +26,12 @@ export const ComponentGalleryScreen = () => {
         navigation.navigate('Avatars');
       },
     },
+    {
+      name: 'Button Groups',
+      onPress: () => {
+        navigation.navigate('Button Groups');
+      },
+    },
   ];
 
   const renderItem = React.useCallback<ListRenderItem<GalleryItemType>>(
