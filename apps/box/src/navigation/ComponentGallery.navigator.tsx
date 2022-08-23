@@ -7,8 +7,8 @@ import { ComponentGalleryScreen } from '../screens/Settings/ComponentGallery.scr
 import {
   AvatarDemoScreen,
   ProgressBarDemoScreen,
+  ButtonGroupDemoScreen,
 } from '../screens/Settings/ComponentGallery';
-import { ButtonGroupDemoScreen } from '../screens/Settings/ComponentGallery/ButtonGroupDemo.screen';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 
 type ComponentGalleryBackProps = {
