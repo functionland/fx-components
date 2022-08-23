@@ -1,7 +1,7 @@
 import React from 'react';
-import { LayoutAnimation } from 'react-native';
 
 import { FxBox, FxBoxProps } from '../box/box';
+import { configureEaseInOutLayoutAnimation } from '../utils/animations';
 import { WINDOW_WIDTH } from '../utils/constants';
 
 export type FxProgressBarProps = {
@@ -23,10 +23,7 @@ const FxProgressBar = ({
   const progressWidth = Math.round(_width * (_progress / total));
 
   React.useEffect(() => {
-    LayoutAnimation.configureNext({
-      ...LayoutAnimation.Presets.easeInEaseOut,
-      duration: 350,
-    });
+    configureEaseInOutLayoutAnimation();
   }, [progressWidth]);
 
   return (
