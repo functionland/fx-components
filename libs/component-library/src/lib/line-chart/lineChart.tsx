@@ -10,8 +10,7 @@ import {
   SkPath,
 } from '@shopify/react-native-skia';
 import { curveLines, serialize } from 'react-native-redash';
-import { useTheme } from '@shopify/restyle';
-import { FxTheme } from '../theme/theme';
+import { useFxTheme } from '../theme/useFxTheme';
 
 export const COLORS = ['#06B59710', '#06B59770'].map(Skia.Color);
 
@@ -45,7 +44,7 @@ export const FxLineChart = ({ points }: FxLineChartProps) => {
     width: 0,
     height: 0,
   });
-  const theme = useTheme<FxTheme>();
+  const theme = useFxTheme();
   const [path, setPath] = React.useState<SkPath | null>();
   const colors = [`${theme.colors.primary}10`, `${theme.colors.primary}70`].map(
     Skia.Color

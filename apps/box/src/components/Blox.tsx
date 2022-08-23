@@ -8,8 +8,7 @@ import {
   Euler,
 } from '@react-three/fiber/native';
 import * as THREE from 'three';
-import { useTheme } from '@shopify/restyle';
-import { FxTheme } from '@functionland/component-library';
+import { useFxTheme } from '@functionland/component-library';
 import { mockTowerData as data } from '../api/tower';
 import { a, useSpring } from '@react-spring/three';
 
@@ -172,7 +171,7 @@ const BloxMesh = ({ colors }: BloxMeshProps) => {
 };
 
 export const Blox = () => {
-  const { colors } = useTheme<FxTheme>();
+  const { colors } = useFxTheme();
 
   return (
     <Canvas camera={{ fov: 75, near: 0.1, far: 1000, position: [0, 7, 10] }}>

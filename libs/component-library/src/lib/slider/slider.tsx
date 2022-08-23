@@ -5,11 +5,11 @@ import {
   composeRestyleFunctions,
   createRestyleComponent,
   useRestyle,
-  useTheme,
 } from '@shopify/restyle';
 import { FxTheme } from '../theme/theme';
 import Slider, { SliderProps } from '@react-native-community/slider';
 import { FxBox } from '../box/box';
+import { useFxTheme } from '../theme/useFxTheme';
 
 type FxSliderProps = BoxProps<FxTheme> & SliderProps;
 
@@ -24,7 +24,7 @@ const restyleFunctions = composeRestyleFunctions<FxTheme, FxSliderProps>(
 
 const FxSlider = (props: FxSliderProps) => {
   const { style, ...rest } = useRestyle(restyleFunctions, props);
-  const { colors } = useTheme<FxTheme>();
+  const { colors } = useFxTheme();
 
   return (
     <FxBox style={style}>

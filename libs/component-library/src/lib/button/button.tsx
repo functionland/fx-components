@@ -3,7 +3,6 @@ import {
   createBox,
   createRestyleComponent,
   createVariant,
-  useTheme,
   VariantProps,
 } from '@shopify/restyle';
 import { Pressable, PressableProps } from 'react-native';
@@ -12,6 +11,7 @@ import { FxText } from '../text/text';
 import { FxSvgProps } from '../svg/svg';
 import { FxBox } from '../box/box';
 import { FxSpacer } from '../spacer/spacer';
+import { useFxTheme } from '../theme/useFxTheme';
 
 const buttonVariant = createVariant({
   themeKey: 'buttonVariants',
@@ -64,7 +64,7 @@ const FxButton = ({
   iconRight,
   ...rest
 }: FxButtonProps) => {
-  const theme = useTheme<FxTheme>();
+  const theme = useFxTheme();
   const [isPressed, setIsPressed] = React.useState(false);
   const type = disabled ? 'disabled' : isPressed ? 'pressed' : variant;
 

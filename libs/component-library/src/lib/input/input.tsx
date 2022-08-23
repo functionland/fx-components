@@ -7,12 +7,12 @@ import {
   TextProps,
   textRestyleFunctions,
   useRestyle,
-  useTheme,
 } from '@shopify/restyle';
 import { FxTheme } from '../theme/theme';
 import { FxTextInputClasses } from '../theme/inputClasses';
 import { TextInput, TextInputProps } from 'react-native';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { useFxTheme } from '../theme/useFxTheme';
 
 type FxTextInputProps = TextProps<FxTheme> &
   BoxProps<FxTheme> &
@@ -46,7 +46,7 @@ const FxTextInput = ({ disabled, error, ...rest }: FxTextInputProps) => {
       ...rest,
     }
   );
-  const { colors } = useTheme<FxTheme>();
+  const { colors } = useFxTheme();
   const Input = isBottomSheetInput ? BottomSheetTextInput : TextInput;
 
   return (
