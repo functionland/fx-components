@@ -23,7 +23,7 @@ export type SettingsStackParamList = {
   Mode: undefined;
   Pools: undefined;
   About: undefined;
-  'Component Gallery': NavigatorScreenParams<ComponentGalleryStackParamList>;
+  'Component Gallery Navigator': NavigatorScreenParams<ComponentGalleryStackParamList>;
 };
 
 export type InitialSetupStackParamList = {
@@ -39,6 +39,7 @@ export type ComponentGalleryStackParamList = {
   Gallery: undefined;
   Avatars: undefined;
   'Button Groups': undefined;
+  'Progress Bar': undefined;
 };
 type MainTabsNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabsParamList>,

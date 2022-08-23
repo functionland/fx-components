@@ -32,6 +32,12 @@ export const ComponentGalleryScreen = () => {
         navigation.navigate('Button Groups');
       },
     },
+    {
+      name: 'Progress Bar',
+      onPress: () => {
+        navigation.navigate('Progress Bar');
+      },
+    },
   ];
 
   const renderItem = React.useCallback<ListRenderItem<GalleryItemType>>(

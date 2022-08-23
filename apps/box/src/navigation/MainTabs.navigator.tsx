@@ -102,7 +102,7 @@ const SettingsNavigator = () => {
         options={() => ({
           headerShown: false,
         })}
-        name="Component Gallery"
+        name="Component Gallery Navigator"
         component={ComponentGalleryNavigator}
       />
     </SettingsStack.Navigator>
