@@ -8,7 +8,7 @@ import {
   Euler,
 } from '@react-three/fiber/native';
 import * as THREE from 'three';
-import { useFxTheme } from '@functionland/component-library';
+import { FxTheme, useFxTheme } from '@functionland/component-library';
 import { mockTowerData as data } from '../api/tower';
 import { a, useSpring } from '@react-spring/three';
 
