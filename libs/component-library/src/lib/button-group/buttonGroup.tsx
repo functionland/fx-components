@@ -1,5 +1,5 @@
 import React from 'react';
-import { FxBox } from '../box/box';
+import { FxBox, FxBoxProps } from '../box/box';
 import { FxPressableOpacity } from '../pressable-opacity/pressableOpacity';
 import { FxText } from '../text/text';
 
@@ -46,12 +46,13 @@ type FxButtonGroupProps = {
   selectedIdx?: number | null;
   onSelect: (idx: number) => void;
   disabled?: boolean;
-};
+} & FxBoxProps;
 export const FxButtonGroup = ({
   items,
   selectedIdx = null,
   disabled = false,
   onSelect,
+  ...rest
 }: FxButtonGroupProps) => {
   const selectHandler = (idx: number) => {
     if (idx !== selectedIdx) {
@@ -65,6 +66,7 @@ export const FxButtonGroup = ({
       borderWidth={1}
       borderColor={disabled ? 'backgroundSecondary' : 'content3'}
       borderRadius="s"
+      {...rest}
     >
       {items
         .map((item, idx) => {
