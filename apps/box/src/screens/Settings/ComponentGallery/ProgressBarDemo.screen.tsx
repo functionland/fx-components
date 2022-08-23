@@ -4,6 +4,7 @@ import {
   FxProgressBar,
   FxSafeAreaBox,
   FxSpacer,
+  FxText,
 } from '@functionland/component-library';
 import { HeaderText } from '../../../components/Text';
 import React from 'react';
@@ -23,6 +24,15 @@ export const ProgressBarDemoScreen = () => {
   return (
     <FxSafeAreaBox flex={1} marginHorizontal={'20'}>
       <HeaderText>Progress Bar</HeaderText>
+      <FxSpacer marginTop="24" />
+      <FxBox
+        flexDirection="row"
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        <FxText variant="bodyMediumRegular">Custom width:</FxText>
+        <FxProgressBar width={200} progress={progress} />
+      </FxBox>
       <FxSpacer marginTop="24" />
       <FxProgressBar progress={progress} />
       <FxSpacer marginTop="24" />

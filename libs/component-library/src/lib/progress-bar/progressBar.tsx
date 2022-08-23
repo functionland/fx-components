@@ -29,6 +29,7 @@ const FxProgressBar = ({
       flexDirection="row"
       alignItems="flex-start"
       backgroundColor={'backgroundSecondary'}
+      width={width}
       height={height}
       onLayout={(evt) => {
         setWidth(evt.nativeEvent.layout.width);
