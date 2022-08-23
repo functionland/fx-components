@@ -1,9 +1,7 @@
-import { useTheme } from '@shopify/restyle';
 import React from 'react';
 import { LayoutAnimation } from 'react-native';
 
 import { FxBox, FxBoxProps } from '../box/box';
-import { FxTheme } from '../theme/theme';
 import { WINDOW_WIDTH } from '../utils/constants';
 
 export type FxProgressBarProps = {
@@ -20,8 +18,7 @@ const FxProgressBar = ({
   total = 100,
   ...rest
 }: FxProgressBarProps) => {
-  const { spacing } = useTheme<FxTheme>();
-  const _width = width || WINDOW_WIDTH - 2 * spacing[20];
+  const _width = width || WINDOW_WIDTH;
   const _progress = Math.min(Math.max(0, progress), total);
   const progressWidth = Math.round(_width * (_progress / total));
 
