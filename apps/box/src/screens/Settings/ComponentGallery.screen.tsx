@@ -32,6 +32,12 @@ export const ComponentGalleryScreen = () => {
         navigation.navigate('Button Groups');
       },
     },
+    {
+      name: 'Tabs',
+      onPress: () => {
+        navigation.navigate('Tabs');
+      },
+    },
   ];
 
   const renderItem = React.useCallback<ListRenderItem<GalleryItemType>>(

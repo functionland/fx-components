@@ -8,6 +8,7 @@ import { Image } from 'react-native';
 import { ComponentGalleryScreen } from '../screens/Settings/ComponentGallery.screen';
 import { AvatarDemoScreen } from '../screens/Settings/ComponentGallery/AvatarDemo.screen';
 import { ButtonGroupDemoScreen } from '../screens/Settings/ComponentGallery/ButtonGroupDemo.screen';
+import { TabsDemoScreen } from '../screens/Settings/ComponentGallery/TabsDemo.screen';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 
 type ComponentGalleryBackProps = {
@@ -62,6 +63,7 @@ export const ComponentGalleryNavigator = () => {
         name="Button Groups"
         component={ButtonGroupDemoScreen}
       />
+      <ComponentGalleryStack.Screen name="Tabs" component={TabsDemoScreen} />
     </ComponentGalleryStack.Navigator>
   );
 };
