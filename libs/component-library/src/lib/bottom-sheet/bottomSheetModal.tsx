@@ -7,8 +7,7 @@ import {
   BottomSheetScrollView,
   useBottomSheetDynamicSnapPoints,
 } from '@gorhom/bottom-sheet';
-import { useTheme } from '@shopify/restyle';
-import { FxTheme } from '../theme/theme';
+import { useFxTheme } from '../theme/useFxTheme';
 import { FxBox, FxBoxProps } from '../box/box';
 import { FxText } from '../text/text';
 import { FxCloseIcon } from '../icons/icons';
@@ -29,7 +28,7 @@ export const FxBottomSheetModal = React.forwardRef<
   BottomSheetModal,
   FxBottomSheetModalProps
 >(({ title, children }, ref) => {
-  const theme = useTheme<FxTheme>();
+  const theme = useFxTheme();
   const insets = useSafeAreaInsets();
   const bottomSheetModalRef = React.useRef<BottomSheetModal>(null);
   const {

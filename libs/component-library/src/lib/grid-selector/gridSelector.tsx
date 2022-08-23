@@ -1,10 +1,9 @@
-import { useTheme } from '@shopify/restyle';
 import React from 'react';
 import { FxBox } from '../box/box';
 import { GridIcon, ListIcon } from '../Icons';
 import { FxPressableOpacity } from '../pressable-opacity/pressableOpacity';
 import { FxSpacer } from '../spacer/spacer';
-import { FxTheme } from '../theme/theme';
+import { useFxTheme } from '../theme/useFxTheme';
 import { configureEaseInOutLayoutAnimation } from '../utils/animations';
 
 export type FxGridSelectorProps = {
@@ -21,7 +20,7 @@ export const FxGridSelector = ({
   animated = true,
   ...rest
 }: FxGridSelectorProps) => {
-  const { colors } = useTheme<FxTheme>();
+  const { colors } = useFxTheme();
   const disabledColor = disabled ? colors.backgroundPrimary : undefined;
 
   const setIsListWithAnimation = (bool: boolean) => () => {

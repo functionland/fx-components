@@ -32,4 +32,5 @@ export { FxTag } from './lib/tag/tag';
 export { FxText, FxReText, FxTextProps } from './lib/text/text';
 export { FxTextInput } from './lib/input/input';
 export { FxTheme, fxDarkTheme, fxLightTheme } from './lib/theme/theme';
+export { useFxTheme } from './lib/theme/useFxTheme';
 export { FxPressableOpacity } from './lib/pressable-opacity/pressableOpacity';

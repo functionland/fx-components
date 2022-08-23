@@ -1,7 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useTheme } from '@shopify/restyle';
-import { FxTheme } from '@functionland/component-library';
+import { useFxTheme } from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BoxScreen } from '../screens/Box.screen';
 import { PoolScreen } from '../screens/Pool.screen';
@@ -18,7 +17,7 @@ import {
 import { ComponentGalleryNavigator } from './ComponentGallery.navigator';
 
 export const MainTabsNavigator = () => {
-  const theme = useTheme<FxTheme>();
+  const theme = useFxTheme();
   return (
     <MainTabs.Navigator
       screenOptions={() => ({
@@ -76,7 +75,7 @@ const MainTabs = createBottomTabNavigator<MainTabsParamList>();
 
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 const SettingsNavigator = () => {
-  const theme = useTheme<FxTheme>();
+  const theme = useFxTheme();
 
   return (
     <SettingsStack.Navigator

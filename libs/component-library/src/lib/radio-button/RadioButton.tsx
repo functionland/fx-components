@@ -1,11 +1,10 @@
-import { useTheme } from '@shopify/restyle';
 import * as React from 'react';
 import { Animated, View, StyleSheet } from 'react-native';
 import {
   FxPressableOpacity,
   FxPressableOpacityProps,
 } from '../pressable-opacity/pressableOpacity';
-import { FxTheme } from '../theme/theme';
+import { useFxTheme } from '../theme/useFxTheme';
 
 import type { $Omit } from './../types';
 
@@ -85,7 +84,7 @@ const BORDER_WIDTH_CHECKED = 6;
  */
 
 const RadioButton = ({ disabled, onPress, value, status, ...rest }: Props) => {
-  const { colors } = useTheme<FxTheme>();
+  const { colors } = useFxTheme();
   const { value: contextValue, onValueChange } = useRadioButtonContext();
   const checked =
     isChecked({

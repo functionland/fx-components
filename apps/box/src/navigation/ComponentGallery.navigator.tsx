@@ -1,6 +1,8 @@
-import { FxPressableOpacity, FxTheme } from '@functionland/component-library';
+import {
+  FxPressableOpacity,
+  useFxTheme,
+} from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useTheme } from '@shopify/restyle';
 import React from 'react';
 import { Image } from 'react-native';
 import { ComponentGalleryScreen } from '../screens/Settings/ComponentGallery.screen';
@@ -28,7 +30,7 @@ const ComponentGalleryBack = ({
 };
 
 export const ComponentGalleryNavigator = () => {
-  const theme = useTheme<FxTheme>();
+  const theme = useFxTheme();
 
   return (
     <ComponentGalleryStack.Navigator
