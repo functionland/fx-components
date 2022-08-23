@@ -24,7 +24,7 @@ export const ProgressBarDemoScreen = () => {
     <FxSafeAreaBox flex={1} marginHorizontal={'20'}>
       <HeaderText>Progress Bar</HeaderText>
       <FxSpacer marginTop="24" />
-      <FxProgressBar disabled={true} progress={progress} />
+      <FxProgressBar progress={progress} />
       <FxSpacer marginTop="24" />
       <FxBox flexDirection="row" alignItems="center" justifyContent="center">
         <FxButton flex={1} onPress={increaseProgress}>
