@@ -9,7 +9,7 @@ import {
 } from '@gorhom/bottom-sheet';
 import { useTheme } from '@shopify/restyle';
 import { FxTheme } from '../theme/theme';
-import { FxBox } from '../box/box';
+import { FxBox, FxBoxProps } from '../box/box';
 import { FxText } from '../text/text';
 import { FxCloseIcon } from '../icons/icons';
 import { FxPressableOpacity } from '../pressable-opacity/pressableOpacity';
@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type FxBottomSheetModalProps = {
   title?: string;
-  children?: React.ReactElement;
+  children?: FxBoxProps['children'];
 };
 
 const snapPoints = ['CONTENT_HEIGHT'];

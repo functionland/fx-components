@@ -7,7 +7,7 @@ export {
   FxBottomSheetModalMethods,
 } from './lib/bottom-sheet/bottomSheetModal';
 export { FxBox, FxReanimatedBox, FxBoxProps } from './lib/box/box';
-export { FxButton } from './lib/button/button';
+export { FxButton, FxButtonProps } from './lib/button/button';
 export { FxButtonGroup } from './lib/button-group/buttonGroup';
 export { FxCard, FxCardProps } from './lib/card/card';
 export { FxSwitch } from './lib/switch/switch';
