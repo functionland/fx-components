@@ -77,7 +77,7 @@ export const FxTabs = ({
 }: FxTabsProps) => {
   const translateX = useSharedValue(0);
   const containerWidth = useSharedValue<number>(0);
-  const hightlightWidth = useDerivedValue(() => {
+  const highlightWidth = useDerivedValue(() => {
     return containerWidth.value / items.length;
   }, [containerWidth, items]);
 
@@ -88,7 +88,7 @@ export const FxTabs = ({
   useAnimatedReaction(
     () => {
       return {
-        translateValue: hightlightWidth.value * selectedIdx,
+        translateValue: highlightWidth.value * selectedIdx,
         hasMeasured: containerWidth.value > 0,
       };
     },
@@ -111,7 +111,7 @@ export const FxTabs = ({
 
   const highlightStyle = useAnimatedStyle(() => {
     return {
-      width: hightlightWidth.value,
+      width: highlightWidth.value,
       transform: [{ translateX: translateX.value }],
     };
   });

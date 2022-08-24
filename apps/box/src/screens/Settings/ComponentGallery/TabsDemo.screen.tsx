@@ -12,7 +12,7 @@ const TAB_ITEMS = ['first', 'second'];
 export const TabsDemoScreen = () => {
   const [selectedIdx, setSelectedIdx] = React.useState<number>(0);
 
-  const selectHander = (idx: number) => {
+  const selectHandler = (idx: number) => {
     setSelectedIdx(idx);
   };
 
@@ -23,7 +23,7 @@ export const TabsDemoScreen = () => {
       <FxTabs
         items={TAB_ITEMS}
         selectedIdx={selectedIdx}
-        onSelect={selectHander}
+        onSelect={selectHandler}
       />
       <FxBox alignItems="center" justifyContent="center" flex={1}>
         <FxText variant="h300">{TAB_ITEMS[selectedIdx]}</FxText>
