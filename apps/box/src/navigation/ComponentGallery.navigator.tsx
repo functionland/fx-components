@@ -8,8 +8,9 @@ import { Image } from 'react-native';
 import { ComponentGalleryScreen } from '../screens/Settings/ComponentGallery.screen';
 import {
   AvatarDemoScreen,
-  ProgressBarDemoScreen,
   ButtonGroupDemoScreen,
+  ProgressBarDemoScreen,
+  TabsDemoScreen,
 } from '../screens/Settings/ComponentGallery';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 
@@ -69,6 +70,7 @@ export const ComponentGalleryNavigator = () => {
         name="Progress Bar"
         component={ProgressBarDemoScreen}
       />
+      <ComponentGalleryStack.Screen name="Tabs" component={TabsDemoScreen} />
     </ComponentGalleryStack.Navigator>
   );
 };

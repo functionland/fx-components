@@ -38,6 +38,7 @@ export type InitialSetupStackParamList = {
 export type ComponentGalleryStackParamList = {
   Gallery: undefined;
   Avatars: undefined;
+  Tabs: undefined;
   'Button Groups': undefined;
   'Progress Bar': undefined;
 };
