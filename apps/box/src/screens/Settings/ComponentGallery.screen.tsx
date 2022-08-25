@@ -33,6 +33,12 @@ export const ComponentGalleryScreen = () => {
       },
     },
     {
+      name: 'Progress Bar',
+      onPress: () => {
+        navigation.navigate('Progress Bar');
+      },
+    },
+    {
       name: 'Tabs',
       onPress: () => {
         navigation.navigate('Tabs');

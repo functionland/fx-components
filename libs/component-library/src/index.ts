@@ -11,6 +11,7 @@ export { FxButton, FxButtonProps } from './lib/button/button';
 export { FxButtonGroup } from './lib/button-group/buttonGroup';
 export { FxCard, FxCardProps } from './lib/card/card';
 export { FxSwitch } from './lib/switch/switch';
+export { FxProgressBar } from './lib/progress-bar/progressBar';
 export {
   FxGridSelector,
   FxGridSelectorProps,

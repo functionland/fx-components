@@ -8,7 +8,6 @@ import {
   FxTag,
   FxText,
 } from '@functionland/component-library';
-import { CardRow, CardRowData, CardRowTitle } from './fields/CardRow';
 import { Image, StyleSheet } from 'react-native';
 import { CopyIcon } from '../Icons';
 import { CardCarousel } from './fields/CardCarousel';
@@ -29,9 +28,7 @@ const UserCard = ({ data, ...rest }: UserCardType) => {
         <Image source={Number(data.imageUrl)} style={styles.image} />
         <FxSpacer marginLeft="16" />
         <FxBox>
-          <FxText variant="bodyLargeRegular" color="content1">
-            @{data.username}
-          </FxText>
+          <FxCard.Title>@{data.username}</FxCard.Title>
           <FxSpacer marginTop="8" />
           <FxBox flexDirection="row">
             <FxTag>Multi-Device</FxTag>
@@ -39,16 +36,18 @@ const UserCard = ({ data, ...rest }: UserCardType) => {
         </FxBox>
       </FxBox>
       <FxSpacer marginTop="24" />
-      <CardRow>
-        <CardRowTitle>Current Usage</CardRowTitle>
-        <CardRowData>
+      <FxCard.Row>
+        <FxCard.Row.Title>Current Usage</FxCard.Row.Title>
+        <FxCard.Row.Data>
           {convertMegabyteToGigabyte(usageStats.totalUsage)} GB
-        </CardRowData>
-      </CardRow>
-      <CardRow>
-        <CardRowTitle>Added</CardRowTitle>
-        <CardRowData>{new Date(data.connectionDate).toISOString()}</CardRowData>
-      </CardRow>
+        </FxCard.Row.Data>
+      </FxCard.Row>
+      <FxCard.Row>
+        <FxCard.Row.Title>Added</FxCard.Row.Title>
+        <FxCard.Row.Data>
+          {new Date(data.connectionDate).toISOString()}
+        </FxCard.Row.Data>
+      </FxCard.Row>
       <FxSpacer marginTop="12" />
       <FxButton
         onPress={() => copyToClipboard(data.decentralizedId)}

@@ -38,7 +38,7 @@ export const SettingsMenu = () => {
     {
       name: 'Component Gallery',
       detail: null,
-      onPress: () => navigation.navigate('Component Gallery'),
+      onPress: () => navigation.navigate('Component Gallery Navigator'),
     },
   ];
 

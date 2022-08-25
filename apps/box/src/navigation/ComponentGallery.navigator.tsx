@@ -6,9 +6,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { Image } from 'react-native';
 import { ComponentGalleryScreen } from '../screens/Settings/ComponentGallery.screen';
-import { AvatarDemoScreen } from '../screens/Settings/ComponentGallery/AvatarDemo.screen';
-import { ButtonGroupDemoScreen } from '../screens/Settings/ComponentGallery/ButtonGroupDemo.screen';
-import { TabsDemoScreen } from '../screens/Settings/ComponentGallery/TabsDemo.screen';
+import {
+  AvatarDemoScreen,
+  ButtonGroupDemoScreen,
+  ProgressBarDemoScreen,
+  TabsDemoScreen,
+} from '../screens/Settings/ComponentGallery';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 
 type ComponentGalleryBackProps = {
@@ -62,6 +65,10 @@ export const ComponentGalleryNavigator = () => {
       <ComponentGalleryStack.Screen
         name="Button Groups"
         component={ButtonGroupDemoScreen}
+      />
+      <ComponentGalleryStack.Screen
+        name="Progress Bar"
+        component={ProgressBarDemoScreen}
       />
       <ComponentGalleryStack.Screen name="Tabs" component={TabsDemoScreen} />
     </ComponentGalleryStack.Navigator>
