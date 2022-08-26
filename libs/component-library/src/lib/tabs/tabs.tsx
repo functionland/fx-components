@@ -4,7 +4,7 @@ import {
   FxPressableOpacity,
   FxPressableOpacityProps,
 } from '../pressable-opacity/pressableOpacity';
-import { FxText } from '../text/text';
+import { FxText, FxTextProps } from '../text/text';
 import {
   useAnimatedReaction,
   useAnimatedStyle,
@@ -32,15 +32,26 @@ const FIXED_TAB_STYLES: FxPressableOpacityProps = {
   borderBottomWidth: 2,
   borderBottomColor: 'content3',
   paddingVertical: '16',
+  hitSlop: 0,
 };
 
 const AUTO_TAB_STYLES: FxPressableOpacityProps = {
   paddingVertical: '8',
+  hitSlop: 16,
+};
+
+const FIXED_TEXT_STYLES: FxTextProps = {
+  variant: 'bodySmallRegular',
+};
+
+const AUTO_TEXT_STYLES: FxTextProps = {
+  variant: 'bodyMediumRegular',
 };
 
 const VARIANT_STYLES = {
   fixed: {
     defaults: FIXED_TAB_STYLES,
+    defaultsText: FIXED_TEXT_STYLES,
     pressedText: FIXED_PRESSED,
     pressedBackground: {
       backgroundColor: 'backgroundPrimary',
@@ -49,6 +60,7 @@ const VARIANT_STYLES = {
   },
   auto: {
     defaults: AUTO_TAB_STYLES,
+    defaultsText: AUTO_TEXT_STYLES,
     pressedText: AUTO_PRESSED,
     pressedBackground: {} as FxPressableOpacityProps,
   },
@@ -75,7 +87,6 @@ const Tab = ({ text, selected, onPress, variant }: TabProps) => {
     <FxPressableOpacity
       onPress={onPress}
       disabled={selected}
-      hitSlop={0}
       alignItems="center"
       justifyContent="center"
       onPressIn={() => {
@@ -92,7 +103,11 @@ const Tab = ({ text, selected, onPress, variant }: TabProps) => {
         },
       ]}
     >
-      <FxText variant="bodySmallRegular" color="content3" {...textOverrides}>
+      <FxText
+        color="content3"
+        {...VARIANT_STYLES[variant].defaultsText}
+        {...textOverrides}
+      >
         {text}
       </FxText>
     </FxPressableOpacity>
