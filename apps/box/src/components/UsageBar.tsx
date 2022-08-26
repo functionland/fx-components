@@ -63,14 +63,14 @@ interface UsageBarProps {
   isEditable?: boolean;
   divisionPercent: SharedValue<number>; //percentage. eg: 50
   totalCapacity: number;
-  usages: [UsageBarUsage[], UsageBarUsage[]];
+  usages?: [Array<UsageBarUsage>, Array<UsageBarUsage>];
   onEditStart?: () => void;
   onEditEnd?: () => void;
 }
 export const UsageBar = ({
   isEditable,
   divisionPercent,
-  usages,
+  usages = [[], []],
   totalCapacity,
   onEditStart,
   onEditEnd,
