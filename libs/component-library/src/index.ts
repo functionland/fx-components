@@ -11,6 +11,7 @@ export { FxButton, FxButtonProps } from './lib/button/button';
 export { FxButtonGroup } from './lib/button-group/buttonGroup';
 export { FxCard, FxCardProps } from './lib/card/card';
 export { FxSwitch } from './lib/switch/switch';
+export { FxProgressBar } from './lib/progress-bar/progressBar';
 export {
   FxGridSelector,
   FxGridSelectorProps,
@@ -28,6 +29,7 @@ export { FxSafeAreaBox } from './lib/safe-area-box/safeAreaBox';
 export { FxSlider } from './lib/slider/slider';
 export { FxSpacer } from './lib/spacer/spacer';
 export { FxSvg, FxSvgProps } from './lib/svg/svg';
+export { FxTabs } from './lib/tabs/tabs';
 export { FxTag } from './lib/tag/tag';
 export { FxText, FxReText, FxTextProps } from './lib/text/text';
 export { FxTextInput } from './lib/input/input';

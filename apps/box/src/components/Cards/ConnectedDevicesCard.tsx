@@ -13,7 +13,6 @@ import {
 } from '@functionland/component-library';
 import { CardCarousel } from './fields/CardCarousel';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
-import { CardRow, CardRowData, CardRowTitle } from './fields/CardRow';
 
 enum DeviceStatus {
   InUse = 0,
@@ -41,9 +40,7 @@ const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
       onLongPress={() => bottomSheetRef.current?.present()}
       delayLongPress={200}
     >
-      <FxText color="content1" variant="bodyLargeRegular" marginBottom="8">
-        {name}
-      </FxText>
+      <FxCard.Title marginBottom="8">{name}</FxCard.Title>
       <FxBox flexDirection="row" marginBottom="16">
         {associatedDevices.map((deviceName) => (
           <FxTag key={`${name}-${deviceName}`} marginRight="8">
@@ -51,21 +48,23 @@ const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
           </FxTag>
         ))}
       </FxBox>
-      <CardRow>
-        <CardRowTitle>Capacity</CardRowTitle>
-        <CardRowData>{convertMegabyteToGigabyte(capacity)} GB</CardRowData>
-      </CardRow>
-      <CardRow>
-        <CardRowTitle>Status</CardRowTitle>
+      <FxCard.Row>
+        <FxCard.Row.Title>Capacity</FxCard.Row.Title>
+        <FxCard.Row.Data>
+          {convertMegabyteToGigabyte(capacity)} GB
+        </FxCard.Row.Data>
+      </FxCard.Row>
+      <FxCard.Row>
+        <FxCard.Row.Title>Status</FxCard.Row.Title>
         <FxBox flexDirection="row" alignItems="center">
-          <CardRowData>
+          <FxCard.Row.Data>
             {convertPascalToSentence(DeviceStatus[status])}
-          </CardRowData>
+          </FxCard.Row.Data>
           {status === DeviceStatus.BackingUp && (
             <FxLoadingSpinner marginLeft="4" />
           )}
         </FxBox>
-      </CardRow>
+      </FxCard.Row>
       <FxButton disabled={status === DeviceStatus.BackingUp}>Eject</FxButton>
       <FxBottomSheetModal ref={bottomSheetRef} title="Device Bottom Sheet">
         <FxBox
