@@ -35,4 +35,5 @@ export { FxText, FxReText, FxTextProps } from './lib/text/text';
 export { FxTextInput } from './lib/input/input';
 export { FxTheme, fxDarkTheme, fxLightTheme } from './lib/theme/theme';
 export { useFxTheme } from './lib/theme/useFxTheme';
+export * from './lib/toast';
 export { FxPressableOpacity } from './lib/pressable-opacity/pressableOpacity';
