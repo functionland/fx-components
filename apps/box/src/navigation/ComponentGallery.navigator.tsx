@@ -11,6 +11,7 @@ import {
   ButtonGroupDemoScreen,
   ProgressBarDemoScreen,
   TabsDemoScreen,
+  ToastDemoScreen,
 } from '../screens/Settings/ComponentGallery';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 
@@ -70,7 +71,6 @@ export const ComponentGalleryNavigator = () => {
         name="Progress Bar"
         component={ProgressBarDemoScreen}
       />
-      <ComponentGalleryStack.Screen name="Tabs" component={TabsDemoScreen} />
     </ComponentGalleryStack.Navigator>
   );
 };
