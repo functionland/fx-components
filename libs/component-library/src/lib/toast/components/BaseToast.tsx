@@ -13,7 +13,7 @@ import { useFxTheme } from '../../theme/useFxTheme';
 import { FxPressableOpacity } from '../../pressable-opacity/pressableOpacity';
 
 const BaseToast: React.FC<BaseToastProps & { localType: LocalType }> = (
-  props
+  { localType, ...props }
 ) => {
   const {
     iconElement,
@@ -28,7 +28,7 @@ const BaseToast: React.FC<BaseToastProps & { localType: LocalType }> = (
   } = props;
 
   const theme = useFxTheme();
-  const colorType = `${props.localType}Base` as const;
+  const colorType = `${localType}Base` as const;
   const color = theme.colors[colorType];
 
   return (
@@ -38,7 +38,7 @@ const BaseToast: React.FC<BaseToastProps & { localType: LocalType }> = (
       borderWidth={1}
       style={s.base}
       disabled={!onPress}
-      onPress={() => onPress()}
+      onPress={() => onPress(props)}
     >
       {renderIcon?.({ color, ...props }) ?? (
         <FxBox style={s.iconContainer}>
