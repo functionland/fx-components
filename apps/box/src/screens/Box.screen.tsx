@@ -5,6 +5,7 @@ import {
 } from '@functionland/component-library';
 import React from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
+import { useSharedValue } from 'react-native-reanimated';
 import {
   ColorSettingsCard,
   ConnectedDevicesCard,
@@ -12,11 +13,16 @@ import {
 } from '../components';
 
 export const BoxScreen = () => {
+  const divisionSplit = useSharedValue(70);
   return (
     <FxSafeAreaBox>
       <ScrollView>
         <FxBox paddingVertical="24" paddingHorizontal="20">
-          <UsageBar isEditable />
+          <UsageBar
+            isEditable
+            divisionPercent={divisionSplit}
+            totalCapacity={1000}
+          />
           <FxSpacer height={24} />
           <ColorSettingsCard />
           <FxSpacer height={16} />

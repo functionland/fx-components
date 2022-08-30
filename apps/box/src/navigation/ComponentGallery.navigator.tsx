@@ -11,6 +11,7 @@ import {
   ButtonGroupDemoScreen,
   ProgressBarDemoScreen,
   TabsDemoScreen,
+  UsageBarDemo,
 } from '../screens/Settings/ComponentGallery';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 
@@ -71,6 +72,7 @@ export const ComponentGalleryNavigator = () => {
         component={ProgressBarDemoScreen}
       />
       <ComponentGalleryStack.Screen name="Tabs" component={TabsDemoScreen} />
+      <ComponentGalleryStack.Screen name="Usage Bar" component={UsageBarDemo} />
     </ComponentGalleryStack.Navigator>
   );
 };
