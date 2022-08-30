@@ -5,12 +5,11 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { LayoutChangeEvent } from 'react-native';
+import { LayoutChangeEvent, StyleSheet } from 'react-native';
 
 import {
   useSharedValue,
   useAnimatedStyle,
-  default as Reanimated,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -29,6 +28,7 @@ import {
   FxWarningIcon,
 } from '../../icons/icons';
 import BaseToast from './BaseToast';
+import { FxReanimatedBox } from '../../box/box';
 
 const defaultComponentsConfig: ToastComponentsConfig = {
   success: (props: BaseToastProps) => (
@@ -89,12 +89,6 @@ const ToasterInternal: React.FC = () => {
 
   const reanimatedStyle = useAnimatedStyle(() => {
     return {
-      position: 'absolute',
-      alignItems: 'center',
-      justifyContent: 'center',
-      left: 0,
-      top: 0,
-      right: 0,
       transform: [
         {
           translateY: translationY.value,
@@ -197,10 +191,21 @@ const ToasterInternal: React.FC = () => {
   };
 
   return (
-    <Reanimated.View onLayout={onLayout} style={[reanimatedStyle]}>
+    <FxReanimatedBox onLayout={onLayout} style={[s.toastBox, reanimatedStyle]}>
       {renderContent()}
-    </Reanimated.View>
+    </FxReanimatedBox>
   );
 };
 
 export const Toast = ToasterInternal;
+
+const s = StyleSheet.create({
+  toastBox: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    left: 0,
+    top: 0,
+    right: 0,
+  },
+});

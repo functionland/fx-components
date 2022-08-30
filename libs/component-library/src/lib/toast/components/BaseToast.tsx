@@ -12,9 +12,10 @@ import { FxText } from '../../text/text';
 import { useFxTheme } from '../../theme/useFxTheme';
 import { FxPressableOpacity } from '../../pressable-opacity/pressableOpacity';
 
-const BaseToast: React.FC<BaseToastProps & { localType: LocalType }> = (
-  { localType, ...props }
-) => {
+const BaseToast: React.FC<BaseToastProps & { localType: LocalType }> = ({
+  localType,
+  ...props
+}) => {
   const {
     iconElement,
     title,
