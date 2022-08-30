@@ -38,11 +38,9 @@ const FxProgressBar = ({
     }
   }, [progress, total, _width]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const progressWidthStyle = useAnimatedStyle(() => {
-    return {
-      width: progressWidth.value,
-    };
-  });
+  const progressWidthStyle = useAnimatedStyle(() => ({
+    width: progressWidth.value,
+  }));
 
   const onLayoutHandler = (evt: LayoutChangeEvent) => {
     setWidth(evt.nativeEvent.layout.width);
