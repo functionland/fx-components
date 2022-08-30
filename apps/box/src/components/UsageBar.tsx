@@ -20,6 +20,7 @@ import { clamp } from 'react-native-redash';
 
 const HEIGHT = 40;
 const TOUCHABLE_WIDTH = 40;
+const TOUCHABLE_HEIGHT = HEIGHT + 12;
 
 type Bounds = {
   low: number; // screen coord
@@ -32,18 +33,16 @@ export type UsageBarUsage = {
 };
 
 // converts percentage into x coordinate value based on bounds of usage bar
-const fromPercentage = (_percentage: number, _bounds: Bounds) => {
+const fromPercentage = (_percentage: number, { high, low }: Bounds) => {
   'worklet';
-  const usageWidth = _bounds.high - _bounds.low;
-  return _bounds.low + (usageWidth * _percentage) / 100;
+  const usageWidth = high - low;
+  return low + (usageWidth * _percentage) / 100;
 };
 
 // converts x coordinate into percentage value based on bounds of usage bar
-const toPercentage = (_pos: number, _bounds: Bounds) => {
+const toPercentage = (_pos: number, { high }: Bounds) => {
   'worklet';
-  return (
-    ((_pos + TOUCHABLE_WIDTH / 2) / (_bounds.high + TOUCHABLE_WIDTH / 2)) * 100
-  );
+  return ((_pos + TOUCHABLE_WIDTH / 2) / (high + TOUCHABLE_WIDTH / 2)) * 100;
 };
 
 // converts the space usage percentage into width value based on size of the
@@ -61,7 +60,10 @@ const calculateLayoutWidth = (
 
 interface UsageBarProps {
   isEditable?: boolean;
-  divisionPercent: SharedValue<number>; //percentage. eg: 50
+  /**
+   * Percentage of the division as a reanimated SharedValue number. e.g 50
+   */
+  divisionPercent: SharedValue<number>;
   totalCapacity: number;
   usages?: [Array<UsageBarUsage>, Array<UsageBarUsage>];
   onEditStart?: () => void;
@@ -164,12 +166,12 @@ export const UsageBar = ({
       {isEditable && (
         <PanGestureHandler onGestureEvent={onGestureEvent}>
           <FxReanimatedBox
-            style={panStyle}
             zIndex="foreground"
             position="absolute"
             alignItems="center"
             width={TOUCHABLE_WIDTH}
-            height="100%"
+            height={TOUCHABLE_HEIGHT}
+            style={[panStyle, { marginTop: HEIGHT - TOUCHABLE_HEIGHT }]}
           />
         </PanGestureHandler>
       )}

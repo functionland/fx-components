@@ -13,7 +13,7 @@ import {
 } from '../components';
 
 export const BoxScreen = () => {
-  const divisionSplit = useSharedValue<number>(70);
+  const divisionSplit = useSharedValue(70);
   return (
     <FxSafeAreaBox>
       <ScrollView>

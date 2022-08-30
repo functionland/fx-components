@@ -37,7 +37,7 @@ export const UsageBarDemo = () => {
       />
       <FxBox flex={1} alignItems="center" justifyContent="center">
         <FxText variant="h200" color="content1">
-          Pool Split -- Editing {`${editing}`}
+          {`Pool Split -- Editing ${editing}`}
         </FxText>
         <FxReText variant="h400" color="content1" text={divisionText} />
       </FxBox>
