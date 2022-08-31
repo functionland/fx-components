@@ -45,6 +45,12 @@ export const ComponentGalleryScreen = () => {
       },
     },
     {
+      name: 'Usage Bar',
+      onPress: () => {
+        navigation.navigate('Usage Bar');
+      },
+    },
+    {
       name: 'Notifications',
       onPress: () => {
         navigation.navigate('Toast');
