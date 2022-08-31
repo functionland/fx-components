@@ -11,6 +11,7 @@ import {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  runOnJS,
 } from 'react-native-reanimated';
 
 import { useInterval } from '../hooks';
@@ -54,14 +55,20 @@ const defaultComponentsConfig: ToastComponentsConfig = {
 };
 
 const ToasterInternal: React.FC = () => {
-  const { activeToast, defaults, customToasts, hideToast } = useToastContext();
+  const {
+    activeToast,
+    defaults,
+    customToasts,
+    hideToast,
+    isLastInQueue,
+    clearToastQueue,
+  } = useToastContext();
 
   const toastTypes: ToastComponentsConfig = {
     ...defaultComponentsConfig,
     ...customToasts,
   };
 
-  const [inProgress, setInProgress] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
   const onHide = defaults.onHide;
@@ -99,68 +106,70 @@ const ToasterInternal: React.FC = () => {
 
   const prevToastRef = useRef<ToastProps | null>();
 
+  const clearToasts = () => {
+    clearToastQueue();
+    setIsVisible(false);
+  };
+
   const transitionDuration =
     activeToast?.transitionDuration ?? defaults.transitionDuration;
 
   useLayoutEffect(() => {
     // no toasts or correct one is already shown
     if (
-      activeToast === prevToastRef.current ||
+      (activeToast === prevToastRef.current && !isLastInQueue) ||
       (!activeToast && !prevToastRef.current)
     ) {
       return;
     }
 
-    const hide = async () => {
-      setInProgress(true);
-
-      translationY.value = withTiming(hiddenY, {
-        duration: transitionDuration.exit,
-      });
-      setIsVisible(false);
-      setInProgress(false);
+    const hide = () => {
+      translationY.value = withTiming(
+        hiddenY,
+        {
+          duration: transitionDuration.exit,
+        },
+        () => {
+          runOnJS(clearToasts)();
+        }
+      );
       onHide?.(prevToastRef.current as ToastProps);
       prevToastRef.current = null;
     };
 
-    const show = async () => {
-      if (inProgress || isVisible) {
-        await hide();
-      }
-      setInProgress(true);
-
+    const show = () => {
       translationY.value = withTiming(openY, {
         duration: transitionDuration.enter,
       });
 
       prevToastRef.current = activeToast;
       setIsVisible(true);
-      setInProgress(false);
+
       onShow?.(activeToast as ToastProps);
     };
 
     // no toasts left but one is visible and not yet animating
-    if (!activeToast && isVisible && !inProgress) {
+    if (isLastInQueue && isVisible) {
       hide();
     }
 
     // toast that isn't visible and not yet animating
-    if (activeToast && !isVisible && !inProgress) {
+    if (activeToast && !isVisible && !isLastInQueue) {
       show();
     }
 
     // activeToast was replaced and the wrong one is showing
-    if (activeToast && !inProgress && activeToast !== prevToastRef.current) {
+    if (activeToast && activeToast !== prevToastRef.current && !isLastInQueue) {
       show();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeToast, hideToast, inProgress, isVisible, onHide, onShow]);
+  }, [activeToast, hideToast, isLastInQueue, isVisible, onHide, onShow]);
 
   const autoHideDuration =
     activeToast?.autoHideDuration ?? defaults.autoHideDuration;
 
   // this will auto-cancel if inProgress flips to true or a toast is not visible
-  useInterval(hideToast, isVisible && !inProgress ? autoHideDuration : null);
+  useInterval(hideToast, isVisible ? autoHideDuration : null);
 
   const toastType = activeToast?.type ?? defaults.type;
   const onPress = activeToast?.onPress ?? defaults.onPress;
@@ -178,7 +187,6 @@ const ToasterInternal: React.FC = () => {
     const toastComponent = toastTypes[toastType];
 
     if (!toastComponent) {
-      console.error(`Toast of type '${toastType}' does not exist.`);
       return null;
     }
 
