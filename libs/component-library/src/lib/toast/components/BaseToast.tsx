@@ -39,7 +39,7 @@ const BaseToast: React.FC<BaseToastProps & { localType: LocalType }> = ({
       borderWidth={1}
       style={s.base}
       disabled={!onPress}
-      onPress={() => onPress(props)}
+      onPress={() => onPress?.(props)}
     >
       {renderIcon?.({ color, ...props }) ?? (
         <FxBox style={s.iconContainer}>
