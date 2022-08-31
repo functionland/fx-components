@@ -12,6 +12,7 @@ const ToastProvider: React.FC<ToastProviderProps> = ({
 }) => {
   const toasts = useRef<ToastProps[]>([]);
   const [activeToast, setActiveToast] = useState<ToastProps | null>(null);
+  const [isLastInQueue, setIsLastInQueue] = useState(false);
 
   const showToast = useCallback((toast: ToastProps) => {
     toasts.current.shift();
@@ -28,12 +29,17 @@ const ToastProvider: React.FC<ToastProviderProps> = ({
 
   const hideToast = useCallback(() => {
     toasts.current.shift();
-    setActiveToast(toasts.current?.[0] ?? null);
+    if (toasts.current.length === 0) {
+      setIsLastInQueue(toasts.current.length === 0);
+    } else {
+      setActiveToast(toasts.current?.[0]);
+    }
   }, []);
 
   const clearToastQueue = useCallback(() => {
     toasts.current.length = 0; // safer than = [] as this preserves the reference issues
     setActiveToast(null);
+    setIsLastInQueue(false);
   }, []);
 
   const value = {
@@ -41,6 +47,7 @@ const ToastProvider: React.FC<ToastProviderProps> = ({
     activeToast,
     showToast,
     queueToast,
+    isLastInQueue,
     hideToast,
     clearToastQueue,
     defaults: {

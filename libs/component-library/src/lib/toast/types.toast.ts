@@ -100,6 +100,7 @@ export interface UseToastHook {
 export interface IToastContext extends ToastContextSettings, UseToastHook {
   toasts: Readonly<ToastProps[]>;
   activeToast: ToastProps | null;
+  isLastInQueue: boolean;
 }
 
 type OptionalSettings = Pick<
