@@ -12,7 +12,6 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import { FxSpacer } from '../spacer/spacer';
-import { StyleSheet, View } from 'react-native';
 import { ColorProps } from '@shopify/restyle';
 import { FxTheme } from '../theme/theme';
 
@@ -74,14 +73,19 @@ type TabProps = {
 };
 
 const Tab = ({ text, selected, onPress, variant }: TabProps) => {
-  const [pressed, setPressed] = React.useState<boolean>(false);
+  const [pressed, setPressed] = React.useState(false);
 
   const backgroundOverrides = pressed
     ? VARIANT_STYLES[variant].pressedBackground
     : {};
 
-  let textOverrides = pressed ? VARIANT_STYLES[variant].pressedText : {};
-  textOverrides = { ...textOverrides, ...(selected ? SELECTED_TEXT : {}) };
+  // let textOverrides = pressed ? VARIANT_STYLES[variant].pressedText : {};
+  // textOverrides = { ...textOverrides, ...(selected ? SELECTED_TEXT : {}) };
+
+  const textOverrides = {
+    ...(pressed ? VARIANT_STYLES[variant].pressedText : {}),
+    ...(selected ? SELECTED_TEXT : {}),
+  };
 
   return (
     <FxPressableOpacity
@@ -131,8 +135,8 @@ export const FxTabs = ({
   variant = 'fixed',
 }: FxTabsProps) => {
   const translateX = useSharedValue(0);
-  const highlightWidth = useSharedValue<number>(0);
-  const selectedLayout = useSharedValue<{ x: number; width: number }>({
+  const highlightWidth = useSharedValue(0);
+  const selectedLayout = useSharedValue({
     x: 0,
     width: 0,
   });
@@ -145,29 +149,35 @@ export const FxTabs = ({
   }, [selectedIdx]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const tabsItems = items.map((item, idx) => {
-    return (
-      <View
-        key={idx}
-        style={styles[variant]}
-        onLayout={(event) => {
-          const { x, width } = event.nativeEvent.layout;
-          itemLayouts.current[idx] = {
-            x: x,
-            width: width,
-          };
+    const isAuto = variant === 'auto';
+    const isLast = idx === items.length - 1;
+    const renderSpacer = isAuto && !isLast;
 
-          if (idx === selectedIdx) {
-            selectedLayout.value = { x: x, width: width };
-          }
-        }}
-      >
-        <Tab
-          text={item}
-          selected={idx === selectedIdx}
-          onPress={() => selectHandler(idx)}
-          variant={variant}
-        />
-      </View>
+    return (
+      <React.Fragment key={idx}>
+        <FxBox
+          flex={isAuto ? undefined : 1}
+          onLayout={(event) => {
+            const { x, width } = event.nativeEvent.layout;
+            itemLayouts.current[idx] = {
+              x: x,
+              width: width,
+            };
+
+            if (idx === selectedIdx) {
+              selectedLayout.value = { x: x, width: width };
+            }
+          }}
+        >
+          <Tab
+            text={item}
+            selected={idx === selectedIdx}
+            onPress={() => selectHandler(idx)}
+            variant={variant}
+          />
+        </FxBox>
+        {renderSpacer && <FxSpacer width={24} />}
+      </React.Fragment>
     );
   });
 
@@ -213,21 +223,7 @@ export const FxTabs = ({
 
   return (
     <FxBox flexDirection="row">
-      {variant === 'auto'
-        ? tabsItems.reduce((acc, cur) => {
-            if (!acc) {
-              return cur;
-            } else {
-              return (
-                <>
-                  {acc}
-                  <FxSpacer width={24} />
-                  {cur}
-                </>
-              );
-            }
-          })
-        : tabsItems}
+      {tabsItems}
       <FxReanimatedBox
         position="absolute"
         height={2}
@@ -238,10 +234,3 @@ export const FxTabs = ({
     </FxBox>
   );
 };
-
-const styles = StyleSheet.create({
-  fixed: {
-    flex: 1,
-  },
-  auto: {},
-});
