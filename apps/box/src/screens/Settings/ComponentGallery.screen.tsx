@@ -50,6 +50,12 @@ export const ComponentGalleryScreen = () => {
         navigation.navigate('Usage Bar');
       },
     },
+    {
+      name: 'Table',
+      onPress: () => {
+        navigation.navigate('Table');
+      },
+    },
   ];
 
   const renderItem = React.useCallback<ListRenderItem<GalleryItemType>>(
