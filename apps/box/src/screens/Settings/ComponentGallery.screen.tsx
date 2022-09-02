@@ -51,6 +51,12 @@ export const ComponentGalleryScreen = () => {
       },
     },
     {
+      name: 'Notifications',
+      onPress: () => {
+        navigation.navigate('Toast');
+      },
+    },
+    {
       name: 'Table',
       onPress: () => {
         navigation.navigate('Table');
