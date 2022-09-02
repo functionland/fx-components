@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { LayoutChangeEvent, StyleSheet } from 'react-native';
 
 import {
@@ -55,14 +49,12 @@ const defaultComponentsConfig: ToastComponentsConfig = {
 };
 
 const ToasterInternal: React.FC = () => {
-  const {
-    activeToast,
-    defaults,
-    customToasts,
-    hideToast,
-    isLastInQueue,
-    clearToastQueue,
-  } = useToastContext();
+  const { activeToast, defaults, customToasts, hideToast, clearToastQueue } =
+    useToastContext();
+
+  const [currentToast, setCurrenToast] = useState<ToastProps | null>(
+    activeToast
+  );
 
   const toastTypes: ToastComponentsConfig = {
     ...defaultComponentsConfig,
@@ -71,23 +63,14 @@ const ToasterInternal: React.FC = () => {
 
   const [isVisible, setIsVisible] = useState(false);
 
-  const onHide = defaults.onHide;
-
-  const onShow = useMemo(
-    () => activeToast?.onShow ?? defaults.onShow,
-    [activeToast?.onShow, defaults.onShow]
-  );
-
-  const prevHeightRef = useRef<number | null>();
   const heightRef = useRef<number | null>(
-    activeToast?.height ?? defaults.height
+    currentToast?.height ?? defaults.height
   );
   const onLayout = useCallback((e: LayoutChangeEvent): void => {
-    prevHeightRef.current = heightRef.current;
     heightRef.current = e.nativeEvent.layout.height;
   }, []);
 
-  const topOffset = activeToast?.topOffset ?? defaults.topOffset;
+  const topOffset = currentToast?.topOffset ?? defaults.topOffset;
   const height = heightRef.current ?? defaults.height;
 
   const hiddenY = -(height + topOffset);
@@ -104,26 +87,26 @@ const ToasterInternal: React.FC = () => {
     };
   });
 
-  const prevToastRef = useRef<ToastProps | null>();
-
-  const clearToasts = () => {
-    clearToastQueue();
-    setIsVisible(false);
-  };
-
   const transitionDuration =
-    activeToast?.transitionDuration ?? defaults.transitionDuration;
+    currentToast?.transitionDuration ?? defaults.transitionDuration;
 
-  useLayoutEffect(() => {
-    // no toasts or correct one is already shown
-    if (
-      (activeToast === prevToastRef.current && !isLastInQueue) ||
-      (!activeToast && !prevToastRef.current)
-    ) {
-      return;
-    }
+  React.useEffect(() => {
+    const onShow = activeToast?.onShow ?? defaults.onShow;
+    const clearToasts = () => {
+      setIsVisible(false);
+      setCurrenToast(null);
+    };
 
-    const hide = () => {
+    if (activeToast) {
+      setIsVisible(true);
+      if (currentToast !== activeToast) {
+        setCurrenToast(activeToast);
+        translationY.value = withTiming(openY, {
+          duration: transitionDuration.enter,
+        });
+      }
+      onShow?.(activeToast);
+    } else if (currentToast) {
       translationY.value = withTiming(
         hiddenY,
         {
@@ -133,46 +116,28 @@ const ToasterInternal: React.FC = () => {
           runOnJS(clearToasts)();
         }
       );
-      onHide?.(prevToastRef.current as ToastProps);
-      prevToastRef.current = null;
-    };
-
-    const show = () => {
-      translationY.value = withTiming(openY, {
-        duration: transitionDuration.enter,
-      });
-
-      prevToastRef.current = activeToast;
-      setIsVisible(true);
-
-      onShow?.(activeToast as ToastProps);
-    };
-
-    // no toasts left but one is visible and not yet animating
-    if (isLastInQueue && isVisible) {
-      hide();
+      defaults.onHide?.(currentToast);
     }
-
-    // toast that isn't visible and not yet animating
-    if (activeToast && !isVisible && !isLastInQueue) {
-      show();
-    }
-
-    // activeToast was replaced and the wrong one is showing
-    if (activeToast && activeToast !== prevToastRef.current && !isLastInQueue) {
-      show();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeToast, hideToast, isLastInQueue, isVisible, onHide, onShow]);
+  }, [
+    activeToast,
+    currentToast,
+    setCurrenToast,
+    openY,
+    translationY,
+    transitionDuration,
+    hiddenY,
+    clearToastQueue,
+    defaults,
+  ]);
 
   const autoHideDuration =
-    activeToast?.autoHideDuration ?? defaults.autoHideDuration;
+    currentToast?.autoHideDuration ?? defaults.autoHideDuration;
 
   // this will auto-cancel if inProgress flips to true or a toast is not visible
   useInterval(hideToast, isVisible ? autoHideDuration : null);
 
-  const toastType = activeToast?.type ?? defaults.type;
-  const onPress = activeToast?.onPress ?? defaults.onPress;
+  const toastType = currentToast?.type ?? defaults.type;
+  const onPress = currentToast?.onPress ?? defaults.onPress;
   const onPressCallback = useMemo(() => {
     if (!onPress) {
       return undefined;
@@ -192,7 +157,7 @@ const ToasterInternal: React.FC = () => {
 
     return toastComponent({
       ...defaults,
-      ...activeToast,
+      ...currentToast,
       onClose: hideToast,
       onPress: onPressCallback,
     });

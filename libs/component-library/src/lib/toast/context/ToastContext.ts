@@ -16,7 +16,6 @@ export const defaultContext: IToastContext = {
   clearToastQueue: () => {},
   toasts: [],
   activeToast: toastDefaults,
-  isLastInQueue: false,
   hideToast: () => {},
   queueToast: () => {},
   showToast: () => {},
