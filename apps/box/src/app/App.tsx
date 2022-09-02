@@ -1,6 +1,10 @@
 import React from 'react';
 import { ThemeProvider } from '@shopify/restyle';
-import { fxLightTheme, fxDarkTheme } from '@functionland/component-library';
+import {
+  fxLightTheme,
+  fxDarkTheme,
+  ToastProvider,
+} from '@functionland/component-library';
 import { RootNavigator } from '../navigation/Root.navigator';
 import { WalletConnectProvider } from '@walletconnect/react-native-dapp/dist/providers';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -40,17 +44,19 @@ export const App = () => {
           asyncStorage: AsyncStorage,
         }}
       >
-        <GestureHandlerRootView style={styles.flex1}>
-          <StatusBar
-            backgroundColor={theme.colors.backgroundApp}
-            barStyle={barStyles[mode]}
-          />
-          <BottomSheetModalProvider>
-            <SafeAreaProvider>
-              <AppContent />
-            </SafeAreaProvider>
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
+        <ToastProvider>
+          <GestureHandlerRootView style={styles.flex1}>
+            <StatusBar
+              backgroundColor={theme.colors.backgroundApp}
+              barStyle={barStyles[mode]}
+            />
+            <BottomSheetModalProvider>
+              <SafeAreaProvider>
+                <AppContent />
+              </SafeAreaProvider>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
+        </ToastProvider>
       </WalletConnectProvider>
     </ThemeProvider>
   );

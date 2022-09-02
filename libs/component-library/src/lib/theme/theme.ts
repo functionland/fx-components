@@ -29,6 +29,27 @@ const paletteLight = {
   error500: '#FF6B6B',
   error200: '#FFE3E3',
   error100: '#FFF5F5',
+
+  // WARNING
+  warning700: '#F59F00',
+  warning600: '#FAB005',
+  warning500: '#FCC419',
+  warning200: '#FFF3BF',
+  warning100: '#FFF9DB',
+
+  // INFO
+  info700: '#1864AB',
+  info600: '#1C7ED6',
+  info500: '#339AF0',
+  info200: '#D0EBFF',
+  info100: '#E7F5FF',
+
+  // SUCCESS
+  success700: '#2F9E44',
+  success600: '#37B24D',
+  success500: '#51CF66',
+  success200: '#D3F9D8',
+  success100: '#EBFBEE',
 };
 
 const paletteDark = {
@@ -54,6 +75,27 @@ const paletteDark = {
   error500: '#FF6B6B',
   error200: '#7D2929',
   error100: '#4B1919',
+
+  // WARNING
+  warning700: '#F08C00',
+  warning600: '#FCC419',
+  warning500: '#FFD43B',
+  warning200: '#806A1D',
+  warning100: '#4C4012',
+
+  // INFO
+  info700: '#1864AB',
+  info600: '#1C7ED6',
+  info500: '#339AF0',
+  info200: '#0E3F6B',
+  info100: '#082640',
+
+  // SUCCESS
+  success700: '#2F9E44',
+  success600: '#37B24D',
+  success500: '#51CF66',
+  success200: '#1C5927',
+  success100: '#103517',
 };
 
 const BaseTheme = {
@@ -72,6 +114,9 @@ const BaseTheme = {
     greenBorder: paletteLight.green400,
     greenBackground: paletteLight.green100,
 
+    successBase: paletteLight.success600,
+    infoBase: paletteLight.info600,
+    warningBase: paletteLight.warning600,
     errorBase: paletteLight.error600,
 
     primary: palette.green,
@@ -265,6 +310,9 @@ const fxDarkTheme: FxTheme = {
     greenBorder: paletteDark.green200,
     greenBackground: paletteDark.green100,
 
+    successBase: paletteDark.success600,
+    infoBase: paletteDark.info600,
+    warningBase: paletteDark.warning600,
     errorBase: paletteDark.error600,
   },
 };
