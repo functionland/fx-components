@@ -2,7 +2,6 @@ import {
   FxBox,
   FxBoxProps,
   FxButton,
-  FxButtons,
   FxChevronLeftIcon,
   FxChevronRightIcon,
   FxLink,
