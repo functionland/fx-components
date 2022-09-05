@@ -111,17 +111,11 @@ const ToasterInternal: React.FC = () => {
         openY + 20
       );
     },
-    onEnd: (event, ctx: GestureContext) => {
-      const newY = ctx.startY! + event.translationY;
-      if (newY > openY) {
-        translationY.value = withSpring(openY);
-      } else {
-        translationY.value = withTiming(hiddenY, {
-          // hide the toast faster with higher velocity
-          duration: interpolate(-event.velocityY, [0, 2000], [500, 0]),
-        });
-        runOnJS(updateInteracting)(false);
-      }
+    onEnd: (event) => {
+      translationY.value = withTiming(hiddenY, {
+        duration: interpolate(-event.velocityY, [0, 2000], [500, 0]),
+      });
+      runOnJS(updateInteracting)(false);
     },
   });
 
