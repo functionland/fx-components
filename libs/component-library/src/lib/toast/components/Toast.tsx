@@ -6,6 +6,9 @@ import {
   useAnimatedStyle,
   withTiming,
   runOnJS,
+  withSpring,
+  interpolate,
+  useAnimatedGestureHandler,
 } from 'react-native-reanimated';
 
 import { useInterval } from '../hooks';
@@ -24,6 +27,11 @@ import {
 } from '../../icons/icons';
 import BaseToast from './BaseToast';
 import { FxReanimatedBox } from '../../box/box';
+import { PanGestureHandler } from 'react-native-gesture-handler';
+
+interface GestureContext {
+  startY?: number;
+}
 
 const defaultComponentsConfig: ToastComponentsConfig = {
   success: (props: BaseToastProps) => (
@@ -62,6 +70,7 @@ const ToasterInternal: React.FC = () => {
   };
 
   const [isVisible, setIsVisible] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
 
   const heightRef = useRef<number | null>(
     currentToast?.height ?? defaults.height
@@ -85,6 +94,35 @@ const ToasterInternal: React.FC = () => {
         },
       ],
     };
+  });
+
+  const updateInteracting = (bool: boolean) => {
+    setIsInteracting(bool);
+  };
+
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx: GestureContext) => {
+      ctx.startY = translationY.value;
+      runOnJS(updateInteracting)(true);
+    },
+    onActive: (event, ctx: GestureContext) => {
+      translationY.value = Math.min(
+        ctx.startY! + event.translationY,
+        openY + 20
+      );
+    },
+    onEnd: (event, ctx: GestureContext) => {
+      const newY = ctx.startY! + event.translationY;
+      if (newY > openY) {
+        translationY.value = withSpring(openY);
+      } else {
+        translationY.value = withTiming(hiddenY, {
+          // hide the toast faster with higher velocity
+          duration: interpolate(-event.velocityY, [0, 2000], [500, 0]),
+        });
+        runOnJS(updateInteracting)(false);
+      }
+    },
   });
 
   const transitionDuration =
@@ -134,7 +172,7 @@ const ToasterInternal: React.FC = () => {
     currentToast?.autoHideDuration ?? defaults.autoHideDuration;
 
   // this will auto-cancel if inProgress flips to true or a toast is not visible
-  useInterval(hideToast, isVisible ? autoHideDuration : null);
+  useInterval(hideToast, isVisible && !isInteracting ? autoHideDuration : null);
 
   const toastType = currentToast?.type ?? defaults.type;
   const onPress = currentToast?.onPress ?? defaults.onPress;
@@ -164,9 +202,14 @@ const ToasterInternal: React.FC = () => {
   };
 
   return (
-    <FxReanimatedBox onLayout={onLayout} style={[s.toastBox, reanimatedStyle]}>
-      {renderContent()}
-    </FxReanimatedBox>
+    <PanGestureHandler onGestureEvent={gestureHandler}>
+      <FxReanimatedBox
+        onLayout={onLayout}
+        style={[s.toastBox, reanimatedStyle]}
+      >
+        {renderContent()}
+      </FxReanimatedBox>
+    </PanGestureHandler>
   );
 };
 
