@@ -11,7 +11,7 @@ import type { $Omit } from './../types';
 import { useRadioButtonContext } from './RadioButtonGroup';
 import { handlePress, isChecked } from './utils';
 
-type Props = $Omit<FxPressableOpacityProps, 'children'> & {
+type RadioButtonProps = $Omit<FxPressableOpacityProps, 'children'> & {
   /**
    * Value of the radio button
    */
@@ -83,7 +83,13 @@ const BORDER_WIDTH_CHECKED = 6;
  * ```
  */
 
-const RadioButton = ({ disabled, onPress, value, status, ...rest }: Props) => {
+const RadioButton = ({
+  disabled,
+  onPress,
+  value,
+  status,
+  ...rest
+}: RadioButtonProps) => {
   const { colors } = useFxTheme();
   const { value: contextValue, onValueChange } = useRadioButtonContext();
   const checked =
@@ -215,4 +221,4 @@ const s = StyleSheet.create({
 
 export default RadioButton;
 
-export { RadioButton };
+export { RadioButton, RadioButtonProps };
