@@ -6,7 +6,6 @@ import {
   useAnimatedStyle,
   withTiming,
   runOnJS,
-  withSpring,
   interpolate,
   useAnimatedGestureHandler,
 } from 'react-native-reanimated';
