@@ -27,6 +27,12 @@ export const ComponentGalleryScreen = () => {
       },
     },
     {
+      name: 'Buttons',
+      onPress: () => {
+        navigation.navigate('Buttons');
+      },
+    },
+    {
       name: 'Button Groups',
       onPress: () => {
         navigation.navigate('Button Groups');

@@ -14,6 +14,7 @@ import {
   UsageBarDemo,
   ToastDemoScreen,
   FormDemoScreen,
+  ButtonsDemoScreen,
 } from '../screens/Settings/ComponentGallery';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 
@@ -64,6 +65,10 @@ export const ComponentGalleryNavigator = () => {
       <ComponentGalleryStack.Screen
         name="Avatars"
         component={AvatarDemoScreen}
+      />
+      <ComponentGalleryStack.Screen
+        name="Buttons"
+        component={ButtonsDemoScreen}
       />
       <ComponentGalleryStack.Screen
         name="Button Groups"
