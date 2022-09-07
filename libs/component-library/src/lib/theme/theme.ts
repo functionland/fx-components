@@ -278,6 +278,18 @@ const buttonTheme /*: ButtonThemeType*/ = {
   },
 };
 
+const LinkTheme = {
+  types: {
+    defaults: { color: 'greenBase' } as ButtonThemeColorType,
+    disabled: { color: 'border' } as ButtonThemeColorType,
+    pressed: { color: 'greenPressed' } as ButtonThemeColorType,
+  },
+  sizes: {
+    defaults: { ...textVariants.bodyXSSemibold },
+    large: { ...textVariants.bodyMediumRegular },
+  },
+};
+
 const fxLightTheme = createTheme({
   ...BaseTheme,
   textVariants,
@@ -285,6 +297,9 @@ const fxLightTheme = createTheme({
   buttonSizes: { ...buttonTheme.container.sizes },
   buttonTextVariants: { ...buttonTheme.text.types },
   buttonTextSizes: { ...buttonTheme.text.sizes },
+  linkVariants: { ...LinkTheme.types },
+  linkSizes: { ...LinkTheme.sizes },
+
   zIndices: {
     foreground: 1000,
   },

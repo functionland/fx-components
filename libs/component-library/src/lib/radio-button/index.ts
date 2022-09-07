@@ -9,3 +9,5 @@ export const FxRadioButton = Object.assign(
     Group: RadioButtonGroup,
   }
 );
+
+export * from './RadioButtonWithLabel';

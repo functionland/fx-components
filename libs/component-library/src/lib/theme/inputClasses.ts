@@ -32,6 +32,7 @@ export const FxTextInputClasses: Record<
     ...defaultProps,
     color: 'border',
     backgroundColor: 'backgroundPrimary',
+    placeholderTextColor: 'border',
   },
   active: {
     ...defaultProps,

@@ -68,4 +68,4 @@ const FxTextInput = ({ disabled, error, ...rest }: FxTextInputProps) => {
   );
 };
 
-export { FxTextInput };
+export { FxTextInput, FxTextInputProps };

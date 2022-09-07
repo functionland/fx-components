@@ -13,6 +13,8 @@ import {
   TabsDemoScreen,
   UsageBarDemo,
   ToastDemoScreen,
+  FormDemoScreen,
+  ButtonsDemoScreen,
 } from '../screens/Settings/ComponentGallery';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 import { TableDemoScreen } from '../screens/Settings/ComponentGallery/TableDemo.screen';
@@ -66,16 +68,21 @@ export const ComponentGalleryNavigator = () => {
         component={AvatarDemoScreen}
       />
       <ComponentGalleryStack.Screen
+        name="Buttons"
+        component={ButtonsDemoScreen}
+      />
+      <ComponentGalleryStack.Screen
         name="Button Groups"
         component={ButtonGroupDemoScreen}
       />
+      <ComponentGalleryStack.Screen name="Forms" component={FormDemoScreen} />
       <ComponentGalleryStack.Screen
         name="Progress Bar"
         component={ProgressBarDemoScreen}
       />
       <ComponentGalleryStack.Screen name="Tabs" component={TabsDemoScreen} />
-      <ComponentGalleryStack.Screen name="Usage Bar" component={UsageBarDemo} />
       <ComponentGalleryStack.Screen name="Toast" component={ToastDemoScreen} />
+      <ComponentGalleryStack.Screen name="Usage Bar" component={UsageBarDemo} />
       <ComponentGalleryStack.Screen name="Table" component={TableDemoScreen} />
     </ComponentGalleryStack.Navigator>
   );

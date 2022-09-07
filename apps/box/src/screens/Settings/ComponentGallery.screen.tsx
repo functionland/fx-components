@@ -27,9 +27,27 @@ export const ComponentGalleryScreen = () => {
       },
     },
     {
+      name: 'Buttons',
+      onPress: () => {
+        navigation.navigate('Buttons');
+      },
+    },
+    {
       name: 'Button Groups',
       onPress: () => {
         navigation.navigate('Button Groups');
+      },
+    },
+    {
+      name: 'Forms',
+      onPress: () => {
+        navigation.navigate('Forms');
+      },
+    },
+    {
+      name: 'Notifications',
+      onPress: () => {
+        navigation.navigate('Toast');
       },
     },
     {
@@ -48,12 +66,6 @@ export const ComponentGalleryScreen = () => {
       name: 'Usage Bar',
       onPress: () => {
         navigation.navigate('Usage Bar');
-      },
-    },
-    {
-      name: 'Notifications',
-      onPress: () => {
-        navigation.navigate('Toast');
       },
     },
     {
