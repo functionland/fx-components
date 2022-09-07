@@ -307,6 +307,18 @@ const dropdownTheme /*: DropdownThemeType*/ = {
   },
 };
 
+const LinkTheme = {
+  types: {
+    defaults: { color: 'greenBase' } as InnerTextThemeColorType,
+    disabled: { color: 'border' } as InnerTextThemeColorType,
+    pressed: { color: 'greenPressed' } as InnerTextThemeColorType,
+  },
+  sizes: {
+    defaults: { ...textVariants.bodyXSSemibold },
+    large: { ...textVariants.bodyMediumRegular },
+  },
+};
+
 const fxLightTheme = createTheme({
   ...BaseTheme,
   textVariants,
@@ -314,6 +326,8 @@ const fxLightTheme = createTheme({
   buttonSizes: { ...buttonTheme.container.sizes },
   buttonTextVariants: { ...buttonTheme.text.types },
   buttonTextSizes: { ...buttonTheme.text.sizes },
+  linkVariants: { ...LinkTheme.types },
+  linkSizes: { ...LinkTheme.sizes },
   dropdownVariants: { ...dropdownTheme.container.types },
   dropdownTextVariants: { ...dropdownTheme.text.types },
   zIndices: {
