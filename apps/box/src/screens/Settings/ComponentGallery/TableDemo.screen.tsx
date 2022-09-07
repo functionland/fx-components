@@ -1,4 +1,5 @@
 import {
+  FxBox,
   FxSafeAreaBox,
   FxSpacer,
   FxTable,
@@ -13,9 +14,14 @@ export const TableDemoScreen = () => {
   return (
     <FxSafeAreaBox flex={1}>
       <ScrollView>
-        <HeaderText>Table Demo</HeaderText>
+        <FxBox paddingHorizontal="20">
+          <HeaderText>Table Demo</HeaderText>
+        </FxBox>
         <FxSpacer marginTop="16" />
-        <SubHeaderText>Without foldout</SubHeaderText>
+        <FxBox paddingHorizontal="20">
+          <SubHeaderText>Without foldout</SubHeaderText>
+        </FxBox>
+        <FxSpacer marginTop="8" />
         <FxTable>
           <FxTable.Header>
             <FxTable.Title>First</FxTable.Title>
@@ -41,7 +47,10 @@ export const TableDemoScreen = () => {
         </FxTable>
 
         <FxSpacer marginTop="16" />
-        <SubHeaderText>With foldout</SubHeaderText>
+        <FxBox paddingHorizontal="20">
+          <SubHeaderText>With foldout</SubHeaderText>
+        </FxBox>
+        <FxSpacer marginTop="8" />
         <FxTable>
           <FxTable.Header>
             <FxTable.Title width={ICON_BUFFER} />
