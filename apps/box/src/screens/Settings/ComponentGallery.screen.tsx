@@ -39,6 +39,18 @@ export const ComponentGalleryScreen = () => {
       },
     },
     {
+      name: 'Forms',
+      onPress: () => {
+        navigation.navigate('Forms');
+      },
+    },
+    {
+      name: 'Notifications',
+      onPress: () => {
+        navigation.navigate('Toast');
+      },
+    },
+    {
       name: 'Progress Bar',
       onPress: () => {
         navigation.navigate('Progress Bar');
@@ -54,12 +66,6 @@ export const ComponentGalleryScreen = () => {
       name: 'Usage Bar',
       onPress: () => {
         navigation.navigate('Usage Bar');
-      },
-    },
-    {
-      name: 'Notifications',
-      onPress: () => {
-        navigation.navigate('Toast');
       },
     },
   ];

@@ -19,7 +19,7 @@ export {
 export { FxHeader, FxHeaderProps } from './lib/header/header';
 export * from './lib/icons/icons';
 export { FxError } from './lib/error/error';
-export { FxRadioButton } from './lib/radio-button';
+export { FxRadioButton, FxRadioButtonWithLabel } from './lib/radio-button';
 export { FxFoldableContent } from './lib/foldable-content/foldableContent';
 export { FxHorizontalRule } from './lib/horizontal-rule/horizontalRule';
 export { FxLineChart } from './lib/line-chart/lineChart';
@@ -32,6 +32,7 @@ export { FxSvg, FxSvgProps } from './lib/svg/svg';
 export { FxTabs } from './lib/tabs/tabs';
 export { FxTag } from './lib/tag/tag';
 export { FxText, FxReText, FxTextProps } from './lib/text/text';
+export { FxTextArea } from './lib/input/textarea';
 export { FxTextInput } from './lib/input/input';
 export { FxTheme, fxDarkTheme, fxLightTheme } from './lib/theme/theme';
 export { useFxTheme } from './lib/theme/useFxTheme';
