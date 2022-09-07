@@ -41,6 +41,7 @@ export type ComponentGalleryStackParamList = {
   'Usage Bar': undefined;
   Tabs: undefined;
   'Button Groups': undefined;
+  Buttons: undefined;
   'Progress Bar': undefined;
   Toast: undefined;
 };
