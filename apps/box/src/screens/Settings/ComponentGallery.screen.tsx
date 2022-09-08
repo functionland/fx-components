@@ -7,7 +7,7 @@ import {
 } from '@functionland/component-library';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { FlatList, ListRenderItem, StyleSheet } from 'react-native';
+import { FlatList, ListRenderItem } from 'react-native';
 import { HeaderText } from '../../components/Text';
 import { ComponentGalleryStackNavigationProps } from '../../navigation/navigationConfig';
 
