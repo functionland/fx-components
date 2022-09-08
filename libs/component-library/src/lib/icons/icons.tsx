@@ -3,10 +3,24 @@ import { Path } from 'react-native-svg';
 import { FxSvg, FxSvgProps } from '../svg/svg';
 
 export const FxChevronDownIcon = (props: FxSvgProps) => (
-  <FxSvg width={12} height={7} viewBox="0 0 12 7" {...props}>
-    <Path d="M6 5.5L6.35355 5.85355L6 6.20711L5.64645 5.85355L6 5.5ZM11.3536 0.853553L6.35355 5.85355L5.64645 5.14645L10.6464 0.146447L11.3536 0.853553ZM5.64645 5.85355L0.646446 0.853554L1.35355 0.146447L6.35355 5.14645L5.64645 5.85355Z" />
+  <FxSvg width={12} height={7} viewBox="0 0 12 7" fill="none" {...props}>
+    <Path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M6 5.5L6.35355 5.85355L6 6.20711L5.64645 5.85355L6 5.5ZM11.3536 0.853553L6.35355 5.85355L5.64645 5.14645L10.6464 0.146447L11.3536 0.853553ZM5.64645 5.85355L0.646446 0.853554L1.35355 0.146447L6.35355 5.14645L5.64645 5.85355Z"
+    />
   </FxSvg>
 );
+export const FxChevronUpIcon = (props: FxSvgProps) => (
+  <FxSvg width={16} height={16} viewBox="0 0 16 16" fill="none" {...props}>
+    <Path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M2.31344 10.8819C2.11818 10.6866 2.11818 10.37 2.31344 10.1748L7.17537 5.31284C7.63098 4.85723 8.36967 4.85723 8.82528 5.31284L13.6872 10.1748C13.8825 10.37 13.8825 10.6866 13.6872 10.8819C13.492 11.0771 13.1754 11.0771 12.9801 10.8819L8.11818 6.01995C8.05309 5.95486 7.94756 5.95486 7.88248 6.01994L3.02055 10.8819C2.82528 11.0771 2.5087 11.0771 2.31344 10.8819Z"
+    />
+  </FxSvg>
+);
+
 export const FxChevronRightIcon = (props: FxSvgProps) => (
   <FxSvg width={16} height={16} viewBox="0 0 16 16" {...props}>
     <Path
@@ -170,7 +184,7 @@ export const FxDownloadingIcon = (props: FxSvgProps) => (
   </FxSvg>
 );
 export const FxOptionsHorizontalIcon = (props: FxSvgProps) => (
-  <FxSvg width={16} height={16} viewBox="0 0 16 16" fill="none" {...props}>
+  <FxSvg width={24} height={24} viewBox="0 0 24 24" fill="none" {...props}>
     <Path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -178,8 +192,9 @@ export const FxOptionsHorizontalIcon = (props: FxSvgProps) => (
     />
   </FxSvg>
 );
+
 export const FxOptionsVerticalIcon = (props: FxSvgProps) => (
-  <FxSvg width={16} height={16} viewBox="0 0 16 16" fill="none" {...props}>
+  <FxSvg width={24} height={24} viewBox="0 0 24 24" fill="none" {...props}>
     <Path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -189,7 +204,7 @@ export const FxOptionsVerticalIcon = (props: FxSvgProps) => (
 );
 
 export const FxSelectIcon = (props: FxSvgProps) => (
-  <FxSvg width={16} height={16} viewBox="0 0 16 16" {...props}>
+  <FxSvg width={24} height={24} viewBox="0 0 24 24" {...props}>
     <Path
       fillRule="evenodd"
       clipRule="evenodd"
