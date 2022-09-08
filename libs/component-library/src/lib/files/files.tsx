@@ -74,7 +74,7 @@ const FxFileContainer = createRestyleComponent<
 >([fileVariant], FxPressableOpacity);
 
 const fileTextVariant = createVariant({
-  themeKey: 'buttonTextVariants',
+  themeKey: 'fileTextVariants',
   property: 'type',
 });
 
@@ -85,7 +85,7 @@ const FxFileText = createRestyleComponent<
 >([fileTextVariant], FxText);
 
 const fileTextDetailVariant = createVariant({
-  themeKey: 'fileTextVariants',
+  themeKey: 'fileTextDetailVariants',
   property: 'type',
 });
 

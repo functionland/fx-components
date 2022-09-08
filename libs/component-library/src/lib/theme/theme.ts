@@ -361,7 +361,7 @@ const fxLightTheme = createTheme({
   dropdownTextVariants: { ...dropdownTheme.text.types },
   fileVariants: { ...filesTheme.text.types },
   fileTextVariants: { ...filesTheme.text.types },
-  fileTextDetailVariants: { ...filesTheme.text.types },
+  fileTextDetailVariants: { ...filesTheme.textDetail.types },
   zIndices: {
     foreground: 1000,
   },
