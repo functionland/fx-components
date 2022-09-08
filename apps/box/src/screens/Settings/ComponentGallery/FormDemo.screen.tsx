@@ -2,9 +2,11 @@ import {
   FxBox,
   FxDropdown,
   FxError,
+  FxHorizontalRule,
   FxRadioButton,
   FxRadioButtonWithLabel,
   FxSafeAreaBox,
+  FxSlider,
   FxSpacer,
   FxText,
   FxTextArea,
@@ -29,6 +31,10 @@ export const FormDemoScreen = () => {
     InputState.default
   );
   const [textAreaState, setTextAreaState] = React.useState<InputState>(
+    InputState.default
+  );
+  const [sliderValue, setSliderValue] = React.useState(24);
+  const [sliderState, setSliderState] = React.useState<InputState>(
     InputState.default
   );
   return (
@@ -62,9 +68,9 @@ export const FormDemoScreen = () => {
           value={InputState[selectState]}
           onValueChange={(val) => setSelectState(InputState[val])}
         >
-          <InputStateOptions />
+          <InputStateOptions default disabled error />
         </FxRadioButton.Group>
-        <FxSpacer height={32} />
+        <FxHorizontalRule marginVertical="20" />
 
         {/**
          * Input Field
@@ -87,9 +93,9 @@ export const FormDemoScreen = () => {
           value={InputState[inputState]}
           onValueChange={(val) => setInputState(InputState[val])}
         >
-          <InputStateOptions />
+          <InputStateOptions default disabled error />
         </FxRadioButton.Group>
-        <FxSpacer height={32} />
+        <FxHorizontalRule marginVertical="20" />
 
         {/**
          * Textarea Field
@@ -110,25 +116,77 @@ export const FormDemoScreen = () => {
           value={InputState[textAreaState]}
           onValueChange={(val) => setTextAreaState(InputState[val])}
         >
-          <InputStateOptions />
+          <InputStateOptions default disabled error />
+        </FxRadioButton.Group>
+        <FxHorizontalRule marginVertical="20" />
+
+        {/**
+         * Slider
+         */}
+        <FxBox
+          flexDirection="row"
+          alignItems="baseline"
+          justifyContent="space-between"
+          marginBottom="8"
+        >
+          <FxText variant="bodySmallRegular" color="content1">
+            Slider
+          </FxText>
+          <FxText variant="bodyXSRegular" color="content3">
+            {sliderValue} GB
+          </FxText>
+        </FxBox>
+        <FxSlider
+          value={sliderValue}
+          onValueChange={setSliderValue}
+          minimumValue={1}
+          maximumValue={100}
+          label="GB"
+          disabled={sliderState === InputState.disabled}
+        />
+        <FxSpacer height={16} />
+        <FxRadioButton.Group
+          value={InputState[sliderState]}
+          onValueChange={(val) => setSliderState(InputState[val])}
+        >
+          <InputStateOptions default disabled />
         </FxRadioButton.Group>
       </FxSafeAreaBox>
     </ScrollView>
   );
 };
 
-const InputStateOptions = () => (
+type InputStateOptionsType = {
+  default?: boolean;
+  disabled?: boolean;
+  error?: boolean;
+};
+
+const InputStateOptions = (props: InputStateOptionsType) => (
   <FxBox flexDirection="row">
-    <FxRadioButtonWithLabel
-      value={InputState.default}
-      label={InputState.default}
-    />
-    <FxSpacer width={20} />
-    <FxRadioButtonWithLabel
-      value={InputState.disabled}
-      label={InputState.disabled}
-    />
-    <FxSpacer width={20} />
-    <FxRadioButtonWithLabel value={InputState.error} label={InputState.error} />
+    {props.default && (
+      <>
+        <FxRadioButtonWithLabel
+          value={InputState.default}
+          label={InputState.default}
+        />
+        <FxSpacer width={20} />
+      </>
+    )}
+    {props.disabled && (
+      <>
+        <FxRadioButtonWithLabel
+          value={InputState.disabled}
+          label={InputState.disabled}
+        />
+        <FxSpacer width={20} />
+      </>
+    )}
+    {props.error && (
+      <FxRadioButtonWithLabel
+        value={InputState.error}
+        label={InputState.error}
+      />
+    )}
   </FxBox>
 );
