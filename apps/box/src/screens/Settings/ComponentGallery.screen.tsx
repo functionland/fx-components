@@ -80,6 +80,12 @@ export const ComponentGalleryScreen = () => {
         navigation.navigate('Breadcrumbs');
       },
     },
+    {
+      name: 'Files',
+      onPress: () => {
+        navigation.navigate('Files');
+      },
+    },
   ];
 
   const renderItem = React.useCallback<ListRenderItem<GalleryItemType>>(
