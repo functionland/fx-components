@@ -10,6 +10,7 @@ export { FxBox, FxReanimatedBox, FxBoxProps } from './lib/box/box';
 export { FxButton, FxButtonProps } from './lib/button/button';
 export { FxButtonGroup } from './lib/button-group/buttonGroup';
 export { FxCard, FxCardProps } from './lib/card/card';
+export { FxDropdown } from './lib/dropdown/dropdown';
 export { FxSwitch } from './lib/switch/switch';
 export { FxProgressBar } from './lib/progress-bar/progressBar';
 export {

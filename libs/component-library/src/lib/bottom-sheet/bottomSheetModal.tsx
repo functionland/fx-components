@@ -2,6 +2,7 @@ import React from 'react';
 import { Dimensions } from 'react-native';
 import {
   BottomSheetModal,
+  BottomSheetModalProps,
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
   BottomSheetScrollView,
@@ -14,7 +15,7 @@ import { FxCloseIcon } from '../icons/icons';
 import { FxPressableOpacity } from '../pressable-opacity/pressableOpacity';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type FxBottomSheetModalProps = {
+type FxBottomSheetModalProps = Pick<BottomSheetModalProps, 'onDismiss'> & {
   title?: string;
   children?: FxBoxProps['children'];
 };
@@ -27,7 +28,7 @@ export type FxBottomSheetModalMethods = BottomSheetModal;
 export const FxBottomSheetModal = React.forwardRef<
   BottomSheetModal,
   FxBottomSheetModalProps
->(({ title, children }, ref) => {
+>(({ title, children, ...rest }, ref) => {
   const theme = useFxTheme();
   const insets = useSafeAreaInsets();
   const bottomSheetModalRef = React.useRef<BottomSheetModal>(null);
@@ -49,9 +50,7 @@ export const FxBottomSheetModal = React.forwardRef<
     );
   };
 
-  const closeHandler = () => {
-    bottomSheetModalRef.current?.close();
-  };
+  const closeHandler = () => bottomSheetModalRef.current?.close();
 
   React.useImperativeHandle<BottomSheetModal | null, BottomSheetModal | null>(
     ref,
@@ -69,6 +68,7 @@ export const FxBottomSheetModal = React.forwardRef<
       backdropComponent={renderBackdrop}
       topInset={INSET}
       backgroundStyle={{ backgroundColor: theme.colors.backgroundApp }}
+      {...rest}
     >
       <BottomSheetScrollView
         stickyHeaderIndices={[0]}

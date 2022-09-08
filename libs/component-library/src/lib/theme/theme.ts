@@ -233,7 +233,7 @@ const textVariants = {
   },
 };
 
-type ButtonThemeColorType = { color: keyof BaseThemeType['colors'] };
+type InnerTextThemeColorType = { color: keyof BaseThemeType['colors'] };
 const buttonTheme /*: ButtonThemeType*/ = {
   container: {
     types: {
@@ -266,10 +266,10 @@ const buttonTheme /*: ButtonThemeType*/ = {
   },
   text: {
     types: {
-      defaults: { color: 'white' } as ButtonThemeColorType,
-      inverted: { color: 'greenBase' } as ButtonThemeColorType,
-      disabled: { color: 'border' } as ButtonThemeColorType,
-      pressed: { color: 'white' } as ButtonThemeColorType,
+      defaults: { color: 'white' } as InnerTextThemeColorType,
+      inverted: { color: 'greenBase' } as InnerTextThemeColorType,
+      disabled: { color: 'border' } as InnerTextThemeColorType,
+      pressed: { color: 'white' } as InnerTextThemeColorType,
     },
     sizes: {
       defaults: { ...textVariants.bodyXSSemibold },
@@ -278,11 +278,40 @@ const buttonTheme /*: ButtonThemeType*/ = {
   },
 };
 
+const dropdownTheme /*: DropdownThemeType*/ = {
+  container: {
+    types: {
+      defaults: {
+        borderColor: 'border',
+      },
+      disabled: {
+        backgroundColor: 'backgroundPrimary',
+        borderColor: 'border',
+      },
+      pressed: {
+        backgroundColor: 'backgroundPrimary',
+        borderColor: 'greenPressed',
+      },
+      error: {
+        borderColor: 'errorBase',
+      },
+    },
+  },
+  text: {
+    types: {
+      defaults: { color: 'content1' } as InnerTextThemeColorType,
+      disabled: { color: 'border' } as InnerTextThemeColorType,
+      pressed: { color: 'content3' } as InnerTextThemeColorType,
+      error: { color: 'content3' } as InnerTextThemeColorType,
+    },
+  },
+};
+
 const LinkTheme = {
   types: {
-    defaults: { color: 'greenBase' } as ButtonThemeColorType,
-    disabled: { color: 'border' } as ButtonThemeColorType,
-    pressed: { color: 'greenPressed' } as ButtonThemeColorType,
+    defaults: { color: 'greenBase' } as InnerTextThemeColorType,
+    disabled: { color: 'border' } as InnerTextThemeColorType,
+    pressed: { color: 'greenPressed' } as InnerTextThemeColorType,
   },
   sizes: {
     defaults: { ...textVariants.bodyXSSemibold },
@@ -299,7 +328,8 @@ const fxLightTheme = createTheme({
   buttonTextSizes: { ...buttonTheme.text.sizes },
   linkVariants: { ...LinkTheme.types },
   linkSizes: { ...LinkTheme.sizes },
-
+  dropdownVariants: { ...dropdownTheme.container.types },
+  dropdownTextVariants: { ...dropdownTheme.text.types },
   zIndices: {
     foreground: 1000,
   },

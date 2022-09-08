@@ -1,5 +1,6 @@
 import {
   FxBox,
+  FxDropdown,
   FxError,
   FxRadioButton,
   FxRadioButtonWithLabel,
@@ -11,6 +12,7 @@ import {
 } from '@functionland/component-library';
 import { HeaderText } from '../../../components/Text';
 import React from 'react';
+import { ScrollView } from 'react-native';
 
 enum InputState {
   default = 'default',
@@ -19,6 +21,10 @@ enum InputState {
 }
 
 export const FormDemoScreen = () => {
+  const [selectedValue, setSelectedValue] = React.useState<number>(null);
+  const [selectState, setSelectState] = React.useState<InputState>(
+    InputState.default
+  );
   const [inputState, setInputState] = React.useState<InputState>(
     InputState.default
   );
@@ -26,10 +32,43 @@ export const FormDemoScreen = () => {
     InputState.default
   );
   return (
-    <FxSafeAreaBox marginHorizontal="20" flex={1}>
-      <HeaderText>Form</HeaderText>
-      <FxSpacer marginTop="32" />
-      <FxBox flex={1}>
+    <ScrollView>
+      <FxSafeAreaBox marginHorizontal="20" flex={1}>
+        <HeaderText>Form</HeaderText>
+        <FxSpacer marginTop="32" />
+
+        {/**
+         * Dropdown Field
+         */}
+        <FxText variant="bodySmallRegular" color="content1" marginBottom="8">
+          Dropdown
+        </FxText>
+        <FxDropdown
+          selectedValue={selectedValue}
+          onValueChange={(itemValue: number) => setSelectedValue(itemValue)}
+          options={[
+            { label: 'Select an option', value: null },
+            { label: 'Option 1', value: 1 },
+            { label: 'Option 2', value: 2 },
+            { label: 'Option 3', value: 3 },
+          ]}
+          disabled={selectState === InputState.disabled}
+          error={selectState === InputState.error}
+          title="Dropdown Example"
+        />
+        {selectState === InputState.error && <FxError error="Error message" />}
+        <FxSpacer height={8} />
+        <FxRadioButton.Group
+          value={InputState[selectState]}
+          onValueChange={(val) => setSelectState(InputState[val])}
+        >
+          <InputStateOptions />
+        </FxRadioButton.Group>
+        <FxSpacer height={32} />
+
+        {/**
+         * Input Field
+         */}
         <FxText variant="bodySmallRegular" color="content1">
           Input Field
         </FxText>
@@ -51,6 +90,10 @@ export const FormDemoScreen = () => {
           <InputStateOptions />
         </FxRadioButton.Group>
         <FxSpacer height={32} />
+
+        {/**
+         * Textarea Field
+         */}
         <FxText variant="bodySmallRegular" color="content1" marginBottom="8">
           Text Area
         </FxText>
@@ -69,8 +112,8 @@ export const FormDemoScreen = () => {
         >
           <InputStateOptions />
         </FxRadioButton.Group>
-      </FxBox>
-    </FxSafeAreaBox>
+      </FxSafeAreaBox>
+    </ScrollView>
   );
 };
 
