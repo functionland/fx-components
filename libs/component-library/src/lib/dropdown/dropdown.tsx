@@ -49,6 +49,7 @@ type FxDropdownProps = React.ComponentProps<typeof FxDropdownBase> &
     options: { label: string; value: ItemValue }[];
     title?: string;
     error?: boolean;
+    onDismiss?: () => void;
   };
 
 const FxDropdown = ({
@@ -59,6 +60,7 @@ const FxDropdown = ({
   options,
   title,
   error,
+  onDismiss,
 }: FxDropdownProps) => {
   const bottomSheetRef = React.useRef<FxBottomSheetModalMethods>(null);
   const [focus, setFocus] = React.useState(false);
@@ -79,7 +81,10 @@ const FxDropdown = ({
     setFocus(true);
   };
 
-  const onDismiss = () => setFocus(false);
+  const _onDismiss = () => {
+    setFocus(false);
+    if (onDismiss) onDismiss();
+  };
 
   return (
     <>
@@ -105,7 +110,7 @@ const FxDropdown = ({
       <FxBottomSheetModal
         ref={bottomSheetRef}
         title={title}
-        onDismiss={onDismiss}
+        onDismiss={_onDismiss}
       >
         <FxPicker selectedValue={selectedValue} onValueChange={onValueChange}>
           {options.map(({ label, value }) => (
