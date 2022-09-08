@@ -11,6 +11,8 @@ import type { $Omit } from './../types';
 import { useRadioButtonContext } from './RadioButtonGroup';
 import { handlePress, isChecked } from './utils';
 
+const RADIO_SIZE = 18;
+
 type RadioButtonProps = $Omit<FxPressableOpacityProps, 'children'> & {
   /**
    * Value of the radio button
@@ -159,6 +161,7 @@ const RadioButton = ({
       accessibilityRole="radio"
       accessibilityState={{ disabled, checked }}
       accessibilityLiveRegion="polite"
+      hitSlop={{ top: 0, right: 0, bottom: 0, left: 0 }}
       {...rest}
       onPress={
         disabled
@@ -208,14 +211,14 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   radio: {
-    height: 18,
-    width: 18,
-    borderRadius: 10,
+    height: RADIO_SIZE,
+    width: RADIO_SIZE,
+    borderRadius: RADIO_SIZE / 2,
   },
   dot: {
-    height: 6,
-    width: 6,
-    borderRadius: 5,
+    height: RADIO_SIZE / 3,
+    width: RADIO_SIZE / 3,
+    borderRadius: RADIO_SIZE / 6,
   },
 });
 

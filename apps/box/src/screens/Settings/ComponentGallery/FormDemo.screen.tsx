@@ -8,6 +8,7 @@ import {
   FxSafeAreaBox,
   FxSlider,
   FxSpacer,
+  FxSwitch,
   FxText,
   FxTextArea,
   FxTextInput,
@@ -37,6 +38,8 @@ export const FormDemoScreen = () => {
   const [sliderState, setSliderState] = React.useState<InputState>(
     InputState.default
   );
+  const [radioState, setRadioState] = React.useState<string>('2');
+  const [switchState, setSwitchState] = React.useState<boolean>(false);
   return (
     <ScrollView>
       <FxSafeAreaBox marginHorizontal="20" flex={1}>
@@ -151,6 +154,64 @@ export const FormDemoScreen = () => {
         >
           <InputStateOptions default disabled />
         </FxRadioButton.Group>
+        <FxHorizontalRule marginVertical="20" />
+
+        <FxBox flexDirection="row" justifyContent="space-between">
+          <FxBox>
+            <FxText
+              variant="bodySmallRegular"
+              color="content1"
+              marginBottom="8"
+            >
+              Switch
+            </FxText>
+            <FxSpacer height={2} />
+            <FxSwitch value={switchState} onValueChange={setSwitchState} />
+            <FxSpacer height={8} />
+            <FxSwitch
+              value={!switchState}
+              onValueChange={(val) => setSwitchState(!val)}
+            />
+            <FxSpacer height={8} />
+            <FxSwitch value={switchState} disabled />
+            <FxSpacer height={8} />
+            <FxSwitch value={!switchState} disabled />
+          </FxBox>
+          <FxBox>
+            <FxText
+              variant="bodySmallRegular"
+              color="content1"
+              marginBottom="8"
+            >
+              Radio
+            </FxText>
+            <FxRadioButton.Group
+              value={radioState}
+              onValueChange={(val) => setRadioState(val)}
+            >
+              <FxRadioButtonWithLabel value="1" label="Option" />
+              <FxSpacer height={4} />
+              <FxRadioButtonWithLabel value="2" label="Option" />
+              <FxSpacer height={4} />
+              <FxRadioButtonWithLabel disabled value="3" label="Option" />
+              <FxSpacer height={4} />
+              <FxRadioButtonWithLabel
+                disabled
+                value={radioState}
+                label="Option"
+              />
+            </FxRadioButton.Group>
+          </FxBox>
+          <FxBox>
+            <FxText
+              variant="bodySmallRegular"
+              color="content1"
+              marginBottom="8"
+            >
+              Checkbox
+            </FxText>
+          </FxBox>
+        </FxBox>
       </FxSafeAreaBox>
     </ScrollView>
   );
