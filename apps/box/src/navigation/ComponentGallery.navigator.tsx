@@ -17,6 +17,7 @@ import {
   ButtonsDemoScreen,
 } from '../screens/Settings/ComponentGallery';
 import { ComponentGalleryStackParamList } from './navigationConfig';
+import { TableDemoScreen } from '../screens/Settings/ComponentGallery/TableDemo.screen';
 
 type ComponentGalleryBackProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,6 +83,7 @@ export const ComponentGalleryNavigator = () => {
       <ComponentGalleryStack.Screen name="Tabs" component={TabsDemoScreen} />
       <ComponentGalleryStack.Screen name="Toast" component={ToastDemoScreen} />
       <ComponentGalleryStack.Screen name="Usage Bar" component={UsageBarDemo} />
+      <ComponentGalleryStack.Screen name="Table" component={TableDemoScreen} />
     </ComponentGalleryStack.Navigator>
   );
 };
