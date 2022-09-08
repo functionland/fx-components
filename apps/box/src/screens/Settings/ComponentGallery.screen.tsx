@@ -74,6 +74,12 @@ export const ComponentGalleryScreen = () => {
         navigation.navigate('Table');
       },
     },
+    {
+      name: 'Breadcrumbs',
+      onPress: () => {
+        navigation.navigate('Breadcrumbs');
+      },
+    },
   ];
 
   const renderItem = React.useCallback<ListRenderItem<GalleryItemType>>(
@@ -101,7 +107,6 @@ export const ComponentGalleryScreen = () => {
         data={galleryItems}
         renderItem={renderItem}
         ItemSeparatorComponent={ItemSeparatorComponent}
-        contentContainerStyle={styles.listContainer}
       />
     </FxSafeAreaBox>
   );
@@ -110,9 +115,3 @@ export const ComponentGalleryScreen = () => {
 const ItemSeparatorComponent = () => {
   return <FxSpacer marginTop="8" />;
 };
-
-const styles = StyleSheet.create({
-  listContainer: {
-    flex: 1,
-  },
-});

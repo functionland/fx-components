@@ -15,6 +15,7 @@ import {
   ToastDemoScreen,
   FormDemoScreen,
   ButtonsDemoScreen,
+  BreadcrumbsDemoScreen,
 } from '../screens/Settings/ComponentGallery';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 import { TableDemoScreen } from '../screens/Settings/ComponentGallery/TableDemo.screen';
@@ -84,6 +85,10 @@ export const ComponentGalleryNavigator = () => {
       <ComponentGalleryStack.Screen name="Toast" component={ToastDemoScreen} />
       <ComponentGalleryStack.Screen name="Usage Bar" component={UsageBarDemo} />
       <ComponentGalleryStack.Screen name="Table" component={TableDemoScreen} />
+      <ComponentGalleryStack.Screen
+        name="Breadcrumbs"
+        component={BreadcrumbsDemoScreen}
+      />
     </ComponentGalleryStack.Navigator>
   );
 };
