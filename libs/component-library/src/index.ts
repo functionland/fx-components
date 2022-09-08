@@ -30,6 +30,7 @@ export { FxSafeAreaBox } from './lib/safe-area-box/safeAreaBox';
 export { FxSlider } from './lib/slider/slider';
 export { FxSpacer } from './lib/spacer/spacer';
 export { FxSvg, FxSvgProps } from './lib/svg/svg';
+export { FxTable } from './lib/table/table';
 export { FxTabs } from './lib/tabs/tabs';
 export { FxTag } from './lib/tag/tag';
 export { FxText, FxReText, FxTextProps } from './lib/text/text';
