@@ -41,3 +41,4 @@ export { useFxTheme } from './lib/theme/useFxTheme';
 export * from './lib/toast';
 export * from './lib/link/link';
 export { FxPressableOpacity } from './lib/pressable-opacity/pressableOpacity';
+export * from './lib/breadcrumbs/breadcrumbs';

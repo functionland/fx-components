@@ -6,3 +6,4 @@ export * from './TabsDemo.screen';
 export * from './ToastDemo.screen';
 export * from './UsageBarDemo.screen';
 export * from './ButtonsDemo.screen';
+export * from './BreadcrumbsDemo.screen';
