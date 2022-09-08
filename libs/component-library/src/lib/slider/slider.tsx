@@ -3,7 +3,7 @@ import { BoxProps } from '@shopify/restyle';
 import { FxTheme } from '../theme/theme';
 import { SliderProps } from '@react-native-community/slider';
 import { FxBox, FxReanimatedBox } from '../box/box';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, ViewProps, ViewStyle } from 'react-native';
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
@@ -140,56 +140,64 @@ const FxSlider = ({
       }}
       {...rest}
     >
-      {/**
-       * Track
-       */}
-      <FxBox
-        width="100%"
-        height={4}
-        borderRadius="s"
-        backgroundColor="backgroundSecondary"
-      >
-        <FxReanimatedBox
-          height="100%"
-          borderRadius="s"
-          backgroundColor="greenBase"
-          style={trackStyle}
-        />
-      </FxBox>
-      {/**
-       * Positioner
-       */}
+      <Track style={trackStyle} />
       <PanGestureHandler onGestureEvent={onGestureEvent}>
         <FxReanimatedBox position="absolute" style={positionerStyle}>
-          {/**
-           * Label
-           */}
-          <FxReanimatedBox
-            backgroundColor="backgroundSecondary"
-            borderRadius="s"
-            padding="8"
+          <Label
             style={[labelStyle, styles.label]}
             onLayout={(e) => {
               const layout = e.nativeEvent.layout;
               labelWidth.value = layout.width;
             }}
-          >
-            <FxText variant="bodyXSRegular" color="content1" numberOfLines={1}>
-              {value}
-              {label ? ` ${label}` : ''}
-            </FxText>
-          </FxReanimatedBox>
-          {/**
-           * Thumb
-           */}
-          <FxBox backgroundColor="greenBase" style={styles.thumb}>
-            <FxBox backgroundColor="white" style={styles.thumbDot} />
-          </FxBox>
+            value={value}
+            label={label}
+          />
+          <Thumb />
         </FxReanimatedBox>
       </PanGestureHandler>
     </FxBox>
   );
 };
+
+const Track = ({ style }: { style: ViewStyle }) => (
+  <FxBox
+    width="100%"
+    height={4}
+    borderRadius="s"
+    backgroundColor="backgroundSecondary"
+  >
+    <FxReanimatedBox
+      height="100%"
+      borderRadius="s"
+      backgroundColor="greenBase"
+      style={style}
+    />
+  </FxBox>
+);
+
+type LabelProps = Pick<FxSliderProps, 'value' | 'label'> &
+  Pick<ViewProps, 'style' | 'onLayout'>;
+
+const Label = ({ style, onLayout, value, label }: LabelProps) => (
+  <FxReanimatedBox
+    backgroundColor="backgroundSecondary"
+    borderRadius="s"
+    padding="8"
+    style={style}
+    onLayout={onLayout}
+  >
+    <FxText variant="bodyXSRegular" color="content1" numberOfLines={1}>
+      {value}
+      {label ? ` ${label}` : ''}
+    </FxText>
+  </FxReanimatedBox>
+);
+
+const Thumb = () => (
+  <FxBox backgroundColor="greenBase" style={styles.thumb}>
+    <FxBox backgroundColor="white" style={styles.thumbDot} />
+  </FxBox>
+);
 
 const styles = StyleSheet.create({
   thumb: {

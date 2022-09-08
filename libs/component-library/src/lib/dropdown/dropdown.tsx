@@ -83,7 +83,7 @@ const FxDropdown = ({
 
   const _onDismiss = () => {
     setFocus(false);
-    if (onDismiss) onDismiss();
+    onDismiss?.();
   };
 
   return (
