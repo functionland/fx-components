@@ -307,7 +307,7 @@ const dropdownTheme /*: DropdownThemeType*/ = {
   },
 };
 
-const LinkTheme = {
+const linkTheme = {
   types: {
     defaults: { color: 'greenBase' } as InnerTextThemeColorType,
     disabled: { color: 'border' } as InnerTextThemeColorType,
@@ -319,6 +319,41 @@ const LinkTheme = {
   },
 };
 
+const switchTheme = {
+  track: {
+    types: {
+      defaults: {
+        backgroundColor: 'border',
+      },
+      disabled: {
+        backgroundColor: 'backgroundSecondary',
+      },
+      pressed: {
+        backgroundColor: 'greenBase',
+      },
+      pressedDisabled: {
+        backgroundColor: 'greenBorder',
+      },
+    },
+  },
+  thumb: {
+    types: {
+      defaults: {
+        backgroundColor: 'content1',
+      },
+      disabled: {
+        backgroundColor: 'border',
+      },
+      pressed: {
+        backgroundColor: 'content1',
+      },
+      pressedDisabled: {
+        backgroundColor: 'border',
+      },
+    },
+  },
+};
+
 const fxLightTheme = createTheme({
   ...BaseTheme,
   textVariants,
@@ -326,10 +361,12 @@ const fxLightTheme = createTheme({
   buttonSizes: { ...buttonTheme.container.sizes },
   buttonTextVariants: { ...buttonTheme.text.types },
   buttonTextSizes: { ...buttonTheme.text.sizes },
-  linkVariants: { ...LinkTheme.types },
-  linkSizes: { ...LinkTheme.sizes },
+  linkVariants: { ...linkTheme.types },
+  linkSizes: { ...linkTheme.sizes },
   dropdownVariants: { ...dropdownTheme.container.types },
   dropdownTextVariants: { ...dropdownTheme.text.types },
+  switchTrackVariants: { ...switchTheme.track.types },
+  switchThumbVariants: { ...switchTheme.thumb.types },
   zIndices: {
     foreground: 1000,
   },
