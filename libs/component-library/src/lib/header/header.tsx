@@ -6,7 +6,7 @@ import {
   FxGridSelectorProps,
   FxGridSelector,
 } from '../grid-selector/gridSelector';
-import { PlusIcon } from '../Icons';
+import { FxPlusIcon } from '../icons/icons';
 import {
   FxChevronDownIcon,
   FxChevronUpIcon,
@@ -84,7 +84,7 @@ export const FxHeader = ({
           <FxButton
             onPress={onAddPress}
             width={40}
-            icon={<PlusIcon fill={'white'} />}
+            icon={<FxPlusIcon fill={'white'} />}
           />
         )}
       </FxBox>
