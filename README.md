@@ -17,9 +17,17 @@ This is the monorepo using [nx](https://nx.dev) that contains the source for the
 
 ## About the Apps
 
-Functionland's FxBlox hardware is managed and used by the `File Sync` and `Blox` apps. `Blox` and `File Sync` can be used independently of each other. The `Blox` app is responsible for managing, controlling and configuring the FxBlox hardware as well as the setup / linking of wallets for to receiving Fula (rewards) tokens. If you have FxBlox hardware, you will need the Blox app. The `File Sync` app is responsible utilizing the FxBlox hardware as a decentralized storage solution for your data.
+Functionland's FxBlox hardware is managed and used by the `File Sync` and `Blox` apps. `Blox` and `File Sync` can be used independently of each other. The `Blox` app is responsible for managing, controlling and configuring the FxBlox hardware as well as the setup / linking of wallets for to receiving Fula (rewards) tokens. If you have FxBlox hardware, you will need the Blox app. The `File Sync` app is responsible for utilizing the FxBlox hardware as a decentralized storage solution for your data.
 
-> Note: The word box is used interchangeably for blox
+> Note: The word "box" is used interchangeably for "blox"
+
+<br>
+
+# Quick start:
+
+In the root run `yarn` followed by `yarn ios`. - See our STYLEGUIDE [here](https://github.com/functionland/apps-monorepo/blob/main/STYLEGUIDE.md)
+
+<br>
 
 # Development
 
@@ -36,7 +44,7 @@ Additional requirements:
 - CMake 3.10.2 (Android only, available through Android Studio)
 - `nx` as a global dependency (optional).
 
-It is easiest to develop in a Unix based environment as there is currently an [issue](https://github.com/functionland/apps-monorepo/issues/224) open for Windows.
+It is easiest to develop in a Unix based environment as there is currently an [issue](https://github.com/functionland/apps-monorepo/issues/224) open for Windows in relation to CMake.
 
 #### To run the iOS apps in development
 
@@ -68,22 +76,25 @@ The default project is `box`
 
 There are 3 core parts to the folder structure:
 
-- [Component Library](https://github.com/functionland/apps-monorepo/tree/main/libs/component-library) (Completed): 📁 `libs/component-library`
-  - 📄 `src/index.ts` exports all components from the component library in `src/lib`
-- [Blox](https://github.com/functionland/apps-monorepo/tree/main/apps/box) app (WIP): 📁 `apps/box`
-  - 📁 `src`: Contains the actual TypeScript + React-Native FB mobile for the Blox app.
-  - 📁 `ios`: Contains the basic skeleton for a React Native iOS app, plus the native
-  - 📁 `android`: Contains the basic skeleton for a React Native Android app, plus the native
-- [File Sync](https://github.com/functionland/apps-monorepo/tree/main/apps/file-manager) app (To Do): 📁 `apps/file-manger`
-  - 📁 `src`: Contains the actual TypeScript + React-Native FB mobile for the File Sync app.
-  - 📁 `ios`: Contains the basic skeleton for a React Native iOS app, plus the native
-  - 📁 `android`: Contains the basic skeleton
+- [Component Library](https://github.com/functionland/apps-monorepo/tree/main/libs/component-library) (Completed):
+  - 📁 `libs/component-library`
+    - 📄 `src/index.ts` exports all components from the component library in `src/lib`
+- [Blox](https://github.com/functionland/apps-monorepo/tree/main/apps/box) app (WIP):
+  - 📁 `apps/box`
+    - 📁 `src`: Contains the actual TypeScript + React-Native FB mobile for the Blox app.
+    - 📁 `ios`: Contains the basic skeleton for a React Native iOS app, plus the native
+    - 📁 `android`: Contains the basic skeleton for a React Native Android app, plus the native
+- [File Sync](https://github.com/functionland/apps-monorepo/tree/main/apps/file-manager) app (To Do):
+  - 📁 `apps/file-manger`
+    - 📁 `src`: Contains the actual TypeScript + React-Native FB mobile for the File Sync app.
+    - 📁 `ios`: Contains the basic skeleton for a React Native iOS app, plus the native
+    - 📁 `android`: Contains the basic skeleton
 
 The designs for the app can be found under the design files folder [`design-files`](https://github.com/functionland/apps-monorepo/tree/main/design-files)
 
 ## Restyle
 
-A core library to this monorepo is [Shopify's restyle library](https://github.com/Shopify/restyle). This ensures a consistent design language when developing the apps and enables easy plug and play theming with light and dark themes (or any other). We have setup base light and dark themes in the component library [theme.ts file](https://github.com/functionland/apps-monorepo/blob/main/libs/component-library/src/lib/theme/theme.ts). The `Blox` and `File sync` apps can implement this theme directly or hydrate their own themes from these base themes.
+A core library to this monorepo is [Shopify's restyle library](https://github.com/Shopify/restyle). This ensures a consistent design language when developing the apps and enables easy plug and play theming with light and dark themes (or any other). We have setup base light and dark themes in the component library [theme.ts file](https://github.com/functionland/apps-monorepo/blob/main/libs/component-library/src/lib/theme/theme.ts). The `Blox` and `File sync` apps can implement this theme directly or hydrate their own themes from these base themes. See our [style guide rules](https://github.com/functionland/apps-monorepo/blob/main/STYLEGUIDE.md) for more info.
 
 # Contributing to the Monorepo
 
@@ -99,8 +110,6 @@ Please always be respectful when contributing.
 ## How To Run locally?
 
 See [Getting started](#getting-started-with-development)
-
-<br>
 
 ## Submitting a PR
 
@@ -136,4 +145,4 @@ All files are released with the MIT License license.
 
 ### Unresolved branches
 
-Rewards screen is in branch
+[Rewards Screen](https://github.com/functionland/apps-monorepo/tree/feat/rewards-screen) branch relating to the rewards screen is unresolved and in a [draft PR](https://github.com/functionland/apps-monorepo/pull/229).
