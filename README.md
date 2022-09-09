@@ -23,7 +23,7 @@ Functionland's FxBlox hardware is managed and used by the `File Sync` and `Blox`
 
 <br>
 
-# Quick start:
+### Quick start
 
 In the root run `yarn` followed by `yarn ios` and see our [STYLEGUIDE](https://github.com/functionland/apps-monorepo/blob/main/STYLEGUIDE.md) when [contributing](#contributing-to-the-monorepo).
 
