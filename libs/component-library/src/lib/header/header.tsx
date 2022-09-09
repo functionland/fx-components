@@ -21,7 +21,7 @@ export type FxHeaderProps = {
   title?: string;
   orderBy?: FxTextProps['children'];
   isOrderAscending?: boolean;
-  setIsOrderByAscending: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsOrderByAscending?: React.Dispatch<React.SetStateAction<boolean>>;
   onAddPress?: (event: GestureResponderEvent) => void;
 } & Partial<FxGridSelectorProps>;
 
