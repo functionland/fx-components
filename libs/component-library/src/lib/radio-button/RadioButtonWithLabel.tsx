@@ -3,12 +3,13 @@ import { FxRadioButton } from '.';
 import { FxBox } from '../box/box';
 import { FxText } from '../text/text';
 import { RadioButtonProps } from './RadioButton';
+import { ValueType } from './RadioButtonGroup';
 
 type Props = RadioButtonProps & {
   /**
    * Label of the radio button
    */
-  label: string;
+  label: ValueType;
 };
 
 const FxRadioButtonWithLabel = ({ label, ...rest }: Props) => (

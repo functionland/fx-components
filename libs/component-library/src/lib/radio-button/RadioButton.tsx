@@ -8,7 +8,7 @@ import { useFxTheme } from '../theme/useFxTheme';
 
 import type { $Omit } from './../types';
 
-import { useRadioButtonContext } from './RadioButtonGroup';
+import { useRadioButtonContext, ValueType } from './RadioButtonGroup';
 import { handlePress, isChecked } from './utils';
 
 const RADIO_SIZE = 18;
@@ -17,7 +17,7 @@ type RadioButtonProps = $Omit<FxPressableOpacityProps, 'children'> & {
   /**
    * Value of the radio button
    */
-  value: string;
+  value: ValueType;
   /**
    * Status of radio button.
    */
@@ -171,6 +171,7 @@ const RadioButton = ({
                 onPress,
                 onValueChange,
                 value,
+                contextValue,
               });
             }
       }
