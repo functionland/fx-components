@@ -1,33 +1,40 @@
 import React from 'react';
 import { View } from 'react-native';
 
-type Props = {
+type ValueType = string | number;
+
+type SingleValueProps<T> = {
   /**
    * Function to execute on selection change.
    */
-  onValueChange: (value: string) => void;
+  onValueChange: (value: T) => void;
   /**
    * Value of the currently selected radio button.
    */
-  value: string;
+  value: T;
+};
+
+type MultiValueProps<T> = {
+  onValueChange: (value: T[]) => void;
+  value: T[];
+};
+
+type Props<T extends ValueType> = (SingleValueProps<T> | MultiValueProps<T>) & {
   /**
    * React elements containing radio buttons.
    */
   children: React.ReactNode;
 };
 
-export type RadioButtonContextType = {
-  value: string;
-  onValueChange: (item: string) => void;
-};
+type RadioButtonContextType<T extends ValueType> = Omit<Props<T>, 'children'>;
 
-const initialContext: RadioButtonContextType = {
+const initialContext: RadioButtonContextType<ValueType> = {
   value: '',
-  onValueChange: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+  onValueChange: () => null,
 };
 
 export const RadioButtonContext =
-  React.createContext<RadioButtonContextType>(initialContext);
+  React.createContext<RadioButtonContextType<ValueType>>(initialContext);
 
 export const useRadioButtonContext = () => React.useContext(RadioButtonContext);
 
@@ -60,7 +67,11 @@ export const useRadioButtonContext = () => React.useContext(RadioButtonContext);
  * export default MyComponent;
  *```
  */
-const RadioButtonGroup = ({ value, onValueChange, children }: Props) => (
+const RadioButtonGroup = ({
+  value,
+  onValueChange,
+  children,
+}: Props<ValueType>) => (
   <RadioButtonContext.Provider value={{ value, onValueChange }}>
     <View accessibilityRole="radiogroup">{children}</View>
   </RadioButtonContext.Provider>
@@ -69,4 +80,4 @@ const RadioButtonGroup = ({ value, onValueChange, children }: Props) => (
 RadioButtonGroup.displayName = 'RadioButton.Group';
 export default RadioButtonGroup;
 
-export { RadioButtonGroup };
+export { RadioButtonGroup, ValueType, RadioButtonContextType };

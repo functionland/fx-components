@@ -1,11 +1,15 @@
+import { RadioButtonContextType, ValueType } from './RadioButtonGroup';
+
 export const handlePress = ({
   onPress,
   value,
   onValueChange,
+  contextValue,
 }: {
   onPress?: () => void;
-  value: string;
-  onValueChange?: (value: string) => void;
+  value: ValueType;
+  onValueChange?: (value: any) => void;
+  contextValue?: RadioButtonContextType<ValueType>['value'];
 }) => {
   if (onPress && onValueChange) {
     console.warn(
@@ -13,7 +17,13 @@ export const handlePress = ({
     );
   }
 
-  onValueChange ? onValueChange(value) : onPress?.();
+  !onValueChange
+    ? onPress?.()
+    : typeof contextValue === 'object'
+    ? contextValue.find((v) => v === value)
+      ? onValueChange(contextValue.filter((v) => v !== value))
+      : onValueChange([...contextValue, value])
+    : onValueChange(value);
 };
 
 export const isChecked = ({
@@ -21,12 +31,16 @@ export const isChecked = ({
   status,
   contextValue,
 }: {
-  value: string;
+  value: ValueType;
   status?: 'checked' | 'unchecked';
-  contextValue?: string;
+  contextValue?: RadioButtonContextType<ValueType>['value'];
 }) => {
   if (contextValue !== undefined && contextValue !== null) {
-    return contextValue === value ? 'checked' : 'unchecked';
+    return contextValue === value ||
+      (typeof contextValue === 'object' &&
+        contextValue.find((v) => v === value))
+      ? 'checked'
+      : 'unchecked';
   } else {
     return status;
   }

@@ -4,6 +4,7 @@ const palette = {
   green: '#06B597',
   blue: '#187AF9',
   white: 'white',
+  transparent: 'rgba(0,0,0,0)',
 };
 // Light and Dark color palettes are broken out into separate palettes since they are broken out in the figame-ui library.
 const paletteLight = {
@@ -122,6 +123,7 @@ const BaseTheme = {
     primary: palette.green,
     secondary: palette.blue,
     white: palette.white,
+    transparent: palette.transparent,
   },
   spacing: {
     '0': 0,
@@ -336,7 +338,7 @@ const filesTheme = {
   },
 };
 
-const LinkTheme = {
+const linkTheme = {
   types: {
     defaults: { color: 'greenBase' } as InnerTextThemeColorType,
     disabled: { color: 'border' } as InnerTextThemeColorType,
@@ -348,6 +350,79 @@ const LinkTheme = {
   },
 };
 
+const switchTheme = {
+  track: {
+    types: {
+      defaults: {
+        backgroundColor: 'border',
+      },
+      disabled: {
+        backgroundColor: 'backgroundSecondary',
+      },
+      pressed: {
+        backgroundColor: 'greenBase',
+      },
+      pressedDisabled: {
+        backgroundColor: 'greenBase',
+        opacity: 0.5,
+      },
+    },
+  },
+  thumb: {
+    types: {
+      defaults: {
+        backgroundColor: 'backgroundApp',
+      },
+      disabled: {
+        backgroundColor: 'backgroundPrimary',
+      },
+      pressed: {
+        backgroundColor: 'backgroundApp',
+      },
+      pressedDisabled: {
+        backgroundColor: 'backgroundApp',
+      },
+    },
+  },
+};
+
+const radioTheme = {
+  container: {
+    types: {
+      defaults: {
+        borderColor: 'border',
+      },
+      disabled: {
+        backgroundColor: 'backgroundSecondary',
+        borderColor: 'border',
+      },
+      pressed: {
+        borderColor: 'greenBase',
+      },
+      pressedDisabled: {
+        borderColor: 'greenBase',
+        opacity: 0.5,
+      },
+    },
+  },
+  checkmark: {
+    types: {
+      defaults: {
+        backgroundColor: 'transparent',
+      },
+      disabled: {
+        backgroundColor: 'transparent',
+      },
+      pressed: {
+        backgroundColor: 'backgroundApp',
+      },
+      pressedDisabled: {
+        backgroundColor: 'backgroundApp',
+      },
+    },
+  },
+};
+
 const fxLightTheme = createTheme({
   ...BaseTheme,
   textVariants,
@@ -355,10 +430,14 @@ const fxLightTheme = createTheme({
   buttonSizes: { ...buttonTheme.container.sizes },
   buttonTextVariants: { ...buttonTheme.text.types },
   buttonTextSizes: { ...buttonTheme.text.sizes },
-  linkVariants: { ...LinkTheme.types },
-  linkSizes: { ...LinkTheme.sizes },
+  linkVariants: { ...linkTheme.types },
+  linkSizes: { ...linkTheme.sizes },
   dropdownVariants: { ...dropdownTheme.container.types },
   dropdownTextVariants: { ...dropdownTheme.text.types },
+  switchTrackVariants: { ...switchTheme.track.types },
+  switchThumbVariants: { ...switchTheme.thumb.types },
+  radioVariants: { ...radioTheme.container.types },
+  radioCheckmarkVariants: { ...radioTheme.checkmark.types },
   fileVariants: { ...filesTheme.text.types },
   fileTextVariants: { ...filesTheme.text.types },
   fileTextDetailVariants: { ...filesTheme.textDetail.types },
@@ -391,6 +470,43 @@ const fxDarkTheme: FxTheme = {
     infoBase: paletteDark.info600,
     warningBase: paletteDark.warning600,
     errorBase: paletteDark.error600,
+  },
+  switchTrackVariants: {
+    ...fxLightTheme.switchTrackVariants,
+    pressedDisabled: {
+      backgroundColor: 'greenBorder',
+      opacity: 1,
+    },
+  },
+  switchThumbVariants: {
+    defaults: {
+      backgroundColor: 'content1',
+    },
+    disabled: {
+      backgroundColor: 'border',
+    },
+    pressed: {
+      backgroundColor: 'content1',
+    },
+    pressedDisabled: {
+      backgroundColor: 'border',
+    },
+  },
+  radioVariants: {
+    ...fxLightTheme.radioVariants,
+    pressedDisabled: {
+      borderColor: 'greenBorder',
+      opacity: 1,
+    },
+  },
+  radioCheckmarkVariants: {
+    ...fxLightTheme.radioCheckmarkVariants,
+    pressed: {
+      backgroundColor: 'content1',
+    },
+    pressedDisabled: {
+      backgroundColor: 'border',
+    },
   },
 };
 
