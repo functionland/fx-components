@@ -1,98 +1,79 @@
+import {
+  createRestyleComponent,
+  createVariant,
+  VariantProps,
+} from '@shopify/restyle';
 import * as React from 'react';
-import { Animated, View, StyleSheet } from 'react-native';
+import { Animated, StyleSheet } from 'react-native';
+import { FxBox } from '../box/box';
+import { FxCheckIcon } from '../icons/icons';
 import {
   FxPressableOpacity,
   FxPressableOpacityProps,
 } from '../pressable-opacity/pressableOpacity';
+import { FxTheme } from '../theme/theme';
 import { useFxTheme } from '../theme/useFxTheme';
-
 import type { $Omit } from './../types';
 
 import { useRadioButtonContext, ValueType } from './RadioButtonGroup';
 import { handlePress, isChecked } from './utils';
 
+const radioVariant = createVariant({
+  themeKey: 'radioVariants',
+  property: 'variant',
+});
+
+const FxRadioBase = createRestyleComponent<
+  React.ComponentProps<typeof Animated.View> &
+    VariantProps<FxTheme, 'radioVariants', 'variant'>,
+  FxTheme
+>([radioVariant], Animated.View);
+
+const radioCheckmarkVariant = createVariant({
+  themeKey: 'radioCheckmarkVariants',
+  property: 'type',
+});
+
+const FxRadioDot = createRestyleComponent<
+  React.ComponentProps<typeof FxBox> &
+    VariantProps<FxTheme, 'radioCheckmarkVariants', 'type'>,
+  FxTheme
+>([radioCheckmarkVariant], FxBox);
+
+type RadioButtonProps = React.ComponentProps<typeof FxRadioBase> &
+  $Omit<FxPressableOpacityProps, 'children'> & {
+    /**
+     * Value of the radio button
+     */
+    value: ValueType;
+    /**
+     * Status of radio button.
+     */
+    status?: 'checked' | 'unchecked';
+    /**
+     * Whether radio is disabled.
+     */
+    disabled?: boolean;
+    /**
+     * Function to execute on internal onPress.
+     */
+    onPress?: () => void;
+  };
+
 const RADIO_SIZE = 18;
-
-type RadioButtonProps = $Omit<FxPressableOpacityProps, 'children'> & {
-  /**
-   * Value of the radio button
-   */
-  value: ValueType;
-  /**
-   * Status of radio button.
-   */
-  status?: 'checked' | 'unchecked';
-  /**
-   * Whether radio is disabled.
-   */
-  disabled?: boolean;
-  /**
-   * Function to execute on internal onPress.
-   */
-  onPress?: () => void;
-  /**
-   * Custom color for radio.
-   */
-  checkedColor?: string;
-  /**
-   * Custom color for unchecked radio.
-   */
-  uncheckedColor?: string;
-  /**
-   * Custom color for radio.
-   */
-  checkedDisabledColor?: string;
-  /**
-   * Custom color for unchecked disabled radio.
-   */
-  uncheckedDisabledColor?: string;
-  /**
-   * Custom color for unchecked disabled radio.
-   */
-  uncheckedDisabledBackgroundColor?: string;
-};
-
+const CHECKBOX_SIZE = 20;
 const BORDER_WIDTH = 1;
 const BORDER_WIDTH_CHECKED = 6;
-
-/**
- * ## Usage
- * ```js
- * import * as React from 'react';
- * import { View } from 'react-native';
- * import { RadioButton } from '@functionland/component-library';
- *
- * const MyComponent = () => {
- *   const [checked, setChecked] = React.useState('first');
- *
- *   return (
- *     <View>
- *       <RadioButton
- *         value="first"
- *         status={ checked === 'first' ? 'checked' : 'unchecked' }
- *         onPress={() => setChecked('first')}
- *       />
- *       <RadioButton
- *         value="second"
- *         status={ checked === 'second' ? 'checked' : 'unchecked' }
- *         onPress={() => setChecked('second')}
- *       />
- *     </View>
- *   );
- * };
- *
- * export default MyComponent;
- * ```
- */
 
 const RadioButton = ({
   disabled,
   onPress,
   value,
   status,
+  variant,
   ...rest
 }: RadioButtonProps) => {
-  const { colors } = useFxTheme();
+  const theme = useFxTheme();
   const { value: contextValue, onValueChange } = useRadioButtonContext();
   const checked =
     isChecked({
@@ -100,8 +81,24 @@ const RadioButton = ({
       status,
       value,
     }) === 'checked';
+  const isMultiSelect = typeof contextValue === 'object';
+  const type =
+    disabled && checked
+      ? 'pressedDisabled'
+      : disabled
+      ? 'disabled'
+      : checked
+      ? 'pressed'
+      : variant;
+
   const { current: borderAnim } = React.useRef<Animated.Value>(
-    new Animated.Value(checked ? BORDER_WIDTH_CHECKED : BORDER_WIDTH)
+    new Animated.Value(
+      checked
+        ? isMultiSelect
+          ? CHECKBOX_SIZE / 2
+          : BORDER_WIDTH_CHECKED
+        : BORDER_WIDTH
+    )
   );
 
   const { current: radioAnim } = React.useRef<Animated.Value>(
@@ -118,17 +115,18 @@ const RadioButton = ({
     }
 
     if (checked) {
+      const duration = isMultiSelect ? 150 : 250;
       radioAnim.setValue(2.5);
 
       Animated.timing(radioAnim, {
         toValue: 1,
-        duration: 250,
+        duration,
         useNativeDriver: true,
       }).start();
 
       Animated.timing(borderAnim, {
-        toValue: BORDER_WIDTH_CHECKED,
-        duration: 250,
+        toValue: isMultiSelect ? CHECKBOX_SIZE / 2 : BORDER_WIDTH_CHECKED,
+        duration,
         useNativeDriver: false,
       }).start();
     } else {
@@ -138,22 +136,7 @@ const RadioButton = ({
         useNativeDriver: false,
       }).start();
     }
-  }, [checked, borderAnim, radioAnim]);
-
-  const radioBackgroundColor = disabled
-    ? rest.uncheckedDisabledBackgroundColor || colors.backgroundSecondary
-    : undefined;
-  const checkedColor = rest.checkedColor || colors.greenBase;
-  const uncheckedColor = rest.uncheckedColor || colors.border;
-  const checkedDisabledColor = rest.checkedDisabledColor || colors.greenBorder;
-  const uncheckedDisabledColor = rest.uncheckedDisabledColor || colors.border;
-
-  let radioColor: string;
-  if (disabled) {
-    radioColor = checked ? checkedDisabledColor : uncheckedDisabledColor;
-  } else {
-    radioColor = checked ? checkedColor : uncheckedColor;
-  }
+  }, [checked, borderAnim, radioAnim, isMultiSelect]);
 
   return (
     <FxPressableOpacity
@@ -176,30 +159,38 @@ const RadioButton = ({
             }
       }
     >
-      <Animated.View
+      <FxRadioBase
+        variant={type}
         style={[
-          s.radio,
+          isMultiSelect ? s.checkbox : s.radio,
           {
-            backgroundColor: radioBackgroundColor,
-            borderColor: radioColor,
             borderWidth: borderAnim,
           },
         ]}
       >
-        {checked ? (
-          <View style={[StyleSheet.absoluteFill, s.radioContainer]}>
-            <Animated.View
-              style={[
-                s.dot,
-                {
-                  backgroundColor: disabled ? colors.border : colors.white,
-                  transform: [{ scale: radioAnim }],
-                },
-              ]}
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            s.radioContainer,
+            {
+              transform: [{ scale: radioAnim }],
+            },
+          ]}
+        >
+          {isMultiSelect ? (
+            <FxCheckIcon
+              color={
+                theme.radioCheckmarkVariants[type || 'defaults']
+                  .backgroundColor as keyof typeof theme.colors
+              }
+              height={(CHECKBOX_SIZE * 8) / 5}
+              width={(CHECKBOX_SIZE * 8) / 5}
             />
-          </View>
-        ) : null}
-      </Animated.View>
+          ) : (
+            <FxRadioDot type={type} style={s.dot} />
+          )}
+        </Animated.View>
+      </FxRadioBase>
     </FxPressableOpacity>
   );
 };
@@ -220,6 +211,11 @@ const s = StyleSheet.create({
     height: RADIO_SIZE / 3,
     width: RADIO_SIZE / 3,
     borderRadius: RADIO_SIZE / 6,
+  },
+  checkbox: {
+    height: CHECKBOX_SIZE,
+    width: CHECKBOX_SIZE,
+    borderRadius: CHECKBOX_SIZE / 5,
   },
 });
 

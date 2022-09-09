@@ -4,6 +4,7 @@ const palette = {
   green: '#06B597',
   blue: '#187AF9',
   white: 'white',
+  transparent: 'rgba(0,0,0,0)',
 };
 // Light and Dark color palettes are broken out into separate palettes since they are broken out in the figame-ui library.
 const paletteLight = {
@@ -122,6 +123,7 @@ const BaseTheme = {
     primary: palette.green,
     secondary: palette.blue,
     white: palette.white,
+    transparent: palette.transparent,
   },
   spacing: {
     '0': 0,
@@ -354,6 +356,41 @@ const switchTheme = {
   },
 };
 
+const radioTheme = {
+  container: {
+    types: {
+      defaults: {
+        borderColor: 'border',
+      },
+      disabled: {
+        borderColor: 'backgroundSecondary',
+      },
+      pressed: {
+        borderColor: 'greenBase',
+      },
+      pressedDisabled: {
+        borderColor: 'greenBorder',
+      },
+    },
+  },
+  checkmark: {
+    types: {
+      defaults: {
+        backgroundColor: 'transparent',
+      },
+      disabled: {
+        backgroundColor: 'transparent',
+      },
+      pressed: {
+        backgroundColor: 'content1',
+      },
+      pressedDisabled: {
+        backgroundColor: 'border',
+      },
+    },
+  },
+};
+
 const fxLightTheme = createTheme({
   ...BaseTheme,
   textVariants,
@@ -367,6 +404,8 @@ const fxLightTheme = createTheme({
   dropdownTextVariants: { ...dropdownTheme.text.types },
   switchTrackVariants: { ...switchTheme.track.types },
   switchThumbVariants: { ...switchTheme.thumb.types },
+  radioVariants: { ...radioTheme.container.types },
+  radioCheckmarkVariants: { ...radioTheme.checkmark.types },
   zIndices: {
     foreground: 1000,
   },

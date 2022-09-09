@@ -2,7 +2,7 @@ import { ColorProps } from '@shopify/restyle';
 import React from 'react';
 import { Image, ImageSourcePropType } from 'react-native';
 import { FxBox } from '../box/box';
-import { FxCheckIcon, FxEditIcon } from '../icons/icons';
+import { FxInvertedCheckIcon, FxEditIcon } from '../icons/icons';
 import {
   FxPressableOpacity,
   FxPressableOpacityProps,
@@ -57,7 +57,7 @@ const IconDefs: Record<
   deselected: { backgroundColor: 'backgroundApp', icon: undefined },
   selected: {
     backgroundColor: 'content1',
-    icon: FxCheckIcon,
+    icon: FxInvertedCheckIcon,
     iconColor: 'greenBase',
   },
   edit: {
