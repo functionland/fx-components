@@ -18,14 +18,14 @@ We use a linter and prettier to automatically help you make style guide decision
 
 ### 4 - File Name
 
-Generally file names are PascalCase if they are components or classes, and camelCase otherwise. This is with the exception of the component library (see [rule #1](#1-be-consistent-with-the-rest-of-the-codebase)). Filenames' extension must be .tsx for component files and .ts otherwise.
+Generally file names are PascalCase if they are components or classes, and camelCase otherwise. This is with the exception of the component library (see [rule #1](#1---be-consistent-with-the-rest-of-the-codebase)). Filenames' extension must be .tsx for component files and .ts otherwise.
 
 ### 5 - Respect Google JavaScript style guide
 
 The style guide accessible
 [here](https://google.github.io/styleguide/jsguide.html) should be
 respected. However, if a rule is not consistent with the rest of the codebase,
-[rule #1](#1-be-consistent-with-the-rest-of-the-codebase) takes precedence. Same thing goes with any of the above rules taking precedence over this rule.
+[rule #1](#1---be-consistent-with-the-rest-of-the-codebase) takes precedence. Same thing goes with any of the above rules taking precedence over this rule.
 
 ### 6 - Follow these grammar rules
 
