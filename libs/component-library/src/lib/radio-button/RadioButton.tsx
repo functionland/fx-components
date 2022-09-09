@@ -60,6 +60,36 @@ type RadioButtonProps = React.ComponentProps<typeof FxRadioBase> &
     onPress?: () => void;
   };
 
+/**
+ * ## Usage
+ * ```js
+ * import * as React from 'react';
+ * import { View } from 'react-native';
+ * import { RadioButton } from '@functionland/component-library';
+ *
+ * const MyComponent = () => {
+ *   const [checked, setChecked] = React.useState('first');
+ *
+ *   return (
+ *     <View>
+ *       <RadioButton
+ *         value="first"
+ *         status={ checked === 'first' ? 'checked' : 'unchecked' }
+ *         onPress={() => setChecked('first')}
+ *       />
+ *       <RadioButton
+ *         value="second"
+ *         status={ checked === 'second' ? 'checked' : 'unchecked' }
+ *         onPress={() => setChecked('second')}
+ *       />
+ *     </View>
+ *   );
+ * };
+ *
+ * export default MyComponent;
+ * ```
+ */
+
 const RADIO_SIZE = 18;
 const CHECKBOX_SIZE = 20;
 const BORDER_WIDTH = 1;
@@ -144,7 +174,7 @@ const RadioButton = ({
       accessibilityRole="radio"
       accessibilityState={{ disabled, checked }}
       accessibilityLiveRegion="polite"
-      hitSlop={{ top: 0, right: 0, bottom: 0, left: 0 }}
+      hitSlop={0}
       {...rest}
       onPress={
         disabled
