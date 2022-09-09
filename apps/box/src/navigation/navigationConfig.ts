@@ -47,6 +47,7 @@ export type ComponentGalleryStackParamList = {
   Toast: undefined;
   Table: undefined;
   Breadcrumbs: undefined;
+  Files: undefined;
 };
 type MainTabsNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabsParamList>,
