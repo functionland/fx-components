@@ -308,6 +308,35 @@ const dropdownTheme /*: DropdownThemeType*/ = {
     },
   },
 };
+const filesTheme = {
+  container: {
+    types: {
+      defaults: {
+        backgroundColor: 'backgroundPrimary',
+      },
+      disabled: {
+        backgroundColor: 'backgroundPrimary',
+      },
+      pressed: {
+        backgroundColor: 'backgroundPrimary',
+      },
+    },
+  },
+  text: {
+    types: {
+      defaults: { color: 'content1' } as InnerTextThemeColorType,
+      disabled: { color: 'border' } as InnerTextThemeColorType,
+      pressed: { color: 'content3' } as InnerTextThemeColorType,
+    },
+  },
+  textDetail: {
+    types: {
+      defaults: { color: 'content3' } as InnerTextThemeColorType,
+      disabled: { color: 'border' } as InnerTextThemeColorType,
+      pressed: { color: 'content3' } as InnerTextThemeColorType,
+    },
+  },
+};
 
 const linkTheme = {
   types: {
@@ -406,6 +435,9 @@ const fxLightTheme = createTheme({
   switchThumbVariants: { ...switchTheme.thumb.types },
   radioVariants: { ...radioTheme.container.types },
   radioCheckmarkVariants: { ...radioTheme.checkmark.types },
+  fileVariants: { ...filesTheme.text.types },
+  fileTextVariants: { ...filesTheme.text.types },
+  fileTextDetailVariants: { ...filesTheme.textDetail.types },
   zIndices: {
     foreground: 1000,
   },

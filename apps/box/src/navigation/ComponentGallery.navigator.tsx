@@ -16,6 +16,7 @@ import {
   FormDemoScreen,
   ButtonsDemoScreen,
   BreadcrumbsDemoScreen,
+  FilesDemoScreen,
 } from '../screens/Settings/ComponentGallery';
 import { ComponentGalleryStackParamList } from './navigationConfig';
 import { TableDemoScreen } from '../screens/Settings/ComponentGallery/TableDemo.screen';
@@ -89,6 +90,7 @@ export const ComponentGalleryNavigator = () => {
         name="Breadcrumbs"
         component={BreadcrumbsDemoScreen}
       />
+      <ComponentGalleryStack.Screen name="Files" component={FilesDemoScreen} />
     </ComponentGalleryStack.Navigator>
   );
 };
