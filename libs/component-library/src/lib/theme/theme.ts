@@ -363,23 +363,24 @@ const switchTheme = {
         backgroundColor: 'greenBase',
       },
       pressedDisabled: {
-        backgroundColor: 'greenBorder',
+        backgroundColor: 'greenBase',
+        opacity: 0.5,
       },
     },
   },
   thumb: {
     types: {
       defaults: {
-        backgroundColor: 'content1',
+        backgroundColor: 'backgroundApp',
       },
       disabled: {
-        backgroundColor: 'border',
+        backgroundColor: 'backgroundPrimary',
       },
       pressed: {
-        backgroundColor: 'content1',
+        backgroundColor: 'backgroundApp',
       },
       pressedDisabled: {
-        backgroundColor: 'border',
+        backgroundColor: 'backgroundApp',
       },
     },
   },
@@ -392,13 +393,15 @@ const radioTheme = {
         borderColor: 'border',
       },
       disabled: {
-        borderColor: 'backgroundSecondary',
+        backgroundColor: 'backgroundSecondary',
+        borderColor: 'border',
       },
       pressed: {
         borderColor: 'greenBase',
       },
       pressedDisabled: {
-        borderColor: 'greenBorder',
+        borderColor: 'greenBase',
+        opacity: 0.5,
       },
     },
   },
@@ -411,10 +414,10 @@ const radioTheme = {
         backgroundColor: 'transparent',
       },
       pressed: {
-        backgroundColor: 'content1',
+        backgroundColor: 'backgroundApp',
       },
       pressedDisabled: {
-        backgroundColor: 'border',
+        backgroundColor: 'backgroundApp',
       },
     },
   },
@@ -467,6 +470,47 @@ const fxDarkTheme: FxTheme = {
     infoBase: paletteDark.info600,
     warningBase: paletteDark.warning600,
     errorBase: paletteDark.error600,
+  },
+  switchTrackVariants: {
+    ...fxLightTheme.switchTrackVariants,
+    pressedDisabled: {
+      backgroundColor: 'greenBorder',
+      opacity: 1,
+    },
+  },
+  switchThumbVariants: {
+    defaults: {
+      backgroundColor: 'content1',
+    },
+    disabled: {
+      backgroundColor: 'border',
+    },
+    pressed: {
+      backgroundColor: 'content1',
+    },
+    pressedDisabled: {
+      backgroundColor: 'border',
+    },
+  },
+  radioVariants: {
+    ...fxLightTheme.radioVariants,
+    disabled: {
+      backgroundColor: 'transparent',
+      borderColor: 'backgroundSecondary',
+    },
+    pressedDisabled: {
+      borderColor: 'greenBorder',
+      opacity: 1,
+    },
+  },
+  radioCheckmarkVariants: {
+    ...fxLightTheme.radioCheckmarkVariants,
+    pressed: {
+      backgroundColor: 'content1',
+    },
+    pressedDisabled: {
+      backgroundColor: 'border',
+    },
   },
 };
 
