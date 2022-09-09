@@ -1,6 +1,6 @@
-# Functionland Mobile Apps Monorepo
+# [Functionland's](https://fx.land/) Mobile Apps Monorepo
 
-This is the monorepo using [nx](https://nx.dev) that contains the source for the Blox App, File Sync App, and Design System component library projects.
+This is the monorepo using [nx](https://nx.dev) that contains the source for the **Blox App**, **File Sync App**, and Design System **component library** projects.
 
 <table>
   <tr>
@@ -58,7 +58,7 @@ yarn android file-manager
 yarn android box
 ```
 
-Running these commands will install the required the native dependencies via Gradle or Cocoapods.
+Running these commands will install the required native dependencies via Gradle or Cocoapods.
 
 These commands are shorthand for: `nx start [app]` followed by `nx run-ios [app]`.
 
@@ -75,9 +75,9 @@ There are 3 core parts to the folder structure:
   - 📁 `ios`: Contains the basic skeleton for a React Native iOS app, plus the native
   - 📁 `android`: Contains the basic skeleton for a React Native Android app, plus the native
 - [File Sync](https://github.com/functionland/apps-monorepo/tree/main/apps/file-manager) app (To Do): 📁 `apps/file-manger`
-- 📁 `src`: Contains the actual TypeScript + React-Native FB mobile for the File Sync app.
-- 📁 `ios`: Contains the basic skeleton for a React Native iOS app, plus the native
-- 📁 `android`: Contains the basic skeleton
+  - 📁 `src`: Contains the actual TypeScript + React-Native FB mobile for the File Sync app.
+  - 📁 `ios`: Contains the basic skeleton for a React Native iOS app, plus the native
+  - 📁 `android`: Contains the basic skeleton
 
 The designs for the app can be found under the design files folder [`design-files`](https://github.com/functionland/apps-monorepo/tree/main/design-files)
 
