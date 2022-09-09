@@ -494,10 +494,6 @@ const fxDarkTheme: FxTheme = {
   },
   radioVariants: {
     ...fxLightTheme.radioVariants,
-    disabled: {
-      backgroundColor: 'transparent',
-      borderColor: 'backgroundSecondary',
-    },
     pressedDisabled: {
       borderColor: 'greenBorder',
       opacity: 1,
