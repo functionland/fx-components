@@ -9,7 +9,10 @@ import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { FlatList, ListRenderItem } from 'react-native';
 import { HeaderText } from '../../components/Text';
-import { ComponentGalleryStackNavigationProps } from '../../navigation/navigationConfig';
+import {
+  Routes,
+  ComponentGalleryStackNavigationProps,
+} from '../../navigation/navigationConfig';
 
 type GalleryItemType = {
   name: string;
@@ -18,72 +21,72 @@ type GalleryItemType = {
 
 export const ComponentGalleryScreen = () => {
   const navigation =
-    useNavigation<ComponentGalleryStackNavigationProps<'Gallery'>>();
+    useNavigation<ComponentGalleryStackNavigationProps<Routes.Gallery>>();
   const galleryItems: GalleryItemType[] = [
     {
       name: 'Avatars',
       onPress: () => {
-        navigation.navigate('Avatars');
+        navigation.navigate(Routes.Avatars);
       },
     },
     {
       name: 'Buttons',
       onPress: () => {
-        navigation.navigate('Buttons');
+        navigation.navigate(Routes.Buttons);
       },
     },
     {
       name: 'Button Groups',
       onPress: () => {
-        navigation.navigate('Button Groups');
+        navigation.navigate(Routes.ButtonGroups);
       },
     },
     {
       name: 'Forms',
       onPress: () => {
-        navigation.navigate('Forms');
+        navigation.navigate(Routes.Forms);
       },
     },
     {
       name: 'Notifications',
       onPress: () => {
-        navigation.navigate('Toast');
+        navigation.navigate(Routes.Toast);
       },
     },
     {
       name: 'Progress Bar',
       onPress: () => {
-        navigation.navigate('Progress Bar');
+        navigation.navigate(Routes.ProgressBar);
       },
     },
     {
       name: 'Tabs',
       onPress: () => {
-        navigation.navigate('Tabs');
+        navigation.navigate(Routes.Tabs);
       },
     },
     {
       name: 'Usage Bar',
       onPress: () => {
-        navigation.navigate('Usage Bar');
+        navigation.navigate(Routes.UsageBar);
       },
     },
     {
       name: 'Table',
       onPress: () => {
-        navigation.navigate('Table');
+        navigation.navigate(Routes.Table);
       },
     },
     {
       name: 'Breadcrumbs',
       onPress: () => {
-        navigation.navigate('Breadcrumbs');
+        navigation.navigate(Routes.Breadcrumbs);
       },
     },
     {
       name: 'Files',
       onPress: () => {
-        navigation.navigate('Files');
+        navigation.navigate(Routes.Files);
       },
     },
   ];

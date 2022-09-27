@@ -6,39 +6,43 @@ import {
   FxText,
   capitalizeFirstLetter,
 } from '@functionland/component-library';
-import { SettingsStackNavigationProps } from '../../navigation/navigationConfig';
+import {
+  Routes,
+  SettingsStackNavigationProps,
+} from '../../navigation/navigationConfig';
 import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore } from '../../stores';
 
 export const SettingsMenu = () => {
-  const navigation = useNavigation<SettingsStackNavigationProps<'Settings'>>();
+  const navigation =
+    useNavigation<SettingsStackNavigationProps<Routes.Settings>>();
   const mode = useSettingsStore().getMode();
 
   const menuItems = [
     {
       name: 'Connected dApps',
       detail: null,
-      onPress: () => navigation.navigate('ConnectedDApps'),
+      onPress: () => navigation.navigate(Routes.ConnectedDApps),
     },
     {
       name: 'Mode',
       detail: `Current: ${capitalizeFirstLetter(mode)}`,
-      onPress: () => navigation.navigate('Mode'),
+      onPress: () => navigation.navigate(Routes.Mode),
     }, // TODO: pull in mode from store when store is implemented
     {
       name: 'Pools',
       detail: null,
-      onPress: () => navigation.navigate('Pools'),
+      onPress: () => navigation.navigate(Routes.Pools),
     },
     {
       name: 'About',
       detail: null,
-      onPress: () => navigation.navigate('About'),
+      onPress: () => navigation.navigate(Routes.About),
     },
     {
       name: 'Component Gallery',
       detail: null,
-      onPress: () => navigation.navigate('Component Gallery Navigator'),
+      onPress: () => navigation.navigate(Routes.ComponentGallery),
     },
   ];
 

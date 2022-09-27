@@ -12,7 +12,7 @@ import {
   UsageBar,
 } from '../components';
 
-export const BoxScreen = () => {
+export const BloxScreen = () => {
   const divisionSplit = useSharedValue(70);
   return (
     <FxSafeAreaBox>

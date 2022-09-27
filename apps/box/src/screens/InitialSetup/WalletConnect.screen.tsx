@@ -4,6 +4,7 @@ import React from 'react';
 import { FxBox, FxText } from '@functionland/component-library';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Image, StyleSheet } from 'react-native';
+import { Routes } from '../../navigation/navigationConfig';
 
 export const WalletConnectScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -27,7 +28,7 @@ export const WalletConnectScreen = () => {
       <FxButton marginBottom="8" onPress={handleConnectWallet}>
         {walletAction}
       </FxButton>
-      <FxButton onPress={() => navigation.navigate('Setup Complete')}>
+      <FxButton onPress={() => navigation.navigate(Routes.SetupComplete)}>
         Nav to Complete
       </FxButton>
       {walletConnect.connected && <WalletDetails />}

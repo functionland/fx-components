@@ -18,7 +18,7 @@ import {
   BreadcrumbsDemoScreen,
   FilesDemoScreen,
 } from '../screens/Settings/ComponentGallery';
-import { ComponentGalleryStackParamList } from './navigationConfig';
+import { Routes, ComponentGalleryStackParamList } from './navigationConfig';
 import { TableDemoScreen } from '../screens/Settings/ComponentGallery/TableDemo.screen';
 
 type ComponentGalleryBackProps = {
@@ -62,35 +62,53 @@ export const ComponentGalleryNavigator = () => {
       })}
     >
       <ComponentGalleryStack.Screen
-        name="Gallery"
+        name={Routes.Gallery}
         component={ComponentGalleryScreen}
       />
       <ComponentGalleryStack.Screen
-        name="Avatars"
+        name={Routes.Avatars}
         component={AvatarDemoScreen}
       />
       <ComponentGalleryStack.Screen
-        name="Buttons"
+        name={Routes.Buttons}
         component={ButtonsDemoScreen}
       />
       <ComponentGalleryStack.Screen
-        name="Button Groups"
+        name={Routes.ButtonGroups}
         component={ButtonGroupDemoScreen}
       />
-      <ComponentGalleryStack.Screen name="Forms" component={FormDemoScreen} />
       <ComponentGalleryStack.Screen
-        name="Progress Bar"
+        name={Routes.Forms}
+        component={FormDemoScreen}
+      />
+      <ComponentGalleryStack.Screen
+        name={Routes.ProgressBar}
         component={ProgressBarDemoScreen}
       />
-      <ComponentGalleryStack.Screen name="Tabs" component={TabsDemoScreen} />
-      <ComponentGalleryStack.Screen name="Toast" component={ToastDemoScreen} />
-      <ComponentGalleryStack.Screen name="Usage Bar" component={UsageBarDemo} />
-      <ComponentGalleryStack.Screen name="Table" component={TableDemoScreen} />
       <ComponentGalleryStack.Screen
-        name="Breadcrumbs"
+        name={Routes.Tabs}
+        component={TabsDemoScreen}
+      />
+      <ComponentGalleryStack.Screen
+        name={Routes.Toast}
+        component={ToastDemoScreen}
+      />
+      <ComponentGalleryStack.Screen
+        name={Routes.UsageBar}
+        component={UsageBarDemo}
+      />
+      <ComponentGalleryStack.Screen
+        name={Routes.Table}
+        component={TableDemoScreen}
+      />
+      <ComponentGalleryStack.Screen
+        name={Routes.Breadcrumbs}
         component={BreadcrumbsDemoScreen}
       />
-      <ComponentGalleryStack.Screen name="Files" component={FilesDemoScreen} />
+      <ComponentGalleryStack.Screen
+        name={Routes.Files}
+        component={FilesDemoScreen}
+      />
     </ComponentGalleryStack.Navigator>
   );
 };
