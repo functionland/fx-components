@@ -10,6 +10,7 @@ import { SafeAreaView, Keyboard } from 'react-native';
 import * as RNLocalize from 'react-native-localize';
 import { useInitialSetupNavigation, useFetch } from '../../hooks';
 import { getWifiList, postWifiConnect } from '../../api/wifi';
+import { Routes } from '../../navigation/navigationConfig';
 
 export const SetupWifiScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -36,7 +37,9 @@ export const SetupWifiScreen = () => {
       });
     } catch (err) {}
 
-    navigation.navigate('Check Connection', { ssid: ssid ?? uniqueSsids[0] });
+    navigation.navigate(Routes.CheckConnection, {
+      ssid: ssid ?? uniqueSsids[0],
+    });
   };
 
   return (

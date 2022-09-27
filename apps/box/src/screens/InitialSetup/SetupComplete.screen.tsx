@@ -5,6 +5,7 @@ import {
   useInitialSetupNavigation,
   useRootNavigation,
 } from '../../hooks/useTypedNavigation';
+import { Routes } from '../../navigation/navigationConfig';
 
 export const SetupCompleteScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -14,7 +15,10 @@ export const SetupCompleteScreen = () => {
       <FxButton
         marginBottom="8"
         onPress={() =>
-          rootNavigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })
+          rootNavigation.reset({
+            index: 0,
+            routes: [{ name: Routes.MainTabs }],
+          })
         }
       >
         Done

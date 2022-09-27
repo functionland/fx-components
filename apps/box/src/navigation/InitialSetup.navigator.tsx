@@ -3,32 +3,38 @@ import React from 'react';
 import {
   WelcomeScreen,
   WalletConnectScreen,
-  ConnectToBoxScreen,
+  ConnectToBloxScreen,
   SetupWifiScreen,
   SetupCompleteScreen,
   CheckConnectionScreen,
 } from '../screens/InitialSetup';
-import { InitialSetupStackParamList } from './navigationConfig';
+import { Routes, InitialSetupStackParamList } from './navigationConfig';
 
 export const InitialSetupNavigator = () => {
   return (
     <InitialSetupStack.Navigator>
-      <InitialSetupStack.Screen name="Welcome" component={WelcomeScreen} />
       <InitialSetupStack.Screen
-        name="Wallet Connect"
+        name={Routes.Welcome}
+        component={WelcomeScreen}
+      />
+      <InitialSetupStack.Screen
+        name={Routes.WalletConnect}
         component={WalletConnectScreen}
       />
       <InitialSetupStack.Screen
-        name="Connect To Box"
-        component={ConnectToBoxScreen}
+        name={Routes.ConnectToBlox}
+        component={ConnectToBloxScreen}
       />
-      <InitialSetupStack.Screen name="Setup Wifi" component={SetupWifiScreen} />
       <InitialSetupStack.Screen
-        name="Check Connection"
+        name={Routes.SetupWifi}
+        component={SetupWifiScreen}
+      />
+      <InitialSetupStack.Screen
+        name={Routes.CheckConnection}
         component={CheckConnectionScreen}
       />
       <InitialSetupStack.Screen
-        name="Setup Complete"
+        name={Routes.SetupComplete}
         component={SetupCompleteScreen}
       />
     </InitialSetupStack.Navigator>

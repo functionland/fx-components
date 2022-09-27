@@ -4,14 +4,15 @@ import { SafeAreaView } from 'react-native';
 import WifiManager from 'react-native-wifi-reborn';
 import { DEFAULT_NETWORK_NAME } from '../../hooks/useIsConnectedToBox';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
+import { Routes } from '../../navigation/navigationConfig';
 
-export const ConnectToBoxScreen = () => {
+export const ConnectToBloxScreen = () => {
   const navigation = useInitialSetupNavigation();
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
 
   useEffect(() => {
     WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(
-      () => navigation.navigate('Setup Wifi'),
+      () => navigation.navigate(Routes.SetupWifi),
       () => setConnectionStatus('Unable to connect to Box.')
     );
   }, [navigation]);

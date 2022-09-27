@@ -2,11 +2,22 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useFxTheme } from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { BoxScreen } from '../screens/Box.screen';
-import { PoolScreen } from '../screens/Pool.screen';
+import { BloxScreen } from '../screens/Blox.screen';
+import { HubScreen } from '../screens/Hub.screen';
+import { DevicesScreen } from '../screens/Devices.screen';
 import { UsersScreen } from '../screens/Users/Users.screen';
-import { BoxIcon, PoolIcon, SettingsIcon, UserIcon } from '../components';
-import { MainTabsParamList, SettingsStackParamList } from './navigationConfig';
+import {
+  BloxIcon,
+  UserIcon,
+  HubIcon,
+  DevicesIcon,
+  SettingsIcon,
+} from '../components';
+import {
+  Routes,
+  MainTabsParamList,
+  SettingsStackParamList,
+} from './navigationConfig';
 import {
   SettingsScreen,
   AboutScreen,
@@ -26,6 +37,7 @@ export const MainTabsNavigator = () => {
         tabBarStyle: {
           backgroundColor: theme.colors.backgroundApp,
         },
+        tabBarLabelStyle: theme.textVariants.bodyXSRegular,
         headerShown: false,
         headerStyle: {
           backgroundColor: theme.colors.backgroundApp,
@@ -36,35 +48,48 @@ export const MainTabsNavigator = () => {
       })}
     >
       <MainTabs.Screen
-        name="Box"
-        component={BoxScreen}
+        name={Routes.BloxTab}
+        component={BloxScreen}
         options={{
           // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <BoxIcon fill={color} />,
+          tabBarIcon: ({ color }) => <BloxIcon fill={color} />,
+          tabBarLabel: 'Blox',
         }}
       />
       <MainTabs.Screen
-        name="SettingsStack"
-        component={SettingsNavigator}
-        options={{
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <SettingsIcon fill={color} />,
-        }}
-      />
-      <MainTabs.Screen
-        name="Pool"
-        component={PoolScreen}
-        options={{
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <PoolIcon fill={color} />,
-        }}
-      />
-      <MainTabs.Screen
-        name="Users"
+        name={Routes.UsersTab}
         component={UsersScreen}
         options={{
           // eslint-disable-next-line react/no-unstable-nested-components
           tabBarIcon: ({ color }) => <UserIcon fill={color} />,
+          tabBarLabel: 'Users',
+        }}
+      />
+      <MainTabs.Screen
+        name={Routes.HubTab}
+        component={HubScreen}
+        options={{
+          // eslint-disable-next-line react/no-unstable-nested-components
+          tabBarIcon: ({ color }) => <HubIcon fill={color} />,
+          tabBarLabel: 'Hub',
+        }}
+      />
+      <MainTabs.Screen
+        name={Routes.DevicesTab}
+        component={DevicesScreen}
+        options={{
+          // eslint-disable-next-line react/no-unstable-nested-components
+          tabBarIcon: ({ color }) => <DevicesIcon fill={color} />,
+          tabBarLabel: 'Devices',
+        }}
+      />
+      <MainTabs.Screen
+        name={Routes.SettingsTab}
+        component={SettingsNavigator}
+        options={{
+          // eslint-disable-next-line react/no-unstable-nested-components
+          tabBarIcon: ({ color }) => <SettingsIcon fill={color} />,
+          tabBarLabel: 'Settings',
         }}
       />
     </MainTabs.Navigator>
@@ -89,20 +114,20 @@ const SettingsNavigator = () => {
         headerTitle: '',
       })}
     >
-      <SettingsStack.Screen name="Settings" component={SettingsScreen} />
+      <SettingsStack.Screen name={Routes.Settings} component={SettingsScreen} />
       <SettingsStack.Screen
-        name="ConnectedDApps"
+        name={Routes.ConnectedDApps}
         component={ConnectedDAppsScreen}
       />
-      <SettingsStack.Screen name="Mode" component={ModeScreen} />
-      <SettingsStack.Screen name="Pools" component={PoolsScreen} />
-      <SettingsStack.Screen name="About" component={AboutScreen} />
+      <SettingsStack.Screen name={Routes.Mode} component={ModeScreen} />
+      <SettingsStack.Screen name={Routes.Pools} component={PoolsScreen} />
+      <SettingsStack.Screen name={Routes.About} component={AboutScreen} />
 
       <SettingsStack.Screen
         options={() => ({
           headerShown: false,
         })}
-        name="Component Gallery Navigator"
+        name={Routes.ComponentGallery}
         component={ComponentGalleryNavigator}
       />
     </SettingsStack.Navigator>

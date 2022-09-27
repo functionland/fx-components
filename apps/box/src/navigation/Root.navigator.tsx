@@ -2,18 +2,18 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { InitialSetupNavigator } from './InitialSetup.navigator';
 import { MainTabsNavigator } from './MainTabs.navigator';
-import { RootStackParamList } from './navigationConfig';
+import { Routes, RootStackParamList } from './navigationConfig';
 
 export const RootNavigator = () => {
   return (
     <RootStack.Navigator>
       <RootStack.Screen
-        name="InitialSetup"
+        name={Routes.InitialSetup}
         options={{ headerShown: false }}
         component={InitialSetupNavigator}
       />
       <RootStack.Screen
-        name="MainTabs"
+        name={Routes.MainTabs}
         component={MainTabsNavigator}
         options={{ headerShown: false }}
       />

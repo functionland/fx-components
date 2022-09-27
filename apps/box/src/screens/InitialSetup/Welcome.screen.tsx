@@ -13,6 +13,7 @@ import {
   useRootNavigation,
 } from '../../hooks/useTypedNavigation';
 import { Blox } from '../../components';
+import { Routes } from '../../navigation/navigationConfig';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -32,9 +33,9 @@ export const WelcomeScreen = () => {
     }
     if (hasLocationPermission) {
       if (isConnectedToBox) {
-        navigation.navigate('Setup Wifi');
+        navigation.navigate(Routes.SetupWifi);
       } else {
-        navigation.navigate('Connect To Box');
+        navigation.navigate(Routes.ConnectToBlox);
       }
     } else {
       /**
@@ -67,7 +68,7 @@ export const WelcomeScreen = () => {
           marginBottom="8"
           size="large"
           testID="app-name"
-          onPress={() => navigation.navigate('Wallet Connect')}
+          onPress={() => navigation.navigate(Routes.WalletConnect)}
         >
           Setup Wallet
         </FxButton>
@@ -83,7 +84,10 @@ export const WelcomeScreen = () => {
         <FxButton
           size="large"
           onPress={() =>
-            rootNavigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })
+            rootNavigation.reset({
+              index: 0,
+              routes: [{ name: Routes.MainTabs }],
+            })
           }
         >
           Setup Complete
