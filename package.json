@@ -36,6 +36,7 @@
     "expo-gl": "^11.4.0",
     "expo-three": "^6.1.0",
     "lodash": "^4.17.21",
+    "moment": "^2.29.4",
     "node-libs-react-native": "^1.2.1",
     "react": "18.1.0",
     "react-native": "0.69.1",

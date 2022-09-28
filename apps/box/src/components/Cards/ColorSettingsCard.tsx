@@ -45,7 +45,7 @@ export const ColorSettingsCard = () => {
 
   return (
     <>
-      <CardHeader>LED Color Settings</CardHeader>
+      <CardHeader>Color</CardHeader>
       <FxCard>
         <FxText variant="bodySmallRegular" color="content3" marginBottom="8">
           Color
@@ -125,7 +125,7 @@ export const ColorSettingsCard = () => {
             Brightness
           </FxText>
           <FxText variant="bodySmallRegular" color="content3">
-            {brightness}
+            {`${brightness * 10}%`}
           </FxText>
         </FxBox>
         <FxSlider
