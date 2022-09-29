@@ -65,7 +65,9 @@ const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
           )}
         </FxBox>
       </FxCard.Row>
-      <FxButton disabled={status === DeviceStatus.BackingUp}>Eject</FxButton>
+      <FxButton disabled={status === DeviceStatus.BackingUp}>
+        Eject Device
+      </FxButton>
       <FxBottomSheetModal ref={bottomSheetRef} title="Device Bottom Sheet">
         <FxBox
           height={200}

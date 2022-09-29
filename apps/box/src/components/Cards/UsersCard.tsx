@@ -9,6 +9,7 @@ import {
   FxText,
 } from '@functionland/component-library';
 import { Image, StyleSheet } from 'react-native';
+import moment from 'moment';
 import { CopyIcon } from '../Icons';
 import { CardCarousel } from './fields/CardCarousel';
 import { Friend } from '../../api/users';
@@ -45,7 +46,7 @@ const UserCard = ({ data, ...rest }: UserCardType) => {
       <FxCard.Row>
         <FxCard.Row.Title>Added</FxCard.Row.Title>
         <FxCard.Row.Data>
-          {new Date(data.connectionDate).toISOString()}
+          {moment(data.connectionDate).format('MM/DD/YYYY')}
         </FxCard.Row.Data>
       </FxCard.Row>
       <FxSpacer marginTop="12" />

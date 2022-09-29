@@ -23,6 +23,7 @@ export { FxError } from './lib/error/error';
 export { FxRadioButton, FxRadioButtonWithLabel } from './lib/radio-button';
 export { FxFoldableContent } from './lib/foldable-content/foldableContent';
 export { FxHorizontalRule } from './lib/horizontal-rule/horizontalRule';
+export { FxVerticalRule } from './lib/vertical-rule/verticalRule';
 export { FxLineChart } from './lib/line-chart/lineChart';
 export { FxLoadingSpinner } from './lib/loading-spinner/loadingSpinner';
 export { FxPicker, FxPickerItem } from './lib/picker/picker';
