@@ -23,7 +23,7 @@ import { mockPoolData } from '../api/pool';
 export const BloxScreen = () => {
   const divisionSplit = useSharedValue(70);
   return (
-    <FxSafeAreaBox flex={1}>
+    <FxSafeAreaBox flex={1} edges={['top']}>
       <BloxHeader />
       <ScrollView>
         <FxBox paddingVertical="20" paddingHorizontal="20">
