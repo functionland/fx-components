@@ -5,7 +5,7 @@ import {
   FxSpacer,
 } from '@functionland/component-library';
 import React from 'react';
-import { ScrollView } from 'react-native-gesture-handler';
+import { ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import { BloxHeader } from '../components/BloxHeader';
 import {
@@ -23,10 +23,10 @@ import { mockPoolData } from '../api/pool';
 export const BloxScreen = () => {
   const divisionSplit = useSharedValue(70);
   return (
-    <FxSafeAreaBox>
+    <FxSafeAreaBox flex={1}>
       <BloxHeader />
       <ScrollView>
-        <FxBox paddingVertical="24" paddingHorizontal="20">
+        <FxBox paddingVertical="20" paddingHorizontal="20">
           <UsageBar
             isEditable
             divisionPercent={divisionSplit}
