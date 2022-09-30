@@ -2,12 +2,12 @@ import React from 'react';
 import { CopyIcon } from '../../components';
 import { User } from '../../api/users';
 import {
+  FxAvatar,
   FxBox,
   FxButton,
   FxSpacer,
   FxText,
 } from '@functionland/component-library';
-import { Image } from 'react-native';
 import { copyToClipboard } from '../../utils/clipboard';
 
 type UserHeaderProps = {
@@ -16,7 +16,7 @@ type UserHeaderProps = {
 export const UserHeader = ({ userData }: UserHeaderProps) => {
   return (
     <FxBox alignItems="center">
-      <Image source={Number(userData.imageUrl)} />
+      <FxAvatar source={Number(userData.imageUrl)} size="xl" icon="edit" />
       <FxSpacer marginTop="16" />
       <FxText variant="bodyLargeRegular">@{userData.username}</FxText>
       <FxSpacer marginTop="4" />
