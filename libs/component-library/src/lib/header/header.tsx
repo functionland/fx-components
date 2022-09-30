@@ -7,11 +7,7 @@ import {
   FxGridSelector,
 } from '../grid-selector/gridSelector';
 import { FxPlusIcon } from '../icons/icons';
-import {
-  FxChevronDownIcon,
-  FxChevronUpIcon,
-  FxSelectIcon,
-} from '../icons/icons';
+import { FxChevronDownIcon, FxChevronUpIcon } from '../icons/icons';
 import { FxPressableOpacity } from '../pressable-opacity/pressableOpacity';
 import { FxSpacer } from '../spacer/spacer';
 import { FxText, FxTextProps } from '../text/text';
@@ -74,18 +70,20 @@ export const FxHeader = ({
         )
       )}
       <FxBox alignItems={'center'} flexDirection="row">
-        <FxSelectIcon fill={colors.content3} />
+        {/* <FxSelectIcon fill={colors.content3} /> */}
         <FxSpacer width={12} />
         {setIsList && typeof isList === 'boolean' && (
           <FxGridSelector isList={isList} setIsList={setIsList} />
         )}
-        <FxSpacer width={12} />
         {onAddPress && (
-          <FxButton
-            onPress={onAddPress}
-            width={40}
-            icon={<FxPlusIcon fill={'white'} />}
-          />
+          <>
+            <FxSpacer width={12} />
+            <FxButton
+              onPress={onAddPress}
+              width={40}
+              icon={<FxPlusIcon fill={'white'} />}
+            />
+          </>
         )}
       </FxBox>
     </FxBox>
