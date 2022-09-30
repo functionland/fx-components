@@ -13,24 +13,12 @@ import {
 } from '@functionland/component-library';
 import { CardCarousel } from './fields/CardCarousel';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
-
-enum DeviceStatus {
-  InUse = 0,
-  BackingUp = 1,
-  NotInUse = 2,
-}
-
-type DeviceData = {
-  name: string;
-  capacity: number; // megabytes
-  status: DeviceStatus;
-  associatedDevices: string[];
-};
+import { DeviceData, DeviceStatus, mockHub } from '../../api/hub';
 
 type DeviceCardProps = React.ComponentProps<typeof FxBox> & {
   data: DeviceData;
 };
-const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
+export const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
   const { name, capacity, status, associatedDevices } = data;
 
@@ -99,35 +87,17 @@ const DeviceCardEmpty = () => (
   </FxBox>
 );
 
-/**
- * @todo: Replace ENTRIES with api data
- */
-const ENTRIES: DeviceData[] = [
-  {
-    name: 'Expansion Card 1',
-    capacity: 921600,
-    status: 0,
-    associatedDevices: ['Home Blox Set Up', 'Tower #1', 'Slot #1'],
-  },
-  {
-    name: 'Expansion Card 2',
-    capacity: 20000,
-    status: 1,
-    associatedDevices: ['Home Blox Set Up', 'Tower #1', 'Slot #2'],
-  },
-];
-
 const DEVICE_CARD_HEIGHT = 264;
 
 export const ConnectedDevicesCard = () => {
   return (
     <>
       <CardHeader>Connected Devices</CardHeader>
-      {ENTRIES.length === 0 ? (
+      {mockHub.length === 0 ? (
         <DeviceCardEmpty />
       ) : (
         <CardCarousel
-          data={ENTRIES}
+          data={mockHub}
           renderItem={DeviceCard}
           height={DEVICE_CARD_HEIGHT}
         />
