@@ -18,7 +18,7 @@ export const UserCardCondensed = ({
   ...rest
 }: UserCardCondensedProps) => {
   return (
-    <FxCard paddingLeft="32" {...rest}>
+    <FxCard paddingHorizontal="16" paddingVertical="16" {...rest}>
       <FxBox flexDirection="row" alignItems="center">
         <Image source={Number(userData.imageUrl)} style={styles.image} />
         <FxSpacer marginLeft="20" />
