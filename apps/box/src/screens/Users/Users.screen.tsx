@@ -1,16 +1,15 @@
 import {
   configureEaseInOutLayoutAnimation,
   FxBox,
-  FxButton,
+  FxHeader,
   FxPressableOpacity,
   FxReanimatedBox,
   FxSafeAreaBox,
   FxSpacer,
   FxText,
 } from '@functionland/component-library';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet } from 'react-native';
-import { SubHeaderText } from '../../components/Text';
 import { UserCardCondensed } from './UserCardCondensed';
 import Reanimated, {
   Extrapolate,
@@ -28,8 +27,8 @@ const FADE_OFFSET = 50;
 export const UsersScreen = () => {
   const breakpoint = useSharedValue(0);
   const scrollY = useSharedValue(0);
-  const [change, setChange] = React.useState<boolean>(false);
-  const scrollViewRef = React.useRef<Reanimated.ScrollView>(null);
+  const [isList, setIsList] = useState<boolean>(false);
+  const scrollViewRef = useRef<Reanimated.ScrollView>(null);
 
   const condensedHeaderPressHandler = () => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -50,22 +49,12 @@ export const UsersScreen = () => {
     scrollY.value = evt.contentOffset.y;
   });
 
-  const changeHandler = React.useCallback(() => {
-    setChange((prev) => !prev);
+  useEffect(() => {
     configureEaseInOutLayoutAnimation();
-  }, [setChange]);
-
-  const SubHeaderBar = React.useMemo(() => {
-    return (
-      <FxBox flexDirection="row" justifyContent="space-between">
-        <SubHeaderText>All Users</SubHeaderText>
-        <FxButton onPress={changeHandler}>Change</FxButton>
-      </FxBox>
-    );
-  }, [changeHandler]);
+  }, [isList]);
 
   return (
-    <FxSafeAreaBox flex={1}>
+    <FxSafeAreaBox flex={1} edges={['top']}>
       <FxBox>
         <Reanimated.ScrollView
           ref={scrollViewRef}
@@ -73,7 +62,7 @@ export const UsersScreen = () => {
           scrollEventThrottle={16}
           contentContainerStyle={styles.scrollViewContainer}
         >
-          <FxSpacer marginTop="56" />
+          <FxSpacer marginTop="16" />
           <FxBox
             onLayout={(evt) => {
               const { height } = evt.nativeEvent.layout;
@@ -83,9 +72,14 @@ export const UsersScreen = () => {
             <UserHeader userData={mockUserData} />
           </FxBox>
           <FxSpacer marginTop="48" />
-          {SubHeaderBar}
+          <FxHeader
+            title="All Friends"
+            isList={isList}
+            setIsList={setIsList}
+            onAddPress={() => console.log('add')}
+          />
           <FxSpacer marginTop="24" />
-          {change ? (
+          {!isList ? (
             <UsersCardCarousel data={mockFriendData} />
           ) : (
             <>
