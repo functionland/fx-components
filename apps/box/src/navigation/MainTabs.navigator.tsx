@@ -114,7 +114,11 @@ const SettingsNavigator = () => {
         headerTitle: '',
       })}
     >
-      <SettingsStack.Screen name={Routes.Settings} component={SettingsScreen} />
+      <SettingsStack.Screen
+        name={Routes.Settings}
+        component={SettingsScreen}
+        options={{ headerShown: false }}
+      />
       <SettingsStack.Screen
         name={Routes.ConnectedDApps}
         component={ConnectedDAppsScreen}
