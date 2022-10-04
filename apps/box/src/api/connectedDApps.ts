@@ -28,7 +28,7 @@ type ConnectedDApp = {
 export const mockConnectedDAppsData: ConnectedDApp[] = [
   {
     id: 1,
-    name: 'Home Blox System',
+    name: 'Home Blox Setup',
     data: {
       fileSync: {
         id: 1,

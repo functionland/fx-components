@@ -39,6 +39,7 @@ export const ConnectedDAppsScreen = () => {
         <SmallHeaderText>Connected dApps</SmallHeaderText>
         <FxHeader
           marginTop="32"
+          marginBottom="16"
           title={blox.name}
           isList={isList}
           setIsList={setIsList}
