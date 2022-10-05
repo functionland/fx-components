@@ -41,6 +41,8 @@
     "@react-native-community/slider": "*",
     "react-native-reanimated-carousel": "*",
     "lodash": "*",
-    "@react-native-clipboard/clipboard": "*"
+    "@react-native-clipboard/clipboard": "*",
+    "react-native-svg-transformer": "*",
+    "moment": "*"
   }
 }
