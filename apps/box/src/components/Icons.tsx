@@ -67,6 +67,7 @@ export const CopyIcon = (props: FxSvgProps) => (
     />
   </FxSvg>
 );
+
 export const ExternalLinkIcon = (props: FxSvgProps) => (
   <FxSvg width={24} height={24} viewBox="0 0 24 24" {...props}>
     <Path

@@ -1,7 +1,11 @@
 import React from 'react';
 import { FxBox, FxAvatar, FxText } from '@functionland/component-library';
 
-export const BloxHeader = () => {
+type TBloxHeader = {
+  title: string;
+};
+
+export const BloxHeader = ({ title }: TBloxHeader) => {
   return (
     <FxBox
       flexDirection="row"
@@ -10,7 +14,7 @@ export const BloxHeader = () => {
       paddingHorizontal="20"
       paddingVertical="12"
     >
-      <FxText variant="h300">Home Blox Setup</FxText>
+      <FxText variant="h300">{title}</FxText>
       <FxAvatar source={require('../api/mockAssets/sample.png')} size="small" />
     </FxBox>
   );
