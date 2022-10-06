@@ -60,7 +60,10 @@ export const BloxScreen = () => {
             <UsersCardCarousel data={mockFriendData} />
           </>
           <FxSpacer height={16} />
-          <PoolCard pool={mockPoolData} />
+          <>
+            <CardHeader>Pool</CardHeader>
+            <PoolCard pool={mockPoolData[0]} marginTop="0" isDetailed />
+          </>
           <FxSpacer height={36} />
           <FxButton size="large">Restart</FxButton>
         </FxBox>
