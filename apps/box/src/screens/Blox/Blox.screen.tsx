@@ -1,47 +1,52 @@
+import React, { useRef, useState } from 'react';
 import {
   FxBox,
   FxButton,
   FxSafeAreaBox,
   FxSpacer,
+  FxBottomSheetModalMethods,
 } from '@functionland/component-library';
-import React, { useState } from 'react';
 import { ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
-import { BloxHeader } from '../components/BloxHeader';
+import { BloxHeader } from '../../components/BloxHeader';
 import {
   ColorSettingsCard,
   ConnectedDevicesCard,
   UsageBar,
   BloxInteraction,
-} from '../components';
-import { UsersCardCarousel } from '../components/Cards/UsersCard';
-import { EarningCard } from '../components/Cards/EarningCard';
-import { PoolCard } from '../components/Cards/PoolCard';
-import { CardHeader } from '../components/Cards/fields/CardHeader';
-import { mockFriendData } from '../api/users';
-import { mockPoolData } from '../api/pool';
-import { EHomeInteractionType } from '../models';
+} from '../../components';
+import { UsersCardCarousel } from '../../components/Cards/UsersCard';
+import { EarningCard } from '../../components/Cards/EarningCard';
+import { PoolCard } from '../../components/Cards/PoolCard';
+import { CardHeader } from '../../components/Cards/fields/CardHeader';
+import { BloxInteractionModal } from './modals/BloxInteractionModal';
+import { mockFriendData } from '../../api/users';
+import { mockPoolData } from '../../api/pool';
+import { EBloxInteractionType } from '../../models';
 
 export const BloxScreen = () => {
+  const bloxInteractionModalRef = useRef<FxBottomSheetModalMethods>(null);
   const divisionSplit = useSharedValue(70);
-  const [selectedMode, setSelectedMode] = useState<EHomeInteractionType>(null);
+  const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
+    EBloxInteractionType.HomeBloxSetup
+  );
 
-  const handleModeChange = (mode: EHomeInteractionType) => {
-    setSelectedMode(mode);
+  const showInteractionModal = () => {
+    bloxInteractionModalRef.current.present();
   };
 
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
       <BloxHeader
-        title={
-          selectedMode === EHomeInteractionType.HomeBloxSetup
-            ? 'Home Blox Setup'
-            : 'Office Blox Unit'
-        }
+        selectedMode={selectedMode}
+        onChangeMode={showInteractionModal}
       />
       <ScrollView>
         <FxBox paddingVertical="20" paddingHorizontal="20">
-          <BloxInteraction onModeChange={handleModeChange} />
+          <BloxInteraction
+            selectedMode={selectedMode}
+            setSelectedMode={setSelectedMode}
+          />
           <FxSpacer height={24} />
           <UsageBar
             isEditable
@@ -65,6 +70,11 @@ export const BloxScreen = () => {
           <FxButton size="large">Restart</FxButton>
         </FxBox>
       </ScrollView>
+      <BloxInteractionModal
+        ref={bloxInteractionModalRef}
+        selectedMode={selectedMode}
+        setSelectedMode={setSelectedMode}
+      />
     </FxSafeAreaBox>
   );
 };
