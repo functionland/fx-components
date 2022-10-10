@@ -41,8 +41,14 @@ export const MainTabsNavigator = () => {
         tabBarInactiveTintColor: theme.colors.content3,
         tabBarStyle: {
           backgroundColor: theme.colors.backgroundApp,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.backgroundSecondary,
+          paddingBottom: 4,
         },
-        tabBarLabelStyle: theme.textVariants.bodyXSRegular,
+        tabBarLabelStyle: {
+          ...theme.textVariants.bodyXSRegular,
+          textTransform: 'none',
+        },
         headerShown: false,
         headerStyle: {
           backgroundColor: theme.colors.backgroundApp,
