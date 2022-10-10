@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useFxTheme } from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { BloxScreen } from '../screens/Blox.screen';
+import { BloxScreen } from '../screens/Blox/Blox.screen';
 import { HubScreen } from '../screens/Hub.screen';
 import { DevicesScreen } from '../screens/Devices.screen';
 import { UsersScreen } from '../screens/Users/Users.screen';

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, useRef } from 'react';
 import Carousel, { ICarouselInstance } from 'react-native-reanimated-carousel';
 import {
   FxBox,
@@ -11,38 +11,26 @@ import {
   useFxTheme,
 } from '@functionland/component-library';
 import { useSettingsStore } from '../stores';
-import { EHomeInteractionType } from '../models';
-import HomeBoxSetupDark from '../app/icons/home-blox-setup-dark.svg';
-import HomeBoxSetupLight from '../app/icons/home-blox-setup-light.svg';
-import OfficeBloxUnitDark from '../app/icons/office-blox-unit-dark.svg';
-import OfficeBloxUnitLight from '../app/icons/office-blox-unit-light.svg';
-
-const DATA = [
-  {
-    mode: EHomeInteractionType.HomeBloxSetup,
-    title: 'Home Blox Setup',
-    darkIcon: HomeBoxSetupDark,
-    lightIcon: HomeBoxSetupLight,
-  },
-  {
-    mode: EHomeInteractionType.OfficeBloxUnit,
-    title: 'Office Blox Unit',
-    darkIcon: OfficeBloxUnitDark,
-    lightIcon: OfficeBloxUnitLight,
-  },
-];
+import { EBloxInteractionType } from '../models';
+import { bloxInteractions } from '../api/blox';
 
 type TBloxInteraction = {
-  onModeChange: (mode: EHomeInteractionType) => void;
+  selectedMode: EBloxInteractionType;
+  setSelectedMode: Dispatch<SetStateAction<EBloxInteractionType>>;
 };
 
-export const BloxInteraction = ({ onModeChange }: TBloxInteraction) => {
+export const BloxInteraction = ({
+  selectedMode,
+  setSelectedMode,
+}: TBloxInteraction) => {
   const carouselRef = useRef<ICarouselInstance>(null);
   const { colorScheme } = useSettingsStore((store) => ({
     colorScheme: store.colorScheme,
   }));
   const { colors } = useFxTheme();
-  const [selectedMode, setSelectedMode] = useState(0);
+  const selectedIndex = bloxInteractions.findIndex(
+    (interaction) => interaction.mode === selectedMode
+  );
 
   const swipePrevious = () => {
     carouselRef?.current?.prev();
@@ -52,22 +40,18 @@ export const BloxInteraction = ({ onModeChange }: TBloxInteraction) => {
     carouselRef?.current?.next();
   };
 
-  useEffect(() => {
-    onModeChange(DATA[selectedMode].mode);
-  }, [onModeChange, selectedMode]);
-
   return (
     <FxBox position="relative">
       <Carousel
         ref={carouselRef}
-        defaultIndex={0}
+        defaultIndex={selectedIndex}
         loop={false}
         width={WINDOW_WIDTH - APP_HORIZONTAL_PADDING * 2}
         height={200}
         panGestureHandlerProps={{
           activeOffsetX: [-10, 10],
         }}
-        data={DATA}
+        data={bloxInteractions}
         renderItem={({ item }) => {
           const Icon = colorScheme === 'dark' ? item.darkIcon : item.lightIcon;
           return (
@@ -79,12 +63,12 @@ export const BloxInteraction = ({ onModeChange }: TBloxInteraction) => {
             </FxBox>
           );
         }}
-        onSnapToItem={(index) => setSelectedMode(index)}
+        onSnapToItem={(index) => setSelectedMode(bloxInteractions[index].mode)}
       />
       <FxPressableOpacity position="absolute" top={48} onPress={swipePrevious}>
         <FxChevronLeftIcon
           fill={
-            selectedMode === 0 ? colors.backgroundSecondary : colors.content1
+            selectedIndex === 0 ? colors.backgroundSecondary : colors.content1
           }
           width={24}
           height={24}
@@ -98,7 +82,7 @@ export const BloxInteraction = ({ onModeChange }: TBloxInteraction) => {
       >
         <FxChevronRightIcon
           fill={
-            selectedMode === DATA.length - 1
+            selectedIndex === bloxInteractions.length - 1
               ? colors.backgroundSecondary
               : colors.content1
           }
