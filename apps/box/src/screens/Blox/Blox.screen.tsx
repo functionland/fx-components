@@ -35,6 +35,11 @@ export const BloxScreen = () => {
     bloxInteractionModalRef.current.present();
   };
 
+  const handleSelectMode = (mode: EBloxInteractionType) => {
+    setSelectedMode(mode);
+    bloxInteractionModalRef.current.close();
+  };
+
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
       <BloxHeader
@@ -52,6 +57,16 @@ export const BloxScreen = () => {
             isEditable
             divisionPercent={divisionSplit}
             totalCapacity={1000}
+            // usages={[
+            //   [
+            //     { color: 'red', usage: 10 },
+            //     { color: 'blue', usage: 30 },
+            //   ],
+            //   [
+            //     { color: 'green', usage: 20 },
+            //     { color: 'black', usage: 50 },
+            //   ],
+            // ]}
           />
           <FxSpacer height={24} />
           <ColorSettingsCard />
@@ -76,7 +91,7 @@ export const BloxScreen = () => {
       <BloxInteractionModal
         ref={bloxInteractionModalRef}
         selectedMode={selectedMode}
-        setSelectedMode={setSelectedMode}
+        onSelectMode={handleSelectMode}
       />
     </FxSafeAreaBox>
   );

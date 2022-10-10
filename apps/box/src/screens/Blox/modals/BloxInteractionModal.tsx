@@ -14,7 +14,7 @@ import { EBloxInteractionType, TBloxInteraction } from '../../../models';
 
 type TBloxInteractionModalProps = {
   selectedMode: EBloxInteractionType;
-  setSelectedMode: Dispatch<SetStateAction<EBloxInteractionType>>;
+  onSelectMode: (mode: EBloxInteractionType) => void;
 };
 
 export const BloxInteractionModal = React.forwardRef<
@@ -31,7 +31,7 @@ export const BloxInteractionModal = React.forwardRef<
             key={interaction.mode}
             interaction={interaction}
             selected={interaction.mode === _.selectedMode}
-            setSelectedMode={_.setSelectedMode}
+            setSelectedMode={_.onSelectMode}
           />
         ))}
       </FxBox>
