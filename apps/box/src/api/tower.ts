@@ -1,29 +1,29 @@
-interface Settings {
+type TSettings = {
   brightness: number;
   color: string;
-}
+};
 
-enum TowerType {
+enum ETowerType {
   Fula,
   Storage,
   Hub,
 }
 
-export interface Tower {
+export type TTower = {
   id: string; // randomly generated unique identifier
   name: string;
   poolId: string; // pool unique identifier
-  settings: Settings;
+  settings: TSettings;
   storageTotal: number; // megabytes
   userStorageAllocation: {
     decentralizedId: string;
     consumed: number;
     allocated: number;
   }[];
-  type: TowerType;
-}
+  type: ETowerType;
+};
 
-export const mockTowerData: Tower[] = [
+export const mockTowerData: TTower[] = [
   {
     id: '1',
     name: 'Tower 1',
@@ -34,7 +34,7 @@ export const mockTowerData: Tower[] = [
     },
     storageTotal: 0,
     userStorageAllocation: [],
-    type: TowerType.Storage,
+    type: ETowerType.Storage,
   },
   {
     id: '2',
@@ -46,7 +46,7 @@ export const mockTowerData: Tower[] = [
     },
     storageTotal: 0,
     userStorageAllocation: [],
-    type: TowerType.Storage,
+    type: ETowerType.Storage,
   },
   {
     id: '3',
@@ -58,7 +58,7 @@ export const mockTowerData: Tower[] = [
     },
     storageTotal: 0,
     userStorageAllocation: [],
-    type: TowerType.Storage,
+    type: ETowerType.Storage,
   },
   {
     id: '4',
@@ -70,7 +70,7 @@ export const mockTowerData: Tower[] = [
     },
     storageTotal: 0,
     userStorageAllocation: [],
-    type: TowerType.Storage,
+    type: ETowerType.Storage,
   },
   {
     id: '5',
@@ -82,7 +82,7 @@ export const mockTowerData: Tower[] = [
     },
     storageTotal: 0,
     userStorageAllocation: [],
-    type: TowerType.Storage,
+    type: ETowerType.Storage,
   },
   {
     id: '6',
@@ -94,7 +94,7 @@ export const mockTowerData: Tower[] = [
     },
     storageTotal: 0,
     userStorageAllocation: [],
-    type: TowerType.Storage,
+    type: ETowerType.Storage,
   },
   {
     id: '7',
@@ -106,7 +106,7 @@ export const mockTowerData: Tower[] = [
     },
     storageTotal: 0,
     userStorageAllocation: [],
-    type: TowerType.Storage,
+    type: ETowerType.Storage,
   },
   {
     id: '8',
@@ -118,7 +118,7 @@ export const mockTowerData: Tower[] = [
     },
     storageTotal: 0,
     userStorageAllocation: [],
-    type: TowerType.Storage,
+    type: ETowerType.Storage,
   },
   {
     id: '9',
@@ -130,6 +130,6 @@ export const mockTowerData: Tower[] = [
     },
     storageTotal: 0,
     userStorageAllocation: [],
-    type: TowerType.Storage,
+    type: ETowerType.Storage,
   },
 ];

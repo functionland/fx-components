@@ -8,10 +8,10 @@ import {
 } from '@functionland/component-library';
 import React from 'react';
 import { Image, StyleSheet } from 'react-native';
-import { Friend } from '../../api/users';
+import { TFriend } from '../../api/users';
 
 type UserCardCondensedProps = FxCardProps & {
-  userData: Friend;
+  userData: TFriend;
 };
 export const UserCardCondensed = ({
   userData,

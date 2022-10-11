@@ -15,11 +15,11 @@ import {
   UsageBar,
   BloxInteraction,
 } from '../../components';
-import { UsersCardCarousel } from '../../components/Cards/UsersCard';
+import { UsersCard } from '../../components/Cards/UsersCard';
 import { EarningCard } from '../../components/Cards/EarningCard';
-import { PoolCard } from '../../components/Cards/PoolCard';
-import { CardHeader } from '../../components/Cards/fields/CardHeader';
 import { BloxInteractionModal } from './modals/BloxInteractionModal';
+import { Pool } from './components/Pool';
+import { mockHub } from '../../api/hub';
 import { mockFriendData } from '../../api/users';
 import { mockPoolData } from '../../api/pool';
 import { EBloxInteractionType } from '../../models';
@@ -73,17 +73,11 @@ export const BloxScreen = () => {
           <FxSpacer height={16} />
           <EarningCard totalFula={4.2931} />
           <FxSpacer height={16} />
-          <ConnectedDevicesCard />
+          <ConnectedDevicesCard data={mockHub} />
           <FxSpacer height={16} />
-          <>
-            <CardHeader>Friends</CardHeader>
-            <UsersCardCarousel data={mockFriendData} />
-          </>
+          <UsersCard data={mockFriendData} />
           <FxSpacer height={16} />
-          <>
-            <CardHeader>Pool</CardHeader>
-            <PoolCard pool={mockPoolData[0]} marginTop="0" isDetailed />
-          </>
+          <Pool pool={mockPoolData[0]} />
           <FxSpacer height={36} />
           <FxButton size="large">Restart</FxButton>
         </FxBox>

@@ -18,8 +18,8 @@ import Reanimated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { UsersCardCarousel } from '../../components/Cards/UsersCard';
-import { mockFriendData, mockUserData, User } from '../../api/users';
+import { UsersCard } from '../../components/Cards/UsersCard';
+import { mockFriendData, mockUserData, TUser } from '../../api/users';
 import { UserHeader } from './UserHeader';
 
 const FADE_OFFSET = 50;
@@ -80,7 +80,7 @@ export const UsersScreen = () => {
           />
           <FxSpacer marginTop="24" />
           {!isList ? (
-            <UsersCardCarousel data={mockFriendData} />
+            <UsersCard data={mockFriendData} />
           ) : (
             <>
               {mockFriendData.map((friend) => {
@@ -116,7 +116,7 @@ export const UsersScreen = () => {
 
 type PrimaryUserCondensedProps = {
   onPress: () => void;
-  userData: User;
+  userData: TUser;
 };
 const PrimaryUserCondensed = ({
   userData,

@@ -12,11 +12,14 @@ import {
   FxText,
 } from '@functionland/component-library';
 import { CardCarousel } from './fields/CardCarousel';
+import { EmptyCard } from './EmptyCard';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
-import { DeviceData, DeviceStatus, mockHub } from '../../api/hub';
+import { TDevice, EDeviceStatus, mockHub } from '../../api/hub';
+
+const DEVICE_CARD_HEIGHT = 264;
 
 type DeviceCardProps = React.ComponentProps<typeof FxBox> & {
-  data: DeviceData;
+  data: TDevice;
 };
 export const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
@@ -46,14 +49,14 @@ export const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
         <FxCard.Row.Title>Status</FxCard.Row.Title>
         <FxBox flexDirection="row" alignItems="center">
           <FxCard.Row.Data>
-            {convertPascalToSentence(DeviceStatus[status])}
+            {convertPascalToSentence(EDeviceStatus[status])}
           </FxCard.Row.Data>
-          {status === DeviceStatus.BackingUp && (
+          {status === EDeviceStatus.BackingUp && (
             <FxLoadingSpinner marginLeft="4" />
           )}
         </FxBox>
       </FxCard.Row>
-      <FxButton disabled={status === DeviceStatus.BackingUp}>
+      <FxButton disabled={status === EDeviceStatus.BackingUp}>
         Eject Device
       </FxButton>
       <FxBottomSheetModal ref={bottomSheetRef} title="Device Bottom Sheet">
@@ -70,34 +73,23 @@ export const DeviceCard = ({ data, ...rest }: DeviceCardProps) => {
   );
 };
 
-const DeviceCardEmpty = () => (
-  <FxBox
-    alignItems="center"
-    borderColor="backgroundSecondary"
-    borderRadius="s"
-    borderStyle="dashed"
-    borderWidth={1}
-    height={DEVICE_CARD_HEIGHT}
-    justifyContent="center"
-    paddingHorizontal="24"
-  >
-    <FxText color="content1" variant="bodyMediumRegular" textAlign="center">
-      No "connected devices"
-    </FxText>
-  </FxBox>
-);
+type TConnectedDevicesCard = {
+  showCardHeader?: boolean;
+  data: TDevice[];
+};
 
-const DEVICE_CARD_HEIGHT = 264;
-
-export const ConnectedDevicesCard = () => {
+export const ConnectedDevicesCard = ({
+  showCardHeader = true,
+  data,
+}: TConnectedDevicesCard) => {
   return (
     <>
-      <CardHeader>Connected Devices</CardHeader>
+      {showCardHeader && <CardHeader>Connected Devices</CardHeader>}
       {mockHub.length === 0 ? (
-        <DeviceCardEmpty />
+        <EmptyCard placeholder="No connected devices" />
       ) : (
         <CardCarousel
-          data={mockHub}
+          data={data}
           renderItem={DeviceCard}
           height={DEVICE_CARD_HEIGHT}
         />

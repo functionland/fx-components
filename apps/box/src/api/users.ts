@@ -1,4 +1,4 @@
-export interface User {
+export type TUser = {
   connectionDate: string | number; // UTC
   decentralizedId: string; // or number?
   imageUrl?: string;
@@ -7,18 +7,18 @@ export interface User {
   securityPassphrase: string;
   walletId: string; // or number?
   walletName: string;
-}
+};
 
-export interface Friend {
+export type TFriend = {
   status: 'invited' | 'accepted'; // other status needed?
   connectionDate: string | number; // UTC : date user connected as friend
   decentralizedId: string; // or number?
   imageUrl?: string;
   username: string;
   peerId: string[]; // identifiers for which blox hardware friend is invited to use
-}
+};
 
-export const mockUserData: User = {
+export const mockUserData: TUser = {
   connectionDate: new Date().valueOf(),
   decentralizedId: 'key:abc12345xyz',
   username: 'testUser',
@@ -29,7 +29,7 @@ export const mockUserData: User = {
   walletName: 'TrustWallet',
 };
 
-export const mockFriendData: Friend[] = [
+export const mockFriendData: TFriend[] = [
   {
     status: 'accepted',
     connectionDate: new Date().valueOf(),

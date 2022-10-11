@@ -6,19 +6,20 @@ import {
   FxCard,
   FxSpacer,
   FxTag,
-  FxText,
 } from '@functionland/component-library';
 import { Image, StyleSheet } from 'react-native';
 import moment from 'moment';
+import { CardHeader } from './fields/CardHeader';
 import { CopyIcon } from '../Icons';
 import { CardCarousel } from './fields/CardCarousel';
-import { Friend } from '../../api/users';
+import { EmptyCard } from './EmptyCard';
+import { TFriend } from '../../api/users';
 import { getUserUsageDetails } from '../../utils/users';
 import { copyToClipboard } from '../../utils/clipboard';
 
 const USER_CARD_HEIGHT = 286;
 type UserCardType = React.ComponentProps<typeof FxCard> & {
-  data: Friend;
+  data: TFriend;
 };
 const UserCard = ({ data, ...rest }: UserCardType) => {
   const usageStats = getUserUsageDetails(data);
@@ -60,31 +61,20 @@ const UserCard = ({ data, ...rest }: UserCardType) => {
   );
 };
 
-type UsersCardCarouselProps = {
-  data: Friend[];
+type TUsersCard = {
+  showCardHeader?: boolean;
+  data: TFriend[];
 };
-export const UsersCardCarousel = ({ data }: UsersCardCarouselProps) => {
+export const UsersCard = ({ showCardHeader = true, data }: TUsersCard) => {
   return (
-    <FxBox>
+    <>
+      {showCardHeader && <CardHeader>Friends</CardHeader>}
       {data.length === 0 ? (
-        <FxBox
-          alignItems="center"
-          borderColor="backgroundSecondary"
-          borderRadius="s"
-          borderStyle="dashed"
-          borderWidth={1}
-          height={USER_CARD_HEIGHT}
-          justifyContent="center"
-          paddingHorizontal="24"
-        >
-          <FxText
-            color="content1"
-            variant="bodyMediumRegular"
-            textAlign="center"
-          >
-            No "connected devices"
-          </FxText>
-        </FxBox>
+        <EmptyCard
+          placeholder="No friends added"
+          showAddButton
+          addButtonTitle="Add friends"
+        />
       ) : (
         <CardCarousel
           data={data}
@@ -92,7 +82,7 @@ export const UsersCardCarousel = ({ data }: UsersCardCarouselProps) => {
           height={USER_CARD_HEIGHT}
         />
       )}
-    </FxBox>
+    </>
   );
 };
 

@@ -1,4 +1,4 @@
-export interface Blox {
+export type TBlox = {
   id: string; // peerId?
   totalStorage: number;
   poolAllocation: number;
@@ -7,9 +7,9 @@ export interface Blox {
     decentralizedId: string;
     storage: number;
   }[];
-}
+};
 
-export const mockBlockHardware: Blox[] = [
+export const mockBlockHardware: TBlox[] = [
   {
     id: '1',
     totalStorage: 800000,
