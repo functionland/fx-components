@@ -1,5 +1,6 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+// import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useFxTheme } from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BloxScreen } from '../screens/Blox/Blox.screen';
@@ -31,13 +32,23 @@ export const MainTabsNavigator = () => {
   const theme = useFxTheme();
   return (
     <MainTabs.Navigator
+      tabBarPosition="bottom"
       screenOptions={() => ({
+        tabBarIndicatorStyle: {
+          height: 0,
+        },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.content3,
         tabBarStyle: {
           backgroundColor: theme.colors.backgroundApp,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.backgroundSecondary,
+          paddingBottom: 4,
         },
-        tabBarLabelStyle: theme.textVariants.bodyXSRegular,
+        tabBarLabelStyle: {
+          ...theme.textVariants.bodyXSRegular,
+          textTransform: 'none',
+        },
         headerShown: false,
         headerStyle: {
           backgroundColor: theme.colors.backgroundApp,
@@ -96,7 +107,7 @@ export const MainTabsNavigator = () => {
   );
 };
 
-const MainTabs = createBottomTabNavigator<MainTabsParamList>();
+const MainTabs = createMaterialTopTabNavigator<MainTabsParamList>();
 
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 const SettingsNavigator = () => {
