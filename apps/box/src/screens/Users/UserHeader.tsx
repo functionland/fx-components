@@ -1,6 +1,6 @@
 import React from 'react';
 import { CopyIcon } from '../../components';
-import { User } from '../../api/users';
+import { TUser } from '../../api/users';
 import {
   FxAvatar,
   FxBox,
@@ -11,7 +11,7 @@ import {
 import { copyToClipboard } from '../../utils/clipboard';
 
 type UserHeaderProps = {
-  userData: User;
+  userData: TUser;
 };
 export const UserHeader = ({ userData }: UserHeaderProps) => {
   return (

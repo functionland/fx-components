@@ -1,4 +1,4 @@
-export type DApp = {
+export type TDApp = {
   id: number;
   name: string;
   isConnected: boolean;
@@ -7,22 +7,22 @@ export type DApp = {
   lastUpdate: Date;
 };
 
-enum dApps {
+enum EDApps {
   fileSync = 'fileSync',
   fotos = 'fotos',
 }
 
-export type DApps = keyof typeof dApps;
+export type DApps = keyof typeof EDApps;
 
 export const imageMap = {
-  [dApps.fileSync]: require('./../../assets/images/file_sync_logo.png'),
-  [dApps.fotos]: require('./../../assets/images/fotos_logo.png'),
+  [EDApps.fileSync]: require('./../../assets/images/file_sync_logo.png'),
+  [EDApps.fotos]: require('./../../assets/images/fotos_logo.png'),
 };
 
 type ConnectedDApp = {
   id: number;
   name: string;
-  data: Record<DApps, DApp>;
+  data: Record<DApps, TDApp>;
 };
 
 export const mockConnectedDAppsData: ConnectedDApp[] = [

@@ -8,14 +8,14 @@ import {
   FxText,
 } from '@functionland/component-library';
 import moment from 'moment';
-import { Pool } from '../../api/pool';
+import { TPool } from '../../api/pool';
 
 type PoolCardType = React.ComponentProps<typeof FxCard> & {
-  pool: Pool;
+  pool: TPool;
   isDetailed?: boolean;
 };
 
-const DetailInfo = ({ pool }: { pool: Pool }) => (
+const DetailInfo = ({ pool }: { pool: TPool }) => (
   <FxBox>
     <FxSpacer marginTop="24" />
     <FxCard.Row>

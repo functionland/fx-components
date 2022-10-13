@@ -8,20 +8,20 @@ import {
   FxCardProps,
 } from '@functionland/component-library';
 
-import { DApp } from './../../../../api/connectedDApps';
+import { TDApp } from './../../../../api/connectedDApps';
 import DAppHeader from './DAppHeader';
 
 type RowDetailsProps = {
-  data: Pick<DApp, 'storageUsed' | 'lastUpdate' | 'name'>;
+  data: Pick<TDApp, 'storageUsed' | 'lastUpdate' | 'name'>;
 };
 
 type CardDetailsProps = Pick<RowDetailsProps, 'data'> & {
-  data: Pick<DApp, 'name'>;
+  data: Pick<TDApp, 'name'>;
   onPress: (event: GestureResponderEvent) => void;
 };
 
 type DAppCardProps = {
-  data: DApp;
+  data: TDApp;
   isDetailed?: boolean;
   imageSrc: ImageSourcePropType;
 } & FxCardProps;

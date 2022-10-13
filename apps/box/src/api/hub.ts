@@ -1,17 +1,17 @@
-export enum DeviceStatus {
+export enum EDeviceStatus {
   InUse = 0,
   BackingUp = 1,
   NotInUse = 2,
 }
 
-export type DeviceData = {
+export type TDevice = {
   name: string;
   capacity: number; // megabytes
-  status: DeviceStatus;
+  status: EDeviceStatus;
   associatedDevices: string[];
 };
 
-export const mockHub: DeviceData[] = [
+export const mockHub: TDevice[] = [
   {
     name: 'Expansion Card 1',
     capacity: 921600,
