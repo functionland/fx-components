@@ -1,7 +1,10 @@
-import React from 'react';
-// import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React, { useRef } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { useFxTheme } from '@functionland/component-library';
+import {
+  FxBottomSheetModalMethods,
+  FxPlusIcon,
+  useFxTheme,
+} from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BloxScreen } from '../screens/Blox/Blox.screen';
 import { HubScreen } from '../screens/Hub.screen';
@@ -10,7 +13,7 @@ import { UsersScreen } from '../screens/Users/Users.screen';
 import {
   BloxIcon,
   UserIcon,
-  HubIcon,
+  // HubIcon,
   DevicesIcon,
   SettingsIcon,
 } from '../components';
@@ -27,83 +30,99 @@ import {
   ConnectedDAppsScreen,
 } from '../screens/Settings';
 import { ComponentGalleryNavigator } from './ComponentGallery.navigator';
+import { GlobalBottomSheet } from '../components/GlobalBottomSheet';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
+  const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
+
+  const openGlobalBottomSheet = () => {
+    globalBottomSheetRef.current.present();
+  };
+
   return (
-    <MainTabs.Navigator
-      tabBarPosition="bottom"
-      screenOptions={() => ({
-        tabBarIndicatorStyle: {
-          height: 0,
-        },
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.content3,
-        tabBarStyle: {
-          backgroundColor: theme.colors.backgroundApp,
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.backgroundSecondary,
-          paddingBottom: 4,
-        },
-        tabBarLabelStyle: {
-          ...theme.textVariants.bodyXSRegular,
-          textTransform: 'none',
-        },
-        headerShown: false,
-        headerStyle: {
-          backgroundColor: theme.colors.backgroundApp,
-        },
-        headerTitleStyle: {
-          color: theme.colors.content1,
-        },
-      })}
-    >
-      <MainTabs.Screen
-        name={Routes.BloxTab}
-        component={BloxScreen}
-        options={{
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <BloxIcon fill={color} />,
-          tabBarLabel: 'Blox',
-        }}
-      />
-      <MainTabs.Screen
-        name={Routes.UsersTab}
-        component={UsersScreen}
-        options={{
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <UserIcon fill={color} />,
-          tabBarLabel: 'Users',
-        }}
-      />
-      <MainTabs.Screen
-        name={Routes.HubTab}
-        component={HubScreen}
-        options={{
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <HubIcon fill={color} />,
-          tabBarLabel: 'Hub',
-        }}
-      />
-      <MainTabs.Screen
-        name={Routes.DevicesTab}
-        component={DevicesScreen}
-        options={{
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <DevicesIcon fill={color} />,
-          tabBarLabel: 'Devices',
-        }}
-      />
-      <MainTabs.Screen
-        name={Routes.SettingsTab}
-        component={SettingsNavigator}
-        options={{
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({ color }) => <SettingsIcon fill={color} />,
-          tabBarLabel: 'Settings',
-        }}
-      />
-    </MainTabs.Navigator>
+    <>
+      <MainTabs.Navigator
+        tabBarPosition="bottom"
+        screenOptions={() => ({
+          tabBarIndicatorStyle: {
+            height: 0,
+          },
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.content3,
+          tabBarStyle: {
+            backgroundColor: theme.colors.backgroundApp,
+            borderTopWidth: 1,
+            borderTopColor: theme.colors.backgroundSecondary,
+            paddingBottom: 4,
+          },
+          tabBarLabelStyle: {
+            ...theme.textVariants.bodyXSRegular,
+            textTransform: 'none',
+          },
+          headerShown: false,
+          headerStyle: {
+            backgroundColor: theme.colors.backgroundApp,
+          },
+          headerTitleStyle: {
+            color: theme.colors.content1,
+          },
+        })}
+      >
+        <MainTabs.Screen
+          name={Routes.BloxTab}
+          component={BloxScreen}
+          options={{
+            // eslint-disable-next-line react/no-unstable-nested-components
+            tabBarIcon: ({ color }) => <BloxIcon fill={color} />,
+            tabBarLabel: 'Blox',
+          }}
+        />
+        <MainTabs.Screen
+          name={Routes.UsersTab}
+          component={UsersScreen}
+          options={{
+            // eslint-disable-next-line react/no-unstable-nested-components
+            tabBarIcon: ({ color }) => <UserIcon fill={color} />,
+            tabBarLabel: 'Users',
+          }}
+        />
+        <MainTabs.Screen
+          name={Routes.HubTab}
+          component={HubScreen}
+          options={{
+            // eslint-disable-next-line react/no-unstable-nested-components
+            tabBarIcon: ({ color }) => <FxPlusIcon fill={color} />,
+            tabBarLabel: '',
+          }}
+          listeners={() => ({
+            tabPress: (e) => {
+              e.preventDefault();
+              openGlobalBottomSheet();
+            },
+          })}
+        />
+        <MainTabs.Screen
+          name={Routes.DevicesTab}
+          component={DevicesScreen}
+          options={{
+            // eslint-disable-next-line react/no-unstable-nested-components
+            tabBarIcon: ({ color }) => <DevicesIcon fill={color} />,
+            tabBarLabel: 'Devices',
+          }}
+        />
+        <MainTabs.Screen
+          name={Routes.SettingsTab}
+          component={SettingsNavigator}
+          options={{
+            // eslint-disable-next-line react/no-unstable-nested-components
+            tabBarIcon: ({ color }) => <SettingsIcon fill={color} />,
+            tabBarLabel: 'Settings',
+          }}
+        />
+      </MainTabs.Navigator>
+      <GlobalBottomSheet ref={globalBottomSheetRef} />
+    </>
   );
 };
 
