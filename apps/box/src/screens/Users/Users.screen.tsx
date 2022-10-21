@@ -22,10 +22,10 @@ import { UsersCard } from '../../components/Cards/UsersCard';
 import { mockFriendData, mockUserData, TUser } from '../../api/users';
 import { UserHeader } from './UserHeader';
 
+const OFFSET_START = 270;
 const FADE_OFFSET = 50;
 
 export const UsersScreen = () => {
-  const breakpoint = useSharedValue(0);
   const scrollY = useSharedValue(0);
   const [isList, setIsList] = useState<boolean>(false);
   const scrollViewRef = useRef<Reanimated.ScrollView>(null);
@@ -38,7 +38,7 @@ export const UsersScreen = () => {
     return {
       opacity: interpolate(
         scrollY.value,
-        [breakpoint.value - FADE_OFFSET, breakpoint.value],
+        [OFFSET_START - FADE_OFFSET, OFFSET_START],
         [0, 1],
         Extrapolate.CLAMP
       ),
@@ -63,12 +63,7 @@ export const UsersScreen = () => {
           contentContainerStyle={styles.scrollViewContainer}
         >
           <FxSpacer marginTop="16" />
-          <FxBox
-            onLayout={(evt) => {
-              const { height } = evt.nativeEvent.layout;
-              breakpoint.value = height;
-            }}
-          >
+          <FxBox>
             <UserHeader userData={mockUserData} />
           </FxBox>
           <FxSpacer marginTop="48" />
