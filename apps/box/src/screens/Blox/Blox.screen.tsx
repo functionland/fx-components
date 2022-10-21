@@ -65,7 +65,7 @@ export const BloxScreen = () => {
           <UsageBar
             isEditable
             divisionPercent={divisionSplit}
-            onUpdateDivisionPercentage={handleUpdateDivisionPercentage}
+            onEditEnd={handleUpdateDivisionPercentage}
             totalCapacity={1000}
           />
           <FxSpacer height={8} />
