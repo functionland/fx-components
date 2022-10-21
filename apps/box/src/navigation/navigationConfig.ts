@@ -9,6 +9,7 @@ export enum Routes {
   // Root
   InitialSetup = 'InitialSetup',
   MainTabs = 'MainTabs',
+  Hub = 'Hub',
 
   // Initial Setup
   Welcome = 'Welcome',
@@ -51,6 +52,7 @@ export enum Routes {
 export type RootStackParamList = {
   [Routes.InitialSetup]: undefined;
   [Routes.MainTabs]: NavigatorScreenParams<MainTabsParamList>;
+  [Routes.Hub]: undefined;
 };
 
 export type MainTabsParamList = {

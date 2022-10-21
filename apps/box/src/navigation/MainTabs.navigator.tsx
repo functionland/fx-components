@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import {
   FxBottomSheetModalMethods,
-  FxPlusIcon,
+  FxArrowUpIcon,
   useFxTheme,
 } from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -38,6 +38,10 @@ export const MainTabsNavigator = () => {
 
   const openGlobalBottomSheet = () => {
     globalBottomSheetRef.current.present();
+  };
+
+  const closeGlobalBottomSheet = () => {
+    globalBottomSheetRef.current.close();
   };
 
   return (
@@ -92,7 +96,7 @@ export const MainTabsNavigator = () => {
           component={HubScreen}
           options={{
             // eslint-disable-next-line react/no-unstable-nested-components
-            tabBarIcon: ({ color }) => <FxPlusIcon fill={color} />,
+            tabBarIcon: ({ color }) => <FxArrowUpIcon fill={color} />,
             tabBarLabel: '',
           }}
           listeners={() => ({
@@ -121,7 +125,10 @@ export const MainTabsNavigator = () => {
           }}
         />
       </MainTabs.Navigator>
-      <GlobalBottomSheet ref={globalBottomSheetRef} />
+      <GlobalBottomSheet
+        ref={globalBottomSheetRef}
+        closeBottomSheet={closeGlobalBottomSheet}
+      />
     </>
   );
 };
