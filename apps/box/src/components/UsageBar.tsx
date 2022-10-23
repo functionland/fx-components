@@ -67,7 +67,7 @@ interface UsageBarProps {
   totalCapacity: number;
   usages?: [Array<UsageBarUsage>, Array<UsageBarUsage>];
   onEditStart?: () => void;
-  onEditEnd?: () => void;
+  onEditEnd?: (percentage: number) => void;
 }
 export const UsageBar = ({
   isEditable,
@@ -87,8 +87,8 @@ export const UsageBar = ({
   const editStartHandler = () => {
     onEditStart && onEditStart();
   };
-  const editEndHandler = () => {
-    onEditEnd && onEditEnd();
+  const editEndHandler = (percentage: number) => {
+    onEditEnd && onEditEnd(percentage);
   };
 
   // calculates the bounds of the division split so that
@@ -121,14 +121,20 @@ export const UsageBar = ({
       runOnJS(editStartHandler)();
     },
     onActive: (event, ctx) => {
-      divisionPercent.value = clamp(
+      const percentage = clamp(
         toPercentage(ctx.offsetX + event.translationX, boundsX),
         clampBoundaries.value.low,
         clampBoundaries.value.high
       );
+      divisionPercent.value = percentage;
     },
-    onEnd: () => {
-      runOnJS(editEndHandler)();
+    onEnd: (event, ctx) => {
+      const percentage = clamp(
+        toPercentage(ctx.offsetX + event.translationX, boundsX),
+        clampBoundaries.value.low,
+        clampBoundaries.value.high
+      );
+      runOnJS(editEndHandler)(percentage);
     },
   });
 

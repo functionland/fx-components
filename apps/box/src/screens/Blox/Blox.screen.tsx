@@ -19,14 +19,19 @@ import { UsersCard } from '../../components/Cards/UsersCard';
 import { EarningCard } from '../../components/Cards/EarningCard';
 import { BloxInteractionModal } from './modals/BloxInteractionModal';
 import { Pool } from './components/Pool';
+import { QuoteStat } from './components/QuoteStat';
 import { mockHub } from '../../api/hub';
 import { mockFriendData } from '../../api/users';
 import { mockPoolData } from '../../api/pool';
 import { EBloxInteractionType } from '../../models';
 
+const DEFAULT_DIVISION = 70;
+
 export const BloxScreen = () => {
   const bloxInteractionModalRef = useRef<FxBottomSheetModalMethods>(null);
-  const divisionSplit = useSharedValue(70);
+  const divisionSplit = useSharedValue(DEFAULT_DIVISION);
+  const [divisionPercentage, setDivisionPercentage] =
+    useState<number>(DEFAULT_DIVISION);
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
     EBloxInteractionType.HomeBloxSetup
   );
@@ -38,6 +43,10 @@ export const BloxScreen = () => {
   const handleSelectMode = (mode: EBloxInteractionType) => {
     setSelectedMode(mode);
     bloxInteractionModalRef.current.close();
+  };
+
+  const handleUpdateDivisionPercentage = (percentage: number) => {
+    setDivisionPercentage(percentage);
   };
 
   return (
@@ -56,18 +65,11 @@ export const BloxScreen = () => {
           <UsageBar
             isEditable
             divisionPercent={divisionSplit}
+            onEditEnd={handleUpdateDivisionPercentage}
             totalCapacity={1000}
-            // usages={[
-            //   [
-            //     { color: 'red', usage: 10 },
-            //     { color: 'blue', usage: 30 },
-            //   ],
-            //   [
-            //     { color: 'green', usage: 20 },
-            //     { color: 'black', usage: 50 },
-            //   ],
-            // ]}
           />
+          <FxSpacer height={8} />
+          <QuoteStat divisionPercentage={divisionPercentage} />
           <FxSpacer height={24} />
           <ColorSettingsCard />
           <FxSpacer height={16} />
