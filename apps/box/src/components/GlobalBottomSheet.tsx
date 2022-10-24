@@ -10,7 +10,7 @@ import {
 } from '@functionland/component-library';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../constants/layout';
 import { HubIcon } from '../components';
-import { useRootNavigation } from '../hooks';
+import { useMainTabsNavigation } from '../hooks';
 import { Routes } from '../navigation/navigationConfig';
 
 const MENUS = [
@@ -30,7 +30,7 @@ export const GlobalBottomSheet = React.forwardRef<
   FxBottomSheetModalMethods,
   GlobalBottomSheetProps
 >((_, ref) => {
-  const navigation = useRootNavigation();
+  const navigation = useMainTabsNavigation();
   const theme = useFxTheme();
   const itemWidth = (SCREEN_WIDTH - APP_HORIZONTAL_PADDING * 2) / 4;
 
@@ -50,7 +50,7 @@ export const GlobalBottomSheet = React.forwardRef<
                 paddingVertical="4"
                 onPress={() => {
                   _.closeBottomSheet();
-                  navigation.navigate(Routes.Hub);
+                  navigation.navigate(Routes.HubTab);
                 }}
               >
                 <Icon fill={theme.colors.primary} />
