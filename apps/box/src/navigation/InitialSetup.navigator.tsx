@@ -16,6 +16,7 @@ export const InitialSetupNavigator = () => {
       <InitialSetupStack.Screen
         name={Routes.Welcome}
         component={WelcomeScreen}
+        options={{ headerShown: false }}
       />
       <InitialSetupStack.Screen
         name={Routes.WalletConnect}

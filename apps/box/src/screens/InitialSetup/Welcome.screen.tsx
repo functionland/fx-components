@@ -1,23 +1,18 @@
-import { FxBox, FxButton, FxText } from '@functionland/component-library';
 import React, { useState, useEffect } from 'react';
 import {
-  Platform,
-  PermissionsAndroid,
-  SafeAreaView,
-  StyleSheet,
-} from 'react-native';
+  FxSafeAreaBox,
+  FxBox,
+  FxButton,
+  FxText,
+} from '@functionland/component-library';
+import { Platform, PermissionsAndroid } from 'react-native';
 import { isEmulatorSync } from 'react-native-device-info';
 import { useIsConnectedToBox } from '../../hooks/useIsConnectedToBox';
-import {
-  useInitialSetupNavigation,
-  useRootNavigation,
-} from '../../hooks/useTypedNavigation';
-import { Blox } from '../../components';
+import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const rootNavigation = useRootNavigation();
   const isAndroid = Platform.OS === 'android';
   const [hasLocationPermission, setHasLocationPermission] = useState(
     !isAndroid
@@ -58,47 +53,45 @@ export const WelcomeScreen = () => {
   }, [isAndroid, hasLocationPermission]);
 
   return (
-    <SafeAreaView style={styles.flex1}>
-      <FxText padding="16" textAlign="center" variant="body">
-        Box Setup Up
-      </FxText>
-      <Blox />
-      <FxBox padding="20">
-        <FxButton
-          marginBottom="8"
-          size="large"
-          testID="app-name"
-          onPress={() => navigation.navigate(Routes.WalletConnect)}
+    <FxSafeAreaBox flex={1} justifyContent="flex-end">
+      <FxBox paddingHorizontal="20" paddingVertical="16" alignItems="center">
+        <FxText
+          letterSpacing={2}
+          variant="bodyXXSRegular"
+          marginBottom="16"
+          color="content1"
         >
-          Setup Wallet
-        </FxButton>
+          WELCOME
+        </FxText>
+        <FxText
+          fontFamily="Montserrat-Semibold"
+          fontSize={36}
+          lineHeight={48}
+          textAlign="center"
+          marginBottom="16"
+        >
+          Blox app setup
+        </FxText>
+        <FxText
+          variant="bodySmallRegular"
+          textAlign="center"
+          marginBottom="16"
+          color="content1"
+        >
+          Et ex nam hic qui minima neque dolore sunt repellendus. Commodi
+          explicabo qui.
+        </FxText>
         <FxButton
           marginBottom="8"
           testID="app-name"
           size="large"
+          width="100%"
           onPress={onConnectToBox}
           disabled={!hasCheckedLocationPermission}
         >
-          Connect To Box
-        </FxButton>
-        <FxButton
-          size="large"
-          onPress={() =>
-            rootNavigation.reset({
-              index: 0,
-              routes: [{ name: Routes.MainTabs }],
-            })
-          }
-        >
-          Setup Complete
+          Connect To Wallet
         </FxButton>
       </FxBox>
-    </SafeAreaView>
+    </FxSafeAreaBox>
   );
 };
-
-const styles = StyleSheet.create({
-  flex1: {
-    flex: 1,
-  },
-});
