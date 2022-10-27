@@ -26,6 +26,7 @@
     "@react-navigation/material-top-tabs": "^6.2.4",
     "@react-navigation/native": "^6.0.10",
     "@react-navigation/native-stack": "^6.6.2",
+    "@react-navigation/stack": "^6.3.2",
     "@react-spring/three": "^9.5.0",
     "@react-three/fiber": "^8.1.0",
     "@shopify/react-native-skia": "^0.1.136",

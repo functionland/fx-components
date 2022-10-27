@@ -1,12 +1,12 @@
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
+import { createStackNavigator } from '@react-navigation/stack';
 import { InitialSetupNavigator } from './InitialSetup.navigator';
 import { MainTabsNavigator } from './MainTabs.navigator';
 import { Routes, RootStackParamList } from './navigationConfig';
 
 export const RootNavigator = () => {
   return (
-    <RootStack.Navigator>
+    <RootStack.Navigator screenOptions={{ gestureEnabled: true }}>
       <RootStack.Screen
         name={Routes.InitialSetup}
         options={{ headerShown: false }}
@@ -21,4 +21,4 @@ export const RootNavigator = () => {
   );
 };
 
-const RootStack = createNativeStackNavigator<RootStackParamList>();
+const RootStack = createStackNavigator<RootStackParamList>();

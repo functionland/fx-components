@@ -46,6 +46,7 @@
     "lodash": "*",
     "@react-native-clipboard/clipboard": "*",
     "react-native-svg-transformer": "*",
-    "moment": "*"
+    "moment": "*",
+    "@react-navigation/stack": "*"
   }
 }
