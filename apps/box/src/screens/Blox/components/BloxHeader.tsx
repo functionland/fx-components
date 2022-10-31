@@ -7,7 +7,7 @@ import {
   FxChevronDownIcon,
   useFxTheme,
 } from '@functionland/component-library';
-import { EBloxInteractionType } from '../models';
+import { EBloxInteractionType } from '../../../models';
 
 type TBloxHeader = {
   selectedMode: EBloxInteractionType;
@@ -43,7 +43,10 @@ export const BloxHeader = ({ selectedMode, onChangeMode }: TBloxHeader) => {
         />
       </FxPressableOpacity>
 
-      <FxAvatar source={require('../api/mockAssets/sample.png')} size="small" />
+      <FxAvatar
+        source={require('../../../api/mockAssets/sample.png')}
+        size="small"
+      />
     </FxBox>
   );
 };

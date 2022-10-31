@@ -13,23 +13,33 @@ import { FxTextInputClasses } from '../theme/inputClasses';
 import { TextInput, TextInputProps } from 'react-native';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useFxTheme } from '../theme/useFxTheme';
+import { FxText } from '../text/text';
 
 type FxTextInputProps = TextProps<FxTheme> &
   BoxProps<FxTheme> &
   Omit<TextInputProps, 'placeholderTextColor' | 'selectionColor'> & {
+    caption?: string;
     disabled?: boolean;
     error?: boolean;
     isBottomSheetInput?: boolean;
   };
 
-type FxTextInputRestyleProps = Omit<FxTextInputProps, 'disabled' | 'error'>;
+type FxTextInputRestyleProps = Omit<
+  FxTextInputProps,
+  'disabled' | 'error' | 'caption'
+>;
 
 const restyleFunctions = composeRestyleFunctions<
   FxTheme,
   FxTextInputRestyleProps
 >([...textRestyleFunctions, ...boxRestyleFunctions]);
 
-const FxTextInput = ({ disabled, error, ...rest }: FxTextInputProps) => {
+const FxTextInput = ({
+  caption,
+  disabled,
+  error,
+  ...rest
+}: FxTextInputProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const variant = useMemo(() => {
     if (disabled) return 'disabled';
@@ -50,21 +60,28 @@ const FxTextInput = ({ disabled, error, ...rest }: FxTextInputProps) => {
   const Input = isBottomSheetInput ? BottomSheetTextInput : TextInput;
 
   return (
-    <Input
-      onFocus={(e) => {
-        setIsFocused(true);
-        if (onFocus) onFocus(e);
-      }}
-      onBlur={(e) => {
-        setIsFocused(false);
-        if (onBlur) onBlur(e);
-      }}
-      editable={!disabled}
-      placeholderTextColor={colors[placeholderTextColor]}
-      selectionColor={colors[selectionColor]}
-      blurOnSubmit
-      {...restyleProps}
-    />
+    <>
+      {caption && (
+        <FxText variant="bodySmallRegular" marginBottom="8" letterSpacing={0.2}>
+          {caption}
+        </FxText>
+      )}
+      <Input
+        onFocus={(e) => {
+          setIsFocused(true);
+          if (onFocus) onFocus(e);
+        }}
+        onBlur={(e) => {
+          setIsFocused(false);
+          if (onBlur) onBlur(e);
+        }}
+        editable={!disabled}
+        placeholderTextColor={colors[placeholderTextColor]}
+        selectionColor={colors[selectionColor]}
+        blurOnSubmit
+        {...restyleProps}
+      />
+    </>
   );
 };
 
