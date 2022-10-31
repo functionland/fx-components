@@ -46,12 +46,13 @@ export const ConnectToWifiScreen = () => {
     });
   };
 
-  const goBack = () => {
+  const handleBack = () => {
     navigation.goBack();
   };
 
   const handleNext = () => {
-    inputWifiPasswordModalRef.current.present();
+    navigation.navigate(Routes.SetupComplete);
+    // inputWifiPasswordModalRef.current.present();
   };
 
   return (
@@ -97,7 +98,7 @@ export const ConnectToWifiScreen = () => {
             variant="inverted"
             paddingHorizontal="20"
             marginRight="12"
-            onPress={goBack}
+            onPress={handleBack}
           >
             Back
           </FxButton>
