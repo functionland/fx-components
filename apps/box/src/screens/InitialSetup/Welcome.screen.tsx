@@ -48,10 +48,10 @@ export const WelcomeScreen = () => {
   useEffect(() => {
     if (isAndroid && !hasLocationPermission) {
       (async () => {
-        const isGranted = await PermissionsAndroid.check(
+        const isGranted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
         );
-        setHasLocationPermission(isGranted);
+        setHasLocationPermission(isGranted === 'granted');
         setHasCheckedLocationPermission(true);
       })();
     }
@@ -112,11 +112,13 @@ export const WelcomeScreen = () => {
         </ImageBackground>
       ) : (
         <>
-          <Image
-            source={require('../../../assets/images/blox_dark.png')}
-            style={styles.blox}
-            resizeMode="contain"
-          />
+          <FxBox flex={1} justifyContent="center" paddingTop="20">
+            <Image
+              source={require('../../../assets/images/blox_dark.png')}
+              style={styles.blox}
+              resizeMode="contain"
+            />
+          </FxBox>
           {renderContent()}
         </>
       )}
@@ -127,7 +129,6 @@ export const WelcomeScreen = () => {
 const styles = StyleSheet.create({
   blox: {
     width: '100%',
-    marginBottom: 56,
   },
   backgroundBlox: {
     width: '100%',
