@@ -12,3 +12,9 @@ export type TBloxInteraction = {
   darkIcon: FC<SvgProps>;
   lightIcon: FC<SvgProps>;
 };
+
+export enum EConnectionStatus {
+  connected = 'connected',
+  connecting = 'connecting',
+  failed = 'failed',
+}

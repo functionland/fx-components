@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   FxBox,
   FxButton,
+  FxPressableOpacity,
   FxProgressBar,
   FxText,
   FxSafeAreaBox,
@@ -10,31 +11,32 @@ import WifiManager from 'react-native-wifi-reborn';
 import { DEFAULT_NETWORK_NAME } from '../../hooks/useIsConnectedToBox';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
+import { EConnectionStatus } from '../../models';
 import BloxWifiDevice from '../../app/icons/blox-wifi-device.svg';
 
-enum EBloxConnectionStatus {
-  connected = 'connected',
-  connecting = 'connecting',
-  failed = 'failed',
-}
-
 const connectionStatusStrings = {
-  [EBloxConnectionStatus.connecting]: 'Connecting',
-  [EBloxConnectionStatus.connected]: 'Connected',
-  [EBloxConnectionStatus.failed]: 'Unable to connect to Blox.',
+  [EConnectionStatus.connecting]: 'Connecting',
+  [EConnectionStatus.connected]: 'Connected',
+  [EConnectionStatus.failed]: 'Unable to connect to Blox.',
 };
 
 export const ConnectToBloxScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const [connectionStatus, setConnectionStatus] =
-    useState<EBloxConnectionStatus>(EBloxConnectionStatus.connecting);
+  const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
+    EConnectionStatus.connecting
+  );
 
   useEffect(() => {
+    connectToBox();
+  }, []);
+
+  const connectToBox = () => {
+    setConnectionStatus(EConnectionStatus.connecting);
     WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(
-      () => setConnectionStatus(EBloxConnectionStatus.connected),
-      () => setConnectionStatus(EBloxConnectionStatus.failed)
+      () => setConnectionStatus(EConnectionStatus.connected),
+      () => setConnectionStatus(EConnectionStatus.failed)
     );
-  }, [navigation]);
+  };
 
   const goBack = () => navigation.goBack();
 
@@ -62,9 +64,11 @@ export const ConnectToBloxScreen = () => {
           borderRadius="s"
           paddingHorizontal="16"
         >
-          <FxText variant="bodyMediumRegular" paddingVertical="16">
-            Box
-          </FxText>
+          <FxPressableOpacity onPress={connectToBox}>
+            <FxText variant="bodyMediumRegular" paddingVertical="16">
+              Box
+            </FxText>
+          </FxPressableOpacity>
         </FxBox>
         <FxBox
           flexDirection="row"
@@ -83,7 +87,7 @@ export const ConnectToBloxScreen = () => {
           <FxButton
             paddingHorizontal="40"
             onPress={handleNext}
-            // disabled={connectionStatus !== EBloxConnectionStatus.connected}
+            disabled={connectionStatus !== EConnectionStatus.connected}
           >
             Next
           </FxButton>

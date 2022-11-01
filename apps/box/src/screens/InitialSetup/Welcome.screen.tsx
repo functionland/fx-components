@@ -1,12 +1,6 @@
-import React /* { useState, useEffect } */ from 'react';
+import React from 'react';
 import { FxBox, FxButton, FxText } from '@functionland/component-library';
-import {
-  Image,
-  ImageBackground,
-  // Platform,
-  // PermissionsAndroid,
-  StyleSheet,
-} from 'react-native';
+import { Image, ImageBackground, StyleSheet } from 'react-native';
 // import { isEmulatorSync } from 'react-native-device-info';
 import { useIsConnectedToBox } from '../../hooks/useIsConnectedToBox';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
@@ -15,12 +9,7 @@ import { Routes } from '../../navigation/navigationConfig';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
-  // const isAndroid = Platform.OS === 'android';
-  // const [hasLocationPermission, setHasLocationPermission] = useState(
-  //   !isAndroid
-  // );
-  // const [hasCheckedLocationPermission, setHasCheckedLocationPermission] =
-  //   useState(!isAndroid);
+
   const isConnectedToBox = useIsConnectedToBox();
   const { colorScheme } = useSettingsStore((store) => ({
     colorScheme: store.colorScheme,
@@ -31,31 +20,12 @@ export const WelcomeScreen = () => {
     //   alert('Emulators cannot connect to the Box');
     //   return;
     // }
-    // if (hasLocationPermission) {
     if (isConnectedToBox) {
       navigation.navigate(Routes.ConnectToWifi);
     } else {
       navigation.navigate(Routes.ConnectToBlox);
     }
-    // } else {
-    /**
-     * @todo: Add Location Permission screen or dialogue for android
-     */
-    // navigation.navigate('Location Permission');
-    // }
   };
-
-  // useEffect(() => {
-  //   if (isAndroid && !hasLocationPermission) {
-  //     (async () => {
-  //       const isGranted = await PermissionsAndroid.request(
-  //         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-  //       );
-  //       setHasLocationPermission(isGranted === 'granted');
-  //       setHasCheckedLocationPermission(true);
-  //     })();
-  //   }
-  // }, [isAndroid, hasLocationPermission]);
 
   const renderContent = () => {
     return (
@@ -93,9 +63,8 @@ export const WelcomeScreen = () => {
           size="large"
           width="100%"
           onPress={onConnectToBox}
-          // disabled={!hasCheckedLocationPermission}
         >
-          Connect To Wallet
+          Setup my Blox
         </FxButton>
       </FxBox>
     );

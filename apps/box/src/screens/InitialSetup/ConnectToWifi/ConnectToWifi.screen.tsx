@@ -14,6 +14,7 @@ import { InputWifiPasswordModal } from './modals/InputWifiPasswordModal';
 import { useInitialSetupNavigation, useFetch } from '../../../hooks';
 import { getWifiList, postWifiConnect } from '../../../api/wifi';
 import { Routes } from '../../../navigation/navigationConfig';
+import { EConnectionStatus } from '../../../models';
 import BloxWifiDevice from '../../../app/icons/blox-wifi-device.svg';
 
 const ItemSeparatorComponent = () => {
@@ -24,6 +25,9 @@ export const ConnectToWifiScreen = () => {
   const navigation = useInitialSetupNavigation();
   const inputWifiPasswordModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [selectedSsid, setSelectedSsid] = useState<string>(null);
+  const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
+    EConnectionStatus.connecting
+  );
   const {
     loading,
     // error,
@@ -34,16 +38,20 @@ export const ConnectToWifiScreen = () => {
 
   const connectWifi = async (ssid: string, password: string) => {
     try {
+      setConnectionStatus(EConnectionStatus.connecting);
       await postWifiConnect({
         ssid: ssid ?? uniqueSsids[0],
         password,
         countryCode: RNLocalize.getCountry(),
       });
-    } catch (err) {}
+      setConnectionStatus(EConnectionStatus.connected);
+    } catch (err) {
+      setConnectionStatus(EConnectionStatus.failed);
+    }
 
-    navigation.navigate(Routes.CheckConnection, {
-      ssid: ssid ?? uniqueSsids[0],
-    });
+    // navigation.navigate(Routes.CheckConnection, {
+    //   ssid: ssid ?? uniqueSsids[0],
+    // });
   };
 
   const handleBack = () => {
@@ -102,7 +110,11 @@ export const ConnectToWifiScreen = () => {
           >
             Back
           </FxButton>
-          <FxButton paddingHorizontal="40" onPress={handleNext}>
+          <FxButton
+            paddingHorizontal="40"
+            onPress={handleNext}
+            disabled={connectionStatus !== EConnectionStatus.connected}
+          >
             Next
           </FxButton>
         </FxBox>
