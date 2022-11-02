@@ -10,9 +10,9 @@ import {
   WINDOW_WIDTH,
   useFxTheme,
 } from '@functionland/component-library';
-import { useSettingsStore } from '../stores';
-import { EBloxInteractionType } from '../models';
-import { bloxInteractions } from '../api/blox';
+import { useSettingsStore } from '../../../stores';
+import { EBloxInteractionType } from '../../../models';
+import { bloxInteractions } from '../../../api/blox';
 
 type TBloxInteraction = {
   selectedMode: EBloxInteractionType;

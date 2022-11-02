@@ -8,15 +8,15 @@ import {
 } from '@functionland/component-library';
 import { ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
-import { BloxHeader } from '../../components/BloxHeader';
 import {
   ColorSettingsCard,
   ConnectedDevicesCard,
   UsageBar,
-  BloxInteraction,
 } from '../../components';
 import { UsersCard } from '../../components/Cards/UsersCard';
 import { EarningCard } from '../../components/Cards/EarningCard';
+import { BloxHeader } from './components/BloxHeader';
+import { BloxInteraction } from './components/BloxInteraction';
 import { BloxInteractionModal } from './modals/BloxInteractionModal';
 import { Pool } from './components/Pool';
 import { QuoteStat } from './components/QuoteStat';

@@ -1,104 +1,107 @@
+import React from 'react';
 import { FxBox, FxButton, FxText } from '@functionland/component-library';
-import React, { useState, useEffect } from 'react';
-import {
-  Platform,
-  PermissionsAndroid,
-  SafeAreaView,
-  StyleSheet,
-} from 'react-native';
-import { isEmulatorSync } from 'react-native-device-info';
+import { Image, ImageBackground, StyleSheet } from 'react-native';
+// import { isEmulatorSync } from 'react-native-device-info';
 import { useIsConnectedToBox } from '../../hooks/useIsConnectedToBox';
-import {
-  useInitialSetupNavigation,
-  useRootNavigation,
-} from '../../hooks/useTypedNavigation';
-import { Blox } from '../../components';
+import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
+import { useSettingsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const rootNavigation = useRootNavigation();
-  const isAndroid = Platform.OS === 'android';
-  const [hasLocationPermission, setHasLocationPermission] = useState(
-    !isAndroid
-  );
-  const [hasCheckedLocationPermission, setHasCheckedLocationPermission] =
-    useState(!isAndroid);
+
   const isConnectedToBox = useIsConnectedToBox();
+  const { colorScheme } = useSettingsStore((store) => ({
+    colorScheme: store.colorScheme,
+  }));
 
   const onConnectToBox = () => {
-    if (isEmulatorSync()) {
-      alert('Emulators cannot connect to the Box');
-      return;
-    }
-    if (hasLocationPermission) {
-      if (isConnectedToBox) {
-        navigation.navigate(Routes.SetupWifi);
-      } else {
-        navigation.navigate(Routes.ConnectToBlox);
-      }
+    // if (isEmulatorSync()) {
+    //   alert('Emulators cannot connect to the Box');
+    //   return;
+    // }
+    if (isConnectedToBox) {
+      navigation.navigate(Routes.ConnectToWifi);
     } else {
-      /**
-       * @todo: Add Location Permission screen or dialogue for android
-       */
-      // navigation.navigate('Location Permission');
+      navigation.navigate(Routes.ConnectToBlox);
     }
   };
 
-  useEffect(() => {
-    if (isAndroid && !hasLocationPermission) {
-      (async () => {
-        const isGranted = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-        );
-        setHasLocationPermission(isGranted);
-        setHasCheckedLocationPermission(true);
-      })();
-    }
-  }, [isAndroid, hasLocationPermission]);
-
-  return (
-    <SafeAreaView style={styles.flex1}>
-      <FxText padding="16" textAlign="center" variant="body">
-        Box Setup Up
-      </FxText>
-      <Blox />
-      <FxBox padding="20">
-        <FxButton
-          marginBottom="8"
-          size="large"
-          testID="app-name"
-          onPress={() => navigation.navigate(Routes.WalletConnect)}
+  const renderContent = () => {
+    return (
+      <FxBox paddingHorizontal="20" paddingVertical="40" alignItems="center">
+        <FxText
+          letterSpacing={2}
+          variant="bodyXXSRegular"
+          marginBottom="16"
+          color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
         >
-          Setup Wallet
-        </FxButton>
+          Hello Functionlander!
+        </FxText>
+        <FxText
+          fontFamily="Montserrat-Semibold"
+          fontSize={36}
+          lineHeight={48}
+          textAlign="center"
+          marginBottom="16"
+          color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
+        >
+          Blox App
+        </FxText>
+        <FxText
+          variant="bodySmallRegular"
+          textAlign="center"
+          marginBottom="16"
+          color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
+        >
+          Start setting up your Blox in a few clicks by clicking on the button
+          below
+        </FxText>
         <FxButton
           marginBottom="8"
           testID="app-name"
           size="large"
+          width="100%"
           onPress={onConnectToBox}
-          disabled={!hasCheckedLocationPermission}
         >
-          Connect To Box
-        </FxButton>
-        <FxButton
-          size="large"
-          onPress={() =>
-            rootNavigation.reset({
-              index: 0,
-              routes: [{ name: Routes.MainTabs }],
-            })
-          }
-        >
-          Setup Complete
+          Setup my Blox
         </FxButton>
       </FxBox>
-    </SafeAreaView>
+    );
+  };
+
+  return (
+    <FxBox flex={1} justifyContent="flex-end">
+      {colorScheme === 'light' ? (
+        <ImageBackground
+          source={require('../../../assets/images/welcome_bg_light.png')}
+          style={styles.backgroundBlox}
+        >
+          {renderContent()}
+        </ImageBackground>
+      ) : (
+        <>
+          <FxBox flex={1} justifyContent="center" paddingTop="20">
+            <Image
+              source={require('../../../assets/images/blox_dark.png')}
+              style={styles.blox}
+              resizeMode="contain"
+            />
+          </FxBox>
+          {renderContent()}
+        </>
+      )}
+    </FxBox>
   );
 };
 
 const styles = StyleSheet.create({
-  flex1: {
-    flex: 1,
+  blox: {
+    width: '100%',
+  },
+  backgroundBlox: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'flex-end',
   },
 });

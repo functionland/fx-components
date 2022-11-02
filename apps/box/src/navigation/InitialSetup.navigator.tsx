@@ -4,7 +4,7 @@ import {
   WelcomeScreen,
   WalletConnectScreen,
   ConnectToBloxScreen,
-  SetupWifiScreen,
+  ConnectToWifiScreen,
   SetupCompleteScreen,
   CheckConnectionScreen,
 } from '../screens/InitialSetup';
@@ -12,7 +12,7 @@ import { Routes, InitialSetupStackParamList } from './navigationConfig';
 
 export const InitialSetupNavigator = () => {
   return (
-    <InitialSetupStack.Navigator>
+    <InitialSetupStack.Navigator screenOptions={{ headerShown: false }}>
       <InitialSetupStack.Screen
         name={Routes.Welcome}
         component={WelcomeScreen}
@@ -26,8 +26,8 @@ export const InitialSetupNavigator = () => {
         component={ConnectToBloxScreen}
       />
       <InitialSetupStack.Screen
-        name={Routes.SetupWifi}
-        component={SetupWifiScreen}
+        name={Routes.ConnectToWifi}
+        component={ConnectToWifiScreen}
       />
       <InitialSetupStack.Screen
         name={Routes.CheckConnection}
