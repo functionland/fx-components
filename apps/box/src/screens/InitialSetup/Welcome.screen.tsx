@@ -36,7 +36,7 @@ export const WelcomeScreen = () => {
           marginBottom="16"
           color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
         >
-          WELCOME
+          Hello Functionlander!
         </FxText>
         <FxText
           fontFamily="Montserrat-Semibold"
@@ -46,7 +46,7 @@ export const WelcomeScreen = () => {
           marginBottom="16"
           color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
         >
-          Blox app setup
+          Blox App
         </FxText>
         <FxText
           variant="bodySmallRegular"
@@ -54,8 +54,8 @@ export const WelcomeScreen = () => {
           marginBottom="16"
           color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
         >
-          Et ex nam hic qui minima neque dolore sunt repellendus. Commodi
-          explicabo qui.
+          Start setting up your Blox in a few clicks by clicking on the button
+          below
         </FxText>
         <FxButton
           marginBottom="8"
