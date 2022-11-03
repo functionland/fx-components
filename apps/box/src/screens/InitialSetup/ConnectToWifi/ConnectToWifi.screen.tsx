@@ -30,11 +30,15 @@ export const ConnectToWifiScreen = () => {
   );
   const {
     loading,
-    // error,
+    error,
     data: networks,
   } = useFetch({ apiMethod: getWifiList });
+  console.log('networks ', networks);
+  console.log('error ', error);
   const ssids = networks?.data.map(({ ssid: network }) => network);
+  console.log('ssids ', ssids);
   const uniqueSsids = [...new Set(ssids)];
+  console.log('uniqueSsids ', uniqueSsids);
 
   const connectWifi = async (ssid: string, password: string) => {
     try {
