@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as RNLocalize from 'react-native-localize';
 import {
   FxBottomSheetModal,
   FxBottomSheetModalMethods,
@@ -7,21 +8,44 @@ import {
   FxSpacer,
   FxText,
   FxTextInput,
+  useToast,
 } from '@functionland/component-library';
+import { EConnectionStatus } from '../../../../models';
+import { postWifiConnect } from '../../../../api/wifi';
 
 type TInputWifiPasswordModalProps = {
   ssid: string;
-  onConnect: (ssid: string, password: string) => void;
+  onConnect: (ssid: string) => void;
 };
 
 export const InputWifiPasswordModal = React.forwardRef<
   FxBottomSheetModalMethods,
   TInputWifiPasswordModalProps
 >((_, ref) => {
+  const { queueToast } = useToast();
+  const [connectionStatus, setConnectionStatus] =
+    useState<EConnectionStatus>(null);
   const [password, setPassword] = useState<string>('');
 
-  const handleConnect = () => {
-    _.onConnect(_.ssid, password);
+  const connectWifi = async () => {
+    try {
+      setConnectionStatus(EConnectionStatus.connecting);
+      await postWifiConnect({
+        ssid: _.ssid,
+        password,
+        countryCode: RNLocalize.getCountry(),
+      });
+      setConnectionStatus(EConnectionStatus.connected);
+      _.onConnect(_.ssid);
+    } catch (err) {
+      setConnectionStatus(EConnectionStatus.failed);
+      queueToast({
+        title: 'Error',
+        message: 'Unable to connect to wifi.',
+        type: 'error',
+        autoHideDuration: 3000,
+      });
+    }
   };
 
   return (
@@ -40,10 +64,15 @@ export const InputWifiPasswordModal = React.forwardRef<
         <FxSpacer height={40} />
         <FxButton
           size="large"
-          disabled={password.length ? false : true}
-          onPress={handleConnect}
+          disabled={
+            connectionStatus === EConnectionStatus.connecting ||
+            (password.length ? false : true)
+          }
+          onPress={connectWifi}
         >
-          Connect
+          {connectionStatus === EConnectionStatus.connecting
+            ? 'Connecting'
+            : 'Connect'}
         </FxButton>
       </FxBox>
     </FxBottomSheetModal>

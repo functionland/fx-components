@@ -8,13 +8,11 @@ import {
   FxBottomSheetModalMethods,
 } from '@functionland/component-library';
 import { FlatList } from 'react-native';
-import * as RNLocalize from 'react-native-localize';
 import { WifiDeviceItem } from './components/WifiDeviceItem';
 import { InputWifiPasswordModal } from './modals/InputWifiPasswordModal';
 import { useInitialSetupNavigation, useFetch } from '../../../hooks';
-import { getWifiList, postWifiConnect } from '../../../api/wifi';
+import { getWifiList } from '../../../api/wifi';
 import { Routes } from '../../../navigation/navigationConfig';
-import { EConnectionStatus } from '../../../models';
 import BloxWifiDevice from '../../../app/icons/blox-wifi-device.svg';
 
 const ItemSeparatorComponent = () => {
@@ -25,34 +23,17 @@ export const ConnectToWifiScreen = () => {
   const navigation = useInitialSetupNavigation();
   const inputWifiPasswordModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [selectedSsid, setSelectedSsid] = useState<string>(null);
-  const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
-    EConnectionStatus.connecting
-  );
+  const [connectedSsid, setConnectedSsid] = useState<string>(null);
   const {
     loading,
     // error,
     data: networks,
   } = useFetch({ apiMethod: getWifiList });
-  const ssids = networks?.data.map(({ ssid: network }) => network);
+  const ssids = networks?.data
+    .map(({ ssid: network }) => network)
+    .filter((ssid) => ssid)
+    .sort();
   const uniqueSsids = [...new Set(ssids)];
-
-  const connectWifi = async (ssid: string, password: string) => {
-    try {
-      setConnectionStatus(EConnectionStatus.connecting);
-      await postWifiConnect({
-        ssid: ssid ?? uniqueSsids[0],
-        password,
-        countryCode: RNLocalize.getCountry(),
-      });
-      setConnectionStatus(EConnectionStatus.connected);
-    } catch (err) {
-      setConnectionStatus(EConnectionStatus.failed);
-    }
-
-    // navigation.navigate(Routes.CheckConnection, {
-    //   ssid: ssid ?? uniqueSsids[0],
-    // });
-  };
 
   const handleBack = () => {
     navigation.goBack();
@@ -60,7 +41,16 @@ export const ConnectToWifiScreen = () => {
 
   const handleNext = () => {
     navigation.navigate(Routes.SetupComplete);
-    // inputWifiPasswordModalRef.current.present();
+  };
+
+  const handleSelectedWifiDevice = (ssid: string) => {
+    inputWifiPasswordModalRef.current.present();
+    setSelectedSsid(ssid);
+  };
+
+  const handleOnConnectWifi = (ssid: string) => {
+    inputWifiPasswordModalRef.current.close();
+    setConnectedSsid(ssid);
   };
 
   return (
@@ -90,8 +80,8 @@ export const ConnectToWifiScreen = () => {
             renderItem={({ item }) => (
               <WifiDeviceItem
                 ssid={item}
-                selected={item === selectedSsid}
-                setSelectedWifiDevice={setSelectedSsid}
+                connected={item === connectedSsid}
+                setSelectedWifiDevice={handleSelectedWifiDevice}
               />
             )}
           />
@@ -113,7 +103,7 @@ export const ConnectToWifiScreen = () => {
           <FxButton
             paddingHorizontal="40"
             onPress={handleNext}
-            disabled={connectionStatus !== EConnectionStatus.connected}
+            disabled={!connectedSsid}
           >
             Next
           </FxButton>
@@ -122,7 +112,7 @@ export const ConnectToWifiScreen = () => {
       <InputWifiPasswordModal
         ssid={selectedSsid}
         ref={inputWifiPasswordModalRef}
-        onConnect={connectWifi}
+        onConnect={handleOnConnectWifi}
       />
     </FxSafeAreaBox>
   );
