@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type FxBottomSheetModalProps = Pick<BottomSheetModalProps, 'onDismiss'> & {
   title?: string;
+  keyboardShouldPersistTaps?: 'never' | 'handled';
   children?: FxBoxProps['children'];
 };
 
@@ -28,7 +29,7 @@ export type FxBottomSheetModalMethods = BottomSheetModal;
 export const FxBottomSheetModal = React.forwardRef<
   BottomSheetModal,
   FxBottomSheetModalProps
->(({ title, children, ...rest }, ref) => {
+>(({ title, keyboardShouldPersistTaps = 'never', children, ...rest }, ref) => {
   const theme = useFxTheme();
   const insets = useSafeAreaInsets();
   const bottomSheetModalRef = React.useRef<BottomSheetModal>(null);
@@ -76,6 +77,7 @@ export const FxBottomSheetModal = React.forwardRef<
         contentContainerStyle={{
           paddingBottom: insets.bottom + 20,
         }}
+        keyboardShouldPersistTaps={keyboardShouldPersistTaps}
       >
         <FxBox
           flexDirection="row"

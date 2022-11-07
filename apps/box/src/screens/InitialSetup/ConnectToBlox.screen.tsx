@@ -9,6 +9,7 @@ import {
 } from '@functionland/component-library';
 import WifiManager from 'react-native-wifi-reborn';
 import { DEFAULT_NETWORK_NAME } from '../../hooks/useIsConnectedToBox';
+import { useIsConnectedToBox } from '../../hooks/useIsConnectedToBox';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { EConnectionStatus } from '../../models';
@@ -22,18 +23,27 @@ const connectionStatusStrings = {
 
 export const ConnectToBloxScreen = () => {
   const navigation = useInitialSetupNavigation();
+  const isConnectedToBox = useIsConnectedToBox();
   const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
     EConnectionStatus.connecting
   );
 
   useEffect(() => {
-    connectToBox();
-  }, []);
+    if (isConnectedToBox) {
+      handleNext();
+    } else {
+      connectToBox();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnectedToBox]);
 
   const connectToBox = () => {
     setConnectionStatus(EConnectionStatus.connecting);
     WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(
-      () => setConnectionStatus(EConnectionStatus.connected),
+      () => {
+        setConnectionStatus(EConnectionStatus.connected);
+        handleNext();
+      },
       () => setConnectionStatus(EConnectionStatus.failed)
     );
   };
@@ -64,7 +74,10 @@ export const ConnectToBloxScreen = () => {
           borderRadius="s"
           paddingHorizontal="16"
         >
-          <FxPressableOpacity onPress={connectToBox}>
+          <FxPressableOpacity
+            disabled={connectionStatus === EConnectionStatus.connected}
+            onPress={connectToBox}
+          >
             <FxText variant="bodyMediumRegular" paddingVertical="16">
               Box
             </FxText>

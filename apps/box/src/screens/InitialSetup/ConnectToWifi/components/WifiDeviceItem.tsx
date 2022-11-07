@@ -8,13 +8,13 @@ import {
 
 type TWifiDeviceItem = {
   ssid: string;
-  selected: boolean;
+  connected: boolean;
   setSelectedWifiDevice: Dispatch<SetStateAction<string>>;
 };
 
 export const WifiDeviceItem = ({
   ssid,
-  selected,
+  connected,
   setSelectedWifiDevice,
 }: TWifiDeviceItem) => {
   const theme = useFxTheme();
@@ -33,7 +33,7 @@ export const WifiDeviceItem = ({
       <FxText variant="bodyMediumRegular" paddingVertical="16">
         {ssid}
       </FxText>
-      {selected && (
+      {connected && (
         <FxInvertedCheckIcon
           width={20}
           height={20}
