@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import {
   FxBox,
   FxButton,
+  FxLoadingSpinner,
   FxProgressBar,
   FxSafeAreaBox,
   FxText,
@@ -51,6 +52,7 @@ export const ConnectToWifiScreen = () => {
   const handleOnConnectWifi = (ssid: string) => {
     inputWifiPasswordModalRef.current.close();
     setConnectedSsid(ssid);
+    handleNext();
   };
 
   return (
@@ -63,9 +65,18 @@ export const ConnectToWifiScreen = () => {
         <FxText variant="h300" marginBottom="12">
           Connect to Wi-Fi
         </FxText>
-        <FxText variant="bodySmallRegular" marginBottom="8">
-          {loading ? 'Searching Wi-Fi Network' : 'Select Wi-Fi Network'}
-        </FxText>
+        {loading ? (
+          <FxBox flexDirection="row" alignItems="center" marginBottom="8">
+            <FxLoadingSpinner />
+            <FxText variant="bodySmallRegular" marginLeft="4">
+              Searching Wi-Fi Network
+            </FxText>
+          </FxBox>
+        ) : (
+          <FxText variant="bodySmallRegular" marginBottom="8">
+            Select Wi-Fi Network
+          </FxText>
+        )}
         <FxBox
           height={180}
           borderColor="border"

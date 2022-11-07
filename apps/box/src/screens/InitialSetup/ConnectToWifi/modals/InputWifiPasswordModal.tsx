@@ -49,7 +49,7 @@ export const InputWifiPasswordModal = React.forwardRef<
   };
 
   return (
-    <FxBottomSheetModal ref={ref}>
+    <FxBottomSheetModal ref={ref} keyboardShouldPersistTaps="handled">
       <FxBox paddingTop="48" paddingBottom="20">
         <FxText variant="h200">{`Enter password for "${_.ssid}"`}</FxText>
         <FxSpacer height={40} />
