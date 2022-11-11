@@ -9,12 +9,15 @@ import {
   FxChevronRightIcon,
   useFxTheme,
 } from '@functionland/component-library';
+import { useBloxStackNavigation } from '../../../hooks';
+import { Routes } from '../../../navigation/navigationConfig';
 
 type TQuoteStat = {
   divisionPercentage: number;
 };
 
 export const QuoteStat = ({ divisionPercentage }: TQuoteStat) => {
+  const navigation = useBloxStackNavigation();
   const theme = useFxTheme();
   const poolPercentage = Math.round(divisionPercentage);
 
@@ -34,6 +37,7 @@ export const QuoteStat = ({ divisionPercentage }: TQuoteStat) => {
         justifyContent="space-between"
         alignItems="center"
         paddingVertical="8"
+        onPress={() => navigation.navigate(Routes.UsageTool)}
       >
         <FxBox flexDirection="row" alignItems="center">
           <FxBox
@@ -56,6 +60,7 @@ export const QuoteStat = ({ divisionPercentage }: TQuoteStat) => {
         justifyContent="space-between"
         alignItems="center"
         paddingVertical="8"
+        onPress={() => navigation.navigate(Routes.UsageTool)}
       >
         <FxBox flexDirection="row" alignItems="center">
           <FxBox

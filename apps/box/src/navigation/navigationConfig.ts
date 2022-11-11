@@ -26,6 +26,10 @@ export enum Routes {
   DevicesTab = 'DevicesTab',
   SettingsTab = 'SettingsTab',
 
+  // Blox Stack
+  Blox = 'Blox',
+  UsageTool = 'UsageTool',
+
   // Settings Stack
   Settings = 'Settings',
   ConnectedDApps = 'ConnectedDApps',
@@ -56,11 +60,16 @@ export type RootStackParamList = {
 };
 
 export type MainTabsParamList = {
-  [Routes.BloxTab]: undefined;
+  [Routes.BloxTab]: NavigatorScreenParams<BloxStackParamList>;
   [Routes.UsersTab]: undefined;
   [Routes.HubTab]: undefined;
   [Routes.DevicesTab]: undefined;
   [Routes.SettingsTab]: NavigatorScreenParams<SettingsStackParamList>;
+};
+
+export type BloxStackParamList = {
+  [Routes.Blox]: undefined;
+  [Routes.UsageTool]: undefined;
 };
 
 export type SettingsStackParamList = {

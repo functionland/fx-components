@@ -5,6 +5,7 @@ import {
   InitialSetupStackParamList,
   RootStackParamList,
   MainTabsParamList,
+  BloxStackParamList,
 } from '../navigation/navigationConfig';
 
 export const useRootNavigation = () =>
@@ -15,3 +16,6 @@ export const useInitialSetupNavigation = () =>
 
 export const useMainTabsNavigation = () =>
   useNavigation<BottomTabNavigationProp<MainTabsParamList>>();
+
+export const useBloxStackNavigation = () =>
+  useNavigation<NativeStackNavigationProp<BloxStackParamList>>();

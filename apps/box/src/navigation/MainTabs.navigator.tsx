@@ -5,11 +5,11 @@ import {
   FxArrowUpIcon,
   useFxTheme,
 } from '@functionland/component-library';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { BloxScreen } from '../screens/Blox/Blox.screen';
+import { BloxNavigator } from './Blox.navigator';
 import { HubScreen } from '../screens/Hub.screen';
 import { DevicesScreen } from '../screens/Devices.screen';
 import { UsersScreen } from '../screens/Users/Users.screen';
+import { SettingsNavigator } from './Settings.navigator';
 import {
   BloxIcon,
   UserIcon,
@@ -17,20 +17,10 @@ import {
   DevicesIcon,
   SettingsIcon,
 } from '../components';
-import {
-  Routes,
-  MainTabsParamList,
-  SettingsStackParamList,
-} from './navigationConfig';
-import {
-  SettingsScreen,
-  AboutScreen,
-  PoolsScreen,
-  ModeScreen,
-  ConnectedDAppsScreen,
-} from '../screens/Settings';
-import { ComponentGalleryNavigator } from './ComponentGallery.navigator';
+import { Routes, MainTabsParamList } from './navigationConfig';
 import { GlobalBottomSheet } from '../components/GlobalBottomSheet';
+
+const MainTabs = createMaterialTopTabNavigator<MainTabsParamList>();
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
@@ -75,7 +65,7 @@ export const MainTabsNavigator = () => {
       >
         <MainTabs.Screen
           name={Routes.BloxTab}
-          component={BloxScreen}
+          component={BloxNavigator}
           options={{
             // eslint-disable-next-line react/no-unstable-nested-components
             tabBarIcon: ({ color }) => <BloxIcon fill={color} />,
@@ -130,47 +120,5 @@ export const MainTabsNavigator = () => {
         closeBottomSheet={closeGlobalBottomSheet}
       />
     </>
-  );
-};
-
-const MainTabs = createMaterialTopTabNavigator<MainTabsParamList>();
-
-const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
-const SettingsNavigator = () => {
-  const theme = useFxTheme();
-
-  return (
-    <SettingsStack.Navigator
-      screenOptions={() => ({
-        headerBackTitleVisible: false,
-        headerBackImageSource: require('../../assets/icons/back.png'),
-        headerTintColor: theme.colors.content1,
-        headerStyle: {
-          backgroundColor: theme.colors.backgroundApp,
-        },
-        headerTitle: '',
-      })}
-    >
-      <SettingsStack.Screen
-        name={Routes.Settings}
-        component={SettingsScreen}
-        options={{ headerShown: false }}
-      />
-      <SettingsStack.Screen
-        name={Routes.ConnectedDApps}
-        component={ConnectedDAppsScreen}
-      />
-      <SettingsStack.Screen name={Routes.Mode} component={ModeScreen} />
-      <SettingsStack.Screen name={Routes.Pools} component={PoolsScreen} />
-      <SettingsStack.Screen name={Routes.About} component={AboutScreen} />
-
-      <SettingsStack.Screen
-        options={() => ({
-          headerShown: false,
-        })}
-        name={Routes.ComponentGallery}
-        component={ComponentGalleryNavigator}
-      />
-    </SettingsStack.Navigator>
   );
 };
