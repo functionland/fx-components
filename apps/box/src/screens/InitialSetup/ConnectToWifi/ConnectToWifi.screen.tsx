@@ -57,7 +57,7 @@ export const ConnectToWifiScreen = () => {
 
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
-      <FxProgressBar progress={200 / 3} />
+      <FxProgressBar progress={80} />
       <FxBox flex={1} justifyContent="center" alignItems="center">
         <BloxWifiDevice />
       </FxBox>

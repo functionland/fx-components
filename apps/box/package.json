@@ -30,6 +30,7 @@
     "react-native-screens": "*",
     "react-native-svg": "*",
     "react-native-tab-view": "*",
+    "react-native-webview": "*",
     "react-native-wifi-reborn": "*",
     "zustand": "*",
     "@react-three/fiber": "*",
@@ -47,6 +48,9 @@
     "@react-native-clipboard/clipboard": "*",
     "react-native-svg-transformer": "*",
     "moment": "*",
-    "@react-navigation/stack": "*"
+    "@react-navigation/stack": "*",
+    "@functionland/fula-sec": "*",
+    "text-encoding-polyfill": "*",
+    "react-native-keychain": "*"
   }
 }

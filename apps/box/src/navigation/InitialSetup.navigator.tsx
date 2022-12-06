@@ -2,7 +2,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import {
   WelcomeScreen,
-  WalletConnectScreen,
+  LinkPasswordScreen,
+  ConnectToWalletScreen,
   ConnectToBloxScreen,
   ConnectToWifiScreen,
   SetupCompleteScreen,
@@ -18,8 +19,12 @@ export const InitialSetupNavigator = () => {
         component={WelcomeScreen}
       />
       <InitialSetupStack.Screen
-        name={Routes.WalletConnect}
-        component={WalletConnectScreen}
+        name={Routes.LinkPassword}
+        component={LinkPasswordScreen}
+      />
+      <InitialSetupStack.Screen
+        name={Routes.ConnectToWallet}
+        component={ConnectToWalletScreen}
       />
       <InitialSetupStack.Screen
         name={Routes.ConnectToBlox}
