@@ -13,20 +13,28 @@ import {
 } from '@functionland/component-library';
 import { useWalletConnect } from '@walletconnect/react-native-dapp';
 import { useInitialSetupNavigation } from '../../hooks';
-import * as Keychain from '../../utils/keychain';
 import { Routes } from '../../navigation/navigationConfig';
 import * as helper from '../../utils/helper';
+import { useUserProfileStore } from '../../stores/useUserProfileStore';
+import { KeyChain } from '../../utils';
+import { ActivityIndicator } from 'react-native';
 
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
   const walletConnector = useWalletConnect();
   const { queueToast } = useToast();
   const [password, setPassword] = useState<string>('');
+  const [linking, setLinking] = useState(false)
   const [dIDCredentialsState, setDIDCredentialsState] =
     useState<null | ReactNativeKeychain.UserCredentials>(null);
-
+  const [setKeyChainValue, signiture] = useUserProfileStore(state => [state.setKeyChainValue, state.signiture])
   const handleLinkPassword = async () => {
     try {
+      if(linking){
+        setLinking(false);
+        return;
+      }
+      setLinking(true);
       const ed = new HDKEY(password);
       const chainCode = ed.chainCode;
       if (!walletConnector.session?.connected)
@@ -35,21 +43,8 @@ export const LinkPasswordScreen = () => {
         chainCode,
         walletConnector?.accounts[0],
       ]);
-      const passwordCredentials = await Keychain.save(
-        password,
-        walletSignature,
-        Keychain.Service.DIDCredentials
-      );
-      if (passwordCredentials) {
-        setDIDCredentialsState(passwordCredentials);
-      } else {
-        queueToast({
-          title: 'Error',
-          message: 'Something went wrong, please try again!',
-          type: 'error',
-          autoHideDuration: 3000,
-        });
-      }
+      await setKeyChainValue(KeyChain.Service.DIDPassword, password)
+      await setKeyChainValue(KeyChain.Service.Signiture, walletSignature)
     } catch (err) {
       console.log(err);
       queueToast({
@@ -58,6 +53,8 @@ export const LinkPasswordScreen = () => {
         type: 'error',
         autoHideDuration: 3000,
       });
+    } finally {
+      setLinking(false);
     }
   };
 
@@ -86,17 +83,21 @@ export const LinkPasswordScreen = () => {
             <FxText variant="h300" textAlign="center">
               Link DID
             </FxText>
-            <FxTextInput
+            {!linking ? (<FxTextInput
               caption="Password"
               autoFocus
               secureTextEntry
               value={password}
               onChangeText={setPassword}
-            />
+            />)
+              : (
+                <ActivityIndicator />
+              )
+            }
           </>
         )}
 
-        {dIDCredentialsState ? (
+        {signiture ? (
           <FxButton size="large" onPress={handleConnectToBlox}>
             Connect to Blox
           </FxButton>
@@ -106,7 +107,7 @@ export const LinkPasswordScreen = () => {
             disabled={!password}
             onPress={handleLinkPassword}
           >
-            Link Password
+            {linking?'Canncel':'Link Password'}
           </FxButton>
         )}
       </FxBox>
