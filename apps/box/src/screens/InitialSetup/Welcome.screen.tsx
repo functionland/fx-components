@@ -1,15 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FxBox, FxButton, FxText } from '@functionland/component-library';
 import { Image, ImageBackground, StyleSheet } from 'react-native';
 // import { isEmulatorSync } from 'react-native-device-info';
-import { useWalletConnect } from '@walletconnect/react-native-dapp';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { useSettingsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const walletConnect = useWalletConnect();
 
   // const isConnectedToBox = useIsConnectedToBox();
   const { colorScheme } = useSettingsStore((store) => ({

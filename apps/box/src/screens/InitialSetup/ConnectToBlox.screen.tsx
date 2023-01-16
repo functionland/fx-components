@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   FxBox,
   FxButton,
-  FxPressableOpacity,
   FxProgressBar,
   FxText,
   FxSafeAreaBox,
@@ -50,38 +49,56 @@ export const ConnectToBloxScreen = () => {
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={60} />
 
-      <FxBox flex={3} justifyContent="center" alignItems="center" marginVertical='0' >
-        <FxBox flex={3} justifyContent='center' alignItems='center'>
-          <FxText variant="h300" marginTop="0" textAlign="center" marginBottom='24'>
+      <FxBox
+        flex={3}
+        justifyContent="center"
+        alignItems="center"
+        marginVertical="0"
+      >
+        <FxBox flex={3} justifyContent="center" alignItems="center">
+          <FxText
+            variant="h300"
+            marginTop="0"
+            textAlign="center"
+            marginBottom="24"
+          >
             Connect to Blox's Hotspot
           </FxText>
           <BloxWifiDevice />
         </FxBox>
 
         <FxBox flex={1}>
-          {!isConnectedToBox ?
-            (
-              <FxText variant='h200' marginTop='24' textAlign='center'>
-                Please turn your Blox on and make sure it is on Hotspot mode
-              </FxText>
-            )
-            : (
-              <FxText variant='h200' marginTop='24' textAlign='center' color='primary'>
-                Now your are connected to Blox's Hotspot
-              </FxText>
-            )}
+          {!isConnectedToBox ? (
+            <FxText variant="h200" marginTop="24" textAlign="center">
+              Please turn your Blox on and make sure it is on Hotspot mode
+            </FxText>
+          ) : (
+            <FxText
+              variant="h200"
+              marginTop="24"
+              textAlign="center"
+              color="primary"
+            >
+              Now your are connected to Blox's Hotspot
+            </FxText>
+          )}
         </FxBox>
         <FxBox flex={1}>
-          {!isConnectedToBox &&
-            <FxText variant="h200" marginBottom="80" textAlign='center' color='warningBase' style={{ bottom: 0 }}>
+          {!isConnectedToBox && (
+            <FxText
+              variant="h200"
+              marginBottom="80"
+              textAlign="center"
+              color="warningBase"
+              style={{ bottom: 0 }}
+            >
               {connectionStatusStrings[connectionStatus]}
             </FxText>
-          }
+          )}
         </FxBox>
-
       </FxBox>
 
-      <FxBox flex={1} justifyContent='flex-end'>
+      <FxBox flex={1} justifyContent="flex-end">
         <FxBox
           flexDirection="row"
           justifyContent="flex-end"
@@ -96,22 +113,26 @@ export const ConnectToBloxScreen = () => {
           >
             Back
           </FxButton>
-          {!isConnectedToBox ? (<FxButton
-            width={150}
-            onPress={connectToBox}
-            disabled={isConnectedToBox || connectionStatus === EConnectionStatus.connecting}
-          >
-            {connectionStatus != EConnectionStatus.connecting ?
-              "Connect"
-              : <ActivityIndicator />
-            }
-          </FxButton>)
-            : (<FxButton
+          {!isConnectedToBox ? (
+            <FxButton
               width={150}
-              onPress={handleNext}>
+              onPress={connectToBox}
+              disabled={
+                isConnectedToBox ||
+                connectionStatus === EConnectionStatus.connecting
+              }
+            >
+              {connectionStatus != EConnectionStatus.connecting ? (
+                'Connect'
+              ) : (
+                <ActivityIndicator />
+              )}
+            </FxButton>
+          ) : (
+            <FxButton width={150} onPress={handleNext}>
               Next
-            </FxButton>)
-          }
+            </FxButton>
+          )}
         </FxBox>
       </FxBox>
     </FxSafeAreaBox>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Image, StyleSheet } from 'react-native';
 import { useWalletConnect } from '@walletconnect/react-native-dapp';
 import {
@@ -19,19 +19,20 @@ export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
   const walletConnect = useWalletConnect();
   const { queueToast } = useToast();
-  const [walletId,signiture, password, setWalletId] = useUserProfileStore(state => [state.walletId,state.signiture, state.password, state.setWalletId])
-  useEffect(()=>{
-    if(walletConnect.connected && !walletId){
-      setWalletId(walletConnect.accounts[0])
-    }
-  },[])
+  const [walletId, signiture, password, setWalletId] = useUserProfileStore(
+    (state) => [
+      state.walletId,
+      state.signiture,
+      state.password,
+      state.setWalletId,
+    ]
+  );
   const handleWalletConnect = async () => {
     try {
-      const wallet=await walletConnect.connect();
-      if(wallet.accounts[0]!==walletId){
-        setWalletId(wallet.accounts[0],true)
+      const wallet = await walletConnect.connect();
+      if (wallet.accounts[0] !== walletId) {
+        setWalletId(wallet.accounts[0], true);
       }
-      
     } catch (err) {
       console.log(err);
       queueToast({
@@ -65,13 +66,12 @@ export const ConnectToWalletScreen = () => {
                   Your DID
                 </FxText>
                 <FxText textAlign="center" marginTop="8">
-                  {Helper.getMyDID(
-                    password,
-                    signiture
-                  )}
+                  {Helper.getMyDID(password, signiture)}
                 </FxText>
-              </FxBox>) : null}
-          </>) : (
+              </FxBox>
+            ) : null}
+          </>
+        ) : (
           <FxText variant="h300" textAlign="center">
             Connect To Wallet
           </FxText>
@@ -96,14 +96,17 @@ export const ConnectToWalletScreen = () => {
 
 export const WalletDetails = () => {
   const walletConnect = useWalletConnect();
-  const [walletId, setWalletId] = useUserProfileStore(state => [state.walletId, state.setWalletId])
+  const [walletId, setWalletId] = useUserProfileStore((state) => [
+    state.walletId,
+    state.setWalletId,
+  ]);
 
   const handleChangeWallet = async () => {
     try {
       await walletConnect.killSession();
-      const wallet=await walletConnect.connect();
-      if(wallet.accounts[0]!==walletId){
-        setWalletId(wallet.accounts[0],true)
+      const wallet = await walletConnect.connect();
+      if (wallet.accounts[0] !== walletId) {
+        setWalletId(wallet.accounts[0], true);
       }
     } catch (err) {
       console.log(err);
@@ -121,9 +124,11 @@ export const WalletDetails = () => {
         style={styles.image}
       />
       <FxText variant="body" textAlign="center">
-         {walletConnect.peerMeta.name} 
+        {walletConnect.peerMeta.name}
       </FxText>
-      <FxText variant="bodySmallRegular" textAlign="center">{walletConnect.accounts[0]}</FxText>
+      <FxText variant="bodySmallRegular" textAlign="center">
+        {walletConnect.accounts[0]}
+      </FxText>
       <FxButton
         variant="inverted"
         paddingHorizontal="16"

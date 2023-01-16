@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import * as ReactNativeKeychain from 'react-native-keychain';
 // @ts-ignore-next-line
 import { HDKEY } from '@functionland/fula-sec';
 import {
@@ -23,9 +22,11 @@ export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
   const walletConnector = useWalletConnect();
   const { queueToast } = useToast();
-  const [linking, setLinking] = useState(false)
+  const [linking, setLinking] = useState(false);
   const [passwordInput, setInputPasswordInput] = useState('');
-  const [setKeyChainValue, signiture, password] = useUserProfileStore(state => [state.setKeyChainValue, state.signiture, state.password])
+  const [setKeyChainValue, signiture, password] = useUserProfileStore(
+    (state) => [state.setKeyChainValue, state.signiture, state.password]
+  );
 
   const handleLinkPassword = async () => {
     try {
@@ -42,8 +43,8 @@ export const LinkPasswordScreen = () => {
         chainCode,
         walletConnector?.accounts[0],
       ]);
-      await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput)
-      await setKeyChainValue(KeyChain.Service.Signiture, walletSignature)
+      await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
+      await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
     } catch (err) {
       console.log(err);
       queueToast({
@@ -71,10 +72,7 @@ export const LinkPasswordScreen = () => {
               Your DID
             </FxText>
             <FxText textAlign="center" marginTop="8">
-              {helper.getMyDID(
-                password,
-                signiture
-              )}
+              {helper.getMyDID(password, signiture)}
             </FxText>
           </FxBox>
         ) : (
@@ -82,17 +80,17 @@ export const LinkPasswordScreen = () => {
             <FxText variant="h300" textAlign="center">
               Link DID
             </FxText>
-            {!linking ? (<FxTextInput
-              caption="Password"
-              autoFocus
-              secureTextEntry
-              value={passwordInput}
-              onChangeText={setInputPasswordInput}
-            />)
-              : (
-                <ActivityIndicator />
-              )
-            }
+            {!linking ? (
+              <FxTextInput
+                caption="Password"
+                autoFocus
+                secureTextEntry
+                value={passwordInput}
+                onChangeText={setInputPasswordInput}
+              />
+            ) : (
+              <ActivityIndicator />
+            )}
           </>
         )}
 

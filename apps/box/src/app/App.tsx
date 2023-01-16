@@ -35,10 +35,12 @@ const barStyles = {
 export const App = () => {
   const mode = useSettingsStore().getMode();
   const theme = fullTheme[mode];
-  const [loadAllCredentials]=useUserProfileStore(state=>[state.loadAllCredentials])
-  useEffect(()=>{
-    loadAllCredentials()
-  },[])
+  const [loadAllCredentials] = useUserProfileStore((state) => [
+    state.loadAllCredentials,
+  ]);
+  useEffect(() => {
+    loadAllCredentials();
+  }, [loadAllCredentials]);
   return (
     <ThemeProvider theme={theme}>
       <WalletConnectProvider

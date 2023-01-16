@@ -1,7 +1,6 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useWalletConnect, WalletConnectContext } from '@walletconnect/react-native-dapp';
 import { KeyChain } from '../utils';
 
 interface UserProfileSlice {
@@ -21,7 +20,7 @@ interface UserProfileSlice {
   bloxPeerIds?: string[] | undefined;
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
   loadAllCredentials: () => Promise<void>;
-  setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>
+  setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
   logout: () => boolean;
 }
 const createUserProfileSlice: StateCreator<
@@ -30,7 +29,7 @@ const createUserProfileSlice: StateCreator<
   [['zustand/persist', Partial<UserProfileSlice>]],
   UserProfileSlice
 > = persist(
-  (set, get) => ({
+  (set) => ({
     _hasHydrated: false,
     setHasHydrated: (isHydrated) => {
       set({
@@ -39,67 +38,78 @@ const createUserProfileSlice: StateCreator<
     },
     bloxPeerIds: [],
     loadAllCredentials: async () => {
-      const password = await KeyChain.load(KeyChain.Service.DIDPassword) || undefined
-      const fulaPeerId = await KeyChain.load(KeyChain.Service.FULAPeerId) || undefined;
-      const fulaRoodCID = await KeyChain.load(KeyChain.Service.FULARootCID) || undefined;
-      const signiture = await KeyChain.load(KeyChain.Service.Signiture) || undefined;
+      const password =
+        (await KeyChain.load(KeyChain.Service.DIDPassword)) || undefined;
+      const fulaPeerId =
+        (await KeyChain.load(KeyChain.Service.FULAPeerId)) || undefined;
+      const fulaRoodCID =
+        (await KeyChain.load(KeyChain.Service.FULARootCID)) || undefined;
+      const signiture =
+        (await KeyChain.load(KeyChain.Service.Signiture)) || undefined;
       set({
         password: password?.password,
         fulaPeerId: fulaPeerId?.password,
         fulaRoodCID: fulaRoodCID?.password,
-        signiture: signiture?.password
+        signiture: signiture?.password,
       });
     },
     setKeyChainValue: async (service, value) => {
       switch (service) {
-        case KeyChain.Service.DIDPassword:
-          const dIDPassword = await KeyChain.save('DIDPassword', value, service) || undefined;
+        case KeyChain.Service.DIDPassword: {
+          const dIDPassword =
+            (await KeyChain.save('DIDPassword', value, service)) || undefined;
           set({
-            password: dIDPassword?.password
+            password: dIDPassword?.password,
           });
           break;
-        case KeyChain.Service.FULAPeerId:
-          const fULAPeerId = await KeyChain.save('FULAPeerId', value, service) || undefined;
+        }
+        case KeyChain.Service.FULAPeerId: {
+          const fULAPeerId =
+            (await KeyChain.save('FULAPeerId', value, service)) || undefined;
           set({
-            fulaPeerId: fULAPeerId?.password
+            fulaPeerId: fULAPeerId?.password,
           });
           break;
-        case KeyChain.Service.FULARootCID:
-          const fULARootCID = await KeyChain.save('FULARootCID', value, service) || undefined;
+        }
+        case KeyChain.Service.FULARootCID: {
+          const fULARootCID =
+            (await KeyChain.save('FULARootCID', value, service)) || undefined;
           set({
-            fulaRoodCID: fULARootCID?.password
+            fulaRoodCID: fULARootCID?.password,
           });
           break;
-        case KeyChain.Service.Signiture:
-          const signiture = await KeyChain.save('Signiture', value, service) || undefined;
+        }
+        case KeyChain.Service.Signiture: {
+          const signiture =
+            (await KeyChain.save('Signiture', value, service)) || undefined;
           set({
-            signiture: signiture?.password
+            signiture: signiture?.password,
           });
           break;
+        }
         default:
           break;
       }
     },
     setWalletId: async (walletId, clearSigniture) => {
       if (clearSigniture) {
-        await KeyChain.reset(KeyChain.Service.DIDPassword)
-        await KeyChain.reset(KeyChain.Service.Signiture)
+        await KeyChain.reset(KeyChain.Service.DIDPassword);
+        await KeyChain.reset(KeyChain.Service.Signiture);
         set({
           walletId,
-          password:undefined,
-          signiture:undefined
-        })
+          password: undefined,
+          signiture: undefined,
+        });
       } else {
         set({
-          walletId
-        })
+          walletId,
+        });
       }
     },
     logout: () => {
-
       // TO: cleare all persist user profile data
       throw 'Not implemented';
-    }
+    },
   }),
   {
     name: 'userProfileSlice',
@@ -114,8 +124,8 @@ const createUserProfileSlice: StateCreator<
     },
     partialize: (state): Partial<UserProfileSlice> => ({
       walletId: state.walletId,
-      bloxPeerIds: state.bloxPeerIds
-    })
+      bloxPeerIds: state.bloxPeerIds,
+    }),
   }
 );
 

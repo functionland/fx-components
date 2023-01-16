@@ -13,12 +13,11 @@ export enum Service {
   /**
    * WNFS' root cid
    */
-  FULARootCID= 'FULARootCID',
+  FULARootCID = 'FULARootCID',
   /**
    * FULA client's PeerId
    */
-  FULAPeerId='FULAPeerId'
-  
+  FULAPeerId = 'FULAPeerId',
 }
 
 /**
