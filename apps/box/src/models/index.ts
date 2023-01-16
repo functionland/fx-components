@@ -17,4 +17,5 @@ export enum EConnectionStatus {
   connected = 'connected',
   connecting = 'connecting',
   failed = 'failed',
+  notConnected= 'notConnected',
 }

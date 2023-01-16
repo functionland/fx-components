@@ -20,7 +20,6 @@ export const ConnectToWalletScreen = () => {
   const walletConnect = useWalletConnect();
   const { queueToast } = useToast();
   const [walletId,signiture, password, setWalletId] = useUserProfileStore(state => [state.walletId,state.signiture, state.password, state.setWalletId])
-  console.log('walletId', walletId)
   useEffect(()=>{
     if(walletConnect.connected && !walletId){
       setWalletId(walletConnect.accounts[0])
