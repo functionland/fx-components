@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ThemeProvider } from '@shopify/restyle';
 import {
   fxLightTheme,
@@ -14,6 +14,7 @@ import { Platform, StatusBar, StyleSheet, UIManager } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSettingsStore } from '../stores';
+import { useUserProfileStore } from '../stores/useUserProfileStore';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -34,7 +35,10 @@ const barStyles = {
 export const App = () => {
   const mode = useSettingsStore().getMode();
   const theme = fullTheme[mode];
-
+  const [loadAllCredentials]=useUserProfileStore(state=>[state.loadAllCredentials])
+  useEffect(()=>{
+    loadAllCredentials()
+  },[])
   return (
     <ThemeProvider theme={theme}>
       <WalletConnectProvider

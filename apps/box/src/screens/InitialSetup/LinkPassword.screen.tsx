@@ -23,19 +23,18 @@ export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
   const walletConnector = useWalletConnect();
   const { queueToast } = useToast();
-  const [password, setPassword] = useState<string>('');
   const [linking, setLinking] = useState(false)
-  const [dIDCredentialsState, setDIDCredentialsState] =
-    useState<null | ReactNativeKeychain.UserCredentials>(null);
-  const [setKeyChainValue, signiture] = useUserProfileStore(state => [state.setKeyChainValue, state.signiture])
+  const [passwordInput, setInputPasswordInput] = useState('');
+  const [setKeyChainValue, signiture, password] = useUserProfileStore(state => [state.setKeyChainValue, state.signiture, state.password])
+
   const handleLinkPassword = async () => {
     try {
-      if(linking){
+      if (linking) {
         setLinking(false);
         return;
       }
       setLinking(true);
-      const ed = new HDKEY(password);
+      const ed = new HDKEY(passwordInput);
       const chainCode = ed.chainCode;
       if (!walletConnector.session?.connected)
         await walletConnector.createSession();
@@ -43,7 +42,7 @@ export const LinkPasswordScreen = () => {
         chainCode,
         walletConnector?.accounts[0],
       ]);
-      await setKeyChainValue(KeyChain.Service.DIDPassword, password)
+      await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput)
       await setKeyChainValue(KeyChain.Service.Signiture, walletSignature)
     } catch (err) {
       console.log(err);
@@ -66,15 +65,15 @@ export const LinkPasswordScreen = () => {
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={40} />
       <FxBox flex={1} justifyContent="space-between" paddingVertical="80">
-        {dIDCredentialsState ? (
+        {password && signiture ? (
           <FxBox>
             <FxText variant="h300" textAlign="center">
               Your DID
             </FxText>
             <FxText textAlign="center" marginTop="8">
               {helper.getMyDID(
-                dIDCredentialsState.username,
-                dIDCredentialsState.password
+                password,
+                signiture
               )}
             </FxText>
           </FxBox>
@@ -87,8 +86,8 @@ export const LinkPasswordScreen = () => {
               caption="Password"
               autoFocus
               secureTextEntry
-              value={password}
-              onChangeText={setPassword}
+              value={passwordInput}
+              onChangeText={setInputPasswordInput}
             />)
               : (
                 <ActivityIndicator />
@@ -107,7 +106,7 @@ export const LinkPasswordScreen = () => {
             disabled={!password}
             onPress={handleLinkPassword}
           >
-            {linking?'Canncel':'Link Password'}
+            {linking ? 'Canncel' : 'Link Password'}
           </FxButton>
         )}
       </FxBox>

@@ -1,11 +1,13 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useWalletConnect, WalletConnectContext } from '@walletconnect/react-native-dapp';
 import { KeyChain } from '../utils';
 
 interface UserProfileSlice {
   _hasHydrated: boolean;
   setHasHydrated: (isHydrated: boolean) => void;
+  walletId?: string | undefined;
   /**
    * Password is a phares that user enter to create DID and make signiture
    */
@@ -19,6 +21,7 @@ interface UserProfileSlice {
   bloxPeerIds?: string[] | undefined;
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
   loadAllCredentials: () => Promise<void>;
+  setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>
   logout: () => boolean;
 }
 const createUserProfileSlice: StateCreator<
@@ -34,7 +37,7 @@ const createUserProfileSlice: StateCreator<
         _hasHydrated: isHydrated,
       });
     },
-    bloxPeerIds:[],
+    bloxPeerIds: [],
     loadAllCredentials: async () => {
       const password = await KeyChain.load(KeyChain.Service.DIDPassword) || undefined
       const fulaPeerId = await KeyChain.load(KeyChain.Service.FULAPeerId) || undefined;
@@ -77,6 +80,21 @@ const createUserProfileSlice: StateCreator<
           break;
       }
     },
+    setWalletId: async (walletId, clearSigniture) => {
+      if (clearSigniture) {
+        await KeyChain.reset(KeyChain.Service.DIDPassword)
+        await KeyChain.reset(KeyChain.Service.Signiture)
+        set({
+          walletId,
+          password:undefined,
+          signiture:undefined
+        })
+      } else {
+        set({
+          walletId
+        })
+      }
+    },
     logout: () => {
 
       // TO: cleare all persist user profile data
@@ -95,6 +113,7 @@ const createUserProfileSlice: StateCreator<
       };
     },
     partialize: (state): Partial<UserProfileSlice> => ({
+      walletId: state.walletId,
       bloxPeerIds: state.bloxPeerIds
     })
   }
