@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "@functionland/react-native-fula": "*",
     "@react-native-async-storage/async-storage": "*",
     "@react-native-community/netinfo": "*",
     "@react-native-picker/picker": "*",
@@ -52,6 +53,7 @@
     "@react-navigation/stack": "*",
     "@functionland/fula-sec": "*",
     "text-encoding-polyfill": "*",
-    "react-native-keychain": "*"
+    "react-native-keychain": "*",
+    "react-native-keyboard-aware-scroll-view": "*"
   }
 }

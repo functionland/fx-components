@@ -17,10 +17,12 @@ interface UserProfileSlice {
   signiture?: string | undefined;
   fulaPeerId?: string | undefined;
   fulaRoodCID?: string | undefined;
+  appPeerId?: string | undefined;
   bloxPeerIds?: string[] | undefined;
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
   loadAllCredentials: () => Promise<void>;
   setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
+  setAppPeerId: (peerId: string | undefined) => void;
   logout: () => boolean;
 }
 const createUserProfileSlice: StateCreator<
@@ -106,6 +108,11 @@ const createUserProfileSlice: StateCreator<
         });
       }
     },
+    setAppPeerId: (peerId) => {
+      set({
+        appPeerId: peerId
+      })
+    },
     logout: () => {
       // TO: cleare all persist user profile data
       throw 'Not implemented';
@@ -125,6 +132,7 @@ const createUserProfileSlice: StateCreator<
     partialize: (state): Partial<UserProfileSlice> => ({
       walletId: state.walletId,
       bloxPeerIds: state.bloxPeerIds,
+      appPeerId: state.appPeerId,
     }),
   }
 );
