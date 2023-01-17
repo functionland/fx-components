@@ -8,6 +8,7 @@ import {
   ConnectToWifiScreen,
   SetupCompleteScreen,
   CheckConnectionScreen,
+  SetBloxAuthorizerScreen
 } from '../screens/InitialSetup';
 import { Routes, InitialSetupStackParamList } from './navigationConfig';
 
@@ -41,6 +42,10 @@ export const InitialSetupNavigator = () => {
       <InitialSetupStack.Screen
         name={Routes.SetupComplete}
         component={SetupCompleteScreen}
+      />
+       <InitialSetupStack.Screen
+        name={Routes.SetBloxAuthorizer}
+        component={SetBloxAuthorizerScreen}
       />
     </InitialSetupStack.Navigator>
   );

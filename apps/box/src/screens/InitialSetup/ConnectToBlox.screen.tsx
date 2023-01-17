@@ -42,7 +42,7 @@ export const ConnectToBloxScreen = () => {
   const goBack = () => navigation.goBack();
 
   const handleNext = () => {
-    navigation.navigate(Routes.ConnectToWifi);
+    navigation.navigate(Routes.SetBloxAuthorizer);
   };
 
   return (

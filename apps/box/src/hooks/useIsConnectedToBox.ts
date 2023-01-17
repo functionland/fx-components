@@ -3,10 +3,12 @@ import { useNetInfo, NetInfoStateType } from '@react-native-community/netinfo';
 export const DEFAULT_NETWORK_NAME = 'Box';
 
 export function useIsConnectedToBox() {
-  const [isConnected, setIsConnected] = useState(false);
   const networkInfo = useNetInfo();
+  const [isConnected, setIsConnected] = useState(
+    (networkInfo.type === NetInfoStateType.wifi) &&
+    networkInfo?.details?.ssid === DEFAULT_NETWORK_NAME);
   useEffect(() => {
-    if (networkInfo.isConnected && networkInfo.type === NetInfoStateType.wifi)
+    if (networkInfo.type === NetInfoStateType.wifi)
       setIsConnected(networkInfo?.details?.ssid === DEFAULT_NETWORK_NAME);
     else setIsConnected(false);
   }, [networkInfo]);

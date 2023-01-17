@@ -19,6 +19,7 @@ export enum Routes {
   ConnectToWifi = 'Connect To Wifi',
   CheckConnection = 'Check Connection',
   SetupComplete = 'Setup Complete',
+  SetBloxAuthorizer = 'Set Blox Authorizer',
 
   // Main Tab
   BloxTab = 'BloxTab',
@@ -81,6 +82,7 @@ export type InitialSetupStackParamList = {
   [Routes.ConnectToWifi]: undefined;
   [Routes.CheckConnection]: { ssid: string };
   [Routes.SetupComplete]: undefined;
+  [Routes.SetBloxAuthorizer]: undefined;
 };
 
 export type ComponentGalleryStackParamList = {
