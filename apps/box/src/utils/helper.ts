@@ -10,12 +10,12 @@ export const getMyDID = (password: string, signiture: string): string => {
 
 export const getMyDIDKeyPair = (
   password: string,
-  signiture: string,
+  signiture: string
 ): {
-  secretKey: Uint8Array
-  pubKey: Uint8Array
+  secretKey: Uint8Array;
+  pubKey: Uint8Array;
 } => {
-  const ed = new HDKEY(password)
-  const keyPair = ed.createEDKeyPair(signiture)
-  return keyPair
-}
+  const ed = new HDKEY(password);
+  const keyPair = ed.createEDKeyPair(signiture);
+  return keyPair;
+};

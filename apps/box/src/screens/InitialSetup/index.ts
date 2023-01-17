@@ -5,4 +5,4 @@ export * from './ConnectToWifi/ConnectToWifi.screen';
 export * from './ConnectToWallet.screen';
 export * from './Welcome.screen';
 export * from './LinkPassword.screen';
-export * from './SetBloxAuthorizer.screen'
+export * from './SetBloxAuthorizer.screen';

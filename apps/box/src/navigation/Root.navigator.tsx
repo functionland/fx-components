@@ -6,7 +6,10 @@ import { Routes, RootStackParamList } from './navigationConfig';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 
 export const RootNavigator = () => {
-  const [_hasHydrated, appPeerId] = useUserProfileStore(state => [state._hasHydrated, state.appPeerId]);
+  const [_hasHydrated, appPeerId] = useUserProfileStore((state) => [
+    state._hasHydrated,
+    state.appPeerId,
+  ]);
   const [initialRoute, setInitialRoute] = useState(undefined);
   useEffect(() => {
     if (_hasHydrated && !initialRoute) {
@@ -16,12 +19,14 @@ export const RootNavigator = () => {
         setInitialRoute(Routes.InitialSetup);
       }
     }
-  }, [_hasHydrated, appPeerId, initialRoute])
+  }, [_hasHydrated, appPeerId, initialRoute]);
 
-  if (!initialRoute)
-    return null;
+  if (!initialRoute) return null;
   return (
-    <RootStack.Navigator initialRouteName={initialRoute} screenOptions={{ gestureEnabled: true }}>
+    <RootStack.Navigator
+      initialRouteName={initialRoute}
+      screenOptions={{ gestureEnabled: true }}
+    >
       <RootStack.Screen
         name={Routes.InitialSetup}
         options={{ headerShown: false }}

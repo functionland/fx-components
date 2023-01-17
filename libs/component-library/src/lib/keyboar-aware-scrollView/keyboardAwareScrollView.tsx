@@ -1,7 +1,5 @@
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
-const FxKeyboardAwareScrollView = KeyboardAwareScrollView
+const FxKeyboardAwareScrollView = KeyboardAwareScrollView;
 
-export {
-    FxKeyboardAwareScrollView
-}
+export { FxKeyboardAwareScrollView };

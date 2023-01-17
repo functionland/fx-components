@@ -110,8 +110,8 @@ const createUserProfileSlice: StateCreator<
     },
     setAppPeerId: (peerId) => {
       set({
-        appPeerId: peerId
-      })
+        appPeerId: peerId,
+      });
     },
     logout: () => {
       // TO: cleare all persist user profile data
