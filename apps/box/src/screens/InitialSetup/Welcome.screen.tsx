@@ -2,7 +2,6 @@ import React from 'react';
 import { FxBox, FxButton, FxText } from '@functionland/component-library';
 import { Image, ImageBackground, StyleSheet } from 'react-native';
 // import { isEmulatorSync } from 'react-native-device-info';
-import { useIsConnectedToBox } from '../../hooks/useIsConnectedToBox';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { useSettingsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
@@ -10,7 +9,7 @@ import { Routes } from '../../navigation/navigationConfig';
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
 
-  const isConnectedToBox = useIsConnectedToBox();
+  // const isConnectedToBox = useIsConnectedToBox();
   const { colorScheme } = useSettingsStore((store) => ({
     colorScheme: store.colorScheme,
   }));
@@ -20,11 +19,17 @@ export const WelcomeScreen = () => {
     //   alert('Emulators cannot connect to the Box');
     //   return;
     // }
-    if (isConnectedToBox) {
-      navigation.navigate(Routes.ConnectToWifi);
-    } else {
-      navigation.navigate(Routes.ConnectToBlox);
-    }
+    // if (isConnectedToBox) {
+    //   navigation.navigate(Routes.ConnectToWifi);
+    // } else {
+    //   navigation.navigate(Routes.ConnectToBlox);
+    // }
+    // if (walletConnect.connected) {
+    //   navigation.navigate(Routes.FulaPassword);
+    // } else {
+    //   navigation.navigate(Routes.ConnectToWallet);
+    // }
+    navigation.navigate(Routes.ConnectToWallet);
   };
 
   const renderContent = () => {

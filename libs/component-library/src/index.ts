@@ -45,3 +45,4 @@ export { FxPressableOpacity } from './lib/pressable-opacity/pressableOpacity';
 export * from './lib/breadcrumbs/breadcrumbs';
 export * from './lib/files/files';
 export * from './lib/types';
+export * from './lib/keyboar-aware-scrollView/keyboardAwareScrollView';

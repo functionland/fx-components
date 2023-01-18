@@ -14,6 +14,7 @@ import { TextInput, TextInputProps } from 'react-native';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useFxTheme } from '../theme/useFxTheme';
 import { FxText } from '../text/text';
+import { FxBox } from '../box/box';
 
 type FxTextInputProps = TextProps<FxTheme> &
   BoxProps<FxTheme> &
@@ -60,7 +61,7 @@ const FxTextInput = ({
   const Input = isBottomSheetInput ? BottomSheetTextInput : TextInput;
 
   return (
-    <>
+    <FxBox>
       {caption && (
         <FxText variant="bodySmallRegular" marginBottom="8" letterSpacing={0.2}>
           {caption}
@@ -81,7 +82,7 @@ const FxTextInput = ({
         blurOnSubmit
         {...restyleProps}
       />
-    </>
+    </FxBox>
   );
 };
 

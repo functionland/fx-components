@@ -2,11 +2,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import {
   WelcomeScreen,
-  WalletConnectScreen,
+  LinkPasswordScreen,
+  ConnectToWalletScreen,
   ConnectToBloxScreen,
   ConnectToWifiScreen,
   SetupCompleteScreen,
   CheckConnectionScreen,
+  SetBloxAuthorizerScreen,
 } from '../screens/InitialSetup';
 import { Routes, InitialSetupStackParamList } from './navigationConfig';
 
@@ -18,8 +20,12 @@ export const InitialSetupNavigator = () => {
         component={WelcomeScreen}
       />
       <InitialSetupStack.Screen
-        name={Routes.WalletConnect}
-        component={WalletConnectScreen}
+        name={Routes.LinkPassword}
+        component={LinkPasswordScreen}
+      />
+      <InitialSetupStack.Screen
+        name={Routes.ConnectToWallet}
+        component={ConnectToWalletScreen}
       />
       <InitialSetupStack.Screen
         name={Routes.ConnectToBlox}
@@ -36,6 +42,10 @@ export const InitialSetupNavigator = () => {
       <InitialSetupStack.Screen
         name={Routes.SetupComplete}
         component={SetupCompleteScreen}
+      />
+      <InitialSetupStack.Screen
+        name={Routes.SetBloxAuthorizer}
+        component={SetBloxAuthorizerScreen}
       />
     </InitialSetupStack.Navigator>
   );
