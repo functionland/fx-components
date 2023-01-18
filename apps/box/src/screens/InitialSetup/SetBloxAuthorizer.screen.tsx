@@ -8,12 +8,13 @@ import {
   FxSafeAreaBox,
   FxText,
 } from '@functionland/component-library';
-//import { fula } from '@functionland/react-native-fula';
+import { fula } from '@functionland/react-native-fula';
 
 import { useInitialSetupNavigation } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { ActivityIndicator } from 'react-native';
+import { Helper } from '../../utils';
 
 export const SetBloxAuthorizerScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -32,7 +33,7 @@ export const SetBloxAuthorizerScreen = () => {
     generateAppPeerId();
   }, []);
   const generateAppPeerId = async () => {
-    const peerId = '12D3KooWJGEKpEVSsM7zpWdT33GzY5qxRQEpNKZGT4ivKkoGB2t9'; //TO DO : await newFulaClient(password, signiture);
+    const peerId =await newFulaClient(password, signiture);
     if (peerId) setNewPeerId(peerId);
   };
   const goBack = () => navigation.goBack();
@@ -50,25 +51,25 @@ export const SetBloxAuthorizerScreen = () => {
 
   //TO DO: un comment the codes
 
-  // const newFulaClient = async (password: string, signiture: string) => {
-  //   if (password && signiture) {
-  //     const keyPair = Helper.getMyDIDKeyPair(password, signiture);
-  //     try {
-  //       if (await fula.isReady()) await fula.shutdown();
-  //       const peerId = await fula.newClient(
-  //         keyPair.secretKey.toString(), //bytes of the privateKey of did identity in string format
-  //         ``, // leave empty to use the default temp one
-  //         '',
-  //         'noop', //leave empty for testing without a backend node
-  //         false
-  //       );
-  //       return peerId;
-  //     } catch (error) {
-  //       console.log('newFulaClient', error);
-  //       return null;
-  //     }
-  //   }
-  // };
+  const newFulaClient = async (password: string, signiture: string) => {
+    if (password && signiture) {
+      const keyPair = Helper.getMyDIDKeyPair(password, signiture);
+      try {
+        if (await fula.isReady()) await fula.shutdown();
+        const peerId = await fula.newClient(
+          keyPair.secretKey.toString(), //bytes of the privateKey of did identity in string format
+          ``, // leave empty to use the default temp one
+          '',
+          'noop', //leave empty for testing without a backend node
+          false
+        );
+        return peerId;
+      } catch (error) {
+        console.log('newFulaClient', error);
+        return null;
+      }
+    }
+  };
 
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
