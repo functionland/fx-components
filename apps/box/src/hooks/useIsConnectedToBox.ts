@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNetInfo, NetInfoStateType } from '@react-native-community/netinfo';
-export const DEFAULT_NETWORK_NAME = 'DontConnect';
+export const DEFAULT_NETWORK_NAME = 'Box';
 
 export function useIsConnectedToBox() {
   const networkInfo = useNetInfo();

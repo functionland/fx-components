@@ -5,6 +5,7 @@ import {
   FxProgressBar,
   FxText,
   FxSafeAreaBox,
+  useToast,
 } from '@functionland/component-library';
 import WifiManager from 'react-native-wifi-reborn';
 import { DEFAULT_NETWORK_NAME } from '../../hooks/useIsConnectedToBox';
@@ -13,23 +14,52 @@ import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { EConnectionStatus } from '../../models';
 import BloxWifiDevice from '../../app/icons/blox-wifi-device.svg';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, PermissionsAndroid, Platform } from 'react-native';
 
 const connectionStatusStrings = {
   [EConnectionStatus.connecting]: 'Connecting',
   [EConnectionStatus.connected]: 'Connected',
-  [EConnectionStatus.failed]: 'Unable to connect to Blox',
+  [EConnectionStatus.failed]: 'Unable to connect to Hotspot',
   [EConnectionStatus.notConnected]: 'Not Connected',
 };
 
 export const ConnectToBloxScreen = () => {
   const navigation = useInitialSetupNavigation();
   const isConnectedToBox = useIsConnectedToBox();
+  const { queueToast } = useToast();
+
   const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
     EConnectionStatus.notConnected
   );
-
-  const connectToBox = () => {
+  const checkAndroidPermission = async (): Promise<boolean> => {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      {
+        title: 'Location permission is required for WiFi connections',
+        message:
+          'This app needs location permission as this is required  ' +
+          'to scan for wifi networks.',
+        buttonNegative: 'DENY',
+        buttonPositive: 'ALLOW',
+      },
+    );
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  const connectToBox = async () => {
+    if(Platform.OS==='android' && ! await checkAndroidPermission())
+    {
+      queueToast({
+        title: 'Permission denied!',
+        message: 'The Blox app needs location permission to connect to the WIFI, set it manually!',
+        type: 'warning',
+        autoHideDuration: 5000,
+      });
+      return
+    }
     setConnectionStatus(EConnectionStatus.connecting);
     WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(
       () => {
