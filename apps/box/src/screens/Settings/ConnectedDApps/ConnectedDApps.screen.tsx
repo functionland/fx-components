@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Reanimated from 'react-native-reanimated';
 import {
   FxBox,
@@ -16,17 +16,33 @@ import {
   DApps,
 } from '../../../api/connectedDApps';
 import { DAppCard } from './components';
-
-export const ConnectedDAppsScreen = () => {
+import { RouteProp } from '@react-navigation/native';
+import { AddAppForm } from './modals/AddDAppModal';
+interface Props {
+  route: RouteProp<{
+    params: { appName?: string, bundleId?: string, peerId?: string }
+  }>
+}
+export const ConnectedDAppsScreen = ({ route }: Props) => {
   const [isList, setIsList] = React.useState(false);
   const addDAppModalRef = useRef<FxBottomSheetModalMethods>(null);
   const dAppSettingsModalRef = useRef<FxBottomSheetModalMethods>(null);
   const clearDAppDataModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [bloxIndex] = React.useState(0);
   const [selectedDAppKey, setSelectedDAppKey] = useCallbackState<DApps>(null);
+  const [addAppForm, setAddAppForm] = useState<AddAppForm | undefined>()
 
   const blox = mockConnectedDAppsData[bloxIndex];
-
+  useEffect(() => {
+    if (route?.params?.appName) {
+      setAddAppForm({
+        appName: route?.params?.appName,
+        bundleId: route?.params?.bundleId,
+        peerId: route?.params?.peerId
+      })
+      addDAppModalRef.current?.present()
+    }
+  }, [])
   const showDAppSettingsModal = (key: DApps) => {
     setSelectedDAppKey(key, () =>
       dAppSettingsModalRef.current?.present({ key, bloxIndex })
@@ -59,7 +75,7 @@ export const ConnectedDAppsScreen = () => {
           );
         })}
       </FxBox>
-      <AddDAppModal ref={addDAppModalRef} />
+      <AddDAppModal ref={addDAppModalRef} form={addAppForm} />
       <DAppSettingsModal
         onClearDataPress={() => clearDAppDataModalRef.current?.present()}
         dAppKey={selectedDAppKey}
