@@ -8,27 +8,14 @@ import {
 } from '@functionland/component-library';
 import { imageMap } from './../../../../api/connectedDApps';
 import { SubHeaderText } from './../../../../components/Text';
-import { DoneButton, DAppHeader } from '../components';
 
-const addDAppModalData = [
-  {
-    imageSrc: imageMap.fileSync,
-    name: 'File Sync',
-    info: 'Get the most out of your blox by connecting to dApps',
-  },
-  {
-    imageSrc: imageMap.fotos,
-    name: 'Fotos',
-    info: 'Backup photos from your device to the pool to your Blox hardware',
-  },
-];
 export type AddAppForm = {
-  appName?: string,
-  bundleId?: string
-  peerId?: string
-}
+  appName?: string;
+  bundleId?: string;
+  peerId?: string;
+};
 type AddDAppModalProps = {
-  form?: AddAppForm
+  form?: AddAppForm;
 };
 const AddDAppModal = React.forwardRef<
   FxBottomSheetModalMethods,
@@ -38,43 +25,49 @@ const AddDAppModal = React.forwardRef<
   const [addForm, setAddForm] = useState<AddAppForm>({
     appName: form?.appName,
     bundleId: form?.bundleId,
-    peerId: form?.peerId
-  })
+    peerId: form?.peerId,
+  });
   useEffect(() => {
     setAddForm({
-      ...form
-    })
-  }, [form])
+      ...form,
+    });
+  }, [form]);
   return (
     <FxBottomSheetModal ref={ref}>
       <FxBox>
         <SubHeaderText textAlign="center" marginVertical={'24'}>
           Authorize dApp
         </SubHeaderText>
-        <FxBox marginBottom='24'>
+        <FxBox marginBottom="24">
           <FxTextInput
             caption="dApp Name"
             value={addForm.appName}
-            onChangeText={(txt) => setAddForm(prev => ({
-              ...prev,
-              appName: txt
-            }))}
+            onChangeText={(txt) =>
+              setAddForm((prev) => ({
+                ...prev,
+                appName: txt,
+              }))
+            }
           />
           <FxTextInput
             caption="Bundle Id"
             value={addForm.bundleId}
-            onChangeText={(txt) => setAddForm(prev => ({
-              ...prev,
-              bundleId: txt
-            }))}
+            onChangeText={(txt) =>
+              setAddForm((prev) => ({
+                ...prev,
+                bundleId: txt,
+              }))
+            }
           />
           <FxTextInput
             caption="Peer Id"
             value={addForm.peerId}
-            onChangeText={(txt) => setAddForm(prev => ({
-              ...prev,
-              peerId: txt
-            }))}
+            onChangeText={(txt) =>
+              setAddForm((prev) => ({
+                ...prev,
+                peerId: txt,
+              }))
+            }
           />
         </FxBox>
         <FxButton size="large" onPress={() => close()}>

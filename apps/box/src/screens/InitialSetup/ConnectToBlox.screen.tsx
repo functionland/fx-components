@@ -41,24 +41,24 @@ export const ConnectToBloxScreen = () => {
           'to scan for wifi networks.',
         buttonNegative: 'DENY',
         buttonPositive: 'ALLOW',
-      },
+      }
     );
     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
       return true;
     } else {
       return false;
     }
-  }
+  };
   const connectToBox = async () => {
-    if(Platform.OS==='android' && ! await checkAndroidPermission())
-    {
+    if (Platform.OS === 'android' && !(await checkAndroidPermission())) {
       queueToast({
         title: 'Permission denied!',
-        message: 'The Blox app needs location permission to connect to the WIFI, set it manually!',
+        message:
+          'The Blox app needs location permission to connect to the WIFI, set it manually!',
         type: 'warning',
         autoHideDuration: 5000,
       });
-      return
+      return;
     }
     setConnectionStatus(EConnectionStatus.connecting);
     WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(

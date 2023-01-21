@@ -1,5 +1,9 @@
 import React from 'react';
-import { DefaultTheme, NavigationContainer, LinkingOptions } from '@react-navigation/native';
+import {
+  DefaultTheme,
+  NavigationContainer,
+  LinkingOptions,
+} from '@react-navigation/native';
 import { useFxTheme } from '@functionland/component-library';
 import { Routes } from './navigationConfig';
 
@@ -11,18 +15,19 @@ const linking: LinkingOptions<unknown> = {
   prefixes: ['fxblox://'],
   config: {
     screens: {
-      [Routes.MainTabs]:{
-        screens:{
-          [Routes.SettingsTab]:{
-            screens:{
-              [Routes.ConnectedDApps]: '/connectdapp/:appName/:bundleId/:peerId'
-            }
-          }
-        }
-      }
-    }
-  }
-}
+      [Routes.MainTabs]: {
+        screens: {
+          [Routes.SettingsTab]: {
+            screens: {
+              [Routes.ConnectedDApps]:
+                '/connectdapp/:appName/:bundleId/:peerId',
+            },
+          },
+        },
+      },
+    },
+  },
+};
 export const NavContainer = ({ children }: NavContainerProps) => {
   const theme = useFxTheme();
 
