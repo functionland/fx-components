@@ -20,8 +20,8 @@ import { RouteProp } from '@react-navigation/native';
 import { AddAppForm } from './modals/AddDAppModal';
 interface Props {
   route: RouteProp<{
-    params: { appName?: string, bundleId?: string, peerId?: string }
-  }>
+    params: { appName?: string; bundleId?: string; peerId?: string };
+  }>;
 }
 export const ConnectedDAppsScreen = ({ route }: Props) => {
   const [isList, setIsList] = React.useState(false);
@@ -30,7 +30,7 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
   const clearDAppDataModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [bloxIndex] = React.useState(0);
   const [selectedDAppKey, setSelectedDAppKey] = useCallbackState<DApps>(null);
-  const [addAppForm, setAddAppForm] = useState<AddAppForm | undefined>()
+  const [addAppForm, setAddAppForm] = useState<AddAppForm | undefined>();
 
   const blox = mockConnectedDAppsData[bloxIndex];
   useEffect(() => {
@@ -38,11 +38,11 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
       setAddAppForm({
         appName: route?.params?.appName,
         bundleId: route?.params?.bundleId,
-        peerId: route?.params?.peerId
-      })
-      addDAppModalRef.current?.present()
+        peerId: route?.params?.peerId,
+      });
+      addDAppModalRef.current?.present();
     }
-  }, [])
+  }, []);
   const showDAppSettingsModal = (key: DApps) => {
     setSelectedDAppKey(key, () =>
       dAppSettingsModalRef.current?.present({ key, bloxIndex })
