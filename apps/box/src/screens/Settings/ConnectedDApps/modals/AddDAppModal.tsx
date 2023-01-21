@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FxBottomSheetModal,
   FxBottomSheetModalMethods,
   FxBox,
+  FxButton,
+  FxTextInput,
 } from '@functionland/component-library';
 import { imageMap } from './../../../../api/connectedDApps';
 import { SubHeaderText } from './../../../../components/Text';
@@ -20,22 +22,64 @@ const addDAppModalData = [
     info: 'Backup photos from your device to the pool to your Blox hardware',
   },
 ];
-
-type AddDAppModalProps = unknown;
+export type AddAppForm = {
+  appName?: string,
+  bundleId?: string
+  peerId?: string
+}
+type AddDAppModalProps = {
+  form?: AddAppForm
+};
 const AddDAppModal = React.forwardRef<
   FxBottomSheetModalMethods,
   AddDAppModalProps
->((_, ref) => {
+>((props, ref) => {
+  const { form } = props;
+  const [addForm, setAddForm] = useState<AddAppForm>({
+    appName: form?.appName,
+    bundleId: form?.bundleId,
+    peerId: form?.peerId
+  })
+  useEffect(() => {
+    setAddForm({
+      ...form
+    })
+  }, [form])
   return (
     <FxBottomSheetModal ref={ref}>
       <FxBox>
         <SubHeaderText textAlign="center" marginVertical={'24'}>
-          Get the most out of your blox by connecting to dApps
+          Authorize dApp
         </SubHeaderText>
-        {addDAppModalData.map((data) => (
-          <DAppHeader key={data.name} marginBottom="32" {...data} />
-        ))}
-        <DoneButton />
+        <FxBox marginBottom='24'>
+          <FxTextInput
+            caption="dApp Name"
+            value={addForm.appName}
+            onChangeText={(txt) => setAddForm(prev => ({
+              ...prev,
+              appName: txt
+            }))}
+          />
+          <FxTextInput
+            caption="Bundle Id"
+            value={addForm.bundleId}
+            onChangeText={(txt) => setAddForm(prev => ({
+              ...prev,
+              bundleId: txt
+            }))}
+          />
+          <FxTextInput
+            caption="Peer Id"
+            value={addForm.peerId}
+            onChangeText={(txt) => setAddForm(prev => ({
+              ...prev,
+              peerId: txt
+            }))}
+          />
+        </FxBox>
+        <FxButton size="large" onPress={() => close()}>
+          Authorize
+        </FxButton>
       </FxBox>
     </FxBottomSheetModal>
   );
