@@ -1,3 +1,4 @@
+export * from './dApps'
 import { FC } from 'react';
 import { SvgProps } from 'react-native-svg';
 

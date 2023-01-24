@@ -5,9 +5,13 @@ import {
   FxBox,
   FxButton,
   FxTextInput,
+  useToast,
 } from '@functionland/component-library';
+import { fula } from '@functionland/react-native-fula'
+
 import { imageMap } from './../../../../api/connectedDApps';
 import { SubHeaderText } from './../../../../components/Text';
+import { useDAppsStore } from 'apps/box/src/stores/dAppsSettingsStore';
 
 export type AddAppForm = {
   appName?: string;
@@ -22,6 +26,8 @@ const AddDAppModal = React.forwardRef<
   AddDAppModalProps
 >((props, ref) => {
   const { form } = props;
+  const { queueToast } = useToast();
+  const [setAuth, addOrUpdateDApp] = useDAppsStore(state => [state.setAuth, state.addOrUpdateDApp]);
   const [addForm, setAddForm] = useState<AddAppForm>({
     appName: form?.appName,
     bundleId: form?.bundleId,
@@ -32,6 +38,27 @@ const AddDAppModal = React.forwardRef<
       ...form,
     });
   }, [form]);
+  const authorize = () => {
+    try {
+      setAuth({
+        peerId: form.peerId,
+        allow: true
+      })
+      addOrUpdateDApp({
+        name: addForm.appName,
+        peerId: addForm.peerId,
+        bundleId: addForm.bundleId,
+        authorized: true
+      })
+      close()
+    } catch (error) {
+      queueToast({
+        type: "error",
+        title: "error",
+        message: error,
+      })
+    }
+  }
   return (
     <FxBottomSheetModal ref={ref}>
       <FxBox>
@@ -70,7 +97,8 @@ const AddDAppModal = React.forwardRef<
             }
           />
         </FxBox>
-        <FxButton size="large" onPress={() => close()}>
+        <FxButton size="large" disabled={!addForm.peerId || !addForm.appName || !addForm.bundleId}
+          onPress={authorize}>
           Authorize
         </FxButton>
       </FxBox>
