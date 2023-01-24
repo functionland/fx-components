@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import {
   FxBottomSheetModalMethods,
@@ -31,9 +31,12 @@ import {
 } from '../screens/Settings';
 import { ComponentGalleryNavigator } from './ComponentGallery.navigator';
 import { GlobalBottomSheet } from '../components/GlobalBottomSheet';
+import { Helper } from '../utils';
+import { useUserProfileStore } from '../stores/useUserProfileStore';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
+  const [password, signiture] = useUserProfileStore(state => [state.password, state.signiture])
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
 
   const openGlobalBottomSheet = () => {
@@ -44,6 +47,12 @@ export const MainTabsNavigator = () => {
     globalBottomSheetRef.current.close();
   };
 
+  useEffect(() => {
+    if (password && signiture) {
+      Helper.initFula(password, signiture, '/ip4/192.168.0.188/tcp/4000/p2p/12D3KooWJGEKpEVSsM7zpWdT33GzY5qxRQEpNKZGT4ivKkoGB2t9')
+    }
+  }, [password, signiture])
+  
   return (
     <>
       <MainTabs.Navigator

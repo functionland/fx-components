@@ -31,10 +31,12 @@ const createDAppsSlice: StateCreator<
     connectedDApps: [],
     setAuth: async ({ peerId, allow }) => {
       try {
-        if(!await fula.isReady())
-          throw 'Fula is not ready!'
+        console.log('setAuth',{ peerId, allow })
+        // if(!await fula.isReady())
+        //   throw 'Fula is not ready!'
         return await fula.setAuth(peerId, allow);
       } catch (error) {
+        console.log('setAuth: ',error)
         throw error
       }
     },
