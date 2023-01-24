@@ -33,7 +33,7 @@ export const SetBloxAuthorizerScreen = () => {
     generateAppPeerId();
   }, []);
   const generateAppPeerId = async () => {
-    const peerId = await newFulaClient(password, signiture);
+    const peerId = await Helper.initFula(password, signiture);
     if (peerId) setNewPeerId(peerId);
   };
   const goBack = () => navigation.goBack();
@@ -46,28 +46,6 @@ export const SetBloxAuthorizerScreen = () => {
     if (newPeerId) {
       //TO DO : call Bolx hardware api to set owner's peerId
       setAppPeerId(newPeerId);
-    }
-  };
-
-  //TO DO: un comment the codes
-
-  const newFulaClient = async (password: string, signiture: string) => {
-    if (password && signiture) {
-      const keyPair = Helper.getMyDIDKeyPair(password, signiture);
-      try {
-        if (await fula.isReady()) await fula.shutdown();
-        const peerId = await fula.newClient(
-          keyPair.secretKey.toString(), //bytes of the privateKey of did identity in string format
-          ``, // leave empty to use the default temp one
-          '',
-          'noop', //leave empty for testing without a backend node
-          false
-        );
-        return peerId;
-      } catch (error) {
-        console.log('newFulaClient', error);
-        return null;
-      }
     }
   };
 
