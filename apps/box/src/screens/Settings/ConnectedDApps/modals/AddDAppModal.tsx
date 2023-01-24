@@ -12,6 +12,7 @@ import { fula } from '@functionland/react-native-fula'
 import { imageMap } from './../../../../api/connectedDApps';
 import { SubHeaderText } from './../../../../components/Text';
 import { useDAppsStore } from 'apps/box/src/stores/dAppsSettingsStore';
+import { useBottomSheet } from '@gorhom/bottom-sheet';
 
 export type AddAppForm = {
   appName?: string;
@@ -50,7 +51,6 @@ const AddDAppModal = React.forwardRef<
         bundleId: addForm.bundleId,
         authorized: true
       })
-      close()
     } catch (error) {
       queueToast({
         type: "error",

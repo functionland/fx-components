@@ -37,6 +37,7 @@ export const initFula = async (
         bloxAddr??'noop', //leave empty for testing without a backend node
         false
       );
+      console.log('peerId: ',peerId)
       return peerId;
     } catch (error) {
       console.log('initFula', error);
