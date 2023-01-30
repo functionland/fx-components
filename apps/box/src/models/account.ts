@@ -1,4 +1,4 @@
 export type TAccount = {
-    seed: string;
-    account: string;
-}
+  seed: string;
+  account: string;
+};

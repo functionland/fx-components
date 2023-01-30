@@ -1,6 +1,6 @@
 // @ts-ignore-next-line
 import { HDKEY, DID } from '@functionland/fula-sec';
-import { fula } from '@functionland/react-native-fula'
+import { fula } from '@functionland/react-native-fula';
 
 export const getMyDID = (password: string, signiture: string): string => {
   const ed = new HDKEY(password);
@@ -34,10 +34,10 @@ export const initFula = async (
         keyPair.secretKey.toString(), //bytes of the privateKey of did identity in string format
         ``, // leave empty to use the default temp one
         bloxAddr,
-        bloxAddr??'noop', //leave empty for testing without a backend node
+        bloxAddr ?? 'noop', //leave empty for testing without a backend node
         false
       );
-      console.log('peerId: ',peerId)
+      console.log('peerId: ', peerId);
       return peerId;
     } catch (error) {
       console.log('initFula', error);
@@ -45,4 +45,3 @@ export const initFula = async (
     }
   }
 };
-
