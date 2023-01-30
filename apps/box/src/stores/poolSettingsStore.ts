@@ -1,10 +1,9 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { blockchain } from '@functionland/react-native-fula'
+import { blockchain } from '@functionland/react-native-fula';
 
-import { TDApp, TPool } from '../models';
-
+import { TPool } from '../models';
 
 interface DAppsSlice {
   _hasHydrated: boolean;
@@ -12,10 +11,34 @@ interface DAppsSlice {
 
   setHasHydrated: (isHydrated: boolean) => void;
   getPools: () => Promise<TPool[]>;
-  addPool?: ({ seed, poolName }: { seed: string, poolName: string }) => Promise<TPool>
-  joinPool?: ({ seed, poolID }: { seed: string, poolID: number }) => Promise<void>
-  leavePool?: ({ seed, poolID }: { seed: string, poolID: number }) => Promise<void>
-  cancelPoolJoin?: ({ seed, poolID }: { seed: string, poolID: number }) => Promise<void>
+  addPool?: ({
+    seed,
+    poolName,
+  }: {
+    seed: string;
+    poolName: string;
+  }) => Promise<TPool>;
+  joinPool?: ({
+    seed,
+    poolID,
+  }: {
+    seed: string;
+    poolID: number;
+  }) => Promise<void>;
+  leavePool?: ({
+    seed,
+    poolID,
+  }: {
+    seed: string;
+    poolID: number;
+  }) => Promise<void>;
+  cancelPoolJoin?: ({
+    seed,
+    poolID,
+  }: {
+    seed: string;
+    poolID: number;
+  }) => Promise<void>;
 }
 const createDAppsSlice: StateCreator<
   DAppsSlice,
@@ -36,20 +59,21 @@ const createDAppsSlice: StateCreator<
         // if(!await fula.isReady())
         //   throw 'Fula is not ready!'
         const currentPools = get().pools;
-        const newPools = ((await blockchain.listPools())?.pools || []) as TPool[];
+        const newPools = ((await blockchain.listPools())?.pools ||
+          []) as TPool[];
         set({
           pools: {
             ...currentPools,
             ...newPools.reduce((obj, pool) => {
               obj[pool.poolID] = pool;
               return obj;
-            }, {})
-          }
-        })
+            }, {}),
+          },
+        });
         return newPools;
       } catch (error) {
-        console.log('getPools: ', error)
-        throw error
+        console.log('getPools: ', error);
+        throw error;
       }
     },
   }),

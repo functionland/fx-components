@@ -21,12 +21,12 @@ interface UserProfileSlice {
   appPeerId?: string | undefined;
   bloxPeerIds?: string[] | undefined;
   accounts: TAccount[];
-  activeAccount?: TAccount | undefined
+  activeAccount?: TAccount | undefined;
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
   loadAllCredentials: () => Promise<void>;
   setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
   setAppPeerId: (peerId: string | undefined) => void;
-  createAccount: (seed: string) => Promise<TAccount>
+  createAccount: (seed: string) => Promise<TAccount>;
   logout: () => boolean;
 }
 const createUserProfileSlice: StateCreator<
@@ -118,7 +118,7 @@ const createUserProfileSlice: StateCreator<
         appPeerId: peerId,
       });
     },
-    createAccount: async()=>{
+    createAccount: async () => {
       //TO DO:
       throw 'Not Implemented';
     },
@@ -143,7 +143,7 @@ const createUserProfileSlice: StateCreator<
       bloxPeerIds: state.bloxPeerIds,
       appPeerId: state.appPeerId,
       accounts: state.accounts,
-      activeAccount: state.activeAccount
+      activeAccount: state.activeAccount,
     }),
   }
 );

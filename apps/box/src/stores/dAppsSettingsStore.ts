@@ -1,19 +1,24 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fula } from '@functionland/react-native-fula'
+import { fula } from '@functionland/react-native-fula';
 
 import { TDApp } from '../models';
-
 
 interface DAppsSlice {
   _hasHydrated: boolean;
   connectedDApps: Record<string, TDApp>;
 
   setHasHydrated: (isHydrated: boolean) => void;
-  setAuth: ({ peerId, allow }: { peerId: string, allow: boolean }) => Promise<boolean>;
-  addOrUpdateDApp: (dApp: Partial<TDApp>) => TDApp
-  removeDApp: (peerId: string) => void
+  setAuth: ({
+    peerId,
+    allow,
+  }: {
+    peerId: string;
+    allow: boolean;
+  }) => Promise<boolean>;
+  addOrUpdateDApp: (dApp: Partial<TDApp>) => TDApp;
+  removeDApp: (peerId: string) => void;
 }
 const createDAppsSlice: StateCreator<
   DAppsSlice,
@@ -35,8 +40,8 @@ const createDAppsSlice: StateCreator<
         //   throw 'Fula is not ready!'
         return await fula.setAuth(peerId, allow);
       } catch (error) {
-        console.log('setAuth: ', error)
-        throw error
+        console.log('setAuth: ', error);
+        throw error;
       }
     },
     addOrUpdateDApp: (dApp) => {
@@ -46,30 +51,30 @@ const createDAppsSlice: StateCreator<
       if (findDApp) {
         findDApp = {
           ...findDApp,
-          ...dApp
-        }
+          ...dApp,
+        };
       } else {
         findDApp = {
-          ...dApp
-        } as TDApp
+          ...dApp,
+        } as TDApp;
       }
       set({
         connectedDApps: {
           ...dApps,
-          [findDApp.peerId]: findDApp
-        }
-      })
-      return findDApp
+          [findDApp.peerId]: findDApp,
+        },
+      });
+      return findDApp;
     },
     removeDApp: (peerId) => {
       const dApps = get().connectedDApps;
-      delete dApps[peerId]
+      delete dApps[peerId];
       set({
         connectedDApps: {
-          ...dApps
-        }
-      })
-    }
+          ...dApps,
+        },
+      });
+    },
   }),
   {
     name: 'dAppsSlice',

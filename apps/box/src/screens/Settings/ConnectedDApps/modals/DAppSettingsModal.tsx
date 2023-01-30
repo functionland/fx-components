@@ -9,17 +9,15 @@ import {
 } from '@functionland/component-library';
 import { Alert, Image, StyleSheet } from 'react-native';
 import { scaleByWidth } from './../../../../constants/layout';
-import {
-  imageMap,
-} from './../../../../api/connectedDApps';
+import { imageMap } from './../../../../api/connectedDApps';
 import { DoneButton } from '../components';
 import { RowDetails } from '../components/DAppCard';
 import { ExternalLinkIcon } from './../../../../components';
 import ClearDAppModal from './ClearDAppModal';
-import { TDApp } from 'apps/box/src/models';
+import { TDApp } from '../../../../models';
 
 type DAppSettingsModalProps = {
-  dApp?: TDApp,
+  dApp?: TDApp;
   onClearDataPress: () => void;
 };
 const DAppSettingsModal = React.forwardRef<
@@ -33,7 +31,7 @@ const DAppSettingsModal = React.forwardRef<
     <>
       <FxBottomSheetModal ref={ref}>
         <FxBox alignItems="center" marginTop="24">
-          <Image style={s.image} source={imageMap['fileSync']} />
+          <Image style={s.image} source={imageMap.fileSync} />
           <FxCard.Title marginTop="16">{name}</FxCard.Title>
           <FxTag marginTop="4">{tag}</FxTag>
         </FxBox>

@@ -9,10 +9,13 @@ import {
 } from '@functionland/component-library';
 
 import DAppHeader from './DAppHeader';
-import { TDApp } from 'apps/box/src/models';
+import { TDApp } from '../../../../models';
 
 type RowDetailsProps = {
-  data: Pick<TDApp, 'storageUsed' | 'lastUpdate' | 'name' | 'authorized' | 'bundleId'>;
+  data: Pick<
+    TDApp,
+    'storageUsed' | 'lastUpdate' | 'name' | 'authorized' | 'bundleId'
+  >;
 };
 
 type CardDetailsProps = Pick<RowDetailsProps, 'data'> & {
@@ -33,7 +36,7 @@ export const RowDetails = ({ data }: RowDetailsProps) => {
         <FxCard.Row.Title>Bundle Id</FxCard.Row.Title>
         <FxCard.Row.Data>{data?.bundleId}</FxCard.Row.Data>
       </FxCard.Row>
-      <FxCard.Row >
+      <FxCard.Row>
         <FxCard.Row.Title>Current use</FxCard.Row.Title>
         <FxCard.Row.Data>
           {convertMegabyteToGigabyte(data.storageUsed || 0)} GB
@@ -72,7 +75,13 @@ const DAppCard = ({
       {isDetailed && (
         <CardDetails
           onPress={onPress}
-          data={pick(data, ['storageUsed', 'lastUpdate', 'name', 'bundleId', 'authorized'])}
+          data={pick(data, [
+            'storageUsed',
+            'lastUpdate',
+            'name',
+            'bundleId',
+            'authorized',
+          ])}
         />
       )}
     </FxCard>

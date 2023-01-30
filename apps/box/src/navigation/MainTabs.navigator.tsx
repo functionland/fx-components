@@ -36,7 +36,10 @@ import { useUserProfileStore } from '../stores/useUserProfileStore';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
-  const [password, signiture] = useUserProfileStore(state => [state.password, state.signiture])
+  const [password, signiture] = useUserProfileStore((state) => [
+    state.password,
+    state.signiture,
+  ]);
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
 
   const openGlobalBottomSheet = () => {
@@ -49,10 +52,14 @@ export const MainTabsNavigator = () => {
 
   useEffect(() => {
     if (password && signiture) {
-      Helper.initFula(password, signiture, '/ip4/192.168.0.188/tcp/40001/p2p/12D3KooWJGEKpEVSsM7zpWdT33GzY5qxRQEpNKZGT4ivKkoGB2t9')
+      Helper.initFula(
+        password,
+        signiture,
+        '/ip4/192.168.0.188/tcp/40001/p2p/12D3KooWJGEKpEVSsM7zpWdT33GzY5qxRQEpNKZGT4ivKkoGB2t9'
+      );
     }
-  }, [password, signiture])
-  
+  }, [password, signiture]);
+
   return (
     <>
       <MainTabs.Navigator

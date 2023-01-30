@@ -16,7 +16,7 @@ export type AddAppForm = {
 };
 type AddDAppModalProps = {
   form?: AddAppForm;
-  onSubmit?: (form: AddAppForm) => void,
+  onSubmit?: (form: AddAppForm) => void;
 };
 const AddDAppModal = React.forwardRef<
   FxBottomSheetModalMethods,
@@ -34,8 +34,8 @@ const AddDAppModal = React.forwardRef<
     });
   }, [form]);
   const addAndAuthorize = async () => {
-    onSubmit?.(form)
-  }
+    onSubmit?.(form);
+  };
   return (
     <FxBottomSheetModal ref={ref}>
       <FxBox>
@@ -74,8 +74,11 @@ const AddDAppModal = React.forwardRef<
             }
           />
         </FxBox>
-        <FxButton size="large" disabled={!addForm.peerId || !addForm.appName || !addForm.bundleId}
-          onPress={addAndAuthorize}>
+        <FxButton
+          size="large"
+          disabled={!addForm.peerId || !addForm.appName || !addForm.bundleId}
+          onPress={addAndAuthorize}
+        >
           Add and Authorize
         </FxButton>
       </FxBox>
