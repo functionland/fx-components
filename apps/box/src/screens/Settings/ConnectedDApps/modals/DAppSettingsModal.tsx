@@ -10,34 +10,30 @@ import {
 import { Alert, Image, StyleSheet } from 'react-native';
 import { scaleByWidth } from './../../../../constants/layout';
 import {
-  DApps,
   imageMap,
-  mockConnectedDAppsData,
 } from './../../../../api/connectedDApps';
 import { DoneButton } from '../components';
 import { RowDetails } from '../components/DAppCard';
 import { ExternalLinkIcon } from './../../../../components';
 import ClearDAppModal from './ClearDAppModal';
+import { TDApp } from 'apps/box/src/models';
 
 type DAppSettingsModalProps = {
-  dAppKey: DApps;
-  bloxIndex: number;
+  dApp?: TDApp,
   onClearDataPress: () => void;
 };
 const DAppSettingsModal = React.forwardRef<
   FxBottomSheetModalMethods,
   DAppSettingsModalProps
->(({ dAppKey, bloxIndex }, ref) => {
+>(({ dApp }, ref) => {
   const clearDAppModalRef = React.useRef<FxBottomSheetModalMethods>(null);
-
-  if (!dAppKey || bloxIndex == null) return null;
-
-  const { name, tag } = mockConnectedDAppsData[bloxIndex].data[dAppKey];
+  if (!dApp) return null;
+  const { name, tag } = dApp || {};
   return (
     <>
       <FxBottomSheetModal ref={ref}>
         <FxBox alignItems="center" marginTop="24">
-          <Image style={s.image} source={imageMap[dAppKey]} />
+          <Image style={s.image} source={imageMap['fileSync']} />
           <FxCard.Title marginTop="16">{name}</FxCard.Title>
           <FxTag marginTop="4">{tag}</FxTag>
         </FxBox>
@@ -50,7 +46,7 @@ const DAppSettingsModal = React.forwardRef<
         >
           {`${name} settings`}
         </FxButton>
-        <RowDetails data={mockConnectedDAppsData[bloxIndex].data[dAppKey]} />
+        <RowDetails data={dApp} />
         <FxButton
           variant="inverted"
           marginTop="32"

@@ -8,11 +8,11 @@ import {
   FxCardProps,
 } from '@functionland/component-library';
 
-import { TDApp } from './../../../../api/connectedDApps';
 import DAppHeader from './DAppHeader';
+import { TDApp } from 'apps/box/src/models';
 
 type RowDetailsProps = {
-  data: Pick<TDApp, 'storageUsed' | 'lastUpdate' | 'name'>;
+  data: Pick<TDApp, 'storageUsed' | 'lastUpdate' | 'name' | 'authorized' | 'bundleId'>;
 };
 
 type CardDetailsProps = Pick<RowDetailsProps, 'data'> & {
@@ -30,14 +30,18 @@ export const RowDetails = ({ data }: RowDetailsProps) => {
   return (
     <>
       <FxCard.Row marginTop="24">
+        <FxCard.Row.Title>Bundle Id</FxCard.Row.Title>
+        <FxCard.Row.Data>{data?.bundleId}</FxCard.Row.Data>
+      </FxCard.Row>
+      <FxCard.Row >
         <FxCard.Row.Title>Current use</FxCard.Row.Title>
         <FxCard.Row.Data>
-          {convertMegabyteToGigabyte(data.storageUsed)} GB
+          {convertMegabyteToGigabyte(data.storageUsed || 0)} GB
         </FxCard.Row.Data>
       </FxCard.Row>
       <FxCard.Row>
         <FxCard.Row.Title>Last update</FxCard.Row.Title>
-        <FxCard.Row.Data>{data.lastUpdate.toDateString()}</FxCard.Row.Data>
+        <FxCard.Row.Data>{data.lastUpdate?.toDateString()}</FxCard.Row.Data>
       </FxCard.Row>
     </>
   );
@@ -68,7 +72,7 @@ const DAppCard = ({
       {isDetailed && (
         <CardDetails
           onPress={onPress}
-          data={pick(data, ['storageUsed', 'lastUpdate', 'name'])}
+          data={pick(data, ['storageUsed', 'lastUpdate', 'name', 'bundleId', 'authorized'])}
         />
       )}
     </FxCard>
