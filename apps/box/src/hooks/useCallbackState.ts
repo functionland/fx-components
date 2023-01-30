@@ -18,7 +18,7 @@ const useCallbackState: RetType = <T>(initialValue: T | (() => T)) => {
   }, [state]);
 
   const setState = (newValue: SetStateType<T>, callback?: CallBackType<T>) => {
-    _setState(newValue);
+    _setState({ ...newValue } as T);
     if (callback && typeof callback === 'function') {
       callbackQueue.current.push(callback);
     }
