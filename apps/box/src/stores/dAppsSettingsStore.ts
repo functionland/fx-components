@@ -8,7 +8,7 @@ import { TDApp } from '../models';
 
 interface DAppsSlice {
   _hasHydrated: boolean;
-  connectedDApps: TDApp[];
+  connectedDApps: Record<string, TDApp>;
 
   setHasHydrated: (isHydrated: boolean) => void;
   setAuth: ({ peerId, allow }: { peerId: string, allow: boolean }) => Promise<boolean>;
@@ -28,21 +28,21 @@ const createDAppsSlice: StateCreator<
         _hasHydrated: isHydrated,
       });
     },
-    connectedDApps: [],
+    connectedDApps: {},
     setAuth: async ({ peerId, allow }) => {
       try {
-        console.log('setAuth',{ peerId, allow })
         // if(!await fula.isReady())
         //   throw 'Fula is not ready!'
         return await fula.setAuth(peerId, allow);
       } catch (error) {
-        console.log('setAuth: ',error)
+        console.log('setAuth: ', error)
         throw error
       }
     },
     addOrUpdateDApp: (dApp) => {
       const dApps = get().connectedDApps;
-      let findDApp: TDApp = dApps.find(app => app.peerId === dApp.peerId)?.[0];
+
+      let findDApp: TDApp = dApps[dApp.peerId];
       if (findDApp) {
         findDApp = {
           ...findDApp,
@@ -54,14 +54,20 @@ const createDAppsSlice: StateCreator<
         } as TDApp
       }
       set({
-        connectedDApps: dApps.map(app => app.peerId === findDApp.peerId ? findDApp : app)
+        connectedDApps: {
+          ...dApps,
+          [findDApp.peerId]: findDApp
+        }
       })
       return findDApp
     },
-    removeDApp: (peerId)=>{
+    removeDApp: (peerId) => {
       const dApps = get().connectedDApps;
+      delete dApps[peerId]
       set({
-        connectedDApps: dApps.filter(app => app.peerId === peerId)
+        connectedDApps: {
+          ...dApps
+        }
       })
     }
   }),

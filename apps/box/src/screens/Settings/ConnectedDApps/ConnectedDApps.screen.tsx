@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Reanimated from 'react-native-reanimated';
 import {
   FxBox,
   FxHeader,
   FxBottomSheetModalMethods,
+  useToast,
 } from '@functionland/component-library';
-
 import { SmallHeaderText } from '../../../components/Text';
 
 import { AddDAppModal, DAppSettingsModal } from './modals';
@@ -18,6 +18,8 @@ import {
 import { DAppCard } from './components';
 import { RouteProp } from '@react-navigation/native';
 import { AddAppForm } from './modals/AddDAppModal';
+import { useDAppsStore } from 'apps/box/src/stores/dAppsSettingsStore';
+import { TDApp } from 'apps/box/src/models';
 interface Props {
   route: RouteProp<{
     params: { appName?: string; bundleId?: string; peerId?: string };
@@ -29,9 +31,12 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
   const dAppSettingsModalRef = useRef<FxBottomSheetModalMethods>(null);
   const clearDAppDataModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [bloxIndex] = React.useState(0);
-  const [selectedDAppKey, setSelectedDAppKey] = useCallbackState<DApps>(null);
+  const [selectedDApp, setSelectedDApp] = useCallbackState<TDApp>(null);
   const [addAppForm, setAddAppForm] = useState<AddAppForm | undefined>();
+  const [connectedDApps, setAuth, addOrUpdateDApp] = useDAppsStore(state => [state.connectedDApps, state.setAuth, state.addOrUpdateDApp]);
+  const { queueToast } = useToast();
 
+  const connectedDAppsArray = useMemo(() => Object.values(connectedDApps), [connectedDApps])
   const blox = mockConnectedDAppsData[bloxIndex];
   useEffect(() => {
     if (route?.params?.appName) {
@@ -43,12 +48,36 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
       addDAppModalRef.current?.present();
     }
   }, []);
-  const showDAppSettingsModal = (key: DApps) => {
-    setSelectedDAppKey(key, () =>
-      dAppSettingsModalRef.current?.present({ key, bloxIndex })
-    );
-  };
-
+  const showDAppSettingsModal = (dApp: TDApp) => {
+    setSelectedDApp(dApp, () => {
+      console.log('dApp', dApp)
+      dAppSettingsModalRef.current?.present({ dApp })
+    })
+  }
+  const addAndAuthorize = async (dApp: AddAppForm) => {
+    try {
+      const result = await setAuth({
+        peerId: dApp.peerId,
+        allow: true
+      })
+      console.log('setAuth result', result)
+      addOrUpdateDApp({
+        name: dApp.appName,
+        peerId: dApp.peerId,
+        bundleId: dApp.bundleId,
+        authorized: true,
+        lastUpdate: new Date(),
+        storageUsed: 0,
+      })
+      addDAppModalRef.current?.close();
+    } catch (error) {
+      queueToast({
+        type: "error",
+        title: "error",
+        message: error,
+      })
+    }
+  }
   return (
     <Reanimated.ScrollView>
       <FxBox marginHorizontal="20" marginVertical="20">
@@ -61,26 +90,23 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
           setIsList={setIsList}
           onAddPress={() => addDAppModalRef.current?.present()}
         />
-        {Object.entries(blox.data).map(([key, dApp]) => {
+        {connectedDAppsArray.map((dApp) => {
           return (
-            dApp.isConnected && (
-              <DAppCard
-                key={key}
-                isDetailed={!isList}
-                imageSrc={imageMap[key]}
-                data={dApp}
-                onPress={() => showDAppSettingsModal(key as DApps)}
-              />
-            )
+            <DAppCard
+              key={dApp.peerId}
+              isDetailed={!isList}
+              imageSrc={imageMap['fileSync']}
+              data={dApp}
+              onPress={() => showDAppSettingsModal(dApp)}
+            />
           );
         })}
       </FxBox>
-      <AddDAppModal ref={addDAppModalRef} form={addAppForm} />
+      <AddDAppModal ref={addDAppModalRef} form={addAppForm} onSubmit={addAndAuthorize} />
       <DAppSettingsModal
         onClearDataPress={() => clearDAppDataModalRef.current?.present()}
-        dAppKey={selectedDAppKey}
-        bloxIndex={bloxIndex}
         ref={dAppSettingsModalRef}
+        dApp={selectedDApp}
       />
     </Reanimated.ScrollView>
   );

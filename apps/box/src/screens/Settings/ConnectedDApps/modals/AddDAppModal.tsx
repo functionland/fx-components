@@ -5,14 +5,9 @@ import {
   FxBox,
   FxButton,
   FxTextInput,
-  useToast,
 } from '@functionland/component-library';
-import { fula } from '@functionland/react-native-fula'
 
-import { imageMap } from './../../../../api/connectedDApps';
 import { SubHeaderText } from './../../../../components/Text';
-import { useDAppsStore } from 'apps/box/src/stores/dAppsSettingsStore';
-import { useBottomSheet } from '@gorhom/bottom-sheet';
 
 export type AddAppForm = {
   appName?: string;
@@ -21,14 +16,13 @@ export type AddAppForm = {
 };
 type AddDAppModalProps = {
   form?: AddAppForm;
+  onSubmit?: (form: AddAppForm) => void,
 };
 const AddDAppModal = React.forwardRef<
   FxBottomSheetModalMethods,
   AddDAppModalProps
 >((props, ref) => {
-  const { form } = props;
-  const { queueToast } = useToast();
-  const [setAuth, addOrUpdateDApp] = useDAppsStore(state => [state.setAuth, state.addOrUpdateDApp]);
+  const { form, onSubmit } = props;
   const [addForm, setAddForm] = useState<AddAppForm>({
     appName: form?.appName,
     bundleId: form?.bundleId,
@@ -39,25 +33,8 @@ const AddDAppModal = React.forwardRef<
       ...form,
     });
   }, [form]);
-  const authorize = () => {
-    try {
-      setAuth({
-        peerId: form.peerId,
-        allow: true
-      })
-      addOrUpdateDApp({
-        name: addForm.appName,
-        peerId: addForm.peerId,
-        bundleId: addForm.bundleId,
-        authorized: true
-      })
-    } catch (error) {
-      queueToast({
-        type: "error",
-        title: "error",
-        message: error,
-      })
-    }
+  const addAndAuthorize = async () => {
+    onSubmit?.(form)
   }
   return (
     <FxBottomSheetModal ref={ref}>
@@ -98,8 +75,8 @@ const AddDAppModal = React.forwardRef<
           />
         </FxBox>
         <FxButton size="large" disabled={!addForm.peerId || !addForm.appName || !addForm.bundleId}
-          onPress={authorize}>
-          Authorize
+          onPress={addAndAuthorize}>
+          Add and Authorize
         </FxButton>
       </FxBox>
     </FxBottomSheetModal>
