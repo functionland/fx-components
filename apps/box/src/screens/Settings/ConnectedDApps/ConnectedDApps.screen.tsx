@@ -10,16 +10,12 @@ import { SmallHeaderText } from '../../../components/Text';
 
 import { AddDAppModal, DAppSettingsModal } from './modals';
 import useCallbackState from './../../../hooks/useCallbackState';
-import {
-  mockConnectedDAppsData,
-  imageMap,
-  DApps,
-} from '../../../api/connectedDApps';
+import { mockConnectedDAppsData, imageMap } from '../../../api/connectedDApps';
 import { DAppCard } from './components';
 import { RouteProp } from '@react-navigation/native';
 import { AddAppForm } from './modals/AddDAppModal';
-import { useDAppsStore } from 'apps/box/src/stores/dAppsSettingsStore';
-import { TDApp } from 'apps/box/src/models';
+import { useDAppsStore } from '../../../stores/dAppsSettingsStore';
+import { TDApp } from '../../../models';
 interface Props {
   route: RouteProp<{
     params: { appName?: string; bundleId?: string; peerId?: string };
@@ -33,10 +29,17 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
   const [bloxIndex] = React.useState(0);
   const [selectedDApp, setSelectedDApp] = useCallbackState<TDApp>(null);
   const [addAppForm, setAddAppForm] = useState<AddAppForm | undefined>();
-  const [connectedDApps, setAuth, addOrUpdateDApp] = useDAppsStore(state => [state.connectedDApps, state.setAuth, state.addOrUpdateDApp]);
+  const [connectedDApps, setAuth, addOrUpdateDApp] = useDAppsStore((state) => [
+    state.connectedDApps,
+    state.setAuth,
+    state.addOrUpdateDApp,
+  ]);
   const { queueToast } = useToast();
 
-  const connectedDAppsArray = useMemo(() => Object.values(connectedDApps), [connectedDApps])
+  const connectedDAppsArray = useMemo(
+    () => Object.values(connectedDApps),
+    [connectedDApps]
+  );
   const blox = mockConnectedDAppsData[bloxIndex];
   useEffect(() => {
     if (route?.params?.appName) {
@@ -47,20 +50,19 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
       });
       addDAppModalRef.current?.present();
     }
-  }, []);
+  }, [route?.params]);
   const showDAppSettingsModal = (dApp: TDApp) => {
     setSelectedDApp(dApp, () => {
-      console.log('dApp', dApp)
-      dAppSettingsModalRef.current?.present({ dApp })
-    })
-  }
+      dAppSettingsModalRef.current?.present({ dApp });
+    });
+  };
   const addAndAuthorize = async (dApp: AddAppForm) => {
     try {
       const result = await setAuth({
         peerId: dApp.peerId,
-        allow: true
-      })
-      console.log('setAuth result', result)
+        allow: true,
+      });
+      console.log('setAuth result', result);
       addOrUpdateDApp({
         name: dApp.appName,
         peerId: dApp.peerId,
@@ -68,16 +70,16 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
         authorized: true,
         lastUpdate: new Date(),
         storageUsed: 0,
-      })
+      });
       addDAppModalRef.current?.close();
     } catch (error) {
       queueToast({
-        type: "error",
-        title: "error",
+        type: 'error',
+        title: 'error',
         message: error,
-      })
+      });
     }
-  }
+  };
   return (
     <Reanimated.ScrollView>
       <FxBox marginHorizontal="20" marginVertical="20">
@@ -95,14 +97,18 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
             <DAppCard
               key={dApp.peerId}
               isDetailed={!isList}
-              imageSrc={imageMap['fileSync']}
+              imageSrc={imageMap.fileSync}
               data={dApp}
               onPress={() => showDAppSettingsModal(dApp)}
             />
           );
         })}
       </FxBox>
-      <AddDAppModal ref={addDAppModalRef} form={addAppForm} onSubmit={addAndAuthorize} />
+      <AddDAppModal
+        ref={addDAppModalRef}
+        form={addAppForm}
+        onSubmit={addAndAuthorize}
+      />
       <DAppSettingsModal
         onClearDataPress={() => clearDAppDataModalRef.current?.present()}
         ref={dAppSettingsModalRef}

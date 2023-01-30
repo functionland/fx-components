@@ -8,7 +8,6 @@ import {
   FxSafeAreaBox,
   FxText,
 } from '@functionland/component-library';
-import { fula } from '@functionland/react-native-fula';
 
 import { useInitialSetupNavigation } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
@@ -31,7 +30,7 @@ export const SetBloxAuthorizerScreen = () => {
 
   useEffect(() => {
     generateAppPeerId();
-  }, []);
+  });
   const generateAppPeerId = async () => {
     const peerId = await Helper.initFula(password, signiture);
     if (peerId) setNewPeerId(peerId);
