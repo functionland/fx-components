@@ -39,12 +39,12 @@ export const RowDetails = ({ data }: RowDetailsProps) => {
       <FxCard.Row>
         <FxCard.Row.Title>Current use</FxCard.Row.Title>
         <FxCard.Row.Data>
-          {convertMegabyteToGigabyte(data.storageUsed || 0)} GB
+          {convertMegabyteToGigabyte(data?.storageUsed || 0)} GB
         </FxCard.Row.Data>
       </FxCard.Row>
       <FxCard.Row>
         <FxCard.Row.Title>Last update</FxCard.Row.Title>
-        <FxCard.Row.Data>{data.lastUpdate?.toDateString()}</FxCard.Row.Data>
+        <FxCard.Row.Data>{new Date(data?.lastUpdate).toDateString()}</FxCard.Row.Data>
       </FxCard.Row>
     </>
   );
@@ -69,6 +69,8 @@ const DAppCard = ({
   onPress,
   ...props
 }: DAppCardProps) => {
+  if(!data)
+    return null;
   return (
     <FxCard marginTop="16" {...props}>
       <DAppHeader imageSrc={imageSrc} name={data.name} tag={data.tag} />
