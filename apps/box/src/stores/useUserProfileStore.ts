@@ -1,8 +1,10 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { blockchain } from '@functionland/react-native-fula'
 import { KeyChain } from '../utils';
 import { TAccount } from '../models/account';
+
 
 interface UserProfileSlice {
   _hasHydrated: boolean;
@@ -26,7 +28,7 @@ interface UserProfileSlice {
   loadAllCredentials: () => Promise<void>;
   setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
   setAppPeerId: (peerId: string | undefined) => void;
-  createAccount: (seed: string) => Promise<TAccount>;
+  createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
   logout: () => boolean;
 }
 const createUserProfileSlice: StateCreator<
@@ -35,7 +37,7 @@ const createUserProfileSlice: StateCreator<
   [['zustand/persist', Partial<UserProfileSlice>]],
   UserProfileSlice
 > = persist(
-  (set) => ({
+  (set, get) => ({
     _hasHydrated: false,
     setHasHydrated: (isHydrated) => {
       set({
@@ -118,9 +120,17 @@ const createUserProfileSlice: StateCreator<
         appPeerId: peerId,
       });
     },
-    createAccount: async () => {
-      //TO DO:
-      throw 'Not Implemented';
+    createAccount: async ({ seed }) => {
+      try {
+        const accounts = get().accounts;
+        const account = await blockchain.createAccount(`/${seed}`);
+        set({
+          accounts: [account, ...accounts]
+        })
+        return account;
+      } catch (error) {
+        throw error;
+      }
     },
     logout: () => {
       // TO: cleare all persist user profile data
