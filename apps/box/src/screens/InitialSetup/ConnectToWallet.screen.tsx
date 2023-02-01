@@ -14,6 +14,7 @@ import { Routes } from '../../navigation/navigationConfig';
 import { getWalletImage } from '../../utils/media';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Helper } from '../../utils';
+import { WalletDetails } from '../../components/WalletDetails';
 
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -59,7 +60,7 @@ export const ConnectToWalletScreen = () => {
       <FxBox flex={1} justifyContent="space-between" paddingVertical="80">
         {walletConnect.connected ? (
           <>
-            <WalletDetails />
+            <WalletDetails allowChangeWallet={true} />
             {password && signiture ? (
               <FxBox>
                 <FxText variant="h300" textAlign="center">
@@ -94,58 +95,4 @@ export const ConnectToWalletScreen = () => {
   );
 };
 
-export const WalletDetails = () => {
-  const walletConnect = useWalletConnect();
-  const [walletId, setWalletId] = useUserProfileStore((state) => [
-    state.walletId,
-    state.setWalletId,
-  ]);
 
-  const handleChangeWallet = async () => {
-    try {
-      await walletConnect.killSession();
-      const wallet = await walletConnect.connect();
-      if (wallet.accounts[0] !== walletId) {
-        setWalletId(wallet.accounts[0], true);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  return (
-    <FxBox paddingVertical="12" alignItems="center">
-      <Image
-        source={
-          walletConnect.peerMeta.name === 'MetaMask'
-            ? getWalletImage(walletConnect.peerMeta.name)
-            : { uri: walletConnect.peerMeta.icons[0] }
-        }
-        style={styles.image}
-      />
-      <FxText variant="body" textAlign="center">
-        {walletConnect.peerMeta.name}
-      </FxText>
-      <FxText variant="bodySmallRegular" textAlign="center">
-        {walletConnect.accounts[0]}
-      </FxText>
-      <FxButton
-        variant="inverted"
-        paddingHorizontal="16"
-        marginTop="16"
-        onPress={handleChangeWallet}
-      >
-        Change Wallet
-      </FxButton>
-    </FxBox>
-  );
-};
-
-const styles = StyleSheet.create({
-  image: {
-    width: 150,
-    height: 150,
-    resizeMode: 'contain',
-    backgroundColor: 'transparent',
-  },
-});

@@ -12,9 +12,11 @@ import { EBloxInteractionType } from '../../../models';
 type TBloxHeader = {
   selectedMode: EBloxInteractionType;
   onChangeMode: VoidFunction;
+  onAvatarPress?: VoidFunction;
+
 };
 
-export const BloxHeader = ({ selectedMode, onChangeMode }: TBloxHeader) => {
+export const BloxHeader = ({ selectedMode, onChangeMode ,onAvatarPress}: TBloxHeader) => {
   const { colors } = useFxTheme();
 
   return (
@@ -46,6 +48,7 @@ export const BloxHeader = ({ selectedMode, onChangeMode }: TBloxHeader) => {
       <FxAvatar
         source={require('../../../api/mockAssets/sample.png')}
         size="small"
+        onPress={onAvatarPress}
       />
     </FxBox>
   );

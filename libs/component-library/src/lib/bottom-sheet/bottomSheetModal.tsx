@@ -1,5 +1,5 @@
-import React from 'react';
-import { Dimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Dimensions, InteractionManager } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetModalProps,
@@ -39,7 +39,14 @@ export const FxBottomSheetModal = React.forwardRef<
     animatedContentHeight,
     handleContentLayout,
   } = useBottomSheetDynamicSnapPoints(snapPoints);
+  const [isReady, setIsReady] = useState(false)
 
+  useEffect(() => {
+    const interactionPromise = InteractionManager.runAfterInteractions(() =>
+      setIsReady(true),
+    );
+    return () => interactionPromise.cancel();
+  }, []);
   const renderBackdrop = (props: BottomSheetBackdropProps) => {
     return (
       <BottomSheetBackdrop
@@ -100,7 +107,7 @@ export const FxBottomSheetModal = React.forwardRef<
             <FxCloseIcon color="content1" />
           </FxPressableOpacity>
         </FxBox>
-        <FxBox paddingHorizontal="20">{children}</FxBox>
+        <FxBox paddingHorizontal="20">{isReady ? children : <ActivityIndicator></ActivityIndicator>}</FxBox>
       </BottomSheetScrollView>
     </BottomSheetModal>
   );
