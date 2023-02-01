@@ -4,16 +4,19 @@ import { InitialSetupNavigator } from './InitialSetup.navigator';
 import { MainTabsNavigator } from './MainTabs.navigator';
 import { Routes, RootStackParamList } from './navigationConfig';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
+import { useWalletConnect } from '@walletconnect/react-native-dapp';
 
 export const RootNavigator = () => {
   const [_hasHydrated, appPeerId] = useUserProfileStore((state) => [
     state._hasHydrated,
-    state.appPeerId,
+    state.appPeerId
   ]);
+  const walletConnect = useWalletConnect();
   const [initialRoute, setInitialRoute] = useState(undefined);
+
   useEffect(() => {
     if (_hasHydrated && !initialRoute) {
-      if (appPeerId) {
+      if (appPeerId && walletConnect.connected) {
         setInitialRoute(Routes.MainTabs);
       } else {
         setInitialRoute(Routes.InitialSetup);

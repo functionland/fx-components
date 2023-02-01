@@ -24,11 +24,13 @@ import { mockHub } from '../../api/hub';
 import { mockFriendData } from '../../api/users';
 import { mockPoolData } from '../../api/pool';
 import { EBloxInteractionType } from '../../models';
+import { ProfileBottomSheet } from '../../components/ProfileBottomSheet';
 
 const DEFAULT_DIVISION = 70;
 
 export const BloxScreen = () => {
   const bloxInteractionModalRef = useRef<FxBottomSheetModalMethods>(null);
+  const profileBottomSheetRef = useRef<FxBottomSheetModalMethods>(null)
   const divisionSplit = useSharedValue(DEFAULT_DIVISION);
   const [divisionPercentage, setDivisionPercentage] =
     useState<number>(DEFAULT_DIVISION);
@@ -49,11 +51,16 @@ export const BloxScreen = () => {
     setDivisionPercentage(percentage);
   };
 
+  const showProfileModal = () => {
+    profileBottomSheetRef.current.present()
+  }
+  
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
       <BloxHeader
         selectedMode={selectedMode}
         onChangeMode={showInteractionModal}
+        onAvatarPress={showProfileModal}
       />
       <ScrollView>
         <FxBox paddingVertical="20" paddingHorizontal="20">
@@ -89,6 +96,7 @@ export const BloxScreen = () => {
         selectedMode={selectedMode}
         onSelectMode={handleSelectMode}
       />
+      <ProfileBottomSheet ref={profileBottomSheetRef} />
     </FxSafeAreaBox>
   );
 };
