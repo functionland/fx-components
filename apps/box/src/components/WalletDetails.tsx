@@ -25,13 +25,16 @@ export const WalletDetails = ({ allowChangeWallet, showPeerId, showDID }: Wallet
         state.setWalletId,
         state.appPeerId
     ]);
+
     const { queueToast } = useToast()
     const [signiture, password] = useUserProfileStore(
         (state) => [state.signiture, state.password]
     );
 
     const DID = useMemo(() => {
-        return Helper.getMyDID(password, signiture)
+        if (password && signiture)
+            return Helper.getMyDID(password, signiture)
+        return null
     }, [password, signiture])
 
     const handleChangeWallet = async () => {
@@ -46,7 +49,7 @@ export const WalletDetails = ({ allowChangeWallet, showPeerId, showDID }: Wallet
             queueToast({
                 type: 'error',
                 title: 'Error',
-                message: err
+                message: err?.toString()
             })
         }
     };
@@ -85,8 +88,8 @@ export const WalletDetails = ({ allowChangeWallet, showPeerId, showDID }: Wallet
                     Change Wallet
                 </FxButton>}
             {password && signiture && showDID && (
-                <FxBox marginTop='24'  width="100%">
-                   
+                <FxBox marginTop='24' width="100%">
+
                     <FxButton
                         onPress={() => copyToClipboard(DID)}
                         iconLeft={<CopyIcon />}
@@ -94,22 +97,22 @@ export const WalletDetails = ({ allowChangeWallet, showPeerId, showDID }: Wallet
                         paddingHorizontal='32'
                     >
                         <FxBox style={{ flex: 1, width: 250 }}>
-                            <FxText ellipsizeMode='tail' numberOfLines={1} style={{ width: 250}}>{DID}</FxText>
+                            <FxText ellipsizeMode='tail' numberOfLines={1} style={{ width: 250 }}>{DID}</FxText>
                         </FxBox>
                     </FxButton>
-                  
+
                 </FxBox>
             )}
             {appPeerId && showPeerId && (
                 <FxBox marginTop='24' width='100%'>
-                     <FxButton
+                    <FxButton
                         onPress={() => copyToClipboard(appPeerId)}
                         iconLeft={<CopyIcon />}
                         flexWrap='wrap'
                         paddingHorizontal='32'
                     >
                         <FxBox style={{ flex: 1, width: 250 }}>
-                            <FxText ellipsizeMode='tail' numberOfLines={1} style={{ width: 250}}>{`PeerId:${appPeerId}`}</FxText>
+                            <FxText ellipsizeMode='tail' numberOfLines={1} style={{ width: 250 }}>{`PeerId:${appPeerId}`}</FxText>
                         </FxBox>
                     </FxButton>
                 </FxBox>

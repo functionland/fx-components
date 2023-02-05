@@ -76,7 +76,7 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
       queueToast({
         type: 'error',
         title: 'error',
-        message: error,
+        message: error.toString(),
       });
     }
   };
