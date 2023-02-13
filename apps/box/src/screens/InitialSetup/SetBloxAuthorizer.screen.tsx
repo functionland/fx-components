@@ -30,7 +30,7 @@ export const SetBloxAuthorizerScreen = () => {
 
   useEffect(() => {
     generateAppPeerId();
-  });
+  },[]);
   const generateAppPeerId = async () => {
     const peerId = await Helper.initFula(password, signiture);
     if (peerId) setNewPeerId(peerId);
