@@ -1,4 +1,4 @@
-package com.box;
+package land.fx.blox;
 
 import android.os.Bundle;
 import expo.modules.ReactActivityDelegateWrapper;
