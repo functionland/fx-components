@@ -1,4 +1,4 @@
-package com.box.newarchitecture.components;
+package land.fx.blox.newarchitecture.components;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
