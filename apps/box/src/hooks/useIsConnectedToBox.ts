@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNetInfo, NetInfoStateType } from '@react-native-community/netinfo';
-export const DEFAULT_NETWORK_NAME = 'Blox';
+export const DEFAULT_NETWORK_NAME = 'FxBlox';
 
 export function useIsConnectedToBox() {
   const networkInfo = useNetInfo();
