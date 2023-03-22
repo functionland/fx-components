@@ -15,6 +15,7 @@ import { DAppCard } from './components';
 import { RouteProp } from '@react-navigation/native';
 import { AddAppForm } from './modals/AddDAppModal';
 import { useDAppsStore } from '../../../stores/dAppsSettingsStore';
+import { useUserProfileStore } from '../../../stores/useUserProfileStore'
 import { TDApp } from '../../../models';
 interface Props {
   route: RouteProp<{
@@ -34,6 +35,7 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
     state.setAuth,
     state.addOrUpdateDApp,
   ]);
+  const [setBloxPeerIds] = useUserProfileStore((state) => [state.setBloxPeerIds])
   const { queueToast } = useToast();
 
   const connectedDAppsArray = useMemo(
@@ -58,11 +60,14 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
   };
   const addAndAuthorize = async (dApp: AddAppForm) => {
     try {
-      const result = await setAuth({
+      const bloxPeerId = await setAuth({
         peerId: dApp.peerId,
         allow: true,
       });
-      console.log('setAuth result', result);
+      if (bloxPeerId) {
+        setBloxPeerIds([bloxPeerId])
+      }
+      console.log('setAuth result', bloxPeerId);
       addOrUpdateDApp({
         name: dApp.appName,
         peerId: dApp.peerId,

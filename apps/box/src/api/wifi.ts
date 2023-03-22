@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_URL = 'http://192.168.88.1:3500';
+import { API_URL } from './index'
 
 export const getProperties = async () => {
   return axios.get(`${API_URL}/properties`, {
