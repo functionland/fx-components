@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fula } from '@functionland/react-native-fula';
 
 import { TDApp } from '../models';
+import { exchangePeerId } from '../api/bloxHardware';
 
 interface DAppsSlice {
   _hasHydrated: boolean;
@@ -16,7 +17,7 @@ interface DAppsSlice {
   }: {
     peerId: string;
     allow: boolean;
-  }) => Promise<boolean>;
+  }) => Promise<string>;
   addOrUpdateDApp: (dApp: Partial<TDApp>) => TDApp;
   removeDApp: (peerId: string) => void;
 }
@@ -38,7 +39,9 @@ const createDAppsSlice: StateCreator<
       try {
         // if(!await fula.isReady())
         //   throw 'Fula is not ready!'
-        return await fula.setAuth(peerId, allow);
+        //return await fula.setAuth(peerId, allow);
+        const boxPeerId = await exchangePeerId({peer_id:peerId})
+        return boxPeerId;
       } catch (error) {
         console.log('setAuth: ', error);
         throw error;

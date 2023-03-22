@@ -1,3 +1,6 @@
+import axios from 'axios';
+import { API_URL } from './index'
+
 export type TBlox = {
   id: string; // peerId?
   totalStorage: number;
@@ -35,3 +38,11 @@ export const mockBlockHardware: TBlox[] = [
     ],
   },
 ];
+
+export const exchangePeerId = async (data: {
+  peer_id: string;
+}) : Promise<string> => {
+  return axios.post(`${API_URL}/peer/exchange`, data, {
+    timeout: 1000 * 15,
+  });
+};

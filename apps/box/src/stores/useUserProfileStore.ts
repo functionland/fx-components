@@ -28,6 +28,7 @@ interface UserProfileSlice {
   loadAllCredentials: () => Promise<void>;
   setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
   setAppPeerId: (peerId: string | undefined) => void;
+  setBloxPeerIds: (peerIds: string[] | undefined) => void;
   createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
   logout: () => boolean;
 }
@@ -118,6 +119,11 @@ const createUserProfileSlice: StateCreator<
     setAppPeerId: (peerId) => {
       set({
         appPeerId: peerId,
+      });
+    },
+    setBloxPeerIds: (peerIds) => {
+      set({
+        bloxPeerIds: peerIds,
       });
     },
     createAccount: async ({ seed }) => {
