@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet } from 'react-native';
-import { useWalletConnect } from '@walletconnect/react-native-dapp';
+import { useWalletConnect, withWalletConnect } from '@walletconnect/react-native-dapp';
 import {
   FxBox,
   FxButton,
+  FxPicker,
+  FxPickerItem,
   FxProgressBar,
   FxSafeAreaBox,
   FxText,
@@ -19,7 +21,9 @@ import { WalletDetails } from '../../components/WalletDetails';
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
   const walletConnect = useWalletConnect();
+  const [selectedChainId, setSelectedChainId] = useState(1);// defualt is Etherum
   const { queueToast } = useToast();
+  const [networkConfirmed, setNetwordConfirmed] = useState(false)
   const [walletId, signiture, password, setWalletId] = useUserProfileStore(
     (state) => [
       state.walletId,
@@ -28,12 +32,45 @@ export const ConnectToWalletScreen = () => {
       state.setWalletId,
     ]
   );
+  useEffect(()=>{
+    if(!walletConnect.connected)
+      return;
+    switch (walletConnect.chainId) {
+      case 1:
+        // Ethereum Mainnet
+        break;
+      case 137:
+        // polygon
+        break;
+      case 5:
+        // Goerli Testnet
+        break;
+      case 80001:
+        // Mumbai Testnet
+        break;
+      default:
+        // Unknown network
+        walletConnect.killSession()
+        queueToast({
+          title: 'Invalid network',
+          message: 'The network you have chosen is invalid',
+          type: 'error',
+          autoHideDuration: 6000,
+        });
+        return;
+    }
+    if (walletConnect.accounts[0] !== walletId) {
+      setWalletId(walletConnect.accounts[0], true);
+    }
+  },[walletConnect.connected])
   const handleWalletConnect = async () => {
     try {
-      const wallet = await walletConnect.connect();
-      if (wallet.accounts[0] !== walletId) {
-        setWalletId(wallet.accounts[0], true);
-      }
+      const wallet = await walletConnect.connect(
+        {
+          chainId: selectedChainId
+        }
+      );
+    
     } catch (err) {
       console.log(err);
       queueToast({
@@ -58,7 +95,7 @@ export const ConnectToWalletScreen = () => {
       <FxProgressBar progress={20} />
 
       <FxBox flex={1} justifyContent="space-between" paddingVertical="80">
-        {walletConnect.connected ? (
+        {walletConnect.connected && networkConfirmed? (
           <>
             <WalletDetails allowChangeWallet={true} />
             {password && signiture ? (
@@ -73,10 +110,25 @@ export const ConnectToWalletScreen = () => {
             ) : null}
           </>
         ) : (
-          <FxText variant="h300" textAlign="center">
-            Connect To Wallet
-          </FxText>
+          <>
+            <FxText variant="h300" textAlign="center">
+              Connect To Wallet
+            </FxText>
+            <FxBox>
+              <FxText variant="h200" marginBottom='8'>Select nerwork</FxText>
+              <FxPicker selectedValue={selectedChainId}
+                onValueChange={(itemValue: number) => setSelectedChainId(itemValue)}>
+                <FxPickerItem key={1} label='Ethereum Mainnet' value={1} />
+                <FxPickerItem key={5} label='Goerli Ethereum Testnet' value={5} />
+                <FxPickerItem key={137} label='Polygon Mainnet' value={137} />
+                <FxPickerItem key={80001} label='Mumbai Polygon Testnet' value={137} />
+              </FxPicker>
+
+            </FxBox>
+
+          </>
         )}
+
         {!walletConnect.connected ? (
           <FxButton size="large" onPress={handleWalletConnect}>
             Connect to Wallet
