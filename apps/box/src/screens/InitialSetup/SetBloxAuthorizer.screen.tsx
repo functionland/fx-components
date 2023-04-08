@@ -14,23 +14,25 @@ import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { ActivityIndicator } from 'react-native';
 import { Helper } from '../../utils';
+import { exchangeConfig } from '../../api/bloxHardware';
 
 export const SetBloxAuthorizerScreen = () => {
   const navigation = useInitialSetupNavigation();
   const [newPeerId, setNewPeerId] = useState(undefined);
   const [callingApi] = useState(false);
-  const [setAppPeerId, signiture, password, appPeerId] = useUserProfileStore(
+  const [setAppPeerId, signiture, password, appPeerId, setBloxPeerIds] = useUserProfileStore(
     (state) => [
       state.setAppPeerId,
       state.signiture,
       state.password,
       state.appPeerId,
+      state.setBloxPeerIds
     ]
   );
 
   useEffect(() => {
     generateAppPeerId();
-  },[]);
+  }, []);
   const generateAppPeerId = async () => {
     const peerId = await Helper.initFula(password, signiture);
     if (peerId) setNewPeerId(peerId);
@@ -41,11 +43,22 @@ export const SetBloxAuthorizerScreen = () => {
     navigation.navigate(Routes.SetupComplete);
   };
 
-  const handleSetOwnerPeerId = () => {
-    if (newPeerId) {
-      //TO DO : call Bolx hardware api to set owner's peerId
-      setAppPeerId(newPeerId);
+  const handleSetOwnerPeerId = async () => {
+    try {
+      if (newPeerId) {
+        //TO DO : call Bolx hardware api to set owner's peerId
+        const { secretKey } = Helper.getMyDIDKeyPair(password, signiture)
+        const { peer_id } = await exchangeConfig({
+          peer_id: newPeerId,
+          seed: secretKey.toString()
+        })
+        setAppPeerId(newPeerId);
+        setBloxPeerIds([peer_id])
+      }
+    } catch (error) {
+      console.log(error)
     }
+
   };
 
   return (

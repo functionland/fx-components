@@ -39,9 +39,10 @@ export const mockBlockHardware: TBlox[] = [
   },
 ];
 
-export const exchangePeerId = async (data: {
-  peer_id: string;
-}) : Promise<string> => {
+export const exchangeConfig = async (data: {
+  peer_id?: string;
+  seed?: string;
+}): Promise<{ peer_id: string }> => {
   return axios.post(`${API_URL}/peer/exchange`, data, {
     timeout: 1000 * 15,
   });
