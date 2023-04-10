@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   FxBox,
   FxButton,
@@ -6,11 +6,12 @@ import {
   FxSpacer,
   FxBottomSheetModalMethods,
 } from '@functionland/component-library';
-import { ScrollView } from 'react-native';
+import { Alert, ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import {
   ColorSettingsCard,
   ConnectedDevicesCard,
+  DeviceCard,
   UsageBar,
 } from '../../components';
 import { UsersCard } from '../../components/Cards/UsersCard';
@@ -20,13 +21,14 @@ import { BloxInteraction } from './components/BloxInteraction';
 import { BloxInteractionModal } from './modals/BloxInteractionModal';
 import { Pool } from './components/Pool';
 import { QuoteStat } from './components/QuoteStat';
-import { mockHub } from '../../api/hub';
+import { EDeviceStatus, mockHub } from '../../api/hub';
 import { mockFriendData } from '../../api/users';
 import { mockPoolData } from '../../api/pool';
 import { EBloxInteractionType } from '../../models';
 import { ProfileBottomSheet } from '../../components/ProfileBottomSheet';
+import { useUserProfileStore } from '../../stores/useUserProfileStore';
 
-const DEFAULT_DIVISION = 70;
+const DEFAULT_DIVISION = 30;
 
 export const BloxScreen = () => {
   const bloxInteractionModalRef = useRef<FxBottomSheetModalMethods>(null);
@@ -37,7 +39,24 @@ export const BloxScreen = () => {
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
     EBloxInteractionType.HomeBloxSetup
   );
+  const [bloxSpace, getBloxSpace] = useUserProfileStore((state) => [
+    state.bloxSpace,
+    state.getBloxSpace,
+  ]);
+  divisionSplit.value = bloxSpace?.used_percentage || 0
+  useEffect(() => {
+    updateBloxSpace();
+  }, [])
 
+  const updateBloxSpace = async () => {
+    try {
+      const space = await getBloxSpace()
+      console.log('space', space)
+    } catch (error) {
+      console.log('GetBloxSpace', error)
+      Alert.alert('GetBloxSpace Error', error)
+    }
+  }
   const showInteractionModal = () => {
     bloxInteractionModalRef.current.present();
   };
@@ -54,7 +73,7 @@ export const BloxScreen = () => {
   const showProfileModal = () => {
     profileBottomSheetRef.current.present()
   }
-  
+
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
       <BloxHeader
@@ -70,10 +89,18 @@ export const BloxScreen = () => {
           />
           <FxSpacer height={24} />
           <UsageBar
-            isEditable
+            //isEditable
             divisionPercent={divisionSplit}
-            onEditEnd={handleUpdateDivisionPercentage}
-            totalCapacity={1000}
+            //onEditEnd={handleUpdateDivisionPercentage}
+            totalCapacity={bloxSpace?.size || 1000}
+          />
+          <DeviceCard
+            data={{
+              capacity: bloxSpace?.size || 0,
+              name: 'Hard Disk',
+              status: EDeviceStatus.InUse,
+              associatedDevices:['Home Blox Set Up']
+            }}
           />
           <FxSpacer height={8} />
           <QuoteStat divisionPercentage={divisionPercentage} />

@@ -34,7 +34,10 @@ export const SetBloxAuthorizerScreen = () => {
     generateAppPeerId();
   }, []);
   const generateAppPeerId = async () => {
-    const peerId = await Helper.initFula(password, signiture);
+    const peerId = await Helper.initFula({
+      password,
+      signiture,
+    });
     if (peerId) setNewPeerId(peerId);
   };
   const goBack = () => navigation.goBack();
