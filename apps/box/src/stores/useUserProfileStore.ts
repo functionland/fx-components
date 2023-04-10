@@ -1,9 +1,9 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { blockchain } from '@functionland/react-native-fula'
+import { blockchain, fula } from '@functionland/react-native-fula'
 import { KeyChain } from '../utils';
-import { TAccount } from '../models/account';
+import { TAccount, TBloxFreeSpace } from '../models';
 
 
 interface UserProfileSlice {
@@ -24,12 +24,14 @@ interface UserProfileSlice {
   bloxPeerIds?: string[] | undefined;
   accounts: TAccount[];
   activeAccount?: TAccount | undefined;
+  bloxSpace: TBloxFreeSpace | undefined;
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
   loadAllCredentials: () => Promise<void>;
   setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
   setAppPeerId: (peerId: string | undefined) => void;
   setBloxPeerIds: (peerIds: string[] | undefined) => void;
   createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
+  getBloxSpace: () => Promise<TBloxFreeSpace>;
   logout: () => boolean;
 }
 const createUserProfileSlice: StateCreator<
@@ -47,6 +49,7 @@ const createUserProfileSlice: StateCreator<
     },
     bloxPeerIds: [],
     accounts: [],
+    bloxSpace: undefined,
     loadAllCredentials: async () => {
       const password =
         (await KeyChain.load(KeyChain.Service.DIDPassword)) || undefined;
@@ -142,6 +145,19 @@ const createUserProfileSlice: StateCreator<
       // TO: cleare all persist user profile data
       throw 'Not implemented';
     },
+    getBloxSpace: async () => {
+      try {
+        if (!await fula.isReady())
+          throw 'Fula is not ready!'
+        const bloxSpace = await blockchain.getBloxSpace();
+        set({
+          bloxSpace
+        })
+        return bloxSpace;
+      } catch (error) {
+        throw error;
+      }
+    }
   }),
   {
     name: 'userProfileSlice',
