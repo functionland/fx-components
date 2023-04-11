@@ -25,7 +25,6 @@ const connectionStatusStrings = {
 
 export const ConnectToBloxScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const isConnectedToBox = useIsConnectedToBox();
   const { queueToast } = useToast();
 
   const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
@@ -98,7 +97,7 @@ export const ConnectToBloxScreen = () => {
         </FxBox>
 
         <FxBox flex={1}>
-          {!isConnectedToBox ? (
+          {connectionStatus != EConnectionStatus.connected ? (
             <FxText variant="h200" marginTop="24" textAlign="center">
               Please turn your Blox on and make sure it is on Hotspot mode
             </FxText>
@@ -114,7 +113,7 @@ export const ConnectToBloxScreen = () => {
           )}
         </FxBox>
         <FxBox flex={1}>
-          {!isConnectedToBox && (
+          {connectionStatus != EConnectionStatus.connected && (
             <FxText
               variant="h200"
               marginBottom="80"
@@ -143,12 +142,11 @@ export const ConnectToBloxScreen = () => {
           >
             Back
           </FxButton>
-          {!isConnectedToBox ? (
+          {connectionStatus != EConnectionStatus.connected ? (
             <FxButton
               width={150}
               onPress={connectToBox}
               disabled={
-                isConnectedToBox ||
                 connectionStatus === EConnectionStatus.connecting
               }
             >
