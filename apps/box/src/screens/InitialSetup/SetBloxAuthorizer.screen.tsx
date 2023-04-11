@@ -12,7 +12,7 @@ import {
 import { useInitialSetupNavigation } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Alert } from 'react-native';
 import { Helper } from '../../utils';
 import { exchangeConfig } from '../../api/bloxHardware';
 
@@ -60,6 +60,7 @@ export const SetBloxAuthorizerScreen = () => {
       }
     } catch (error) {
       console.log(error)
+      Alert.alert('exchangeConfig Error',error?.message)
     }
 
   };
