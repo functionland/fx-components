@@ -11,7 +11,7 @@ export const postProperties = async (data) => {
   return axios.post(`${API_URL}/properties`, data);
 };
 
-export const getWifiList = async (): Promise<{ data: { ssid: string }[] }> => {
+export const getWifiList = async (): Promise<{ data: { essid: string }[] }> => {
   return axios.get(`${API_URL}/wifi/list`);
 };
 
@@ -24,8 +24,16 @@ export const postWifiConnect = async (data: {
   password: string;
   countryCode: string;
 }) => {
-  return axios.post(`${API_URL}/wifi/connect`, data, {
+  const formData = new URLSearchParams();
+  formData.append('ssid', data?.ssid);
+  formData.append('password', data?.password);
+  formData.append('countryCode', data?.countryCode || 'CA');
+  
+  return axios.post(`${API_URL}/wifi/connect?${formData.toString()}`, undefined, {
     timeout: 1000 * 15,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
   });
 };
 

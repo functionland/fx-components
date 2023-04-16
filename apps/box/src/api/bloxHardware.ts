@@ -43,7 +43,14 @@ export const exchangeConfig = async (data: {
   peer_id?: string;
   seed?: string;
 }): Promise<{ peer_id: string }> => {
-  return axios.post(`${API_URL}/peer/exchange`, data, {
+  const formData = new URLSearchParams();
+  formData.append('peer_id', data?.peer_id);
+  formData.append('seed', data?.seed);
+  return axios.post(`${API_URL}/peer/exchange?${formData.toString()}`, undefined, {
     timeout: 1000 * 15,
+    headers: {
+      'Accept':'*/*',
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
   });
 };

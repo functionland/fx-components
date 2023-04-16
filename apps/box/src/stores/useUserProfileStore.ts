@@ -147,9 +147,10 @@ const createUserProfileSlice: StateCreator<
     },
     getBloxSpace: async () => {
       try {
-        if (!await fula.isReady())
-          throw 'Fula is not ready!'
+        // if (!await fula.isReady())
+        //   throw 'Fula is not ready!'
         const bloxSpace = await blockchain.getBloxSpace();
+        console.log('bloxSpace',bloxSpace)
         set({
           bloxSpace
         })
