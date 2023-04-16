@@ -31,7 +31,7 @@ export const ConnectToWifiScreen = () => {
     data: networks,
   } = useFetch({ apiMethod: getWifiList });
   const ssids = networks?.data
-    .map(({ ssid: network }) => network)
+    .map(({ essid: network }) => network.replaceAll('"', ''))
     .filter((ssid) => ssid)
     .sort();
   const uniqueSsids = [...new Set(ssids)];
@@ -45,8 +45,10 @@ export const ConnectToWifiScreen = () => {
   };
 
   const handleSelectedWifiDevice = (ssid: string) => {
-    inputWifiPasswordModalRef.current.present();
     setSelectedSsid(ssid);
+    setTimeout(() => {
+      inputWifiPasswordModalRef.current.present();
+    }, 100);
   };
 
   const handleOnConnectWifi = (ssid: string) => {

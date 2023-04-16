@@ -43,7 +43,7 @@ export const SetBloxAuthorizerScreen = () => {
   const goBack = () => navigation.goBack();
 
   const handleNext = () => {
-    navigation.navigate(Routes.SetupComplete);
+    navigation.navigate(Routes.ConnectToWifi);
   };
 
   const handleSetOwnerPeerId = async () => {
@@ -59,8 +59,8 @@ export const SetBloxAuthorizerScreen = () => {
         setBloxPeerIds([peer_id])
       }
     } catch (error) {
-      console.log(error)
-      Alert.alert('exchangeConfig Error',error?.message)
+      console.log('handleSetOwnerPeerId',error,JSON.stringify(error))
+      Alert.alert('exchangeConfig Error',JSON.stringify(error))
     }
 
   };
