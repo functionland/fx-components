@@ -30,21 +30,23 @@ export const InputWifiPasswordModal = React.forwardRef<
   const connectWifi = async () => {
     try {
       setConnectionStatus(EConnectionStatus.connecting);
-      await postWifiConnect({
+     const result= await postWifiConnect({
         ssid: _.ssid,
         password,
         countryCode: RNLocalize.getCountry(),
       });
-      setConnectionStatus(EConnectionStatus.connected);
-      _.onConnect(_.ssid);
-    } catch (err) {
-      setConnectionStatus(EConnectionStatus.failed);
+      console.log('postWifiConnect',result)
       queueToast({
-        title: 'Error',
-        message: 'Unable to connect to wifi.',
+        title: 'Unable to connect to wifi',
+        message:result.statusText,
         type: 'error',
-        autoHideDuration: 3000,
+        autoHideDuration: 5000,
       });
+     
+    } catch (err) {
+      console.log('connectWifi',err)
+      setConnectionStatus(EConnectionStatus.connected);
+      _.onConnect?.(_?.ssid);
     }
   };
 
@@ -55,7 +57,6 @@ export const InputWifiPasswordModal = React.forwardRef<
         <FxSpacer height={40} />
         <FxTextInput
           caption="Password"
-          autoFocus
           secureTextEntry
           isBottomSheetInput
           value={password}
