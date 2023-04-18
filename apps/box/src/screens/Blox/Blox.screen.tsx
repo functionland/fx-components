@@ -39,14 +39,17 @@ export const BloxScreen = () => {
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
     EBloxInteractionType.HomeBloxSetup
   );
-  const [bloxSpace, getBloxSpace] = useUserProfileStore((state) => [
+  const [bloxSpace, getBloxSpace, fulaIsReady] = useUserProfileStore((state) => [
     state.bloxSpace,
     state.getBloxSpace,
+    state.fulaIsReady
   ]);
   divisionSplit.value = bloxSpace?.used_percentage || 0
+  
   useEffect(() => {
-    updateBloxSpace();
-  }, [])
+    if (fulaIsReady)
+      updateBloxSpace();
+  }, [fulaIsReady])
 
   const updateBloxSpace = async () => {
     try {
@@ -99,7 +102,7 @@ export const BloxScreen = () => {
               capacity: bloxSpace?.size || 0,
               name: 'Hard Disk',
               status: EDeviceStatus.InUse,
-              associatedDevices:['Home Blox Set Up']
+              associatedDevices: ['Home Blox Set Up']
             }}
           />
           <FxSpacer height={8} />

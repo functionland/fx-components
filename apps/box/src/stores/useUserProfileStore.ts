@@ -25,6 +25,7 @@ interface UserProfileSlice {
   accounts: TAccount[];
   activeAccount?: TAccount | undefined;
   bloxSpace: TBloxFreeSpace | undefined;
+  fulaIsReady: boolean;
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
   loadAllCredentials: () => Promise<void>;
   setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
@@ -33,6 +34,7 @@ interface UserProfileSlice {
   createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
   getBloxSpace: () => Promise<TBloxFreeSpace>;
   logout: () => boolean;
+  setFulaIsReady: (value: boolean) => void;
 }
 const createUserProfileSlice: StateCreator<
   UserProfileSlice,
@@ -50,6 +52,7 @@ const createUserProfileSlice: StateCreator<
     bloxPeerIds: [],
     accounts: [],
     bloxSpace: undefined,
+    fulaIsReady: false,
     loadAllCredentials: async () => {
       const password =
         (await KeyChain.load(KeyChain.Service.DIDPassword)) || undefined;
@@ -149,8 +152,8 @@ const createUserProfileSlice: StateCreator<
       try {
         // if (!await fula.isReady())
         //   throw 'Fula is not ready!'
-        const bloxSpace = await blockchain.getBloxSpace();
-        console.log('bloxSpace',bloxSpace)
+        const bloxSpace = await blockchain.bloxFreeSpace();
+        console.log('bloxSpace', bloxSpace)
         set({
           bloxSpace
         })
@@ -158,6 +161,11 @@ const createUserProfileSlice: StateCreator<
       } catch (error) {
         throw error;
       }
+    },
+    setFulaIsReady: (value: boolean) => {
+      set({
+        fulaIsReady: value
+      })
     }
   }),
   {
