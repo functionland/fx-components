@@ -36,10 +36,11 @@ import { useUserProfileStore } from '../stores/useUserProfileStore';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
-  const [password, signiture, bloxPeerIds] = useUserProfileStore((state) => [
+  const [password, signiture, bloxPeerIds,setFulaIsReady] = useUserProfileStore((state) => [
     state.password,
     state.signiture,
-    state.bloxPeerIds
+    state.bloxPeerIds,
+    state.setFulaIsReady
   ]);
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
 
@@ -58,10 +59,11 @@ export const MainTabsNavigator = () => {
         signiture,
         //bloxAddr: '/ip4/192.168.0.188/tcp/40001/p2p/12D3KooWJGEKpEVSsM7zpWdT33GzY5qxRQEpNKZGT4ivKkoGB2t9',
         bloxPeerId: bloxPeerIds?.[0],
+      }).then(()=>{
+        setFulaIsReady(true)
       });
     }
   }, [password, signiture]);
-
   return (
     <>
       <MainTabs.Navigator
