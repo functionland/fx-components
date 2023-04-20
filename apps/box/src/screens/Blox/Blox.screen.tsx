@@ -53,8 +53,8 @@ export const BloxScreen = () => {
 
   const updateBloxSpace = async () => {
     try {
-      const space = await getBloxSpace()
-      console.log('space', space)
+      // const space = await getBloxSpace()
+      // console.log('space', space)
     } catch (error) {
       console.log('GetBloxSpace', error)
       Alert.alert('GetBloxSpace Error', error)
