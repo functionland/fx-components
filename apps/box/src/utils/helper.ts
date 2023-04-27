@@ -25,7 +25,7 @@ export const getMyDIDKeyPair = (
 export const initFula = async ({
   password,
   signiture,
-  bloxAddr,
+  bloxAddr = undefined,
   bloxPeerId
 }: {
   password: string,
@@ -34,9 +34,8 @@ export const initFula = async ({
   bloxPeerId?: string
 }) => {
   if (password && signiture) {
-
     // Use FxRelay if bloxAddr is null or empty if bloxPeerId is null
-    let bloxAddress = bloxAddr ? bloxAddr: (bloxPeerId ? `${Constants.FXRelat}/p2p/${bloxPeerId}`.trim() : '')
+    let bloxAddress = bloxAddr ? bloxAddr : (bloxPeerId ? `${Constants.FXRelat}/p2p/${bloxPeerId}`.trim() : '')
     const keyPair = getMyDIDKeyPair(password, signiture);
     try {
       if (await fula.isReady()) await fula.shutdown();

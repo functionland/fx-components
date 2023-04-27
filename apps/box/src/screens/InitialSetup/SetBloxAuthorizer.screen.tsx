@@ -20,12 +20,13 @@ export const SetBloxAuthorizerScreen = () => {
   const navigation = useInitialSetupNavigation();
   const [newPeerId, setNewPeerId] = useState(undefined);
   const [callingApi] = useState(false);
-  const [setAppPeerId, signiture, password, appPeerId, setBloxPeerIds] = useUserProfileStore(
+  const [setAppPeerId, signiture, password, appPeerId, bloxPeerIds, setBloxPeerIds] = useUserProfileStore(
     (state) => [
       state.setAppPeerId,
       state.signiture,
       state.password,
       state.appPeerId,
+      state.bloxPeerIds,
       state.setBloxPeerIds
     ]
   );
@@ -51,16 +52,15 @@ export const SetBloxAuthorizerScreen = () => {
       if (newPeerId) {
         //TO DO : call Bolx hardware api to set owner's peerId
         const { secretKey } = Helper.getMyDIDKeyPair(password, signiture)
-        const { peer_id } = await exchangeConfig({
+        const data = await exchangeConfig({
           peer_id: newPeerId,
           seed: secretKey.toString()
         })
         setAppPeerId(newPeerId);
-        setBloxPeerIds([peer_id])
+        setBloxPeerIds([data?.peer_id])
       }
     } catch (error) {
-      console.log('handleSetOwnerPeerId',error,JSON.stringify(error))
-      Alert.alert('exchangeConfig Error',JSON.stringify(error))
+      Alert.alert('Error', 'Unable to set the authorizer!, make sure you are connected to FxBlox hotspot.')
     }
 
   };
@@ -104,7 +104,7 @@ export const SetBloxAuthorizerScreen = () => {
           >
             Back
           </FxButton>
-          {!appPeerId ? (
+          {(!bloxPeerIds || bloxPeerIds?.length == 0) ? (
             <FxButton width={150} onPress={handleSetOwnerPeerId}>
               {!callingApi ? 'Set authorizer' : <ActivityIndicator />}
             </FxButton>

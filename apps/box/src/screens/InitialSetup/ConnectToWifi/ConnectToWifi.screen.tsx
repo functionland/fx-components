@@ -7,6 +7,7 @@ import {
   FxSafeAreaBox,
   FxText,
   FxBottomSheetModalMethods,
+  FxRefreshIcon,
 } from '@functionland/component-library';
 import { FlatList } from 'react-native';
 import { WifiDeviceItem } from './components/WifiDeviceItem';
@@ -27,8 +28,9 @@ export const ConnectToWifiScreen = () => {
   const [connectedSsid, setConnectedSsid] = useState<string>(null);
   const {
     loading,
-    // error,
+    error,
     data: networks,
+    refetch
   } = useFetch({ apiMethod: getWifiList });
   const ssids = networks?.data
     .map(({ essid: network }) => network.replaceAll('"', ''))
@@ -75,9 +77,13 @@ export const ConnectToWifiScreen = () => {
             </FxText>
           </FxBox>
         ) : (
-          <FxText variant="bodySmallRegular" marginBottom="8">
-            Select Wi-Fi Network
-          </FxText>
+          <FxBox flexDirection='row'>
+            <FxText variant="bodySmallRegular" marginBottom="8" paddingEnd='8'>
+              Select Wi-Fi Network
+            </FxText>
+            <FxRefreshIcon color='white' onPress={() => refetch({ withLoading: true })} />
+          </FxBox>
+
         )}
         <FxBox
           height={180}

@@ -39,13 +39,14 @@ export const BloxScreen = () => {
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
     EBloxInteractionType.HomeBloxSetup
   );
-  const [bloxSpace, getBloxSpace, fulaIsReady] = useUserProfileStore((state) => [
+  const [bloxSpace, getBloxSpace, fulaIsReady, checkBloxConnection] = useUserProfileStore((state) => [
     state.bloxSpace,
     state.getBloxSpace,
-    state.fulaIsReady
+    state.fulaIsReady,
+    state.checkBloxConnection
   ]);
   divisionSplit.value = bloxSpace?.used_percentage || 0
-  
+
   useEffect(() => {
     if (fulaIsReady)
       updateBloxSpace();
@@ -53,7 +54,8 @@ export const BloxScreen = () => {
 
   const updateBloxSpace = async () => {
     try {
-      // const space = await getBloxSpace()
+     //await checkBloxConnection()
+      //const space = await getBloxSpace()
       // console.log('space', space)
     } catch (error) {
       console.log('GetBloxSpace', error)
