@@ -63,6 +63,8 @@ export type MainTabsParamList = {
   [Routes.HubTab]: undefined;
   [Routes.DevicesTab]: undefined;
   [Routes.SettingsTab]: NavigatorScreenParams<SettingsStackParamList>;
+  [Routes.InitialSetup]: undefined;
+
 };
 
 export type SettingsStackParamList = {

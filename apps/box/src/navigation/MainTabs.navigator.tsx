@@ -36,11 +36,12 @@ import { useUserProfileStore } from '../stores/useUserProfileStore';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
-  const [password, signiture, bloxPeerIds, setFulaIsReady] = useUserProfileStore((state) => [
+  const [password, signiture, bloxPeerIds, setFulaIsReady, fulaIsReady] = useUserProfileStore((state) => [
     state.password,
     state.signiture,
     state.bloxPeerIds,
-    state.setFulaIsReady
+    state.setFulaIsReady,
+    state.fulaIsReady
   ]);
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
 
@@ -53,7 +54,7 @@ export const MainTabsNavigator = () => {
   };
 
   useEffect(() => {
-    if (password && signiture) {
+    if (password && signiture && !fulaIsReady) {
       Helper.initFula({
         password,
         signiture,
@@ -61,9 +62,11 @@ export const MainTabsNavigator = () => {
         bloxPeerId: bloxPeerIds?.[0],
       }).then(() => {
         setFulaIsReady(true)
-      });
+      }).catch(() => {
+        setFulaIsReady(false)
+      });;
     }
-  }, [password, signiture]);
+  }, [password, signiture, fulaIsReady]);
   return (
     <>
       <MainTabs.Navigator
