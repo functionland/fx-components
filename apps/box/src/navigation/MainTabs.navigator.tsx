@@ -36,7 +36,7 @@ import { useUserProfileStore } from '../stores/useUserProfileStore';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
-  const [password, signiture, bloxPeerIds,setFulaIsReady] = useUserProfileStore((state) => [
+  const [password, signiture, bloxPeerIds, setFulaIsReady] = useUserProfileStore((state) => [
     state.password,
     state.signiture,
     state.bloxPeerIds,
@@ -57,9 +57,9 @@ export const MainTabsNavigator = () => {
       Helper.initFula({
         password,
         signiture,
-        //bloxAddr: '/ip4/192.168.0.188/tcp/40001/p2p/12D3KooWJGEKpEVSsM7zpWdT33GzY5qxRQEpNKZGT4ivKkoGB2t9',
+        //bloxAddr: '/ip4/192.168.0.167/tcp/40001/p2p/12D3KooWGawPDngmHEfynixQGsg9nQTrRufa2TD8TQkQQsf76PUF',
         bloxPeerId: bloxPeerIds?.[0],
-      }).then(()=>{
+      }).then(() => {
         setFulaIsReady(true)
       });
     }
