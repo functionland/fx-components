@@ -5,12 +5,12 @@ import OfficeBloxUnitDark from '../app/icons/office-blox-unit-dark.svg';
 import OfficeBloxUnitLight from '../app/icons/office-blox-unit-light.svg';
 
 export const bloxInteractions: TBloxInteraction[] = [
-  {
-    mode: EBloxInteractionType.HomeBloxSetup,
-    title: 'Home Blox Setup',
-    darkIcon: HomeBoxSetupDark,
-    lightIcon: HomeBoxSetupLight,
-  },
+  // {
+  //   mode: EBloxInteractionType.HomeBloxSetup,
+  //   title: 'Home Blox Setup',
+  //   darkIcon: HomeBoxSetupDark,
+  //   lightIcon: HomeBoxSetupLight,
+  // },
   {
     mode: EBloxInteractionType.OfficeBloxUnit,
     title: 'Office Blox Unit',

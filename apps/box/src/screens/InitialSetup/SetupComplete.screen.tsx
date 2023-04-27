@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   FxBox,
   FxButton,
@@ -12,13 +12,33 @@ import {
 } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import SetupCompleteSvg1 from '../../app/icons/setup-complete-1.svg';
+import { Helper } from '../../utils';
+import { useUserProfileStore } from '../../stores/useUserProfileStore';
 // import SetupCompleteSvg2 from '../../app/icons/setup-complete-2.svg';
 // import SetupCompleteSvg3 from '../../app/icons/setup-complete-3.svg';
 
 export const SetupCompleteScreen = () => {
   const navigation = useInitialSetupNavigation();
   const rootNavigation = useRootNavigation();
-
+  const [password, signiture, bloxPeerIds, setFulaIsReady] = useUserProfileStore((state) => [
+    state.password,
+    state.signiture,
+    state.bloxPeerIds,
+    state.setFulaIsReady
+  ]);
+  useEffect(()=>{
+    if (password && signiture) {
+      Helper.initFula({
+        password,
+        signiture,
+        bloxPeerId: bloxPeerIds?.[0],
+      }).then(() => {
+        setFulaIsReady(true)
+      }).catch(()=>{
+        setFulaIsReady(false)
+      });
+    }
+  },[password, signiture])
   const handleBack = () => {
     navigation.goBack();
   };

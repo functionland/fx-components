@@ -5,7 +5,7 @@ import { blockchain, fula } from '@functionland/react-native-fula'
 import { KeyChain } from '../utils';
 import { TAccount, TBloxFreeSpace } from '../models';
 
-
+type BloxConectionStatus = 'CONNECTED' | 'PENDING' | 'DISCONNECTED'
 interface UserProfileSlice {
   _hasHydrated: boolean;
   setHasHydrated: (isHydrated: boolean) => void;
@@ -26,6 +26,7 @@ interface UserProfileSlice {
   activeAccount?: TAccount | undefined;
   bloxSpace: TBloxFreeSpace | undefined;
   fulaIsReady: boolean;
+  bloxConnectionStatus: BloxConectionStatus;
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
   loadAllCredentials: () => Promise<void>;
   setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
@@ -35,6 +36,7 @@ interface UserProfileSlice {
   getBloxSpace: () => Promise<TBloxFreeSpace>;
   logout: () => boolean;
   setFulaIsReady: (value: boolean) => void;
+  checkBloxConnection: () => Promise<boolean>;
 }
 const createUserProfileSlice: StateCreator<
   UserProfileSlice,
@@ -53,6 +55,7 @@ const createUserProfileSlice: StateCreator<
     accounts: [],
     bloxSpace: undefined,
     fulaIsReady: false,
+    bloxConnectionStatus: 'PENDING',
     loadAllCredentials: async () => {
       const password =
         (await KeyChain.load(KeyChain.Service.DIDPassword)) || undefined;
@@ -166,6 +169,26 @@ const createUserProfileSlice: StateCreator<
       set({
         fulaIsReady: value
       })
+    },
+    checkBloxConnection: async () => {
+      try {
+        // if (!await fula.isReady())
+        //   throw 'Fula is not ready!'
+        set({
+          bloxConnectionStatus: 'PENDING'
+        })
+        const connected = await fula.checkConnection();
+        console.log('checkBloxConnection', connected)
+        set({
+          bloxConnectionStatus: connected ? 'CONNECTED' : 'DISCONNECTED'
+        })
+        return connected;
+      } catch (error) {
+        set({
+          bloxConnectionStatus: 'DISCONNECTED'
+        })
+        throw error;
+      }
     }
   }),
   {

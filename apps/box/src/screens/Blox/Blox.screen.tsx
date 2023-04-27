@@ -27,18 +27,25 @@ import { mockPoolData } from '../../api/pool';
 import { EBloxInteractionType } from '../../models';
 import { ProfileBottomSheet } from '../../components/ProfileBottomSheet';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
+import { ConnectionOptionsSheet, ConnectionOptionsType } from '../../components/ConnectionOptionsSheet';
+import { useInitialSetupNavigation, useMainTabsNavigation, useRootNavigation } from '../../hooks';
+import { Routes } from '../../navigation/navigationConfig';
+import { CommonActions, StackActions, useNavigation } from '@react-navigation/native';
 
 const DEFAULT_DIVISION = 30;
 
 export const BloxScreen = () => {
   const bloxInteractionModalRef = useRef<FxBottomSheetModalMethods>(null);
   const profileBottomSheetRef = useRef<FxBottomSheetModalMethods>(null)
+  const connectionOptionsSheetRef = useRef<FxBottomSheetModalMethods>(null)
   const divisionSplit = useSharedValue(DEFAULT_DIVISION);
   const [divisionPercentage, setDivisionPercentage] =
     useState<number>(DEFAULT_DIVISION);
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
-    EBloxInteractionType.HomeBloxSetup
+    EBloxInteractionType.OfficeBloxUnit
   );
+  const navigation = useNavigation();
+
   const [bloxSpace, getBloxSpace, fulaIsReady, checkBloxConnection] = useUserProfileStore((state) => [
     state.bloxSpace,
     state.getBloxSpace,
@@ -54,7 +61,7 @@ export const BloxScreen = () => {
 
   const updateBloxSpace = async () => {
     try {
-     //await checkBloxConnection()
+      //await checkBloxConnection()
       //const space = await getBloxSpace()
       // console.log('space', space)
     } catch (error) {
@@ -79,6 +86,22 @@ export const BloxScreen = () => {
     profileBottomSheetRef.current.present()
   }
 
+  const handleOnConnectionOptionSelect = (type: ConnectionOptionsType) => {
+    connectionOptionsSheetRef.current.close()
+    console.log('fulaIsReady', fulaIsReady)
+    switch (type) {
+      case 'RETRY':
+        if (fulaIsReady)
+          checkBloxConnection()
+        break;
+      case 'CONNECT-TO-WIFI':
+        navigation.navigate(Routes.InitialSetup, { screen: Routes.ConnectToBlox });
+        break;
+      default:
+        break;
+    }
+  }
+
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
       <BloxHeader
@@ -91,6 +114,7 @@ export const BloxScreen = () => {
           <BloxInteraction
             selectedMode={selectedMode}
             setSelectedMode={setSelectedMode}
+            onConnectionPress={() => connectionOptionsSheetRef.current.present()}
           />
           <FxSpacer height={24} />
           <UsageBar
@@ -129,6 +153,7 @@ export const BloxScreen = () => {
         onSelectMode={handleSelectMode}
       />
       <ProfileBottomSheet ref={profileBottomSheetRef} />
+      <ConnectionOptionsSheet ref={connectionOptionsSheetRef} onSelected={handleOnConnectionOptionSelect} />
     </FxSafeAreaBox>
   );
 };

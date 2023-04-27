@@ -1,6 +1,6 @@
 import { FxSvg, FxSvgProps } from '@functionland/component-library';
 import React from 'react';
-import { Path } from 'react-native-svg';
+import { Circle, Path } from 'react-native-svg';
 
 export const Logo = (props: FxSvgProps) => (
   <FxSvg width={105} height={102} viewBox="0 0 105 102" {...props}>
@@ -75,5 +75,11 @@ export const ExternalLinkIcon = (props: FxSvgProps) => (
       fillRule="evenodd"
       clipRule="evenodd"
     />
+  </FxSvg>
+);
+
+export const CircleFilledIcon = (props: FxSvgProps) => (
+  <FxSvg width={20} height={20} viewBox="0 0 20 20" {...props}>
+    <Circle cx="10" cy="9.99996" r="8.33333" />
   </FxSvg>
 );

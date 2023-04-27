@@ -7,9 +7,10 @@ import {
   FxProgressBar,
   FxSafeAreaBox,
   FxText,
+  useToast,
 } from '@functionland/component-library';
 
-import { useInitialSetupNavigation } from '../../hooks';
+import { useFetch, useInitialSetupNavigation } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { ActivityIndicator, Alert } from 'react-native';
@@ -20,6 +21,8 @@ export const SetBloxAuthorizerScreen = () => {
   const navigation = useInitialSetupNavigation();
   const [newPeerId, setNewPeerId] = useState(undefined);
   const [callingApi] = useState(false);
+  const { queueToast } = useToast()
+
   const [setAppPeerId, signiture, password, appPeerId, bloxPeerIds, setBloxPeerIds] = useUserProfileStore(
     (state) => [
       state.setAppPeerId,
@@ -30,10 +33,45 @@ export const SetBloxAuthorizerScreen = () => {
       state.setBloxPeerIds
     ]
   );
-
+  const {
+    loading: loading_exchange,
+    data: data_exchange,
+    error: error_exchange,
+    refetch: refetch_exchangeConfig
+  } = useFetch({
+    initialLoading: false,
+    apiMethod: exchangeConfig,
+  })
   useEffect(() => {
     generateAppPeerId();
   }, []);
+
+  //echange config with blox when peerId is ready
+  useEffect(() => {
+    if (newPeerId) {
+      const { secretKey } = Helper.getMyDIDKeyPair(password, signiture)
+      refetch_exchangeConfig({
+        params: {
+          peer_id: newPeerId,
+          seed: secretKey.toString()
+        }
+      })
+    }
+  }, [newPeerId])
+
+  useEffect(() => {
+    if (data_exchange?.data?.peer_id) {
+      setAppPeerId(newPeerId);
+      setBloxPeerIds([data_exchange?.data?.peer_id])
+    } else if (error_exchange) {
+      queueToast({
+        type: 'error',
+        title: 'Set authotizer',
+        message: error_exchange?.message
+      })
+    }
+  }, [data_exchange, error_exchange])
+
   const generateAppPeerId = async () => {
     const peerId = await Helper.initFula({
       password,
@@ -49,16 +87,17 @@ export const SetBloxAuthorizerScreen = () => {
 
   const handleSetOwnerPeerId = async () => {
     try {
-      if (newPeerId) {
-        //TO DO : call Bolx hardware api to set owner's peerId
-        const { secretKey } = Helper.getMyDIDKeyPair(password, signiture)
-        const data = await exchangeConfig({
-          peer_id: newPeerId,
-          seed: secretKey.toString()
-        })
-        setAppPeerId(newPeerId);
-        setBloxPeerIds([data?.peer_id])
-      }
+      setNewPeerId(newPeerId);
+      // if (newPeerId) {
+      //   //TO DO : call Bolx hardware api to set owner's peerId
+      //   const { secretKey } = Helper.getMyDIDKeyPair(password, signiture)
+      //   const data = await exchangeConfig({
+      //     peer_id: newPeerId,
+      //     seed: secretKey.toString()
+      //   })
+      //   setAppPeerId(newPeerId);
+      //   setBloxPeerIds([data?.peer_id])
+      // }
     } catch (error) {
       Alert.alert('Error', 'Unable to set the authorizer!, make sure you are connected to FxBlox hotspot.')
     }
@@ -105,12 +144,16 @@ export const SetBloxAuthorizerScreen = () => {
             Back
           </FxButton>
           {(!bloxPeerIds || bloxPeerIds?.length == 0) ? (
-            <FxButton width={150} onPress={handleSetOwnerPeerId}>
-              {!callingApi ? 'Set authorizer' : <ActivityIndicator />}
+            <FxButton disabled={loading_exchange} width={150}
+              onPress={handleSetOwnerPeerId}>
+              {!loading_exchange ? 'Set authorizer' : <ActivityIndicator />}
             </FxButton>
           ) : (
-            <FxButton width={150} onPress={handleNext}>
-              Next
+            <FxButton
+              disabled={!bloxPeerIds || bloxPeerIds?.length == 0}
+              width={150} onPress={handleNext}>
+              {loading_exchange ? <ActivityIndicator /> : 'Next'}
+
             </FxButton>
           )}
         </FxBox>
