@@ -15,6 +15,8 @@
     "@testing-library/jest-native": "*",
     "@testing-library/react-native": "*",
     "@walletconnect/react-native-dapp": "*",
+    "@react-native-firebase/app": "*",
+    "@react-native-firebase/crashlytics": "*",
     "axios": "*",
     "expo": "*",
     "node-libs-react-native": "*",

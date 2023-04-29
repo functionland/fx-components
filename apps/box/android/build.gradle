@@ -27,6 +27,12 @@ buildscript {
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("de.undercouch:gradle-download-task:5.0.1")
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+        // Add the dependency for the Google services Grad
+        classpath 'com.google.gms:google-services:4.3.15'
+
+        // NOTE: 2.9.4 has issues: https://github.com/invertase/react-native-firebase/issues/6983
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.2'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }

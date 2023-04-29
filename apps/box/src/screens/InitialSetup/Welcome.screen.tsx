@@ -1,18 +1,32 @@
-import React from 'react';
-import { FxBox, FxButton, FxText } from '@functionland/component-library';
+import React, { useEffect } from 'react';
+import { FxBox, FxButton, FxPressableOpacity, FxText } from '@functionland/component-library';
 import { Image, ImageBackground, StyleSheet } from 'react-native';
 // import { isEmulatorSync } from 'react-native-device-info';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { useSettingsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
+import { stat } from 'fs';
+import { useUserProfileStore } from '../../stores/useUserProfileStore';
+import { Helper } from '../../utils';
+import moment from 'moment';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
+  const [debugMode, setDebugMode] = useUserProfileStore((state) => [
+    state.debugMode,
+    state.setDebugMode
+  ]);
 
   // const isConnectedToBox = useIsConnectedToBox();
   const { colorScheme } = useSettingsStore((store) => ({
     colorScheme: store.colorScheme,
   }));
+
+
+  const toggleDebugMode = () => {
+    const newMode = Helper.toggleDebugMode(debugMode)
+    setDebugMode(newMode.uniqueId, newMode.endDate)
+  }
 
   const onConnectToBox = () => {
     // if (isEmulatorSync()) {
@@ -76,26 +90,36 @@ export const WelcomeScreen = () => {
   };
 
   return (
-    <FxBox flex={1} justifyContent="flex-end">
-      {colorScheme === 'light' ? (
-        <ImageBackground
-          source={require('../../../assets/images/welcome_bg_light.png')}
-          style={styles.backgroundBlox}
-        >
-          {renderContent()}
-        </ImageBackground>
-      ) : (
-        <>
-          <FxBox flex={1} justifyContent="center" paddingTop="20">
-            <Image
-              source={require('../../../assets/images/blox_dark.png')}
-              style={styles.blox}
-              resizeMode="contain"
-            />
-          </FxBox>
-          {renderContent()}
-        </>
-      )}
+    <FxBox flex={1} justifyContent="flex-end" >
+      <FxPressableOpacity
+        delayLongPress={3000}
+        onLongPress={toggleDebugMode}
+        flex={1}
+        style={{
+          opacity: 1
+        }}
+      >
+        {colorScheme === 'light' ? (
+          <ImageBackground
+            source={require('../../../assets/images/welcome_bg_light.png')}
+            style={styles.backgroundBlox}
+
+          >
+            {renderContent()}
+          </ImageBackground>
+        ) : (
+          <>
+            <FxBox flex={1} justifyContent="center" paddingTop="20">
+              <Image
+                source={require('../../../assets/images/blox_dark.png')}
+                style={styles.blox}
+                resizeMode="contain"
+              />
+            </FxBox>
+            {renderContent()}
+          </>
+        )}
+      </FxPressableOpacity>
     </FxBox>
   );
 };

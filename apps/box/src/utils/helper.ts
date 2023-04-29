@@ -2,6 +2,7 @@
 import { HDKEY, DID } from '@functionland/fula-sec';
 import { fula } from '@functionland/react-native-fula';
 import { Constants } from '.';
+import moment from 'moment';
 
 export const getMyDID = (password: string, signiture: string): string => {
   const ed = new HDKEY(password);
@@ -54,3 +55,24 @@ export const initFula = async ({
     }
   }
 };
+
+export const generateUniqueId = () => {
+  const timestamp = Date.now();
+  const randomNum = Math.random() * Math.pow(10, 18);
+  return `${timestamp}-${randomNum}`;
+}
+export const toggleDebugMode = (debugMode?: { endDate: Date, uniqueId: string }) => {
+  if (debugMode && new Date(debugMode.endDate.toString()) > new Date()) {
+    //Disable debug mode
+    return {
+      uniqueId: debugMode?.uniqueId || generateUniqueId(),
+      endDate: moment().add(-2, 'days').toDate()
+    }
+  } else {
+    //Enable debug mode
+    return {
+      uniqueId: debugMode?.uniqueId || generateUniqueId(),
+      endDate: moment().add(2, 'days').toDate()
+    }
+  }
+}
