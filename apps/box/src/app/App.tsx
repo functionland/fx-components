@@ -78,22 +78,10 @@ const AppContent = () => {
     state.debugMode
   ]);
   useEffect(() => {
-    if (__DEV__) {
-      if (debugMode || new Date(debugMode.endDate) >= new Date()) {
-        firebase.crashlytics().setUserId(debugMode.uniqueId)
-        console.log = (...data: any[]) => {
-          // Send the log message to the Firebase Crashlytics service.
-          firebase.crashlytics().log(JSON.stringify(data, null, 4));
-        }
-      } else {
-        console.log = originalLog
-      }
-      console.error = (...data: any[]) => {
-        // Send the error message to the Firebase Crashlytics service.
-        //firebase.crashlytics().log(JSON.stringify(data, null, 4));
-        // Record the error in the Firebase Crashlytics service.
-        firebase.crashlytics().recordError(new Error(JSON.stringify(data, null, 4)));
-      }
+    if (!__DEV__) {
+      firebase.crashlytics().setUserId(debugMode?.uniqueId)
+      console.log = () => null
+      console.error = () => null
     }
   }, [debugMode])
   const shareUniqueId = () => {
