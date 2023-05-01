@@ -45,7 +45,8 @@ export const initFula = async ({
         ``, // leave empty to use the default temp one
         bloxAddress,
         bloxAddress ? bloxAddress : 'noop', //leave empty for testing without a backend node
-        false
+        true,
+        true
       );
       console.log('peerId: ', peerId);
       return peerId;
