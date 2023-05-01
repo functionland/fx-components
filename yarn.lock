@@ -1552,9 +1552,10 @@
     tslib "^2.4.0"
     uint8arrays "^3.0.0"
 
-"@functionland/react-native-fula@github:https://github.com/functionland/react-native-fula.git#blockchain":
-  version "1.1.4"
-  resolved "https://codeload.github.com/functionland/react-native-fula/tar.gz/547571abcad7583b0b3308758c0734945fb445e1"
+"@functionland/react-native-fula@^1.1.5":
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/@functionland/react-native-fula/-/react-native-fula-1.1.5.tgz#da407176b49ee7261f7bb98331dea18c31829953"
+  integrity sha512-sMww8ISMeuOOosz/oHheVhMCopDU/fYX24oONCD3nCa7f6hyByVPAGEwtJJGjAFdmRMTncwHjHDOboBmkVkHqg==
   dependencies:
     "@polkadot/api" "^9.11.3"
     "@polkadot/keyring" "^10.2.6"
