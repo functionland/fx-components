@@ -50,15 +50,24 @@ export const SetupCompleteScreen = () => {
   // Initiate fula 
   useEffect(() => {
     if (password && signiture) {
-      Helper.initFula({
+      logger.log('SetupCompleteScreen:intiFula', {
         password,
         signiture,
         bloxPeerId: bloxPeerIds?.[0],
-      }).then(() => {
-        setFulaIsReady(true)
-      }).catch(() => {
-        setFulaIsReady(false)
-      });
+      })
+      try {
+        Helper.initFula({
+          password,
+          signiture,
+          bloxPeerId: bloxPeerIds?.[0],
+        }).then(() => {
+          setFulaIsReady(true)
+        }).catch(() => {
+          setFulaIsReady(false)
+        });
+      } catch (error) {
+        logger.logError('SetupCompleteScreen:intiFula', error)
+      }
     }
   }, [password, signiture])
 

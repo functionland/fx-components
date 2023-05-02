@@ -54,7 +54,7 @@ export const initFula = async ({
       return peerId;
     } catch (error) {
       console.log('initFula', error);
-      return null;
+      throw error;
     }
   }
 };
