@@ -8,8 +8,9 @@ export function useLogger() {
     ]);
     
     useEffect(() => {
+        if (debugMode)
         firebase.crashlytics().setUserId(debugMode.uniqueId)
-    }, [debugMode.uniqueId])
+    }, [debugMode])
 
     const log = useCallback((...data: any[]) => {
         if (!__DEV__) {
