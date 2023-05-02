@@ -4,6 +4,7 @@ import { useWalletConnect } from '@walletconnect/react-native-dapp';
 import {
     FxBox,
     FxButton,
+    FxHeader,
     FxText,
     useToast,
 } from '@functionland/component-library';
@@ -16,14 +17,16 @@ import { CopyIcon } from './Icons';
 interface WalletDetailsProps {
     allowChangeWallet?: boolean
     showPeerId?: boolean
-    showDID?: boolean
+    showDID?: boolean,
+    showBloxPeerIds?: boolean
 }
-export const WalletDetails = ({ allowChangeWallet, showPeerId, showDID }: WalletDetailsProps) => {
+export const WalletDetails = ({ allowChangeWallet, showPeerId, showDID, showBloxPeerIds = false }: WalletDetailsProps) => {
     const walletConnect = useWalletConnect();
-    const [walletId, setWalletId, appPeerId] = useUserProfileStore((state) => [
+    const [walletId, setWalletId, appPeerId, bloxPeerIds] = useUserProfileStore((state) => [
         state.walletId,
         state.setWalletId,
-        state.appPeerId
+        state.appPeerId,
+        state.bloxPeerIds
     ]);
 
     const { queueToast } = useToast()
@@ -116,6 +119,31 @@ export const WalletDetails = ({ allowChangeWallet, showPeerId, showDID }: Wallet
                         </FxBox>
                     </FxButton>
                 </FxBox>
+            )}
+            {bloxPeerIds && showBloxPeerIds && (
+                <>
+                    <FxHeader
+                        alignSelf='flex-start'
+                        marginTop='20'
+                        title="Bloxs' PeerId"
+                    />
+                    <FxBox marginTop='24' width='100%'>
+                        {bloxPeerIds?.map((bloxPeerId, index) =>
+                            <FxButton
+                                key={index}
+                                onPress={() => copyToClipboard(bloxPeerId)}
+                                iconLeft={<CopyIcon />}
+                                flexWrap='wrap'
+                                paddingHorizontal='32'
+                            >
+                                <FxBox style={{ flex: 1, width: 250 }}>
+                                    <FxText ellipsizeMode='tail' numberOfLines={1} style={{ width: 250 }}>{`Blox#${index + 1}:${bloxPeerId}`}</FxText>
+                                </FxBox>
+                            </FxButton>)}
+
+                    </FxBox>
+                </>
+
             )}
         </FxBox>
     );
