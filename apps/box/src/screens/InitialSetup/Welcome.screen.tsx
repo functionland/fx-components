@@ -5,27 +5,20 @@ import { Image, ImageBackground, StyleSheet } from 'react-native';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { useSettingsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
-import { stat } from 'fs';
-import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { Helper } from '../../utils';
-import moment from 'moment';
+import { useLogger } from '../../hooks';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const [debugMode, setDebugMode] = useUserProfileStore((state) => [
-    state.debugMode,
-    state.setDebugMode
-  ]);
 
+  const { toggleDebugMode } = useLogger()
   // const isConnectedToBox = useIsConnectedToBox();
   const { colorScheme } = useSettingsStore((store) => ({
     colorScheme: store.colorScheme,
   }));
 
 
-  const toggleDebugMode = () => {
-    const newMode = Helper.toggleDebugMode(debugMode)
-    setDebugMode(newMode.uniqueId, newMode.endDate)
+  const handleToggleDebugMode = () => {
+    toggleDebugMode()
   }
 
   const onConnectToBox = () => {
@@ -93,7 +86,7 @@ export const WelcomeScreen = () => {
     <FxBox flex={1} justifyContent="flex-end" >
       <FxPressableOpacity
         delayLongPress={3000}
-        onLongPress={toggleDebugMode}
+        onLongPress={handleToggleDebugMode}
         flex={1}
         style={{
           opacity: 1
