@@ -33,6 +33,7 @@ import { ComponentGalleryNavigator } from './ComponentGallery.navigator';
 import { GlobalBottomSheet } from '../components/GlobalBottomSheet';
 import { Helper } from '../utils';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
+import { useLogger } from '../hooks';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
@@ -44,6 +45,7 @@ export const MainTabsNavigator = () => {
     state.fulaIsReady
   ]);
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
+  const logger = useLogger()
 
   const openGlobalBottomSheet = () => {
     globalBottomSheetRef.current.present();
@@ -55,16 +57,25 @@ export const MainTabsNavigator = () => {
 
   useEffect(() => {
     if (password && signiture && !fulaIsReady) {
-      Helper.initFula({
+      logger.log('MainTabsNavigator:intiFula', {
         password,
         signiture,
-        //bloxAddr: '/ip4/192.168.0.167/tcp/40001/p2p/12D3KooWGawPDngmHEfynixQGsg9nQTrRufa2TD8TQkQQsf76PUF',
         bloxPeerId: bloxPeerIds?.[0],
-      }).then(() => {
-        setFulaIsReady(true)
-      }).catch(() => {
-        setFulaIsReady(false)
-      });;
+      })
+      try {
+        Helper.initFula({
+          password,
+          signiture,
+          //bloxAddr: '/ip4/192.168.0.167/tcp/40001/p2p/12D3KooWGawPDngmHEfynixQGsg9nQTrRufa2TD8TQkQQsf76PUF',
+          bloxPeerId: bloxPeerIds?.[0],
+        }).then(() => {
+          setFulaIsReady(true)
+        }).catch(() => {
+          setFulaIsReady(false)
+        });;
+      } catch (error) {
+        logger.logError('MainTabsNavigator:intiFula', error)
+      }
     }
   }, [password, signiture, fulaIsReady]);
   return (
