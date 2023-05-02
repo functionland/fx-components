@@ -28,7 +28,7 @@ import { EBloxInteractionType } from '../../models';
 import { ProfileBottomSheet } from '../../components/ProfileBottomSheet';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { ConnectionOptionsSheet, ConnectionOptionsType } from '../../components/ConnectionOptionsSheet';
-import { useInitialSetupNavigation, useMainTabsNavigation, useRootNavigation } from '../../hooks';
+import { useInitialSetupNavigation, useLogger, useMainTabsNavigation, useRootNavigation } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import { CommonActions, StackActions, useNavigation } from '@react-navigation/native';
 
@@ -45,7 +45,7 @@ export const BloxScreen = () => {
     EBloxInteractionType.OfficeBloxUnit
   );
   const navigation = useNavigation();
-
+  const logger = useLogger()
   const [bloxSpace, getBloxSpace, fulaIsReady, checkBloxConnection] = useUserProfileStore((state) => [
     state.bloxSpace,
     state.getBloxSpace,
@@ -61,12 +61,11 @@ export const BloxScreen = () => {
 
   const updateBloxSpace = async () => {
     try {
-      //await checkBloxConnection()
-      //const space = await getBloxSpace()
-      // console.log('space', space)
+      const space = await getBloxSpace()
+      logger.log('updateBloxSpace', space)
     } catch (error) {
       console.log('GetBloxSpace', error)
-      Alert.alert('GetBloxSpace Error', error)
+      logger.logError('GetBloxSpace Error', error)
     }
   }
   const showInteractionModal = () => {
@@ -88,11 +87,15 @@ export const BloxScreen = () => {
 
   const handleOnConnectionOptionSelect = (type: ConnectionOptionsType) => {
     connectionOptionsSheetRef.current.close()
-    console.log('fulaIsReady', fulaIsReady)
     switch (type) {
       case 'RETRY':
-        if (fulaIsReady)
-          checkBloxConnection()
+        if (fulaIsReady) {
+          try {
+            checkBloxConnection()
+          } catch (error) {
+            logger.logError('handleOnConnectionOptionSelect:checkBloxConnection', error)
+          }
+        }
         break;
       case 'CONNECT-TO-WIFI':
         navigation.navigate(Routes.InitialSetup, { screen: Routes.ConnectToBlox });

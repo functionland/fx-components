@@ -12,6 +12,7 @@ import {
 } from '@functionland/component-library';
 import { EConnectionStatus } from '../../../../models';
 import { postWifiConnect } from '../../../../api/wifi';
+import { useLogger } from 'apps/box/src/hooks';
 
 type TInputWifiPasswordModalProps = {
   ssid: string;
@@ -26,25 +27,26 @@ export const InputWifiPasswordModal = React.forwardRef<
   const [connectionStatus, setConnectionStatus] =
     useState<EConnectionStatus>(null);
   const [password, setPassword] = useState<string>('');
-
+  const logger = useLogger()
   const connectWifi = async () => {
     try {
       setConnectionStatus(EConnectionStatus.connecting);
-     const result= await postWifiConnect({
+      const result = await postWifiConnect({
         ssid: _.ssid,
         password,
         countryCode: RNLocalize.getCountry(),
       });
-      console.log('postWifiConnect',result)
+      console.log('postWifiConnect', result)
+      logger.log('connectWifi', result)
       queueToast({
         title: 'Unable to connect to wifi',
-        message:result.statusText,
+        message: result.statusText,
         type: 'error',
         autoHideDuration: 5000,
       });
-     
     } catch (err) {
-      console.log('connectWifi',err)
+      console.log('connectWifi', err)
+      logger.logError('connectWifi', err)
       setConnectionStatus(EConnectionStatus.connected);
       _.onConnect?.(_?.ssid);
     }

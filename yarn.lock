@@ -1552,7 +1552,7 @@
     tslib "^2.4.0"
     uint8arrays "^3.0.0"
 
-"@functionland/react-native-fula@^1.1.5":
+"@functionland/react-native-fula@^1.1.9":
   version "1.1.9"
   resolved "https://registry.yarnpkg.com/@functionland/react-native-fula/-/react-native-fula-1.1.9.tgz#6df9df97f8922554ee184e9a89b77633d072118d"
   integrity sha512-wtCiyreb8uwAho49pIa9SRiOpp76Yzz4ur/UI7B9eEgPCDNrBwiYhvFBQyulxnylpvs/H0y9HxDKigwuwkcn6A==

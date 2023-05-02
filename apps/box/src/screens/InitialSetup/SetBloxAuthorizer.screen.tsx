@@ -10,7 +10,7 @@ import {
   useToast,
 } from '@functionland/component-library';
 
-import { useFetch, useInitialSetupNavigation } from '../../hooks';
+import { useFetch, useInitialSetupNavigation, useLogger } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { ActivityIndicator, Alert } from 'react-native';
@@ -22,6 +22,7 @@ export const SetBloxAuthorizerScreen = () => {
   const [newPeerId, setNewPeerId] = useState(undefined);
   const [callingApi] = useState(false);
   const { queueToast } = useToast()
+  const logger = useLogger()
 
   const [setAppPeerId, signiture, password, appPeerId, bloxPeerIds, setBloxPeerIds] = useUserProfileStore(
     (state) => [
@@ -49,13 +50,7 @@ export const SetBloxAuthorizerScreen = () => {
   //echange config with blox when peerId is ready
   useEffect(() => {
     if (newPeerId) {
-      const { secretKey } = Helper.getMyDIDKeyPair(password, signiture)
-      refetch_exchangeConfig({
-        params: {
-          peer_id: newPeerId,
-          seed: secretKey.toString()
-        }
-      })
+      handleExchangeConfig()
     }
   }, [newPeerId])
 
@@ -72,6 +67,19 @@ export const SetBloxAuthorizerScreen = () => {
     }
   }, [data_exchange, error_exchange])
 
+  const handleExchangeConfig = () => {
+    try {
+      const { secretKey } = Helper.getMyDIDKeyPair(password, signiture)
+      refetch_exchangeConfig({
+        params: {
+          peer_id: newPeerId,
+          seed: secretKey.toString()
+        }
+      })
+    } catch (error) {
+      logger.logError('exchangeConfig', error)
+    }
+  }
   const generateAppPeerId = async () => {
     const peerId = await Helper.initFula({
       password,
@@ -86,22 +94,9 @@ export const SetBloxAuthorizerScreen = () => {
   };
 
   const handleSetOwnerPeerId = async () => {
-    try {
-      setNewPeerId(newPeerId);
-      // if (newPeerId) {
-      //   //TO DO : call Bolx hardware api to set owner's peerId
-      //   const { secretKey } = Helper.getMyDIDKeyPair(password, signiture)
-      //   const data = await exchangeConfig({
-      //     peer_id: newPeerId,
-      //     seed: secretKey.toString()
-      //   })
-      //   setAppPeerId(newPeerId);
-      //   setBloxPeerIds([data?.peer_id])
-      // }
-    } catch (error) {
-      Alert.alert('Error', 'Unable to set the authorizer!, make sure you are connected to FxBlox hotspot.')
+    if (newPeerId) {
+      handleExchangeConfig()
     }
-
   };
 
   return (
