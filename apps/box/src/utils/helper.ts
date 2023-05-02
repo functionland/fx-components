@@ -64,18 +64,3 @@ export const generateUniqueId = () => {
   const randomNum = Math.random() * Math.pow(10, 18);
   return `${timestamp}-${randomNum}`;
 }
-export const toggleDebugMode = (debugMode?: { endDate: Date, uniqueId: string }) => {
-  if (debugMode && new Date(debugMode.endDate.toString()) > new Date()) {
-    //Disable debug mode
-    return {
-      uniqueId: debugMode?.uniqueId || generateUniqueId(),
-      endDate: moment().add(-2, 'days').toDate()
-    }
-  } else {
-    //Enable debug mode
-    return {
-      uniqueId: debugMode?.uniqueId || generateUniqueId(),
-      endDate: moment().add(2, 'days').toDate()
-    }
-  }
-}
