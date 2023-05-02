@@ -20,6 +20,7 @@ import { useSettingsStore } from '../stores';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { firebase } from '@react-native-firebase/crashlytics';
 import moment from 'moment';
+import { useLogger } from '../hooks';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -72,18 +73,17 @@ export const App = () => {
     </ThemeProvider>
   );
 };
-const originalLog = console.log
 const AppContent = () => {
-  const [debugMode] = useUserProfileStore((state) => [
-    state.debugMode
+  const [debugMode] = useSettingsStore((state) => [
+    state.debugMode,
   ]);
+  const { isDebugModeEnable } = useLogger()
   useEffect(() => {
     if (!__DEV__) {
-      firebase.crashlytics().setUserId(debugMode?.uniqueId)
       console.log = () => null
       console.error = () => null
     }
-  }, [debugMode])
+  }, [])
   const shareUniqueId = () => {
     Share.share({
       message: debugMode.uniqueId
@@ -93,7 +93,7 @@ const AppContent = () => {
   }
   return (
     <NavContainer>
-      {debugMode && new Date(debugMode.endDate.toString()) > new Date() &&
+      {isDebugModeEnable &&
         <FxPressableOpacity onPress={shareUniqueId} alignItems='center' backgroundColor='backgroundSecondary'>
           <FxText textAlign='center' color='warningBase'>Debug mode is enable {debugMode.uniqueId}</FxText>
         </FxPressableOpacity>}
