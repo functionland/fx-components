@@ -2,6 +2,8 @@ import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
+import { Helper } from '../utils';
+import moment from 'moment';
 
 export type ColorScheme = 'light' | 'dark';
 interface ModeSlice {
@@ -14,8 +16,13 @@ interface ModeSlice {
   getMode: () => ColorScheme;
   isAuto: boolean;
   colorScheme: ColorScheme;
+  debugMode?: {
+    endDate: Date,
+    uniqueId: string
+  };
   toggleIsAuto: () => void;
   setColorScheme: (colorScheme: ColorScheme) => void;
+  setDebugMode: (uniqueId: string, endDate: Date) => void
 }
 const createModeSlice: StateCreator<
   ModeSlice,
@@ -32,6 +39,10 @@ const createModeSlice: StateCreator<
     },
     isAuto: true,
     colorScheme: 'dark',
+    debugMode: {
+      uniqueId: Helper.generateUniqueId(),
+      endDate: moment().add(-2, 'days').toDate()
+    },
     setColorScheme: (colorScheme: ColorScheme) =>
       set(() => ({ colorScheme: colorScheme })),
     toggleIsAuto: () => set((state) => ({ isAuto: !state.isAuto })),
@@ -39,6 +50,14 @@ const createModeSlice: StateCreator<
       const { isAuto, colorScheme } = get();
       const systemColorScheme = useColorScheme(); // eslint-disable-line react-hooks/rules-of-hooks
       return isAuto ? systemColorScheme : colorScheme;
+    },
+    setDebugMode: (uniqueId, endDate) => {
+      set({
+        debugMode: {
+          endDate,
+          uniqueId
+        }
+      })
     },
   }),
   {

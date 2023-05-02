@@ -2,14 +2,26 @@ import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { blockchain, fula } from '@functionland/react-native-fula'
-import { KeyChain } from '../utils';
 import { TAccount, TBloxFreeSpace } from '../models';
-import moment from 'moment';
+import { KeyChain } from '../utils';
 
 type BloxConectionStatus = 'CONNECTED' | 'PENDING' | 'DISCONNECTED'
+interface UserProfileActions {
+  setHasHydrated: (isHydrated: boolean) => void;
+  setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
+  loadAllCredentials: () => Promise<void>;
+  setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
+  setAppPeerId: (peerId: string | undefined) => void;
+  setBloxPeerIds: (peerIds: string[] | undefined) => void;
+  createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
+  getBloxSpace: () => Promise<TBloxFreeSpace>;
+  logout: () => boolean;
+  setFulaIsReady: (value: boolean) => void;
+  checkBloxConnection: () => Promise<boolean>;
+  reset: () => void
+}
 interface UserProfileSlice {
   _hasHydrated: boolean;
-  setHasHydrated: (isHydrated: boolean) => void;
   walletId?: string | undefined;
   /**
    * Password is a phares that user enter to create DID and make signiture
@@ -28,41 +40,37 @@ interface UserProfileSlice {
   bloxSpace: TBloxFreeSpace | undefined;
   fulaIsReady: boolean;
   bloxConnectionStatus: BloxConectionStatus;
-  debugMode?: {
-    endDate: Date,
-    uniqueId: string
-  };
-  setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
-  loadAllCredentials: () => Promise<void>;
-  setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
-  setAppPeerId: (peerId: string | undefined) => void;
-  setBloxPeerIds: (peerIds: string[] | undefined) => void;
-  createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
-  getBloxSpace: () => Promise<TBloxFreeSpace>;
-  logout: () => boolean;
-  setFulaIsReady: (value: boolean) => void;
-  checkBloxConnection: () => Promise<boolean>;
-  setDebugMode: (uniqueId: string, endDate: Date) => void
+
+}
+// define the initial state
+const initialState: UserProfileSlice = {
+  _hasHydrated: false,
+  bloxPeerIds: [],
+  accounts: [],
+  bloxSpace: undefined,
+  fulaIsReady: false,
+  bloxConnectionStatus: 'PENDING',
+  appPeerId: undefined,
+  fulaRoodCID: undefined,
+  fulaPeerId:undefined,
+  signiture: undefined,
+  password: undefined,
+  walletId: undefined
+
 }
 const createUserProfileSlice: StateCreator<
-  UserProfileSlice,
+  UserProfileSlice & UserProfileActions,
   [],
-  [['zustand/persist', Partial<UserProfileSlice>]],
-  UserProfileSlice
+  [['zustand/persist', Partial<UserProfileSlice & UserProfileActions>]],
+  UserProfileSlice & UserProfileActions
 > = persist(
   (set, get) => ({
-    _hasHydrated: false,
+    ...initialState,
     setHasHydrated: (isHydrated) => {
       set({
         _hasHydrated: isHydrated,
       });
     },
-    bloxPeerIds: [],
-    accounts: [],
-    bloxSpace: undefined,
-    fulaIsReady: false,
-    bloxConnectionStatus: 'PENDING',
-    debugMode: undefined,
     loadAllCredentials: async () => {
       const password =
         (await KeyChain.load(KeyChain.Service.DIDPassword)) || undefined;
@@ -197,13 +205,8 @@ const createUserProfileSlice: StateCreator<
         throw error;
       }
     },
-    setDebugMode: (uniqueId, endDate) => {
-      set({
-        debugMode: {
-          endDate,
-          uniqueId
-        }
-      })
+    reset: () => {
+      set(initialState)
     }
   }),
   {
@@ -217,17 +220,16 @@ const createUserProfileSlice: StateCreator<
         state.setHasHydrated(true);
       };
     },
-    partialize: (state): Partial<UserProfileSlice> => ({
+    partialize: (state): Partial<UserProfileSlice & UserProfileActions> => ({
       walletId: state.walletId,
       bloxPeerIds: state.bloxPeerIds,
       appPeerId: state.appPeerId,
       accounts: state.accounts,
       activeAccount: state.activeAccount,
-      debugMode: state.debugMode
     }),
   }
 );
 
-export const useUserProfileStore = create<UserProfileSlice>()((...a) => ({
+export const useUserProfileStore = create<UserProfileSlice & UserProfileActions>()((...a) => ({
   ...createUserProfileSlice(...a),
 }));
