@@ -13,7 +13,7 @@ export const bloxInteractions: TBloxInteraction[] = [
   // },
   {
     mode: EBloxInteractionType.OfficeBloxUnit,
-    title: 'Office Blox Unit',
+    title: 'Blox Unit #1',
     darkIcon: OfficeBloxUnitDark,
     lightIcon: OfficeBloxUnitLight,
   },
