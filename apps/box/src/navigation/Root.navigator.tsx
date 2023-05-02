@@ -13,10 +13,9 @@ export const RootNavigator = () => {
   ]);
   const walletConnect = useWalletConnect();
   const [initialRoute, setInitialRoute] = useState(undefined);
-
   useEffect(() => {
     if (_hasHydrated && !initialRoute) {
-      if (appPeerId && walletConnect.connected) {
+      if (appPeerId && walletConnect.connected && appPeerId) {
         setInitialRoute(Routes.MainTabs);
       } else {
         setInitialRoute(Routes.InitialSetup);
