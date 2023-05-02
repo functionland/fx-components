@@ -10,6 +10,7 @@ import { Image, ImageSourcePropType, StyleSheet } from 'react-native';
 import { SubHeaderText } from '../../components/Text';
 import { scaleByWidth } from '../../constants/layout';
 import { ColorScheme, useSettingsStore } from '../../stores';
+import { useLogger } from '../../hooks';
 
 export const ModeScreen = () => {
   return (
@@ -17,6 +18,7 @@ export const ModeScreen = () => {
       <SubHeaderText marginVertical="16">Mode</SubHeaderText>
       <SelectMode />
       <AutomaticSwitch />
+      <DebugModeSwitch/>
     </FxBox>
   );
 };
@@ -87,6 +89,26 @@ const AutomaticSwitch = () => {
         </FxText>
       </FxBox>
       <FxSwitch value={isAuto} onValueChange={toggleIsAuto} />
+    </FxBox>
+  );
+};
+
+const DebugModeSwitch = () => {
+  const { toggleDebugMode, isDebugModeEnable } = useLogger()
+  return (
+    <FxBox
+      marginTop="32"
+      flexDirection="row"
+      justifyContent="space-between"
+      alignItems="center"
+    >
+      <FxBox>
+        <FxText variant="bodySmallRegular">Debug mode</FxText>
+        <FxText variant="bodyXSRegular">
+          Enable logs for troubleshooting by support team
+        </FxText>
+      </FxBox>
+      <FxSwitch value={isDebugModeEnable} onValueChange={toggleDebugMode} />
     </FxBox>
   );
 };
