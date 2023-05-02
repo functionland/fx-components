@@ -12,6 +12,13 @@ export const SettingsMenu = () => {
   const navigation =
     useNavigation<SettingsStackNavigationProps<Routes.Settings>>();
   const mode = useSettingsStore().getMode();
+  
+  // Add app component gallery in development mode
+  const appGallery = __DEV__ ? [{
+    name: 'Component Gallery',
+    detail: null,
+    onPress: () => navigation.navigate(Routes.ComponentGallery),
+  }] : []
 
   const menuItems = [
     {
@@ -34,11 +41,7 @@ export const SettingsMenu = () => {
       detail: null,
       onPress: () => navigation.navigate(Routes.About),
     },
-    {
-      name: 'Component Gallery',
-      detail: null,
-      onPress: () => navigation.navigate(Routes.ComponentGallery),
-    },
+    ...appGallery
   ];
 
   return (
