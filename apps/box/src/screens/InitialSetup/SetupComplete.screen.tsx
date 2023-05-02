@@ -91,7 +91,7 @@ export const SetupCompleteScreen = () => {
       setInternetStatus('NOTCONNECTED')
       setSetupStatus('NOTCOMPLETED')
       console.error('checkInternetConectivity', error)
-      logger.error('checkInternetConectivity', error)
+      logger.logError('checkInternetConectivity', error)
     }
   }
 
