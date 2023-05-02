@@ -7,9 +7,7 @@ export const AboutScreen = () => {
     <FxBox marginHorizontal="20">
       <SubHeaderText>Privacy</SubHeaderText>
       <FxText variant="bodySmallRegular">
-        {
-          'Qui et sunt officiis eos corporis rerum veniam qui ut. Rem modi ratione velit laborum eligendi delectus. Quia temporibus non minima enim rem et impedit nemo. Qui ut sed non. Et enim veniam dolore. Et temporibus eaque eligendi. Odit sed laborum sit est consequatur. Sed et esse quas dignissimos et ipsa eius ad nisi. Sed aut sit ut. Saepe ut molestiae enim non quia quisquam consequatur quis error. Ducimus vel corporis. Provident quis suscipit vel deleniti doloribus. Maxime molestias dolores rerum.'
-        }
+        Functionland's FxBlox hardware is managed and used by the File Sync and Blox apps. Blox and File Sync can be used independently of each other. The Blox app is responsible for managing, controlling and configuring the FxBlox hardware as well as the setup / linking of wallets for to receiving Fula (rewards) tokens. If you have FxBlox hardware, you will need the Blox app. The File Sync app is responsible for utilizing the FxBlox hardware as a decentralized storage solution for your data.
       </FxText>
     </FxBox>
   );
