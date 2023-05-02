@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { blockchain, fula } from '@functionland/react-native-fula'
 import { KeyChain } from '../utils';
 import { TAccount, TBloxFreeSpace } from '../models';
+import moment from 'moment';
 
 type BloxConectionStatus = 'CONNECTED' | 'PENDING' | 'DISCONNECTED'
 interface UserProfileSlice {
@@ -27,6 +28,10 @@ interface UserProfileSlice {
   bloxSpace: TBloxFreeSpace | undefined;
   fulaIsReady: boolean;
   bloxConnectionStatus: BloxConectionStatus;
+  debugMode?: {
+    endDate: Date,
+    uniqueId: string
+  };
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
   loadAllCredentials: () => Promise<void>;
   setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
@@ -37,6 +42,7 @@ interface UserProfileSlice {
   logout: () => boolean;
   setFulaIsReady: (value: boolean) => void;
   checkBloxConnection: () => Promise<boolean>;
+  setDebugMode: (uniqueId: string, endDate: Date) => void
 }
 const createUserProfileSlice: StateCreator<
   UserProfileSlice,
@@ -56,6 +62,7 @@ const createUserProfileSlice: StateCreator<
     bloxSpace: undefined,
     fulaIsReady: false,
     bloxConnectionStatus: 'PENDING',
+    debugMode: undefined,
     loadAllCredentials: async () => {
       const password =
         (await KeyChain.load(KeyChain.Service.DIDPassword)) || undefined;
@@ -189,6 +196,14 @@ const createUserProfileSlice: StateCreator<
         })
         throw error;
       }
+    },
+    setDebugMode: (uniqueId, endDate) => {
+      set({
+        debugMode: {
+          endDate,
+          uniqueId
+        }
+      })
     }
   }),
   {
@@ -208,6 +223,7 @@ const createUserProfileSlice: StateCreator<
       appPeerId: state.appPeerId,
       accounts: state.accounts,
       activeAccount: state.activeAccount,
+      debugMode: state.debugMode
     }),
   }
 );

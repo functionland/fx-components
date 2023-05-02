@@ -4,17 +4,22 @@ import {
   fxLightTheme,
   fxDarkTheme,
   ToastProvider,
+  FxBox,
+  FxText,
+  FxPressableOpacity,
 } from '@functionland/component-library';
 import { RootNavigator } from '../navigation/Root.navigator';
 import { WalletConnectProvider } from '@walletconnect/react-native-dapp/dist/providers';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavContainer } from '../navigation/NavContainer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Platform, StatusBar, StyleSheet, UIManager } from 'react-native';
+import { Platform, Share, StatusBar, StyleSheet, UIManager } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSettingsStore } from '../stores';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
+import { firebase } from '@react-native-firebase/crashlytics';
+import moment from 'moment';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -67,12 +72,33 @@ export const App = () => {
     </ThemeProvider>
   );
 };
-
+const originalLog = console.log
 const AppContent = () => {
+  const [debugMode] = useUserProfileStore((state) => [
+    state.debugMode
+  ]);
+  useEffect(() => {
+    if (!__DEV__) {
+      firebase.crashlytics().setUserId(debugMode?.uniqueId)
+      console.log = () => null
+      console.error = () => null
+    }
+  }, [debugMode])
+  const shareUniqueId = () => {
+    Share.share({
+      message: debugMode.uniqueId
+    }, {
+      dialogTitle: 'Share your debug Id'
+    })
+  }
   return (
     <NavContainer>
+      {debugMode && new Date(debugMode.endDate.toString()) > new Date() &&
+        <FxPressableOpacity onPress={shareUniqueId} alignItems='center' backgroundColor='backgroundSecondary'>
+          <FxText textAlign='center' color='warningBase'>Debug mode is enable {debugMode.uniqueId}</FxText>
+        </FxPressableOpacity>}
       <RootNavigator />
-    </NavContainer>
+    </NavContainer >
   );
 };
 
@@ -83,3 +109,4 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+

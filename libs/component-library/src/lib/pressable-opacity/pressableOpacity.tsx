@@ -14,7 +14,7 @@ export const FxPressableOpacity = ({
 }: FxPressableOpacityProps) => {
   return (
     <PressableBox
-      hitSlop={16}
+      hitSlop={4}
       style={(args) => [
         args.pressed && {
           opacity: 0.5,
