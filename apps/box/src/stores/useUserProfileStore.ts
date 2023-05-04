@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { blockchain, fula } from '@functionland/react-native-fula'
 import { TAccount, TBloxFreeSpace } from '../models';
 import { KeyChain } from '../utils';
+import { useBloxsStore } from './useBloxsStore';
+import { firebase } from '@react-native-firebase/crashlytics';
 
 type BloxConectionStatus = 'CONNECTED' | 'PENDING' | 'DISCONNECTED'
 interface UserProfileActions {
@@ -20,7 +22,7 @@ interface UserProfileActions {
   checkBloxConnection: () => Promise<boolean>;
   reset: () => void
 }
-interface UserProfileSlice {
+export interface UserProfileSlice {
   _hasHydrated: boolean;
   walletId?: string | undefined;
   /**
@@ -52,7 +54,7 @@ const initialState: UserProfileSlice = {
   bloxConnectionStatus: 'PENDING',
   appPeerId: undefined,
   fulaRoodCID: undefined,
-  fulaPeerId:undefined,
+  fulaPeerId: undefined,
   signiture: undefined,
   password: undefined,
   walletId: undefined
@@ -211,6 +213,7 @@ const createUserProfileSlice: StateCreator<
   }),
   {
     name: 'userProfileSlice',
+    version: 1,
     getStorage: () => AsyncStorage,
     serialize: (state) => JSON.stringify(state),
     deserialize: (str) => JSON.parse(str),
@@ -227,6 +230,30 @@ const createUserProfileSlice: StateCreator<
       accounts: state.accounts,
       activeAccount: state.activeAccount,
     }),
+    migrate: async (persistedState, version) => {
+      const { setState } = useBloxsStore
+      try {
+        if (version === 0) {
+          if (persistedState) {
+            const userPrfoile = persistedState as UserProfileSlice
+            const bloxs = userPrfoile?.bloxPeerIds?.reduce((obj, peerId, index) => {
+              obj[peerId] = {
+                peerId,
+                name: `Blox Unit #${index}`
+              }
+              return obj
+            }, {}) || {}
+            setState({
+              bloxs
+            })
+          }
+        }
+      } catch (error) {
+        console.log(error)
+        firebase.crashlytics().recordError(error, `UserProfileStore migrate:version(${version})`)
+      }
+      return persistedState
+    }
   }
 );
 
