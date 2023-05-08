@@ -15,6 +15,11 @@ import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useFxTheme } from '../theme/useFxTheme';
 import { FxText } from '../text/text';
 import { FxBox } from '../box/box';
+import { FxRewardIcon } from '../icons/icons';
+import { FxDetailIcon } from '../icons/icons';
+import { FxInfoIcon } from '../icons/icons';
+import { FxPressableOpacity } from '../pressable-opacity/pressableOpacity';
+import { FxExclamationIcon } from '../icons/icons';
 
 type FxTextInputProps = TextProps<FxTheme> &
   BoxProps<FxTheme> &
@@ -42,6 +47,7 @@ const FxTextInput = ({
   ...rest
 }: FxTextInputProps) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(!rest?.secureTextEntry)
   const variant = useMemo(() => {
     if (disabled) return 'disabled';
     else if (error) return 'error';
@@ -67,21 +73,31 @@ const FxTextInput = ({
           {caption}
         </FxText>
       )}
-      <Input
-        onFocus={(e) => {
-          setIsFocused(true);
-          if (onFocus) onFocus(e);
-        }}
-        onBlur={(e) => {
-          setIsFocused(false);
-          if (onBlur) onBlur(e);
-        }}
-        editable={!disabled}
-        placeholderTextColor={colors[placeholderTextColor]}
-        selectionColor={colors[selectionColor]}
-        blurOnSubmit
-        {...restyleProps}
-      />
+      <FxBox justifyContent='center'>
+        <Input
+          onFocus={(e) => {
+            setIsFocused(true);
+            if (onFocus) onFocus(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            if (onBlur) onBlur(e);
+          }}
+          editable={!disabled}
+          placeholderTextColor={colors[placeholderTextColor]}
+          selectionColor={colors[selectionColor]}
+          blurOnSubmit
+          {...restyleProps}
+          {...showPassword ? { secureTextEntry: false } : {}}
+        />
+        {rest?.secureTextEntry &&
+          <FxBox position='absolute' end={10}>
+            {!showPassword && <FxInfoIcon color='white' height={28} width={28} onPress={() => setShowPassword(true)} />}
+            {showPassword && <FxExclamationIcon color='warningBase' height={26} width={26} onPress={() => setShowPassword(false)} />}
+          </FxBox>
+        }
+      </FxBox>
+
     </FxBox>
   );
 };

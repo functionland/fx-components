@@ -8,6 +8,7 @@ import {
 } from '@functionland/component-library';
 import { Alert, ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
+import shallow from 'zustand/shallow';
 import {
   ColorSettingsCard,
   ConnectedDevicesCard,
@@ -28,9 +29,10 @@ import { EBloxInteractionType } from '../../models';
 import { ProfileBottomSheet } from '../../components/ProfileBottomSheet';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { ConnectionOptionsSheet, ConnectionOptionsType } from '../../components/ConnectionOptionsSheet';
-import { useInitialSetupNavigation, useLogger, useMainTabsNavigation, useRootNavigation } from '../../hooks';
+import { useLogger } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
-import { CommonActions, StackActions, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import { useBloxsStore } from '../../stores';
 
 const DEFAULT_DIVISION = 30;
 
@@ -46,18 +48,25 @@ export const BloxScreen = () => {
   );
   const navigation = useNavigation();
   const logger = useLogger()
-  const [bloxSpace, getBloxSpace, fulaIsReady, checkBloxConnection] = useUserProfileStore((state) => [
-    state.bloxSpace,
-    state.getBloxSpace,
+  const [fulaIsReady] = useUserProfileStore((state) => [
     state.fulaIsReady,
-    state.checkBloxConnection
-  ]);
-  divisionSplit.value = bloxSpace?.used_percentage || 0
+  ], shallow);
+
+  const [bloxs, currentBloxPeerId, checkBloxConnection, getBloxSpace] = useBloxsStore((state) => [
+    state.bloxs,
+    state.currentBloxPeerId,
+    state.bloxsConnectionStatus,
+    state.checkBloxConnection,
+    state.getBloxSpace
+  ], shallow);
+
+  const currentBlox = bloxs[currentBloxPeerId]
+  divisionSplit.value = currentBlox?.freeSpace?.used_percentage || 0
 
   useEffect(() => {
-    if (fulaIsReady)
+    if (fulaIsReady && currentBloxPeerId)
       updateBloxSpace();
-  }, [fulaIsReady])
+  }, [fulaIsReady, currentBloxPeerId])
 
   const updateBloxSpace = async () => {
     try {
@@ -121,14 +130,12 @@ export const BloxScreen = () => {
           />
           <FxSpacer height={24} />
           <UsageBar
-            //isEditable
             divisionPercent={divisionSplit}
-            //onEditEnd={handleUpdateDivisionPercentage}
-            totalCapacity={bloxSpace?.size || 1000}
+            totalCapacity={currentBlox?.freeSpace?.size || 1000}
           />
           <DeviceCard
             data={{
-              capacity: bloxSpace?.size || 0,
+              capacity: currentBlox?.freeSpace?.size || 0,
               name: 'Hard Disk',
               status: EDeviceStatus.InUse,
               associatedDevices: ['Home Blox Set Up']
