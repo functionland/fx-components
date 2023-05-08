@@ -11,11 +11,12 @@ import {
   useFxTheme,
   FxChevronDownIcon,
 } from '@functionland/component-library';
-import { useSettingsStore } from '../../../stores';
+import { useBloxsStore, useSettingsStore } from '../../../stores';
 import { EBloxInteractionType } from '../../../models';
 import { bloxInteractions } from '../../../api/blox';
 import { useUserProfileStore } from 'apps/box/src/stores/useUserProfileStore';
 import { CircleFilledIcon, HubIcon } from 'apps/box/src/components';
+import shallow from 'zustand/shallow';
 
 type TBloxInteraction = {
   selectedMode: EBloxInteractionType;
@@ -36,17 +37,21 @@ export const BloxInteraction = ({
   const selectedIndex = bloxInteractions.findIndex(
     (interaction) => interaction.mode === selectedMode
   );
-  const [fulaIsReady, checkBloxConnection, bloxConnectionStatus] = useUserProfileStore((state) => [
+  const [fulaIsReady] = useUserProfileStore((state) => [
     state.fulaIsReady,
+  ], shallow);
+
+  const [currentBloxPeerId, bloxsConnectionStatus, checkBloxConnection] = useBloxsStore((state) => [
+    state.currentBloxPeerId,
+    state.bloxsConnectionStatus,
     state.checkBloxConnection,
-    state.bloxConnectionStatus
-  ]);
+  ], shallow);
 
   useEffect(() => {
-    if (fulaIsReady) {
+    if (fulaIsReady && currentBloxPeerId) {
       checkConnectionStatus()
     }
-  }, [fulaIsReady])
+  }, [fulaIsReady, currentBloxPeerId])
 
   const checkConnectionStatus = async () => {
     try {
@@ -91,18 +96,18 @@ export const BloxInteraction = ({
               >
                 <CircleFilledIcon
                   color={
-                    bloxConnectionStatus === 'CONNECTED' ? 'successBase' :
-                      (bloxConnectionStatus === 'PENDING' ? 'warningBase' : 'errorBase')
+                    bloxsConnectionStatus[currentBloxPeerId] === 'CONNECTED' ? 'successBase' :
+                      (bloxsConnectionStatus[currentBloxPeerId] === 'PENDING' ? 'warningBase' : 'errorBase')
                   }
                 />
                 <FxText
                   paddingStart='4'
                   color={
-                    bloxConnectionStatus === 'CONNECTED' ? 'successBase' :
-                      (bloxConnectionStatus === 'PENDING' ? 'warningBase' : 'errorBase')
+                    bloxsConnectionStatus[currentBloxPeerId] === 'CONNECTED' ? 'successBase' :
+                      (bloxsConnectionStatus[currentBloxPeerId] === 'PENDING' ? 'warningBase' : 'errorBase')
                   }
                 >
-                  {bloxConnectionStatus.toString()}
+                  {bloxsConnectionStatus[currentBloxPeerId]?.toString() || 'PREPARING'}
 
                 </FxText>
                 <FxChevronDownIcon

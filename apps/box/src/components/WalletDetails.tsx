@@ -13,6 +13,8 @@ import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { copyToClipboard } from '../utils/clipboard';
 import { Helper } from '../utils';
 import { CopyIcon } from './Icons';
+import { useBloxsStore } from '../stores';
+import shallow from 'zustand/shallow';
 
 interface WalletDetailsProps {
     allowChangeWallet?: boolean
@@ -22,13 +24,15 @@ interface WalletDetailsProps {
 }
 export const WalletDetails = ({ allowChangeWallet, showPeerId, showDID, showBloxPeerIds = false }: WalletDetailsProps) => {
     const walletConnect = useWalletConnect();
-    const [walletId, setWalletId, appPeerId, bloxPeerIds] = useUserProfileStore((state) => [
+    const [walletId, setWalletId, appPeerId] = useUserProfileStore((state) => [
         state.walletId,
         state.setWalletId,
         state.appPeerId,
-        state.bloxPeerIds
     ]);
-
+    const [bloxs = {}] = useBloxsStore((state) => [
+        state.bloxs,
+    ], shallow);
+    const bloxsArray = Object.values(bloxs)
     const { queueToast } = useToast()
     const [signiture, password] = useUserProfileStore(
         (state) => [state.signiture, state.password]
@@ -120,7 +124,7 @@ export const WalletDetails = ({ allowChangeWallet, showPeerId, showDID, showBlox
                     </FxButton>
                 </FxBox>
             )}
-            {bloxPeerIds && showBloxPeerIds && (
+            {bloxsArray.length && showBloxPeerIds && (
                 <>
                     <FxHeader
                         alignSelf='flex-start'
@@ -128,22 +132,20 @@ export const WalletDetails = ({ allowChangeWallet, showPeerId, showDID, showBlox
                         title="Bloxs' PeerId"
                     />
                     <FxBox marginTop='24' width='100%'>
-                        {bloxPeerIds?.map((bloxPeerId, index) =>
+                        {bloxsArray?.map((blox, index) =>
                             <FxButton
                                 key={index}
-                                onPress={() => copyToClipboard(bloxPeerId)}
+                                onPress={() => copyToClipboard(blox.peerId)}
                                 iconLeft={<CopyIcon />}
                                 flexWrap='wrap'
                                 paddingHorizontal='32'
                             >
                                 <FxBox style={{ flex: 1, width: 250 }}>
-                                    <FxText ellipsizeMode='tail' numberOfLines={1} style={{ width: 250 }}>{`Blox#${index + 1}:${bloxPeerId}`}</FxText>
+                                    <FxText ellipsizeMode='tail' numberOfLines={1} style={{ width: 250 }}>{`${blox.name}:${blox.peerId}`}</FxText>
                                 </FxBox>
                             </FxButton>)}
-
                     </FxBox>
                 </>
-
             )}
         </FxBox>
     );

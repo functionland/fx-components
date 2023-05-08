@@ -19,8 +19,8 @@ interface BloxsActionSlice {
   /**
    * Remote actions
    */
-  getBloxSpace: (peerId: string, updateStore: boolean) => Promise<TBloxFreeSpace>;
-  checkBloxConnection: (peerId: string) => Promise<boolean>;
+  getBloxSpace: (updateStore?: boolean) => Promise<TBloxFreeSpace>;
+  checkBloxConnection: () => Promise<boolean>;
 }
 interface BloxsModel {
   _hasHydrated: boolean;
@@ -97,16 +97,16 @@ const createModeSlice: StateCreator<
     /**
      * Remote actions implementaions
      */
-    getBloxSpace: async (peerId, updateStore = true) => {
+    getBloxSpace: async (updateStore = true) => {
       try {
-        const { bloxs: currentBloxs } = get()
+        const { bloxs: currentBloxs, currentBloxPeerId } = get()
         const bloxSpace = await blockchain.bloxFreeSpace();
         if (updateStore) {
           set({
             bloxs: {
               ...currentBloxs,
-              [peerId]: {
-                ...currentBloxs[peerId],
+              [currentBloxPeerId]: {
+                ...currentBloxs[currentBloxPeerId],
                 freeSpace: {
                   ...bloxSpace
                 }
@@ -119,20 +119,20 @@ const createModeSlice: StateCreator<
         throw error;
       }
     },
-    checkBloxConnection: async (peerId) => {
-      const { bloxsConnectionStatus: currentBloxsConnectionStatus } = get()
+    checkBloxConnection: async () => {
+      const { bloxsConnectionStatus: currentBloxsConnectionStatus, currentBloxPeerId } = get()
       try {
         set({
           bloxsConnectionStatus: {
             ...currentBloxsConnectionStatus,
-            [peerId]: 'PENDING'
+            [currentBloxPeerId]: 'PENDING'
           }
         })
         const connected = await fula.checkConnection();
         set({
           bloxsConnectionStatus: {
             ...currentBloxsConnectionStatus,
-            [peerId]: connected ? 'CONNECTED' : 'DISCONNECTED'
+            [currentBloxPeerId]: connected ? 'CONNECTED' : 'DISCONNECTED'
           }
         })
         return connected;
