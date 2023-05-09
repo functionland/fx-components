@@ -17,9 +17,11 @@ import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { ActivityIndicator, Alert, Share } from 'react-native';
 import { Helper } from '../../utils';
-import { exchangeConfig } from '../../api/bloxHardware';
+import { exchangeConfig, getBloxProperties } from '../../api/bloxHardware';
 import shallow from 'zustand/shallow';
 import { useBloxsStore } from '../../stores';
+import { DeviceCard } from '../../components';
+import { EDeviceStatus } from '../../api/hub';
 
 export const SetBloxAuthorizerScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -55,6 +57,15 @@ export const SetBloxAuthorizerScreen = () => {
     initialLoading: false,
     apiMethod: exchangeConfig,
   })
+  const {
+    loading: loading_bloxProperties,
+    data: data_bloxProperties,
+    error: error_bloxProperties,
+    refetch: refetch_bloxProperties
+  } = useFetch({
+    initialLoading: false,
+    apiMethod: getBloxProperties,
+  })
   useEffect(() => {
     if (password && signiture)
       generateAppPeerId();
@@ -64,8 +75,23 @@ export const SetBloxAuthorizerScreen = () => {
   useEffect(() => {
     if (newPeerId) {
       handleExchangeConfig()
+      refetch_bloxProperties()
     }
   }, [newPeerId])
+
+  useEffect(() => {
+    
+    if (data_bloxProperties?.data?.bloxFreeSpace) {
+      //setNewBloxPeerId(data_exchange?.data?.peer_id)
+    } else if (error_bloxProperties) {
+      queueToast({
+        type: 'warning',
+        title: 'Unable to get the blox properties!',
+        message: error_bloxProperties?.message
+      })
+    }
+    logger.log('refetch_bloxProperties:result', { data_bloxProperties, error_bloxProperties })
+  }, [data_bloxProperties, error_bloxProperties])
 
   useEffect(() => {
     if (data_exchange?.data?.peer_id) {
@@ -79,7 +105,6 @@ export const SetBloxAuthorizerScreen = () => {
     }
     logger.log('handleExchangeConfig:result', { data_exchange, error_exchange })
   }, [data_exchange, error_exchange])
-
   const handleExchangeConfig = () => {
     try {
       const { secretKey } = Helper.getMyDIDKeyPair(password, signiture)
@@ -111,11 +136,19 @@ export const SetBloxAuthorizerScreen = () => {
     if (!loading_exchange && newBloxName && newBloxPeerId && newPeerId && newBloxName) {
       setAppPeerId(newPeerId);
       updateBloxsStore({
-        currentBloxPeerId: newBloxPeerId
+        currentBloxPeerId: newBloxPeerId,
       })
       addBlox({
         peerId: newBloxPeerId,
-        name: newBloxName
+        name: newBloxName,
+        freeSpace: data_bloxProperties?.data?.bloxFreeSpace,
+        propertyInfo: data_bloxProperties?.data
+      })
+      logger.log('SetBloxAuthorizer.Screen:handleNext', {
+        peerId: newBloxPeerId,
+        name: newBloxName,
+        freeSpace: data_bloxProperties?.data?.bloxFreeSpace,
+        propertyInfo: data_bloxProperties?.data
       })
       navigation.navigate(Routes.ConnectToWifi);
     } else
@@ -136,7 +169,7 @@ export const SetBloxAuthorizerScreen = () => {
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={80} />
-      <FxKeyboardAwareScrollView enableOnAndroid={true} extraHeight={100}>
+      <FxKeyboardAwareScrollView enableOnAndroid={true} extraScrollHeight={60} extraHeight={100} contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         <FxBox flex={3} paddingVertical="40">
           <FxText variant="h300" textAlign="center" marginBottom="40">
             Set Blox Owner
@@ -178,7 +211,7 @@ export const SetBloxAuthorizerScreen = () => {
           {newBloxPeerId &&
             <FxBox paddingTop='40'>
               <FxTextInput
-                caption="Blox name"
+                caption="Set Blox name"
                 value={newBloxName}
                 onChangeText={setNewBloxName}
               />
@@ -186,9 +219,20 @@ export const SetBloxAuthorizerScreen = () => {
 
           }
         </FxBox>
+        {
+          <DeviceCard
+            data={{
+              capacity: data_bloxProperties?.data?.bloxFreeSpace?.size || 0,
+              name: 'Hard Disk',
+              status: data_bloxProperties?.data?.bloxFreeSpace ? EDeviceStatus.InUse : EDeviceStatus.NotAvailable,
+              associatedDevices: ['Blox Set Up']
+            }}
+            onRefreshPress={refetch_bloxProperties}
+            loading={loading_bloxProperties}
+          />}
       </FxKeyboardAwareScrollView>
 
-      <FxBox flex={1} justifyContent="flex-end">
+      <FxBox flex={1} position='absolute' bottom={0} right={0} left={0} paddingHorizontal='20' paddingVertical='20'>
         <FxBox
           flexDirection="row"
           justifyContent="flex-end"
@@ -213,7 +257,7 @@ export const SetBloxAuthorizerScreen = () => {
             </FxButton>
           ) : (
             <FxButton
-              disabled={loading_exchange || !newBloxName || !newBloxPeerId || !newPeerId}
+              disabled={loading_exchange || !newBloxName || !newBloxPeerId || !newPeerId || loading_bloxProperties}
               width={150} onPress={handleNext}>
               {loading_exchange ? <ActivityIndicator /> : 'Next'}
             </FxButton>

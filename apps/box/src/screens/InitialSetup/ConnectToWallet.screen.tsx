@@ -18,6 +18,7 @@ import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Helper } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
 import shallow from 'zustand/shallow';
+import { useLogger } from '../../hooks';
 
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -34,6 +35,8 @@ export const ConnectToWalletScreen = () => {
     ],
     shallow
   );
+  const logger = useLogger()
+
   useEffect(() => {
     if (!walletConnect.connected)
       return;
@@ -77,6 +80,7 @@ export const ConnectToWalletScreen = () => {
 
     } catch (err) {
       console.log(err);
+      logger.logError('handleWalletConnect', err)
       queueToast({
         title: 'WalletConnect Error',
         message: err.toString(),

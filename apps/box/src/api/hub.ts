@@ -2,11 +2,14 @@ export enum EDeviceStatus {
   InUse = 0,
   BackingUp = 1,
   NotInUse = 2,
+  NotAvailable = 3,
 }
 
 export type TDevice = {
   name: string;
   capacity: number; // megabytes
+  used?: number; // megabytes
+  free?: number; // megabytes
   status: EDeviceStatus;
   associatedDevices: string[];
 };

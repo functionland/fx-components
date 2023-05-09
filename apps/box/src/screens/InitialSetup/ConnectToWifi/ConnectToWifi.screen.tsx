@@ -37,7 +37,6 @@ export const ConnectToWifiScreen = () => {
     .filter((ssid) => ssid)
     .sort();
   const uniqueSsids = [...new Set(ssids)];
-
   const handleBack = () => {
     navigation.goBack();
   };

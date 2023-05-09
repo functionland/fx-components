@@ -107,9 +107,9 @@ const createModeSlice: StateCreator<
               ...currentBloxs,
               [currentBloxPeerId]: {
                 ...currentBloxs[currentBloxPeerId],
-                freeSpace: {
+                freeSpace: bloxSpace.size != undefined ? {
                   ...bloxSpace
-                }
+                } : undefined
               }
             }
           })
@@ -140,7 +140,7 @@ const createModeSlice: StateCreator<
         set({
           bloxsConnectionStatus: {
             ...currentBloxsConnectionStatus,
-            [peerId]: 'DISCONNECTED'
+            [currentBloxPeerId]: 'DISCONNECTED'
           }
         })
         throw error;

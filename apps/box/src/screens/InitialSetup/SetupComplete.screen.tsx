@@ -29,7 +29,7 @@ export const SetupCompleteScreen = () => {
   const rootNavigation = useRootNavigation();
   const [internetStatus, setInternetStatus] = useState<InternetStatus>()
   const [setupStatus, setSetupStatus] = useState<SetupStatus>('CHECKING')
- 
+  const [bloxReachOutTryCount, setBloxReachOutTryCount] = useState(1)
   const [password, signiture, fulaIsReady, setFulaIsReady] = useUserProfileStore((state) => [
     state.password,
     state.signiture,
@@ -87,7 +87,12 @@ export const SetupCompleteScreen = () => {
   //Set the setup completion status
   useEffect(() => {
     if (bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED') {
-      setSetupStatus('NOTCOMPLETED')
+      if (bloxReachOutTryCount < 2) {
+        setBloxReachOutTryCount(bloxReachOutTryCount + 1)
+        handleTryReachBlox()
+      } else {
+        setSetupStatus('NOTCOMPLETED')
+      }
     } else if (bloxsConnectionStatus[currentBloxPeerId] === 'CONNECTED')
       setSetupStatus('COMPLETED')
   }, [bloxsConnectionStatus, currentBloxPeerId])
@@ -171,7 +176,7 @@ export const SetupCompleteScreen = () => {
         }
         {internetStatus === 'CONNECTED' && bloxsConnectionStatus[currentBloxPeerId] === 'PENDING' &&
           <FxText variant='bodyMediumRegular'>
-            Reaching Blox ...
+            Reaching Blox #{bloxReachOutTryCount}...
           </FxText>
         }
         {internetStatus === 'NOTCONNECTED' && setupStatus === 'NOTCOMPLETED' &&

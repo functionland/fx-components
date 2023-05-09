@@ -32,7 +32,7 @@ export const BloxHeader = ({ selectedMode, onChangeMode ,onAvatarPress}: TBloxHe
         alignItems="center"
         onPress={onChangeMode}
       >
-        <FxText variant="h300">
+        {/* <FxText variant="h300">
           {selectedMode === EBloxInteractionType.HomeBloxSetup
             ? 'Home Blox Setup'
             : 'Office Blox Unit'}
@@ -42,7 +42,7 @@ export const BloxHeader = ({ selectedMode, onChangeMode ,onAvatarPress}: TBloxHe
           height={16}
           marginLeft="4"
           fill={colors.content1}
-        />
+        /> */}
       </FxPressableOpacity>
 
       <FxAvatar
