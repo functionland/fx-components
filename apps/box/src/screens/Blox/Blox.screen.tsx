@@ -10,6 +10,7 @@ import { Alert, ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import shallow from 'zustand/shallow';
 import {
+  BloxInfoBottomSheet,
   ColorSettingsCard,
   ConnectedDevicesCard,
   DeviceCard,
@@ -20,12 +21,8 @@ import { EarningCard } from '../../components/Cards/EarningCard';
 import { BloxHeader } from './components/BloxHeader';
 import { BloxInteraction } from './components/BloxInteraction';
 import { BloxInteractionModal } from './modals/BloxInteractionModal';
-import { Pool } from './components/Pool';
-import { QuoteStat } from './components/QuoteStat';
-import { EDeviceStatus, mockHub } from '../../api/hub';
-import { mockFriendData } from '../../api/users';
-import { mockPoolData } from '../../api/pool';
-import { EBloxInteractionType } from '../../models';
+import { EDeviceStatus } from '../../api/hub';
+import { EBloxInteractionType, TBloxInteraction } from '../../models';
 import { ProfileBottomSheet } from '../../components/ProfileBottomSheet';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { ConnectionOptionsSheet, ConnectionOptionsType } from '../../components/ConnectionOptionsSheet';
@@ -40,7 +37,11 @@ export const BloxScreen = () => {
   const bloxInteractionModalRef = useRef<FxBottomSheetModalMethods>(null);
   const profileBottomSheetRef = useRef<FxBottomSheetModalMethods>(null)
   const connectionOptionsSheetRef = useRef<FxBottomSheetModalMethods>(null)
+  const bloxInfoBottomSheetRef = useRef<FxBottomSheetModalMethods>(null)
+
   const divisionSplit = useSharedValue(DEFAULT_DIVISION);
+  const [screenIsLoaded, setScreenIsLoaded] = useState(false)
+  const [loadingBloxSpace, setLoadingBloxSpace] = useState(false)
   const [divisionPercentage, setDivisionPercentage] =
     useState<number>(DEFAULT_DIVISION);
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
@@ -52,29 +53,41 @@ export const BloxScreen = () => {
     state.fulaIsReady,
   ], shallow);
 
-  const [bloxs, currentBloxPeerId, checkBloxConnection, getBloxSpace] = useBloxsStore((state) => [
+  const [bloxs, currentBloxPeerId, bloxsConnectionStatus, checkBloxConnection, getBloxSpace, removeBlox, updateBloxsStore] = useBloxsStore((state) => [
     state.bloxs,
     state.currentBloxPeerId,
     state.bloxsConnectionStatus,
     state.checkBloxConnection,
-    state.getBloxSpace
+    state.getBloxSpace,
+    state.removeBlox,
+    state.update
   ], shallow);
-
+  const bloxInteractions = Object.values(bloxs || {}).map<TBloxInteraction>(blox => ({
+    peerId: blox.peerId,
+    title: blox.name
+  }))
   const currentBlox = bloxs[currentBloxPeerId]
   divisionSplit.value = currentBlox?.freeSpace?.used_percentage || 0
-
   useEffect(() => {
-    if (fulaIsReady && currentBloxPeerId)
+    if (fulaIsReady && !screenIsLoaded) {
+      setScreenIsLoaded(true)
       updateBloxSpace();
-  }, [fulaIsReady, currentBloxPeerId])
-
+      checkBloxConnection()
+    } else if (fulaIsReady && !bloxsConnectionStatus[currentBloxPeerId]) {
+      checkBloxConnection()
+    }
+  }, [fulaIsReady])
   const updateBloxSpace = async () => {
     try {
-      const space = await getBloxSpace()
-      logger.log('updateBloxSpace', space)
+      setLoadingBloxSpace(true)
+      if (fulaIsReady) {
+        const space = await getBloxSpace()
+        logger.log('updateBloxSpace', space)
+      }
     } catch (error) {
-      console.log('GetBloxSpace', error)
       logger.logError('GetBloxSpace Error', error)
+    } finally {
+      setLoadingBloxSpace(false)
     }
   }
   const showInteractionModal = () => {
@@ -93,7 +106,17 @@ export const BloxScreen = () => {
   const showProfileModal = () => {
     profileBottomSheetRef.current.present()
   }
+  const handleOnBloxChanged = (index: number) => {
+    try {
+      const blox = bloxInteractions[index]
+      updateBloxsStore({
+        currentBloxPeerId: blox.peerId
+      })
+    } catch (error) {
+      logger.logError('handleOnBloxChanged', error)
+    }
 
+  }
   const handleOnConnectionOptionSelect = (type: ConnectionOptionsType) => {
     connectionOptionsSheetRef.current.close()
     switch (type) {
@@ -113,7 +136,24 @@ export const BloxScreen = () => {
         break;
     }
   }
-
+  const handleOnBloxRemovePress = (peerId: string) => {
+    if (Object.values(bloxs)?.length <= 1) {
+      Alert.alert('Warning', 'You cannot remove the last Blox!, please first add new Blox, then remove this one from the list.')
+      return
+    }
+    Alert.alert('Remove Blox!', `Are you sure want to remove '${bloxs[peerId]?.name}' from the list?`,
+      [{
+        text: 'Yes',
+        onPress: () => {
+          bloxInfoBottomSheetRef.current.close()
+          removeBlox(peerId)
+        },
+        style: 'destructive'
+      }, {
+        text: 'No',
+        style: 'cancel'
+      }])
+  }
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
       <BloxHeader
@@ -124,24 +164,30 @@ export const BloxScreen = () => {
       <ScrollView>
         <FxBox paddingVertical="20" paddingHorizontal="20">
           <BloxInteraction
+            bloxs={bloxInteractions}
             selectedMode={selectedMode}
-            setSelectedMode={setSelectedMode}
+            //setSelectedMode={setSelectedMode}
+            onBloxChange={handleOnBloxChanged}
             onConnectionPress={() => connectionOptionsSheetRef.current.present()}
+            onBloxPress={() => bloxInfoBottomSheetRef.current.present()}
           />
           <FxSpacer height={24} />
-          <UsageBar
-            divisionPercent={divisionSplit}
-            totalCapacity={currentBlox?.freeSpace?.size || 1000}
-          />
+          {currentBlox?.freeSpace?.size != undefined &&
+            <UsageBar
+              divisionPercent={divisionSplit}
+              totalCapacity={currentBlox?.freeSpace?.size || 1000}
+            />}
           <DeviceCard
+            onRefreshPress={updateBloxSpace}
+            loading={loadingBloxSpace}
             data={{
               capacity: currentBlox?.freeSpace?.size || 0,
               name: 'Hard Disk',
-              status: EDeviceStatus.InUse,
-              associatedDevices: ['Home Blox Set Up']
+              status: currentBlox?.freeSpace ? EDeviceStatus.InUse : EDeviceStatus.NotAvailable,
+              associatedDevices: ['Blox Set Up']
             }}
           />
-          <FxSpacer height={8} />
+          {/* <FxSpacer height={8} />
           <QuoteStat divisionPercentage={divisionPercentage} />
           <FxSpacer height={24} />
           <ColorSettingsCard />
@@ -154,7 +200,7 @@ export const BloxScreen = () => {
           <FxSpacer height={16} />
           <Pool pool={mockPoolData[0]} />
           <FxSpacer height={36} />
-          <FxButton size="large">Restart</FxButton>
+          <FxButton size="large">Restart</FxButton> */}
         </FxBox>
       </ScrollView>
       <BloxInteractionModal
@@ -162,6 +208,7 @@ export const BloxScreen = () => {
         selectedMode={selectedMode}
         onSelectMode={handleSelectMode}
       />
+      <BloxInfoBottomSheet ref={bloxInfoBottomSheetRef} bloxInfo={bloxs[currentBloxPeerId]} onBloxRemovePress={handleOnBloxRemovePress} />
       <ProfileBottomSheet ref={profileBottomSheetRef} />
       <ConnectionOptionsSheet ref={connectionOptionsSheetRef} onSelected={handleOnConnectionOptionSelect} />
     </FxSafeAreaBox>

@@ -69,7 +69,8 @@ export const MainTabsNavigator = () => {
     }
   }, [currentBloxPeerId])
   useEffect(() => {
-    if (password && signiture && !fulaIsReady && currentBloxPeerId) {
+    if (password && signiture && currentBloxPeerId) {
+      setFulaIsReady(false)
       logger.log('MainTabsNavigator:intiFula', {
         bloxPeerId: currentBloxPeerId,
         bloxs
@@ -89,7 +90,7 @@ export const MainTabsNavigator = () => {
         logger.logError('MainTabsNavigator:intiFula', error)
       }
     }
-  }, [password, signiture, fulaIsReady, currentBloxPeerId]);
+  }, [password, signiture, currentBloxPeerId]);
   return (
     <>
       <MainTabs.Navigator

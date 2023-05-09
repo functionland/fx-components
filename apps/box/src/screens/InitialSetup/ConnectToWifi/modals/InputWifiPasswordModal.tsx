@@ -30,14 +30,9 @@ export const InputWifiPasswordModal = React.forwardRef<
   const logger = useLogger()
   const connectWifi = async () => {
     try {
-      console.log('connectWifi:FormData', {
-        ssid: _.ssid,
-        password,
-        countryCode: RNLocalize.getCountry(),
-      })
       logger.log('connectWifi:FormData', {
         ssid: _.ssid,
-        password,
+        password:'***',
         countryCode: RNLocalize.getCountry(),
       })
       setConnectionStatus(EConnectionStatus.connecting);
@@ -46,7 +41,6 @@ export const InputWifiPasswordModal = React.forwardRef<
         password,
         countryCode: RNLocalize.getCountry(),
       });
-      console.log('postWifiConnect', result)
       logger.log('connectWifi', result)
       queueToast({
         title: 'Unable to connect to wifi',
