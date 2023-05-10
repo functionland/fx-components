@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import Carousel, { ICarouselInstance } from 'react-native-reanimated-carousel';
 import {
   FxBox,
@@ -11,50 +11,55 @@ import {
   useFxTheme,
   FxChevronDownIcon,
 } from '@functionland/component-library';
-import { useSettingsStore } from '../../../stores';
-import { EBloxInteractionType } from '../../../models';
-import { bloxInteractions } from '../../../api/blox';
-import { useUserProfileStore } from 'apps/box/src/stores/useUserProfileStore';
-import { CircleFilledIcon, HubIcon } from 'apps/box/src/components';
+import OfficeBloxUnitDark from '../../../app/icons/office-blox-unit-dark.svg';
+import OfficeBloxUnitLight from '../../../app/icons/office-blox-unit-light.svg';
 
-type TBloxInteraction = {
+import { useBloxsStore, useSettingsStore } from '../../../stores';
+import { EBloxInteractionType, TBloxInteraction } from '../../../models';
+import { CircleFilledIcon } from 'apps/box/src/components';
+import shallow from 'zustand/shallow';
+
+type TBloxInteractionProps = {
+  bloxs: TBloxInteraction[],
   selectedMode: EBloxInteractionType;
-  setSelectedMode: Dispatch<SetStateAction<EBloxInteractionType>>;
+  setSelectedMode?: Dispatch<SetStateAction<EBloxInteractionType>>;
   onConnectionPress?: () => void
+  onBloxChange?: (index: number) => void
+  onBloxPress?: (peerId: string) => void
 };
 
 export const BloxInteraction = ({
   selectedMode,
+  bloxs,
   setSelectedMode,
-  onConnectionPress
-}: TBloxInteraction) => {
+  onConnectionPress,
+  onBloxChange,
+  onBloxPress
+}: TBloxInteractionProps) => {
   const carouselRef = useRef<ICarouselInstance>(null);
   const { colorScheme } = useSettingsStore((store) => ({
     colorScheme: store.colorScheme,
   }));
   const { colors } = useFxTheme();
-  const selectedIndex = bloxInteractions.findIndex(
-    (interaction) => interaction.mode === selectedMode
-  );
-  const [fulaIsReady, checkBloxConnection, bloxConnectionStatus] = useUserProfileStore((state) => [
-    state.fulaIsReady,
-    state.checkBloxConnection,
-    state.bloxConnectionStatus
-  ]);
+  const [selectedIndex, setSelectedIndex] = useState(0)
 
-  useEffect(() => {
-    if (fulaIsReady) {
-      checkConnectionStatus()
-    }
-  }, [fulaIsReady])
+  const [bloxsConnectionStatus] = useBloxsStore((state) => [
+    state.bloxsConnectionStatus,
+  ], shallow);
 
-  const checkConnectionStatus = async () => {
-    try {
-      await checkBloxConnection()
-    } catch (error) {
-      console.log(error)
-    }
-  }
+  // useEffect(() => {
+  //   if (fulaIsReady && currentBloxPeerId) {
+  //     checkConnectionStatus()
+  //   }
+  // }, [fulaIsReady, currentBloxPeerId])
+
+  // const checkConnectionStatus = async () => {
+  //   try {
+  //     await checkBloxConnection()
+  //   } catch (error) {
+  //     console.log(error)
+  //   }
+  // }
   const swipePrevious = () => {
     carouselRef?.current?.prev();
   };
@@ -62,23 +67,26 @@ export const BloxInteraction = ({
   const swipeNext = () => {
     carouselRef?.current?.next();
   };
-
+  const onSnapToItem = (index: number) => {
+    setSelectedIndex(index)
+    onBloxChange?.(index)
+  }
   return (
     <FxBox position="relative">
       <Carousel
         ref={carouselRef}
-        defaultIndex={selectedIndex}
+        defaultIndex={0}
         loop={false}
         width={WINDOW_WIDTH - APP_HORIZONTAL_PADDING * 2}
         height={200}
         panGestureHandlerProps={{
           activeOffsetX: [-10, 10],
         }}
-        data={bloxInteractions}
+        data={bloxs}
         renderItem={({ item }) => {
-          const Icon = colorScheme === 'dark' ? item.darkIcon : item.lightIcon;
+          const Icon = colorScheme === 'dark' ? item.darkIcon || OfficeBloxUnitDark : item.lightIcon || OfficeBloxUnitLight;
           return (
-            <FxBox height="100%" flexDirection="column" alignItems="center">
+            <FxPressableOpacity onPress={() => onBloxPress?.(item.peerId)} height="100%" flexDirection="column" alignItems="center" >
               <Icon />
               <FxText variant="bodyLargeRegular" marginTop="12">
                 {item.title}
@@ -91,18 +99,18 @@ export const BloxInteraction = ({
               >
                 <CircleFilledIcon
                   color={
-                    bloxConnectionStatus === 'CONNECTED' ? 'successBase' :
-                      (bloxConnectionStatus === 'PENDING' ? 'warningBase' : 'errorBase')
+                    bloxsConnectionStatus[item.peerId] === 'CONNECTED' ? 'successBase' :
+                      (bloxsConnectionStatus[item.peerId] === 'PENDING' ? 'warningBase' : 'errorBase')
                   }
                 />
                 <FxText
                   paddingStart='4'
                   color={
-                    bloxConnectionStatus === 'CONNECTED' ? 'successBase' :
-                      (bloxConnectionStatus === 'PENDING' ? 'warningBase' : 'errorBase')
+                    bloxsConnectionStatus[item.peerId] === 'CONNECTED' ? 'successBase' :
+                      (bloxsConnectionStatus[item.peerId] === 'PENDING' ? 'warningBase' : 'errorBase')
                   }
                 >
-                  {bloxConnectionStatus.toString()}
+                  {bloxsConnectionStatus[item.peerId]?.toString() || 'UNCECKED '}
 
                 </FxText>
                 <FxChevronDownIcon
@@ -119,10 +127,11 @@ export const BloxInteraction = ({
 
                 </FxText>
               </FxBox>
-            </FxBox>
+            </FxPressableOpacity>
           );
         }}
-        onSnapToItem={(index) => setSelectedMode(bloxInteractions[index].mode)}
+        //onSnapToItem={(index) => setSelectedMode?.(bloxInteractions[index]?.mode)}
+        onSnapToItem={onSnapToItem}
       />
       <FxPressableOpacity position="absolute" top={48} onPress={swipePrevious}>
         <FxChevronLeftIcon
@@ -141,7 +150,7 @@ export const BloxInteraction = ({
       >
         <FxChevronRightIcon
           fill={
-            selectedIndex === bloxInteractions.length - 1
+            selectedIndex === bloxs?.length - 1
               ? colors.backgroundSecondary
               : colors.content1
           }

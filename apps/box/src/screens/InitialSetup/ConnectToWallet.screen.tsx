@@ -17,6 +17,8 @@ import { getWalletImage } from '../../utils/media';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Helper } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
+import shallow from 'zustand/shallow';
+import { useLogger } from '../../hooks';
 
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -30,10 +32,13 @@ export const ConnectToWalletScreen = () => {
       state.signiture,
       state.password,
       state.setWalletId,
-    ]
+    ],
+    shallow
   );
-  useEffect(()=>{
-    if(!walletConnect.connected)
+  const logger = useLogger()
+
+  useEffect(() => {
+    if (!walletConnect.connected)
       return;
     switch (walletConnect.chainId) {
       case 1:
@@ -62,17 +67,19 @@ export const ConnectToWalletScreen = () => {
     if (walletConnect.accounts[0] !== walletId) {
       setWalletId(walletConnect.accounts[0], true);
     }
-  },[walletConnect.connected])
+  }, [walletConnect.connected])
   const handleWalletConnect = async () => {
     try {
+      if (walletConnect.connected)
+        await walletConnect.killSession()
       const wallet = await walletConnect.connect(
         {
           chainId: selectedChainId
         }
       );
-    
     } catch (err) {
       console.log(err);
+      logger.logError('handleWalletConnect', err)
       queueToast({
         title: 'WalletConnect Error',
         message: err.toString(),
@@ -95,7 +102,7 @@ export const ConnectToWalletScreen = () => {
       <FxProgressBar progress={20} />
 
       <FxBox flex={1} justifyContent="space-between" paddingVertical="80">
-        {walletConnect.connected && networkConfirmed? (
+        {walletConnect.connected && networkConfirmed ? (
           <>
             <WalletDetails allowChangeWallet={true} />
             {password && signiture ? (

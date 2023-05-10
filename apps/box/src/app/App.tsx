@@ -84,6 +84,13 @@ const AppContent = () => {
       console.error = () => null
     }
   }, [])
+  useEffect(() => {
+    return () => {
+      if (!__DEV__ && isDebugModeEnable) {
+        firebase.crashlytics().recordError(new Error('On App Close Error Log'))
+      }
+    }
+  }, [isDebugModeEnable])
   const shareUniqueId = () => {
     Share.share({
       message: debugMode.uniqueId

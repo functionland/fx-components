@@ -10,10 +10,11 @@ export enum EBloxInteractionType {
 }
 
 export type TBloxInteraction = {
-  mode: EBloxInteractionType;
+  //mode: EBloxInteractionType;
+  peerId?:string;
   title: string;
-  darkIcon: FC<SvgProps>;
-  lightIcon: FC<SvgProps>;
+  darkIcon?: FC<SvgProps>;
+  lightIcon?: FC<SvgProps>;
 };
 
 export enum EConnectionStatus {
