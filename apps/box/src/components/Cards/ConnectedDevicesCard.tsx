@@ -54,14 +54,14 @@ export const DeviceCard = ({ data, showEject, loading, onRefreshPress, ...rest }
           {capacity} GB
         </FxCard.Row.Data>
       </FxCard.Row>
-      {used &&
+      {used != undefined &&
         <FxCard.Row>
           <FxCard.Row.Title>Used</FxCard.Row.Title>
           <FxCard.Row.Data>
             {used} GB
           </FxCard.Row.Data>
         </FxCard.Row>}
-      {free &&
+      {free != undefined &&
         <FxCard.Row>
           <FxCard.Row.Title>Free</FxCard.Row.Title>
           <FxCard.Row.Data>

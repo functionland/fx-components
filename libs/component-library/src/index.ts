@@ -19,7 +19,7 @@ export {
 } from './lib/grid-selector/gridSelector';
 export { FxHeader, FxHeaderProps } from './lib/header/header';
 export * from './lib/icons/icons';
-export { FxError } from './lib/error/error';
+export { FxError, FxWarning } from './lib/error/error';
 export { FxRadioButton, FxRadioButtonWithLabel } from './lib/radio-button';
 export { FxFoldableContent } from './lib/foldable-content/foldableContent';
 export { FxHorizontalRule } from './lib/horizontal-rule/horizontalRule';

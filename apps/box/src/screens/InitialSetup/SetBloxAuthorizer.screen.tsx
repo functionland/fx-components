@@ -3,12 +3,17 @@ import React, { useEffect, useState } from 'react';
 import {
   FxBox,
   FxButton,
+  FxCard,
+  FxCheckIcon,
   FxKeyboardAwareScrollView,
   FxPressableOpacity,
   FxProgressBar,
+  FxRadioButton,
   FxSafeAreaBox,
   FxText,
   FxTextInput,
+  FxWarning,
+  FxWarningIcon,
   useToast,
 } from '@functionland/component-library';
 
@@ -27,7 +32,6 @@ export const SetBloxAuthorizerScreen = () => {
   const navigation = useInitialSetupNavigation();
   const [newPeerId, setNewPeerId] = useState(undefined);
   const [newBloxPeerId, setNewBloxPeerId] = useState(undefined);
-  const [callingApi] = useState(false);
   const { queueToast } = useToast()
   const logger = useLogger()
 
@@ -40,10 +44,12 @@ export const SetBloxAuthorizerScreen = () => {
     shallow
   );
 
-  const [bloxs = {}, updateBloxsStore, addBlox] = useBloxsStore((state) => [
+  const [bloxs = {}, currentBloxPeerId, updateBloxsStore, addBlox, removeBlox] = useBloxsStore((state) => [
     state.bloxs,
+    state.currentBloxPeerId,
     state.update,
     state.addBlox,
+    state.removeBlox
   ], shallow);
 
   const bloxsArray = Object.values(bloxs)
@@ -80,7 +86,7 @@ export const SetBloxAuthorizerScreen = () => {
   }, [newPeerId])
 
   useEffect(() => {
-    
+
     if (data_bloxProperties?.data?.bloxFreeSpace) {
       //setNewBloxPeerId(data_exchange?.data?.peer_id)
     } else if (error_bloxProperties) {
@@ -105,6 +111,7 @@ export const SetBloxAuthorizerScreen = () => {
     }
     logger.log('handleExchangeConfig:result', { data_exchange, error_exchange })
   }, [data_exchange, error_exchange])
+
   const handleExchangeConfig = () => {
     try {
       const { secretKey } = Helper.getMyDIDKeyPair(password, signiture)
@@ -135,14 +142,18 @@ export const SetBloxAuthorizerScreen = () => {
   const handleNext = () => {
     if (!loading_exchange && newBloxName && newBloxPeerId && newPeerId && newBloxName) {
       setAppPeerId(newPeerId);
-      updateBloxsStore({
-        currentBloxPeerId: newBloxPeerId,
-      })
+
       addBlox({
         peerId: newBloxPeerId,
         name: newBloxName,
         freeSpace: data_bloxProperties?.data?.bloxFreeSpace,
         propertyInfo: data_bloxProperties?.data
+      })
+      if (currentBloxPeerId) {
+        removeBlox(currentBloxPeerId)
+      }
+      updateBloxsStore({
+        currentBloxPeerId: newBloxPeerId,
       })
       logger.log('SetBloxAuthorizer.Screen:handleNext', {
         peerId: newBloxPeerId,
@@ -174,9 +185,15 @@ export const SetBloxAuthorizerScreen = () => {
           <FxText variant="h300" textAlign="center" marginBottom="40">
             Set Blox Owner
           </FxText>
-          <FxText variant="body" textAlign="center" marginBottom="40">
+          <FxText variant="body" textAlign="center" marginBottom="20">
             Adding the Blox App peerId as an owner on the Blox
           </FxText>
+          {error_exchange?.message === 'Network Error' &&
+            <FxWarning padding='16' marginBottom='8' error="In some cases you need to turn the mobile data off, please make sure the phone is connected to the Blox's Hotspot and mobile data is off" />
+          }
+          {newBloxPeerId && !data_bloxProperties?.data?.bloxFreeSpace && !loading_bloxProperties &&
+            <FxWarning padding='16' marginBottom='8' error='To proceed successfully you need to attach an external storage to the Blox!' />
+          }
           {password && signiture ? (
             <FxBox>
               <FxText variant="h300" textAlign="center" marginBottom="8">
@@ -186,12 +203,13 @@ export const SetBloxAuthorizerScreen = () => {
                 title: 'The Blox App Peer ID',
                 message: newPeerId
               })}>
-                <FxText color="warningBase" textAlign="center" marginTop="8">
+                <FxText color="content3" textAlign="center" marginTop="8">
                   {newPeerId ?? 'Generating the app peerId...'}
                 </FxText>
               </FxPressableOpacity>
             </FxBox>
           ) : null}
+
           {newBloxPeerId &&
             <FxBox marginTop='16'>
               <FxText variant="h300" textAlign="center" marginBottom="8">
@@ -201,7 +219,7 @@ export const SetBloxAuthorizerScreen = () => {
                 title: 'Your Blox Peer ID',
                 message: newBloxPeerId
               })}>
-                <FxText color="warningBase" textAlign="center" marginTop="8">
+                <FxText color="content3" textAlign="center" marginTop="8">
                   {newBloxPeerId}
                 </FxText>
               </FxPressableOpacity>
@@ -219,17 +237,20 @@ export const SetBloxAuthorizerScreen = () => {
 
           }
         </FxBox>
-        {
+        {data_bloxProperties?.data?.bloxFreeSpace &&
           <DeviceCard
             data={{
               capacity: data_bloxProperties?.data?.bloxFreeSpace?.size || 0,
+              free: data_bloxProperties?.data?.bloxFreeSpace?.avail,
+              used: data_bloxProperties?.data?.bloxFreeSpace?.used,
               name: 'Hard Disk',
               status: data_bloxProperties?.data?.bloxFreeSpace ? EDeviceStatus.InUse : EDeviceStatus.NotAvailable,
               associatedDevices: ['Blox Set Up']
             }}
             onRefreshPress={refetch_bloxProperties}
             loading={loading_bloxProperties}
-          />}
+          />
+        }
       </FxKeyboardAwareScrollView>
 
       <FxBox flex={1} position='absolute' bottom={0} right={0} left={0} paddingHorizontal='20' paddingVertical='20'>
