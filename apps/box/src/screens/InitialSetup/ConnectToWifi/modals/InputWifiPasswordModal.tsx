@@ -30,13 +30,17 @@ export const InputWifiPasswordModal = React.forwardRef<
   const logger = useLogger()
   const connectWifi = async () => {
     try {
+      logger.log('connectWifi:FormData', {
+        ssid: _.ssid,
+        password:'***',
+        countryCode: RNLocalize.getCountry(),
+      })
       setConnectionStatus(EConnectionStatus.connecting);
       const result = await postWifiConnect({
         ssid: _.ssid,
         password,
         countryCode: RNLocalize.getCountry(),
       });
-      console.log('postWifiConnect', result)
       logger.log('connectWifi', result)
       queueToast({
         title: 'Unable to connect to wifi',
@@ -56,7 +60,15 @@ export const InputWifiPasswordModal = React.forwardRef<
     <FxBottomSheetModal ref={ref} keyboardShouldPersistTaps="handled">
       <FxBox paddingTop="48" paddingBottom="20">
         <FxText variant="h200">{`Enter password for "${_.ssid}"`}</FxText>
+
         <FxSpacer height={40} />
+        <FxTextInput
+          caption='Country code'
+          value={RNLocalize.getCountry()}
+          disabled={true}
+          editable={false}
+        />
+        <FxSpacer height={16} />
         <FxTextInput
           caption="Password"
           secureTextEntry
@@ -64,6 +76,7 @@ export const InputWifiPasswordModal = React.forwardRef<
           value={password}
           onChangeText={setPassword}
         />
+
         <FxSpacer height={40} />
         <FxButton
           size="large"

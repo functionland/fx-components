@@ -11,12 +11,13 @@ import {
   useToast,
 } from '@functionland/component-library';
 import { useWalletConnect } from '@walletconnect/react-native-dapp';
-import { useInitialSetupNavigation } from '../../hooks';
+import { useInitialSetupNavigation, useLogger } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
+import shallow from 'zustand/shallow';
 
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -26,7 +27,8 @@ export const LinkPasswordScreen = () => {
   const [passwordInput, setInputPasswordInput] = useState('');
   const [setKeyChainValue, signiture, password] = useUserProfileStore(
     (state) => [state.setKeyChainValue, state.signiture, state.password]
-  );
+    , shallow);
+  const logger = useLogger()
 
   const handleLinkPassword = async () => {
     try {
@@ -47,6 +49,7 @@ export const LinkPasswordScreen = () => {
       await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
     } catch (err) {
       console.log(err);
+      logger.logError('handleLinkPassword',err)
       queueToast({
         title: 'Error',
         message: 'Unable to sign the wallet address!',

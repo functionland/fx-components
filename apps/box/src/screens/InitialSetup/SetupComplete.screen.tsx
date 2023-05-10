@@ -18,6 +18,8 @@ import NetInfo, { useNetInfo } from '@react-native-community/netinfo';
 import { ActivityIndicator } from 'react-native';
 import { useFetch, useLogger } from '../../hooks';
 import { CommonActions } from '@react-navigation/native';
+import shallow from 'zustand/shallow';
+import { useBloxsStore } from '../../stores';
 // import SetupCompleteSvg2 from '../../app/icons/setup-complete-2.svg';
 // import SetupCompleteSvg3 from '../../app/icons/setup-complete-3.svg';
 type SetupStatus = 'COMPLETED' | 'CHECKING' | 'NOTCOMPLETED' | undefined
@@ -26,40 +28,57 @@ export const SetupCompleteScreen = () => {
   const navigation = useInitialSetupNavigation();
   const rootNavigation = useRootNavigation();
   const [internetStatus, setInternetStatus] = useState<InternetStatus>()
+  const [initialWaitForInternet, setInitialWaitForInternet] = useState(true)
   const [setupStatus, setSetupStatus] = useState<SetupStatus>('CHECKING')
-  const [password, signiture, bloxPeerIds, fulaIsReady, bloxConnectionStatus, setFulaIsReady, checkBloxConnection] = useUserProfileStore((state) => [
+  const [bloxReachOutTryCount, setBloxReachOutTryCount] = useState(0)
+  const [password, signiture, fulaIsReady, setFulaIsReady] = useUserProfileStore((state) => [
     state.password,
     state.signiture,
-    state.bloxPeerIds,
     state.fulaIsReady,
-    state.bloxConnectionStatus,
     state.setFulaIsReady,
-    state.checkBloxConnection
-  ]);
+  ], shallow);
+
+  const [currentBloxPeerId, bloxsConnectionStatus, checkBloxConnection] = useBloxsStore((state) => [
+    state.currentBloxPeerId,
+    state.bloxsConnectionStatus,
+    state.checkBloxConnection,
+  ], shallow);
+
   const logger = useLogger()
   const inetInfo = useNetInfo()
+
   useEffect(() => {
-    checkInternetStatus()
+    setTimeout(() => {
+      setInitialWaitForInternet(false)
+    }, 20 * 1000);
   }, [])
 
   useEffect(() => {
-    if (internetStatus !== 'CONNECTED' && inetInfo.isInternetReachable)
+    if (!initialWaitForInternet && internetStatus !== 'CONNECTED') {
+      checkInternetStatus()
+    }
+  }, [initialWaitForInternet])
+
+  useEffect(() => {
+    if (internetStatus !== 'CONNECTED' && inetInfo.isInternetReachable){
       setInternetStatus('CONNECTED')
+      setInitialWaitForInternet(false)
+    }
   }, [inetInfo])
 
   // Initiate fula 
   useEffect(() => {
-    if (password && signiture) {
+    if (password && signiture && currentBloxPeerId) {
       logger.log('SetupCompleteScreen:intiFula', {
         password,
         signiture,
-        bloxPeerId: bloxPeerIds?.[0],
+        bloxPeerId: currentBloxPeerId,
       })
       try {
         Helper.initFula({
           password,
           signiture,
-          bloxPeerId: bloxPeerIds?.[0],
+          bloxPeerId: currentBloxPeerId,
         }).then(() => {
           setFulaIsReady(true)
         }).catch(() => {
@@ -69,27 +88,33 @@ export const SetupCompleteScreen = () => {
         logger.logError('SetupCompleteScreen:intiFula', error)
       }
     }
-  }, [password, signiture])
+  }, [password, signiture, currentBloxPeerId])
 
   //Check the blox conectivity
   useEffect(() => {
-    if (fulaIsReady && internetStatus === 'CONNECTED')
+    if (fulaIsReady && internetStatus === 'CONNECTED' && currentBloxPeerId)
       handleTryReachBlox()
-  }, [fulaIsReady, internetStatus])
+  }, [fulaIsReady, internetStatus, currentBloxPeerId])
 
   //Set the setup completion status
   useEffect(() => {
-    if (bloxConnectionStatus === 'DISCONNECTED') {
-      setSetupStatus('NOTCOMPLETED')
-    } else if (bloxConnectionStatus === 'CONNECTED')
+    if (bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED') {
+      if (bloxReachOutTryCount < 2) {
+        setBloxReachOutTryCount(bloxReachOutTryCount + 1)
+        handleTryReachBlox()
+      } else {
+        setSetupStatus('NOTCOMPLETED')
+      }
+    } else if (bloxsConnectionStatus[currentBloxPeerId] === 'CONNECTED')
       setSetupStatus('COMPLETED')
-  }, [bloxConnectionStatus])
+  }, [bloxsConnectionStatus, currentBloxPeerId])
 
   const checkInternetStatus = async () => {
     try {
       const network = await NetInfo.fetch();
       if (network.isInternetReachable) {
         setInternetStatus('CONNECTED')
+        setInitialWaitForInternet(false)
       } else {
         setInternetStatus('NOTCONNECTED')
         setSetupStatus('NOTCOMPLETED')
@@ -123,10 +148,14 @@ export const SetupCompleteScreen = () => {
   const handleTryReachBlox = () => {
     setSetupStatus('CHECKING')
     setTimeout(() => {
-      if (fulaIsReady && internetStatus === 'CONNECTED') {
-        checkBloxConnection()
-      } else
-        setSetupStatus('NOTCOMPLETED')
+      try {
+        if (fulaIsReady && internetStatus === 'CONNECTED') {
+          checkBloxConnection()
+        } else
+          setSetupStatus('NOTCOMPLETED')
+      } catch (error) {
+        logger.logError('handleTryReachBlox', error)
+      }
     }, 1000);
   };
 
@@ -145,7 +174,7 @@ export const SetupCompleteScreen = () => {
         <SetupCompleteSvg1 width="100%" />
       </FxBox>
       <FxBox flex={1} alignItems='center' marginTop='8'>
-        {setupStatus === 'CHECKING' &&
+        {(setupStatus === 'CHECKING' || initialWaitForInternet) &&
           <>
             <ActivityIndicator size="large" />
             <FxText variant="bodyLargeRegular" paddingVertical='8'>
@@ -153,14 +182,14 @@ export const SetupCompleteScreen = () => {
             </FxText>
           </>
         }
-        {internetStatus === 'CHECKING' &&
+        {(internetStatus === 'CHECKING' || initialWaitForInternet) &&
           <FxText variant='bodyMediumRegular'>
-            Checking internet ...
+            Waiting for internet ...
           </FxText>
         }
-        {internetStatus === 'CONNECTED' && bloxConnectionStatus === 'PENDING' &&
+        {internetStatus === 'CONNECTED' && bloxsConnectionStatus[currentBloxPeerId] === 'PENDING' &&
           <FxText variant='bodyMediumRegular'>
-            Reaching Blox ...
+            Reaching Blox #{bloxReachOutTryCount}...
           </FxText>
         }
         {internetStatus === 'NOTCONNECTED' && setupStatus === 'NOTCOMPLETED' &&
@@ -168,7 +197,7 @@ export const SetupCompleteScreen = () => {
             Make sure your phone is connected to the internet and then try again
           </FxText>
         }
-        {bloxConnectionStatus === 'DISCONNECTED' && internetStatus === 'CONNECTED' && setupStatus === 'NOTCOMPLETED' &&
+        {bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED' && internetStatus === 'CONNECTED' && setupStatus === 'NOTCOMPLETED' &&
           <FxText variant='bodyMediumRegular' color='warningBase' textAlign='center' paddingHorizontal='16' lineHeight={20}>
             Your blox is not reachable, It seems is not connected to the internet! Please turn your blox off and then turn it on and make sure it is on Hotspot mode, then try to reconnect the blox to the Wi-Fi
           </FxText>
@@ -213,7 +242,7 @@ export const SetupCompleteScreen = () => {
             Try again
           </FxButton>
         }
-        {bloxConnectionStatus === 'DISCONNECTED' && internetStatus === 'CONNECTED' && setupStatus === 'NOTCOMPLETED' &&
+        {bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED' && internetStatus === 'CONNECTED' && setupStatus === 'NOTCOMPLETED' &&
           <FxButton size="large" onPress={handleReconnectBlox}>
             Reconnect Blox to Wi-Fi
           </FxButton>

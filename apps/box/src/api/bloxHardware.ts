@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_URL } from './index'
+import { TBloxProperty } from '../models';
 
 export type TBlox = {
   id: string; // peerId?
@@ -53,4 +54,8 @@ export const exchangeConfig = async (data: {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
   });
+};
+
+export const getBloxProperties = async (): Promise<{ data: TBloxProperty }> => {
+  return axios.get(`${API_URL}/properties`);
 };

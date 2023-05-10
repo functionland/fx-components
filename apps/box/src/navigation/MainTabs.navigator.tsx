@@ -34,16 +34,22 @@ import { GlobalBottomSheet } from '../components/GlobalBottomSheet';
 import { Helper } from '../utils';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useLogger } from '../hooks';
+import { useBloxsStore } from '../stores';
+import shallow from 'zustand/shallow';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
-  const [password, signiture, bloxPeerIds, setFulaIsReady, fulaIsReady] = useUserProfileStore((state) => [
+  const [password, signiture, setFulaIsReady, fulaIsReady] = useUserProfileStore((state) => [
     state.password,
     state.signiture,
-    state.bloxPeerIds,
     state.setFulaIsReady,
     state.fulaIsReady
-  ]);
+  ], shallow);
+  const [bloxs, currentBloxPeerId, updateBloxsStore] = useBloxsStore((state) => [
+    state.bloxs,
+    state.currentBloxPeerId,
+    state.update
+  ], shallow);
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
   const logger = useLogger()
 
@@ -54,20 +60,27 @@ export const MainTabsNavigator = () => {
   const closeGlobalBottomSheet = () => {
     globalBottomSheetRef.current.close();
   };
-
   useEffect(() => {
-    if (password && signiture && !fulaIsReady) {
+    const bloxsArray = Object.values(bloxs || {})
+    if (!currentBloxPeerId && bloxsArray.length) {
+      updateBloxsStore({
+        currentBloxPeerId: bloxsArray[0].peerId || 'PeerId is empty'
+      })
+    }
+  }, [currentBloxPeerId])
+  useEffect(() => {
+    if (password && signiture && currentBloxPeerId) {
+      setFulaIsReady(false)
       logger.log('MainTabsNavigator:intiFula', {
-        password,
-        signiture,
-        bloxPeerId: bloxPeerIds?.[0],
+        bloxPeerId: currentBloxPeerId,
+        bloxs
       })
       try {
         Helper.initFula({
           password,
           signiture,
           //bloxAddr: '/ip4/192.168.0.167/tcp/40001/p2p/12D3KooWGawPDngmHEfynixQGsg9nQTrRufa2TD8TQkQQsf76PUF',
-          bloxPeerId: bloxPeerIds?.[0],
+          bloxPeerId: currentBloxPeerId,
         }).then(() => {
           setFulaIsReady(true)
         }).catch(() => {
@@ -77,7 +90,7 @@ export const MainTabsNavigator = () => {
         logger.logError('MainTabsNavigator:intiFula', error)
       }
     }
-  }, [password, signiture, fulaIsReady]);
+  }, [password, signiture, currentBloxPeerId]);
   return (
     <>
       <MainTabs.Navigator
