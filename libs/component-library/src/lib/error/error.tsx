@@ -2,7 +2,7 @@ import React from 'react';
 import { BoxProps } from '@shopify/restyle';
 import { FxText } from '../text/text';
 import { FxTheme } from '../theme/theme';
-import { FxExclamationIcon } from '../icons/icons';
+import { FxExclamationIcon, FxWarningIcon } from '../icons/icons';
 import { FxBox } from '../box/box';
 
 type FxErrorProps = BoxProps<FxTheme> & {
@@ -20,5 +20,15 @@ const FxError = ({ error, ...rest }: FxErrorProps) => {
     </FxBox>
   );
 };
-
-export { FxError };
+const FxWarning = ({ error, ...rest }: FxErrorProps) => {
+  if (!error) return null;
+  return (
+    <FxBox marginTop="8"  flexDirection="row" alignItems="center" borderWidth={1} borderColor='warningBase' {...rest}>
+      <FxWarningIcon color="warningBase" />
+      <FxText variant="bodyXSRegular" paddingHorizontal='4' color="warningBase" marginLeft="4">
+        {error}
+      </FxText>
+    </FxBox>
+  );
+};
+export { FxError, FxWarning };

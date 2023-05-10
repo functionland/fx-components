@@ -28,8 +28,9 @@ export const SetupCompleteScreen = () => {
   const navigation = useInitialSetupNavigation();
   const rootNavigation = useRootNavigation();
   const [internetStatus, setInternetStatus] = useState<InternetStatus>()
+  const [initialWaitForInternet, setInitialWaitForInternet] = useState(true)
   const [setupStatus, setSetupStatus] = useState<SetupStatus>('CHECKING')
-  const [bloxReachOutTryCount, setBloxReachOutTryCount] = useState(1)
+  const [bloxReachOutTryCount, setBloxReachOutTryCount] = useState(0)
   const [password, signiture, fulaIsReady, setFulaIsReady] = useUserProfileStore((state) => [
     state.password,
     state.signiture,
@@ -45,13 +46,24 @@ export const SetupCompleteScreen = () => {
 
   const logger = useLogger()
   const inetInfo = useNetInfo()
+
   useEffect(() => {
-    checkInternetStatus()
+    setTimeout(() => {
+      setInitialWaitForInternet(false)
+    }, 20 * 1000);
   }, [])
 
   useEffect(() => {
-    if (internetStatus !== 'CONNECTED' && inetInfo.isInternetReachable)
+    if (!initialWaitForInternet && internetStatus !== 'CONNECTED') {
+      checkInternetStatus()
+    }
+  }, [initialWaitForInternet])
+
+  useEffect(() => {
+    if (internetStatus !== 'CONNECTED' && inetInfo.isInternetReachable){
       setInternetStatus('CONNECTED')
+      setInitialWaitForInternet(false)
+    }
   }, [inetInfo])
 
   // Initiate fula 
@@ -102,6 +114,7 @@ export const SetupCompleteScreen = () => {
       const network = await NetInfo.fetch();
       if (network.isInternetReachable) {
         setInternetStatus('CONNECTED')
+        setInitialWaitForInternet(false)
       } else {
         setInternetStatus('NOTCONNECTED')
         setSetupStatus('NOTCOMPLETED')
@@ -161,7 +174,7 @@ export const SetupCompleteScreen = () => {
         <SetupCompleteSvg1 width="100%" />
       </FxBox>
       <FxBox flex={1} alignItems='center' marginTop='8'>
-        {setupStatus === 'CHECKING' &&
+        {(setupStatus === 'CHECKING' || initialWaitForInternet) &&
           <>
             <ActivityIndicator size="large" />
             <FxText variant="bodyLargeRegular" paddingVertical='8'>
@@ -169,9 +182,9 @@ export const SetupCompleteScreen = () => {
             </FxText>
           </>
         }
-        {internetStatus === 'CHECKING' &&
+        {(internetStatus === 'CHECKING' || initialWaitForInternet) &&
           <FxText variant='bodyMediumRegular'>
-            Checking internet ...
+            Waiting for internet ...
           </FxText>
         }
         {internetStatus === 'CONNECTED' && bloxsConnectionStatus[currentBloxPeerId] === 'PENDING' &&
