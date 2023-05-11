@@ -77,7 +77,6 @@ export const ConnectToWalletScreen = () => {
           chainId: selectedChainId
         }
       );
-
     } catch (err) {
       console.log(err);
       logger.logError('handleWalletConnect', err)
