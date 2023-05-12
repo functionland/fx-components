@@ -60,7 +60,7 @@ export const SetupCompleteScreen = () => {
   }, [initialWaitForInternet])
 
   useEffect(() => {
-    if (internetStatus !== 'CONNECTED' && inetInfo.isInternetReachable){
+    if (internetStatus !== 'CONNECTED' && inetInfo.isInternetReachable) {
       setInternetStatus('CONNECTED')
       setInitialWaitForInternet(false)
     }
@@ -70,8 +70,8 @@ export const SetupCompleteScreen = () => {
   useEffect(() => {
     if (password && signiture && currentBloxPeerId) {
       logger.log('SetupCompleteScreen:intiFula', {
-        password,
-        signiture,
+        password: password ? 'Has password' : undefined,
+        signiture: signiture ? 'Has signiture' : undefined,
         bloxPeerId: currentBloxPeerId,
       })
       try {
@@ -101,7 +101,9 @@ export const SetupCompleteScreen = () => {
     if (bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED') {
       if (bloxReachOutTryCount < 2) {
         setBloxReachOutTryCount(bloxReachOutTryCount + 1)
-        handleTryReachBlox()
+        setTimeout(() => {
+          handleTryReachBlox()
+        }, 4 * 1000)
       } else {
         setSetupStatus('NOTCOMPLETED')
       }
@@ -147,10 +149,11 @@ export const SetupCompleteScreen = () => {
   };
   const handleTryReachBlox = () => {
     setSetupStatus('CHECKING')
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         if (fulaIsReady && internetStatus === 'CONNECTED') {
-          checkBloxConnection()
+          const result = await checkBloxConnection()
+          logger.log('handleTryReachBlox:checkBloxConnection', result)
         } else
           setSetupStatus('NOTCOMPLETED')
       } catch (error) {
@@ -238,7 +241,10 @@ export const SetupCompleteScreen = () => {
           </FxButton>
         }
         {internetStatus === 'CONNECTED' && setupStatus === 'NOTCOMPLETED' &&
-          <FxButton variant="inverted" marginBottom="16" size="large" onPress={handleTryReachBlox}>
+          <FxButton variant="inverted" marginBottom="16" size="large" onPress={() => {
+            setBloxReachOutTryCount(0)
+            handleTryReachBlox()
+          }}>
             Try again
           </FxButton>
         }
