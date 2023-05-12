@@ -73,6 +73,8 @@ export const MainTabsNavigator = () => {
       setFulaIsReady(false)
       logger.log('MainTabsNavigator:intiFula', {
         bloxPeerId: currentBloxPeerId,
+        password: password ? 'Has password' : undefined,
+        signiture: signiture ? 'Has signiture' : undefined,
         bloxs
       })
       try {

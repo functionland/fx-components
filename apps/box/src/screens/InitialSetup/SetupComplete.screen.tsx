@@ -70,8 +70,8 @@ export const SetupCompleteScreen = () => {
   useEffect(() => {
     if (password && signiture && currentBloxPeerId) {
       logger.log('SetupCompleteScreen:intiFula', {
-        password,
-        signiture,
+        password: password ? 'Has password' : undefined,
+        signiture: signiture ? 'Has signiture' : undefined,
         bloxPeerId: currentBloxPeerId,
       })
       try {
