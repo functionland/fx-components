@@ -62,11 +62,11 @@ export const App = () => {
               backgroundColor={theme.colors.backgroundApp}
               barStyle={barStyles[mode]}
             />
-            <BottomSheetModalProvider>
-              <SafeAreaProvider>
+            <SafeAreaProvider>
+              <BottomSheetModalProvider>
                 <AppContent />
-              </SafeAreaProvider>
-            </BottomSheetModalProvider>
+              </BottomSheetModalProvider>
+            </SafeAreaProvider>
           </GestureHandlerRootView>
         </ToastProvider>
       </WalletConnectProvider>
