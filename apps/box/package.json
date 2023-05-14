@@ -1,6 +1,6 @@
 {
   "name": "box",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "private": true,
   "dependencies": {
     "@functionland/react-native-fula": "*",
