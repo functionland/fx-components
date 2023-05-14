@@ -6,6 +6,7 @@ import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { useSettingsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
 import { useLogger } from '../../hooks';
+import Version from '../../components/Version';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -50,16 +51,19 @@ export const WelcomeScreen = () => {
         >
           Hello Functionlander!
         </FxText>
+
         <FxText
           fontFamily="Montserrat-Semibold"
           fontSize={36}
           lineHeight={48}
           textAlign="center"
-          marginBottom="16"
+          marginBottom="4"
           color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
         >
           Blox App
         </FxText>
+        <Version marginBottom='16'/>
+
         <FxText
           variant="bodySmallRegular"
           textAlign="center"
