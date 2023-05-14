@@ -14,7 +14,7 @@ import { Routes } from '../../navigation/navigationConfig';
 import SetupCompleteSvg1 from '../../app/icons/setup-complete-1.svg';
 import { Helper } from '../../utils';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import NetInfo, { useNetInfo } from '@react-native-community/netinfo';
+import NetInfo, { NetInfoStateType, useNetInfo } from '@react-native-community/netinfo';
 import { ActivityIndicator } from 'react-native';
 import { useFetch, useLogger } from '../../hooks';
 import { CommonActions } from '@react-navigation/native';
@@ -60,7 +60,7 @@ export const SetupCompleteScreen = () => {
   }, [initialWaitForInternet])
 
   useEffect(() => {
-    if (internetStatus !== 'CONNECTED' && inetInfo.isInternetReachable) {
+    if (internetStatus !== 'CONNECTED' && inetInfo.isInternetReachable && inetInfo?.type === NetInfoStateType.wifi) {
       setInternetStatus('CONNECTED')
       setInitialWaitForInternet(false)
     }
@@ -114,7 +114,7 @@ export const SetupCompleteScreen = () => {
   const checkInternetStatus = async () => {
     try {
       const network = await NetInfo.fetch();
-      if (network.isInternetReachable) {
+      if (network.isInternetReachable && network?.type === NetInfoStateType.wifi) {
         setInternetStatus('CONNECTED')
         setInitialWaitForInternet(false)
       } else {
