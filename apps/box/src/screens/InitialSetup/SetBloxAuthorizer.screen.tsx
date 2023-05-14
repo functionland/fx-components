@@ -44,12 +44,14 @@ export const SetBloxAuthorizerScreen = () => {
     shallow
   );
 
-  const [bloxs = {}, currentBloxPeerId, updateBloxsStore, addBlox, removeBlox] = useBloxsStore((state) => [
+  const [bloxs = {}, currentBloxPeerId, updateBloxsStore, addBlox, removeBlox, updateBloxPropertyInfo, updateBloxSpaceInfo] = useBloxsStore((state) => [
     state.bloxs,
     state.currentBloxPeerId,
     state.update,
     state.addBlox,
-    state.removeBlox
+    state.removeBlox,
+    state.updateBloxPropertyInfo,
+    state.updateBloxSpaceInfo
   ], shallow);
 
   const bloxsArray = Object.values(bloxs)
@@ -142,16 +144,15 @@ export const SetBloxAuthorizerScreen = () => {
   const handleNext = () => {
     if (!loading_exchange && newBloxName && newBloxPeerId && newPeerId && newBloxName) {
       setAppPeerId(newPeerId);
-
-      addBlox({
-        peerId: newBloxPeerId,
-        name: newBloxName,
-        freeSpace: data_bloxProperties?.data?.bloxFreeSpace,
-        propertyInfo: data_bloxProperties?.data
-      })
       if (currentBloxPeerId) {
         removeBlox(currentBloxPeerId)
       }
+      addBlox({
+        peerId: newBloxPeerId,
+        name: newBloxName,
+      })
+      updateBloxPropertyInfo(newBloxPeerId, data_bloxProperties?.data)
+      updateBloxSpaceInfo(newBloxPeerId, data_bloxProperties?.data?.bloxFreeSpace)
       updateBloxsStore({
         currentBloxPeerId: newBloxPeerId,
       })

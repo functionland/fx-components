@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   FxBox,
   FxButton,
@@ -53,8 +53,9 @@ export const BloxScreen = () => {
     state.fulaIsReady,
   ], shallow);
 
-  const [bloxs, currentBloxPeerId, bloxsConnectionStatus, checkBloxConnection, getBloxSpace, removeBlox, updateBloxsStore] = useBloxsStore((state) => [
+  const [bloxs, bloxsSpaceInfo, currentBloxPeerId, bloxsConnectionStatus, checkBloxConnection, getBloxSpace, removeBlox, updateBloxsStore] = useBloxsStore((state) => [
     state.bloxs,
+    state.bloxsSpaceInfo,
     state.currentBloxPeerId,
     state.bloxsConnectionStatus,
     state.checkBloxConnection,
@@ -66,8 +67,9 @@ export const BloxScreen = () => {
     peerId: blox.peerId,
     title: blox.name
   }))
-  const currentBlox = bloxs[currentBloxPeerId]
-  divisionSplit.value = currentBlox?.freeSpace?.used_percentage || 0
+  const currentBlox = useMemo(() => (bloxs[currentBloxPeerId]), [bloxs, currentBloxPeerId])
+  const currentBloxSpaceInfo = useMemo(() => (bloxsSpaceInfo?.[currentBloxPeerId]), [bloxsSpaceInfo, currentBloxPeerId])
+  divisionSplit.value = bloxsSpaceInfo?.[currentBloxPeerId]?.used_percentage || 0
   useEffect(() => {
     if (fulaIsReady && !screenIsLoaded) {
       setScreenIsLoaded(true)
@@ -172,18 +174,18 @@ export const BloxScreen = () => {
             onBloxPress={() => bloxInfoBottomSheetRef.current.present()}
           />
           <FxSpacer height={24} />
-          {currentBlox?.freeSpace?.size != undefined &&
+          {currentBloxSpaceInfo?.size != undefined &&
             <UsageBar
               divisionPercent={divisionSplit}
-              totalCapacity={currentBlox?.freeSpace?.size || 1000}
+              totalCapacity={currentBloxSpaceInfo?.size || 1000}
             />}
           <DeviceCard
             onRefreshPress={updateBloxSpace}
             loading={loadingBloxSpace}
             data={{
-              capacity: currentBlox?.freeSpace?.size || 0,
+              capacity: currentBloxSpaceInfo?.size || 0,
               name: 'Hard Disk',
-              status: currentBlox?.freeSpace ? EDeviceStatus.InUse : EDeviceStatus.NotAvailable,
+              status: currentBloxSpaceInfo ? EDeviceStatus.InUse : EDeviceStatus.NotAvailable,
               associatedDevices: ['Blox Set Up']
             }}
           />
