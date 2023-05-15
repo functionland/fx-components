@@ -1,8 +1,6 @@
 export interface TBlox {
     peerId: string
     name: string
-    freeSpace?: TBloxFreeSpace
-    propertyInfo?: TBloxProperty
 }
 export interface TBloxFreeSpace {
     device_count: number

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ThemeProvider } from '@shopify/restyle';
 import {
   fxLightTheme,
@@ -13,7 +13,7 @@ import { WalletConnectProvider } from '@walletconnect/react-native-dapp/dist/pro
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavContainer } from '../navigation/NavContainer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Platform, Share, StatusBar, StyleSheet, UIManager } from 'react-native';
+import { AppState, Platform, Share, StatusBar, StyleSheet, UIManager } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSettingsStore } from '../stores';
@@ -74,6 +74,7 @@ export const App = () => {
   );
 };
 const AppContent = () => {
+  const appState = useRef(AppState.currentState);
   const [debugMode] = useSettingsStore((state) => [
     state.debugMode,
   ]);
@@ -81,15 +82,33 @@ const AppContent = () => {
   useEffect(() => {
     if (!__DEV__) {
       console.log = () => null
-      console.error = () => null
+      //console.error = () => null
     }
   }, [])
   useEffect(() => {
-    return () => {
-      if (!__DEV__ && isDebugModeEnable) {
-        firebase.crashlytics().recordError(new Error('On App Close Error Log'))
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      console.log('AppState.addEventListener', isDebugModeEnable, nextAppState, appState.current)
+      if (
+        !nextAppState.match(/active/)
+      ) {
+        console.log('App has come to the inactive/background!', debugMode);
+        if (!__DEV__ && isDebugModeEnable) {
+          firebase.crashlytics().setUserId(debugMode.uniqueId)
+          firebase.crashlytics().recordError(new Error('On App Close Error Log'), "Self Generated Error")
+        }
       }
-    }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      console.log('subscription.remove();')
+      subscription.remove();
+    };
+    // return () => {
+    //   if (!__DEV__ && isDebugModeEnable) {
+    //     firebase.crashlytics().recordError(new Error('On App Close Error Log'))
+    //   }
+    // }
   }, [isDebugModeEnable])
   const shareUniqueId = () => {
     Share.share({
