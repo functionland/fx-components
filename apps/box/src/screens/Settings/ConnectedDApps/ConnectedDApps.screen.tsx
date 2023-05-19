@@ -22,6 +22,7 @@ import shallow from 'zustand/shallow';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes, SettingsStackParamList } from 'apps/box/src/navigation/navigationConfig';
 import { useLogger } from 'apps/box/src/hooks';
+import { Alert, Linking } from 'react-native';
 
 type Props = NativeStackScreenProps<
   SettingsStackParamList,
@@ -53,6 +54,8 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
     () => Object.values(connectedDApps?.[currentBloxPeerId] || {}),
     [connectedDApps, currentBloxPeerId]
   );
+  console.log('route?.params?.returnDeepLink\n\r', route?.params)
+
   //const blox = mockConnectedDAppsData[bloxIndex];
   useEffect(() => {
     if (route?.params?.appName) {
@@ -86,6 +89,18 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
         storageUsed: 0,
       });
       addDAppModalRef.current?.close();
+      setTimeout(() => {
+        if (route?.params?.returnDeepLink && Linking.canOpenURL(route?.params?.returnDeepLink)) {
+          Alert.alert('Authorized!', `Now you navigate to the ${route?.params?.appName}, to add the blox address!`, [{
+            text: 'Ok',
+            onPress: () => {
+              Linking.openURL(decodeURIComponent(route?.params?.returnDeepLink)
+                ?.replace('$bloxName', currentBlox.name.replaceAll(' ', '_'))
+                .replace('$bloxPeerId', dApp.bloxPeerId))
+            }
+          }])
+        }
+      }, 100);
     } catch (error) {
       logger.logError('addAndAuthorize', error)
       queueToast({
