@@ -14,11 +14,13 @@ import {
   FxBottomSheetModal,
   FxBottomSheetModalMethods,
 } from '../bottom-sheet/bottomSheetModal';
-import { FxChevronDownIcon } from '../icons/icons';
+import { FxCheckIcon, FxChevronDownIcon, FxSelectIcon } from '../icons/icons';
 import { FxPicker, FxPickerItem } from '../picker/picker';
 import { FxText } from '../text/text';
 import { FxTheme } from '../theme/theme';
 import { useFxTheme } from '../theme/useFxTheme';
+import { FxPressableOpacity } from '../pressable-opacity/pressableOpacity';
+import { FxBox } from '../box/box';
 
 const dropdownVariant = createVariant({
   themeKey: 'dropdownVariants',
@@ -29,7 +31,7 @@ const PressableBox = createBox<FxTheme, PressableProps>(Pressable);
 
 const FxDropdownBase = createRestyleComponent<
   React.ComponentProps<typeof PressableBox> &
-    VariantProps<FxTheme, 'dropdownVariants', 'variant'>,
+  VariantProps<FxTheme, 'dropdownVariants', 'variant'>,
   FxTheme
 >([dropdownVariant], PressableBox);
 
@@ -40,7 +42,7 @@ const dropdownTextVariant = createVariant({
 
 const FxDropdownText = createRestyleComponent<
   React.ComponentProps<typeof FxText> &
-    VariantProps<FxTheme, 'dropdownTextVariants', 'type'>,
+  VariantProps<FxTheme, 'dropdownTextVariants', 'type'>,
   FxTheme
 >([dropdownTextVariant], FxText);
 
@@ -49,6 +51,7 @@ type FxDropdownProps = React.ComponentProps<typeof FxDropdownBase> &
     options: { label: string; value: ItemValue }[];
     title?: string;
     error?: boolean;
+    caption?: string;
     onDismiss?: () => void;
   };
 
@@ -60,6 +63,7 @@ const FxDropdown = ({
   options,
   title,
   error,
+  caption,
   onDismiss,
 }: FxDropdownProps) => {
   const bottomSheetRef = React.useRef<FxBottomSheetModalMethods>(null);
@@ -68,10 +72,10 @@ const FxDropdown = ({
   const type = disabled
     ? 'disabled'
     : error
-    ? 'error'
-    : focus
-    ? 'pressed'
-    : variant;
+      ? 'error'
+      : focus
+        ? 'pressed'
+        : variant;
   const dropdownLabel =
     options.find(({ value }) => value === selectedValue)?.label ??
     options[0].label;
@@ -85,9 +89,19 @@ const FxDropdown = ({
     setFocus(false);
     onDismiss?.();
   };
-
+  const handleOnItemPress = (value: ItemValue, index: number) => {
+    setFocus(false);
+    onDismiss?.();
+    bottomSheetRef.current?.close();
+    onValueChange?.(value, index)
+  }
   return (
     <>
+      {caption && (
+        <FxText variant="bodySmallRegular" marginBottom="8" letterSpacing={0.2}>
+          {caption}
+        </FxText>
+      )}
       <FxDropdownBase
         variant={type}
         disabled={disabled}
@@ -112,11 +126,13 @@ const FxDropdown = ({
         title={title}
         onDismiss={_onDismiss}
       >
-        <FxPicker selectedValue={selectedValue} onValueChange={onValueChange}>
-          {options.map(({ label, value }) => (
-            <FxPickerItem key={value} label={label} value={value} />
+        <FxBox paddingVertical='16' paddingStart='8'>
+          {options.map(({ label, value }, index) => (
+            <FxPressableOpacity key={index} borderBottomWidth={1} justifyContent='space-between' flexDirection='row' paddingVertical='16' onPress={() => handleOnItemPress(value, index)}>
+              <FxText>{label}</FxText>{value === selectedValue && <FxSelectIcon color="white" />}
+            </FxPressableOpacity>
           ))}
-        </FxPicker>
+        </FxBox>
       </FxBottomSheetModal>
     </>
   );

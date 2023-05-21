@@ -69,7 +69,12 @@ export type MainTabsParamList = {
 
 export type SettingsStackParamList = {
   [Routes.Settings]: undefined;
-  [Routes.ConnectedDApps]: undefined;
+  [Routes.ConnectedDApps]: {
+    appName?: string;
+    bundleId?: string;
+    peerId?: string;
+    returnDeepLink?: string
+  };
   [Routes.Mode]: undefined;
   [Routes.Pools]: undefined;
   [Routes.About]: undefined;
