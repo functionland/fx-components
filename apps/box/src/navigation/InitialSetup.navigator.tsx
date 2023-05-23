@@ -11,10 +11,11 @@ import {
   SetBloxAuthorizerScreen,
 } from '../screens/InitialSetup';
 import { Routes, InitialSetupStackParamList } from './navigationConfig';
+import { ConnectToExistingBloxScreen } from '../screens/InitialSetup/ConnectToExistingBlox.screen';
 
 export const InitialSetupNavigator = () => {
   return (
-    <InitialSetupStack.Navigator screenOptions={{ headerShown: false }}>
+    <InitialSetupStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={Routes.ConnectToWallet}>
       <InitialSetupStack.Screen
         name={Routes.Welcome}
         component={WelcomeScreen}
@@ -46,6 +47,10 @@ export const InitialSetupNavigator = () => {
       <InitialSetupStack.Screen
         name={Routes.SetBloxAuthorizer}
         component={SetBloxAuthorizerScreen}
+      />
+       <InitialSetupStack.Screen
+        name={Routes.ConnectToExistingBlox}
+        component={ConnectToExistingBloxScreen}
       />
     </InitialSetupStack.Navigator>
   );

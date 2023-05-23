@@ -96,7 +96,9 @@ export const ConnectToWalletScreen = () => {
   const handleConnectToBlox = () => {
     navigation.navigate(Routes.ConnectToBlox);
   };
-
+  const handleConnectToExistingBlox = () => {
+    navigation.navigate(Routes.ConnectToExistingBlox);
+  }
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={20} />
@@ -145,9 +147,14 @@ export const ConnectToWalletScreen = () => {
             Link Password
           </FxButton>
         ) : (
-          <FxButton size="large" onPress={handleConnectToBlox}>
-            Connect to blox
-          </FxButton>
+          <FxBox>
+            <FxButton size="large" variant='inverted' onPress={handleConnectToExistingBlox}>
+              Reconnect to existing blox
+            </FxButton>
+            <FxButton size="large" marginTop='16' onPress={handleConnectToBlox}>
+              Connect to new blox
+            </FxButton>
+          </FxBox>
         )}
       </FxBox>
     </FxSafeAreaBox>
