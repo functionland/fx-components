@@ -59,5 +59,12 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_fulatower._tcp.</string>
+		<string>fulatower._tcp.</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>To discover the Bloxs in your network we need to have access to the network</string>
 </dict>
 </plist>

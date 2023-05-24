@@ -7800,7 +7800,7 @@ events@^1.0.0:
   resolved "https://registry.yarnpkg.com/events/-/events-1.1.1.tgz#9ebdb7635ad099c70dcc4c2a1f5004288e8bd924"
   integrity sha512-kEcvvCBByWXGnZy6JUlgAp2gBIUjfCAV6P6TgT1/aaQKcmuAEC4OZTV1I4EWQLz2gxZw76atuVyvHhTxvi0Flw==
 
-events@^3.2.0:
+events@^3.0.0, events@^3.2.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/events/-/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
   integrity sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==
@@ -13839,6 +13839,13 @@ react-native-wifi-reborn@^4.6.0:
   version "4.7.0"
   resolved "https://registry.yarnpkg.com/react-native-wifi-reborn/-/react-native-wifi-reborn-4.7.0.tgz#de32bf893ecf90188a273b744c5c867bcd2ae257"
   integrity sha512-16TtGpXrM6GtGjJXJdoQ7FDPUDm7LpvYy9S/ZeS3eRh2RPLwYHk1VaJQR/cDoE6BzAyH/rVb5+WWg/jQ49ncaQ==
+
+react-native-zeroconf@^0.13.8:
+  version "0.13.8"
+  resolved "https://registry.yarnpkg.com/react-native-zeroconf/-/react-native-zeroconf-0.13.8.tgz#62fe5279fdf81250a0da647454f2c3b8ee8cacae"
+  integrity sha512-frGS1xNbNCA7BfETSubNYODu7s7mlU55vgArEzZW9EuSQ8SYqlNQC5zpKHDZEAXy4fFqe+CgnMCxKAjQqYM6XA==
+  dependencies:
+    events "^3.0.0"
 
 react-native@0.69.1:
   version "0.69.1"

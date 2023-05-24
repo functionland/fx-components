@@ -36,6 +36,7 @@
     "react-native-tab-view": "*",
     "react-native-webview": "*",
     "react-native-wifi-reborn": "*",
+    "react-native-zeroconf": "*",
     "zustand": "*",
     "@react-three/fiber": "*",
     "expo-gl": "*",

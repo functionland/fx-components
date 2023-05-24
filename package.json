@@ -67,6 +67,7 @@
     "react-native-webview": "^11.25.0",
     "react-native-wheel-color-picker": "^1.2.0",
     "react-native-wifi-reborn": "^4.6.0",
+    "react-native-zeroconf": "^0.13.8",
     "text-encoding-polyfill": "^0.6.7",
     "three": "^0.142.0",
     "tslib": "^2.3.0",

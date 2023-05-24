@@ -42,3 +42,18 @@ export type TBloxProperty = {
     containerInfo_node: DockerContainerInfo,
     hardwareID: string //"5141290d789694aafce3392b5c17558b289663fc80312b89e6a105c15313c644"
 }
+
+export type MDNSBloxService = {
+    addresses: string[] //["192.168.0.188"],
+    fullName: string // "192.168.0.188._fulatower._tcp",
+    host: string // "192.168.0.188",
+    name: string //"fulatower",
+    port: number // 8080,
+    txt:
+    {
+        authorizer: string
+        bloxPeerIdString: string | "NA"
+        hardwareID: string
+        poolName: string
+    }
+}

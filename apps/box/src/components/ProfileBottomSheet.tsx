@@ -3,6 +3,7 @@ import {
   FxBottomSheetModal,
   FxBottomSheetModalMethods,
   FxBox,
+  FxButton,
   FxText,
   useToast,
 } from '@functionland/component-library';
@@ -26,6 +27,7 @@ const MENUS = [
 
 type ProfileBottomSheetProps = {
   closeBottomSheet: VoidFunction;
+  onBloxDiscovery?: VoidFunction;
 };
 
 export const ProfileBottomSheet = React.forwardRef<
@@ -58,9 +60,12 @@ export const ProfileBottomSheet = React.forwardRef<
         <FxText variant="bodyMediumRegular" textAlign='center' fontSize={24} >Profile</FxText>
         <ScrollView showsVerticalScrollIndicator={false}>
           <FxBox paddingVertical="20">
-            <WalletDetails showDID={true} showPeerId={true} showBloxPeerIds={true} />
+            <WalletDetails showDID={true} showPeerId={true} showBloxPeerIds={false} />
           </FxBox>
           <FxBox paddingVertical="20">
+            <FxButton variant='inverted' size='large' onPress={_.onBloxDiscovery}>
+              Blox Discovery
+            </FxButton>
           </FxBox>
           {/**
            * Added accounts here

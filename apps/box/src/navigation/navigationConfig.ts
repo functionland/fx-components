@@ -16,6 +16,7 @@ export enum Routes {
   LinkPassword = 'Link Password',
   ConnectToWallet = 'Connect To Wallet',
   ConnectToBlox = 'Connect To Blox',
+  ConnectToExistingBlox = 'Connect To Existing Blox',
   ConnectToWifi = 'Connect To Wifi',
   CheckConnection = 'Check Connection',
   SetupComplete = 'Setup Complete',
@@ -86,6 +87,7 @@ export type InitialSetupStackParamList = {
   [Routes.LinkPassword]: undefined;
   [Routes.ConnectToWallet]: { password: string };
   [Routes.ConnectToBlox]: undefined;
+  [Routes.ConnectToExistingBlox]: undefined;
   [Routes.ConnectToWifi]: undefined;
   [Routes.CheckConnection]: { ssid: string };
   [Routes.SetupComplete]: undefined;

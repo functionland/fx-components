@@ -88,11 +88,19 @@ const createModeSlice: StateCreator<
       })
     },
     removeBlox: (peerId: string) => {
-      const { bloxs: currentBloxs } = get()
+      const { bloxs: currentBloxs, bloxsPropertyInfo, bloxsSpaceInfo } = get()
+      delete bloxsPropertyInfo[peerId]
+      delete bloxsSpaceInfo[peerId]
       delete currentBloxs[peerId]
       set({
         bloxs: {
           ...currentBloxs,
+        },
+        bloxsPropertyInfo: {
+          ...bloxsPropertyInfo,
+        },
+        bloxsSpaceInfo: {
+          ...bloxsSpaceInfo
         }
       })
     },
