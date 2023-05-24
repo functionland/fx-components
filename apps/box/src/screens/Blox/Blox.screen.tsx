@@ -138,6 +138,10 @@ export const BloxScreen = () => {
         break;
     }
   }
+  const handleOnBloxDiscovery=()=>{
+    profileBottomSheetRef.current.close()
+    navigation.navigate(Routes.InitialSetup, { screen: Routes.ConnectToExistingBlox });
+  }
   const handleOnBloxRemovePress = (peerId: string) => {
     if (Object.values(bloxs)?.length <= 1) {
       Alert.alert('Warning', 'You cannot remove the last Blox!, please first add new Blox, then remove this one from the list.')
@@ -211,7 +215,7 @@ export const BloxScreen = () => {
         onSelectMode={handleSelectMode}
       />
       <BloxInfoBottomSheet ref={bloxInfoBottomSheetRef} bloxInfo={bloxs[currentBloxPeerId]} onBloxRemovePress={handleOnBloxRemovePress} />
-      <ProfileBottomSheet ref={profileBottomSheetRef} />
+      <ProfileBottomSheet ref={profileBottomSheetRef} onBloxDiscovery={handleOnBloxDiscovery} />
       <ConnectionOptionsSheet ref={connectionOptionsSheetRef} onSelected={handleOnConnectionOptionSelect} />
     </FxSafeAreaBox>
   );

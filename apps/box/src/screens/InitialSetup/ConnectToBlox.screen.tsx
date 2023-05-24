@@ -15,6 +15,8 @@ import { Routes } from '../../navigation/navigationConfig';
 import { EConnectionStatus } from '../../models';
 import BloxWifiDevice from '../../app/icons/blox-wifi-device.svg';
 import { ActivityIndicator, PermissionsAndroid, Platform } from 'react-native';
+import shallow from 'zustand/shallow';
+import { useBloxsStore } from '../../stores';
 
 const connectionStatusStrings = {
   [EConnectionStatus.connecting]: 'Connecting',
@@ -26,6 +28,11 @@ const connectionStatusStrings = {
 export const ConnectToBloxScreen = () => {
   const navigation = useInitialSetupNavigation();
   const { queueToast } = useToast();
+
+  const [bloxs, bloxsPropertyInfo] = useBloxsStore((state) => [
+    state.bloxs,
+    state.bloxsPropertyInfo
+  ], shallow);
 
   const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
     EConnectionStatus.notConnected
