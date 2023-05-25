@@ -26,9 +26,10 @@ export const LinkPasswordScreen = () => {
   const [linking, setLinking] = useState(false);
   const [passwordInput, setInputPasswordInput] = useState('');
   const [setKeyChainValue, signiture, password] = useUserProfileStore(
-    (state) => [state.setKeyChainValue, state.signiture, state.password]
-    , shallow);
-  const logger = useLogger()
+    (state) => [state.setKeyChainValue, state.signiture, state.password],
+    shallow
+  );
+  const logger = useLogger();
 
   const handleLinkPassword = async () => {
     try {
@@ -49,7 +50,7 @@ export const LinkPasswordScreen = () => {
       await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
     } catch (err) {
       console.log(err);
-      logger.logError('handleLinkPassword',err)
+      logger.logError('handleLinkPassword', err);
       queueToast({
         title: 'Error',
         message: 'Unable to sign the wallet address!',
@@ -64,7 +65,9 @@ export const LinkPasswordScreen = () => {
   const handleConnectToBlox = () => {
     navigation.navigate(Routes.ConnectToBlox);
   };
-
+  const handleConnectToExistingBlox = () => {
+    navigation.navigate(Routes.ConnectToExistingBlox);
+  }
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={40} />
@@ -98,9 +101,18 @@ export const LinkPasswordScreen = () => {
         )}
 
         {signiture ? (
-          <FxButton size="large" onPress={handleConnectToBlox}>
-            Connect to Blox
-          </FxButton>
+          <FxBox>
+            <FxButton
+              size="large"
+              variant="inverted"
+              onPress={handleConnectToExistingBlox}
+            >
+              Reconnect to existing blox
+            </FxButton>
+            <FxButton size="large" marginTop='16' onPress={handleConnectToBlox}>
+              Connect to Blox
+            </FxButton>
+          </FxBox>
         ) : (
           <FxButton
             size="large"

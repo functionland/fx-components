@@ -156,7 +156,7 @@ export const ConnectToExistingBloxScreen = () => {
       const alreadyExist = !!bloxs[item.txt?.bloxPeerIdString]
       return (
         <FxCard
-          disabled={authorized || alreadyExist}
+          disabled={!authorized || !appPeerId}
           onPress={() => handleOnItemPress(item.txt?.bloxPeerIdString)}
         >
           <FxCard.Row>
