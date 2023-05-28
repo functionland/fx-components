@@ -64,14 +64,16 @@ export const ConnectToWifiScreen = () => {
     setConnectedSsid(ssid);
     handleNext();
   };
-
+  const Container = enabledHiddenNetwork ? FxKeyboardAwareScrollView : FxBox;
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
-      <FxKeyboardAwareScrollView
+      <Container
         showsVerticalScrollIndicator={false}
+        flex={1}
         contentContainerStyle={{
           flexGrow: 1,
         }}
+        scrollEnabled={enabledHiddenNetwork}
       >
         <FxProgressBar progress={80} />
         <FxBox flex={1} justifyContent="center" alignItems="center">
@@ -177,7 +179,7 @@ export const ConnectToWifiScreen = () => {
             Next
           </FxButton>
         </FxBox>
-      </FxKeyboardAwareScrollView>
+      </Container>
       <InputWifiPasswordModal
         ssid={selectedSsid}
         ref={inputWifiPasswordModalRef}
