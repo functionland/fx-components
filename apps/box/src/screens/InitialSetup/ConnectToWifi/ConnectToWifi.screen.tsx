@@ -8,6 +8,10 @@ import {
   FxText,
   FxBottomSheetModalMethods,
   FxRefreshIcon,
+  FxRadioButtonWithLabel,
+  FxRadioButton,
+  FxTextInput,
+  FxKeyboardAwareScrollView,
 } from '@functionland/component-library';
 import { FlatList } from 'react-native';
 import { WifiDeviceItem } from './components/WifiDeviceItem';
@@ -26,11 +30,14 @@ export const ConnectToWifiScreen = () => {
   const inputWifiPasswordModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [selectedSsid, setSelectedSsid] = useState<string>(null);
   const [connectedSsid, setConnectedSsid] = useState<string>(null);
+  const [enabledHiddenNetwork, setEnableHiddenNetwork] =
+    React.useState<boolean>(false);
+
   const {
     loading,
     error,
     data: networks,
-    refetch
+    refetch,
   } = useFetch({ apiMethod: getWifiList });
   const ssids = networks?.data
     .map(({ essid: network }) => network.replaceAll('"', ''))
@@ -60,49 +67,93 @@ export const ConnectToWifiScreen = () => {
 
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
-      <FxProgressBar progress={80} />
-      <FxBox flex={1} justifyContent="center" alignItems="center">
-        <BloxWifiDevice />
-      </FxBox>
-      <FxBox>
-        <FxText variant="h300" marginBottom="12">
-          Connect to Wi-Fi
-        </FxText>
-        {loading ? (
-          <FxBox flexDirection="row" alignItems="center" marginBottom="8">
-            <FxLoadingSpinner />
-            <FxText variant="bodySmallRegular" marginLeft="4">
-              Searching Wi-Fi Network
-            </FxText>
-          </FxBox>
-        ) : (
-          <FxBox flexDirection='row'>
-            <FxText variant="bodySmallRegular" marginBottom="8" paddingEnd='8'>
-              Select Wi-Fi Network
-            </FxText>
-            <FxRefreshIcon color='white' onPress={() => refetch({ withLoading: true })} />
-          </FxBox>
-
-        )}
-        <FxBox
-          height={180}
-          borderColor="border"
-          borderWidth={1}
-          borderRadius="s"
-          paddingHorizontal="16"
-        >
-          <FlatList
-            data={uniqueSsids}
-            keyExtractor={(item) => item}
-            ItemSeparatorComponent={() => <ItemSeparatorComponent />}
-            renderItem={({ item }) => (
-              <WifiDeviceItem
-                ssid={item}
-                connected={item === connectedSsid}
-                setSelectedWifiDevice={handleSelectedWifiDevice}
+      <FxKeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          flexGrow: 1,
+        }}
+      >
+        <FxProgressBar progress={80} />
+        <FxBox flex={1} justifyContent="center" alignItems="center">
+          <BloxWifiDevice />
+        </FxBox>
+        <FxBox flex={1}>
+          <FxText variant="h300" marginBottom="12">
+            Connect to Wi-Fi
+          </FxText>
+          <FxRadioButton.Group
+            value={enabledHiddenNetwork ? [1] : []}
+            onValueChange={(val) => setEnableHiddenNetwork(val && val[0] === 1)}
+          >
+            <FxRadioButtonWithLabel
+              paddingVertical="8"
+              label="I want to connect to a hidden network"
+              value={1}
+            />
+          </FxRadioButton.Group>
+          {enabledHiddenNetwork && (
+            <FxBox>
+              <FxTextInput
+                marginVertical="16"
+                value={selectedSsid}
+                onChange={(e) => setSelectedSsid(e.nativeEvent.text)}
+                onSubmitEditing={() => handleSelectedWifiDevice(selectedSsid)}
               />
-            )}
-          />
+              <FxButton
+                onPress={() => {
+                  handleSelectedWifiDevice(selectedSsid);
+                }}
+              >
+                Connect
+              </FxButton>
+            </FxBox>
+          )}
+          {!enabledHiddenNetwork && (
+            <>
+              {loading ? (
+                <FxBox flexDirection="row" alignItems="center" marginBottom="8">
+                  <FxLoadingSpinner />
+                  <FxText variant="bodySmallRegular" marginLeft="4">
+                    Searching Wi-Fi Network
+                  </FxText>
+                </FxBox>
+              ) : (
+                <FxBox flexDirection="row">
+                  <FxText
+                    variant="bodySmallRegular"
+                    marginBottom="8"
+                    paddingEnd="8"
+                  >
+                    Select Wi-Fi Network
+                  </FxText>
+                  <FxRefreshIcon
+                    color="white"
+                    onPress={() => refetch({ withLoading: true })}
+                  />
+                </FxBox>
+              )}
+              <FxBox
+                height={180}
+                borderColor="border"
+                borderWidth={1}
+                borderRadius="s"
+                paddingHorizontal="16"
+              >
+                <FlatList
+                  data={uniqueSsids}
+                  keyExtractor={(item) => item}
+                  ItemSeparatorComponent={() => <ItemSeparatorComponent />}
+                  renderItem={({ item }) => (
+                    <WifiDeviceItem
+                      ssid={item}
+                      connected={item === connectedSsid}
+                      setSelectedWifiDevice={handleSelectedWifiDevice}
+                    />
+                  )}
+                />
+              </FxBox>
+            </>
+          )}
         </FxBox>
         <FxBox
           flexDirection="row"
@@ -126,7 +177,7 @@ export const ConnectToWifiScreen = () => {
             Next
           </FxButton>
         </FxBox>
-      </FxBox>
+      </FxKeyboardAwareScrollView>
       <InputWifiPasswordModal
         ssid={selectedSsid}
         ref={inputWifiPasswordModalRef}
