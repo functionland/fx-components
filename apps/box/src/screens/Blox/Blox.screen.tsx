@@ -5,6 +5,7 @@ import {
   FxSafeAreaBox,
   FxSpacer,
   FxBottomSheetModalMethods,
+  useToast,
 } from '@functionland/component-library';
 import { Alert, ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
@@ -25,73 +26,101 @@ import { EDeviceStatus } from '../../api/hub';
 import { EBloxInteractionType, TBloxInteraction } from '../../models';
 import { ProfileBottomSheet } from '../../components/ProfileBottomSheet';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { ConnectionOptionsSheet, ConnectionOptionsType } from '../../components/ConnectionOptionsSheet';
+import {
+  ConnectionOptionsSheet,
+  ConnectionOptionsType,
+} from '../../components/ConnectionOptionsSheet';
 import { useLogger } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import { useNavigation } from '@react-navigation/native';
 import { useBloxsStore } from '../../stores';
-
+import { fxblox } from '@functionland/react-native-fula';
 const DEFAULT_DIVISION = 30;
 
 export const BloxScreen = () => {
   const bloxInteractionModalRef = useRef<FxBottomSheetModalMethods>(null);
-  const profileBottomSheetRef = useRef<FxBottomSheetModalMethods>(null)
-  const connectionOptionsSheetRef = useRef<FxBottomSheetModalMethods>(null)
-  const bloxInfoBottomSheetRef = useRef<FxBottomSheetModalMethods>(null)
+  const profileBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
+  const connectionOptionsSheetRef = useRef<FxBottomSheetModalMethods>(null);
+  const bloxInfoBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
+  const { queueToast } = useToast();
 
   const divisionSplit = useSharedValue(DEFAULT_DIVISION);
-  const [screenIsLoaded, setScreenIsLoaded] = useState(false)
-  const [loadingBloxSpace, setLoadingBloxSpace] = useState(false)
+  const [screenIsLoaded, setScreenIsLoaded] = useState(false);
+  const [resetingBloxHotspot, setResetingBloxHotspot] = useState(false);
+  const [rebootingBlox, setRebootingBlox] = useState(false);
+  const [loadingBloxSpace, setLoadingBloxSpace] = useState(false);
   const [divisionPercentage, setDivisionPercentage] =
     useState<number>(DEFAULT_DIVISION);
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
     EBloxInteractionType.OfficeBloxUnit
   );
   const navigation = useNavigation();
-  const logger = useLogger()
-  const [fulaIsReady] = useUserProfileStore((state) => [
-    state.fulaIsReady,
-  ], shallow);
+  const logger = useLogger();
+  const [fulaIsReady] = useUserProfileStore(
+    (state) => [state.fulaIsReady],
+    shallow
+  );
 
-  const [bloxs, bloxsSpaceInfo, currentBloxPeerId, bloxsConnectionStatus, checkBloxConnection, getBloxSpace, removeBlox, updateBloxsStore] = useBloxsStore((state) => [
-    state.bloxs,
-    state.bloxsSpaceInfo,
-    state.currentBloxPeerId,
-    state.bloxsConnectionStatus,
-    state.checkBloxConnection,
-    state.getBloxSpace,
-    state.removeBlox,
-    state.update
-  ], shallow);
-  const bloxInteractions = Object.values(bloxs || {}).map<TBloxInteraction>(blox => ({
-    peerId: blox.peerId,
-    title: blox.name
-  }))
-  const currentBlox = useMemo(() => (bloxs[currentBloxPeerId]), [bloxs, currentBloxPeerId])
-  const currentBloxSpaceInfo = useMemo(() => (bloxsSpaceInfo?.[currentBloxPeerId]), [bloxsSpaceInfo, currentBloxPeerId])
-  divisionSplit.value = bloxsSpaceInfo?.[currentBloxPeerId]?.used_percentage || 0
+  const [
+    bloxs,
+    bloxsSpaceInfo,
+    currentBloxPeerId,
+    bloxsConnectionStatus,
+    checkBloxConnection,
+    getBloxSpace,
+    removeBlox,
+    updateBloxsStore,
+  ] = useBloxsStore(
+    (state) => [
+      state.bloxs,
+      state.bloxsSpaceInfo,
+      state.currentBloxPeerId,
+      state.bloxsConnectionStatus,
+      state.checkBloxConnection,
+      state.getBloxSpace,
+      state.removeBlox,
+      state.update,
+    ],
+    shallow
+  );
+  const bloxInteractions = Object.values(bloxs || {}).map<TBloxInteraction>(
+    (blox) => ({
+      peerId: blox.peerId,
+      title: blox.name,
+    })
+  );
+  const currentBlox = useMemo(
+    () => bloxs[currentBloxPeerId],
+    [bloxs, currentBloxPeerId]
+  );
+  const currentBloxSpaceInfo = useMemo(
+    () => bloxsSpaceInfo?.[currentBloxPeerId],
+    [bloxsSpaceInfo, currentBloxPeerId]
+  );
+  divisionSplit.value =
+    bloxsSpaceInfo?.[currentBloxPeerId]?.used_percentage || 0;
   useEffect(() => {
     if (fulaIsReady && !screenIsLoaded) {
-      setScreenIsLoaded(true)
+      setScreenIsLoaded(true);
       updateBloxSpace();
-      checkBloxConnection()
+      checkBloxConnection();
     } else if (fulaIsReady && !bloxsConnectionStatus[currentBloxPeerId]) {
-      checkBloxConnection()
+      checkBloxConnection();
     }
-  }, [fulaIsReady])
+  }, [fulaIsReady]);
   const updateBloxSpace = async () => {
     try {
-      setLoadingBloxSpace(true)
+      setLoadingBloxSpace(true);
       if (fulaIsReady) {
-        const space = await getBloxSpace()
-        logger.log('updateBloxSpace', space)
+        const space = await getBloxSpace();
+        logger.log('updateBloxSpace', space);
       }
     } catch (error) {
-      logger.logError('GetBloxSpace Error', error)
+      logger.logError('GetBloxSpace Error', error);
     } finally {
-      setLoadingBloxSpace(false)
+      setLoadingBloxSpace(false);
     }
-  }
+  };
   const showInteractionModal = () => {
     bloxInteractionModalRef.current.present();
   };
@@ -106,60 +135,161 @@ export const BloxScreen = () => {
   };
 
   const showProfileModal = () => {
-    profileBottomSheetRef.current.present()
-  }
+    profileBottomSheetRef.current.present();
+  };
   const handleOnBloxChanged = (index: number) => {
     try {
-      const blox = bloxInteractions[index]
+      const blox = bloxInteractions[index];
       updateBloxsStore({
-        currentBloxPeerId: blox.peerId
-      })
+        currentBloxPeerId: blox.peerId,
+      });
     } catch (error) {
-      logger.logError('handleOnBloxChanged', error)
+      logger.logError('handleOnBloxChanged', error);
     }
-
-  }
+  };
   const handleOnConnectionOptionSelect = (type: ConnectionOptionsType) => {
-    connectionOptionsSheetRef.current.close()
+    connectionOptionsSheetRef.current.close();
     switch (type) {
       case 'RETRY':
         if (fulaIsReady) {
           try {
-            checkBloxConnection()
+            checkBloxConnection();
           } catch (error) {
-            logger.logError('handleOnConnectionOptionSelect:checkBloxConnection', error)
+            logger.logError(
+              'handleOnConnectionOptionSelect:checkBloxConnection',
+              error
+            );
           }
         }
         break;
       case 'CONNECT-TO-WIFI':
-        navigation.navigate(Routes.InitialSetup, { screen: Routes.ConnectToBlox });
+        navigation.navigate(Routes.InitialSetup, {
+          screen: Routes.ConnectToBlox,
+        });
         break;
       default:
         break;
     }
-  }
-  const handleOnBloxDiscovery=()=>{
-    profileBottomSheetRef.current.close()
-    navigation.navigate(Routes.InitialSetup, { screen: Routes.ConnectToExistingBlox });
-  }
+  };
+  const handleOnBloxDiscovery = () => {
+    profileBottomSheetRef.current.close();
+    navigation.navigate(Routes.InitialSetup, {
+      screen: Routes.ConnectToExistingBlox,
+    });
+  };
   const handleOnBloxRemovePress = (peerId: string) => {
     if (Object.values(bloxs)?.length <= 1) {
-      Alert.alert('Warning', 'You cannot remove the last Blox!, please first add new Blox, then remove this one from the list.')
-      return
+      Alert.alert(
+        'Warning',
+        'You cannot remove the last Blox!, please first add new Blox, then remove this one from the list.'
+      );
+      return;
     }
-    Alert.alert('Remove Blox!', `Are you sure want to remove '${bloxs[peerId]?.name}' from the list?`,
-      [{
-        text: 'Yes',
-        onPress: () => {
-          bloxInfoBottomSheetRef.current.close()
-          removeBlox(peerId)
+    Alert.alert(
+      'Remove Blox!',
+      `Are you sure want to remove '${bloxs[peerId]?.name}' from the list?`,
+      [
+        {
+          text: 'Yes',
+          onPress: () => {
+            bloxInfoBottomSheetRef.current.close();
+            removeBlox(peerId);
+          },
+          style: 'destructive',
         },
-        style: 'destructive'
-      }, {
-        text: 'No',
-        style: 'cancel'
-      }])
-  }
+        {
+          text: 'No',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+  const handleOnResetToHotspotPress = (peerId: string) => {
+    Alert.alert(
+      'Hotspot mode!',
+      `Are you sure want to reset Blox '${bloxs[peerId]?.name}' to hotspot mode? Your blox will reboot!`,
+      [
+        {
+          text: 'Yes',
+          onPress: async () => {
+            try {
+              setResetingBloxHotspot(true);
+              const result = await fxblox.wifiRemoveall();
+              if (result.status) {
+                bloxInfoBottomSheetRef.current.close();
+                queueToast({
+                  type: 'success',
+                  title: 'Reset to hotspot mode successfully!',
+                });
+              } else {
+                queueToast({
+                  type: 'error',
+                  title: 'Failed',
+                  message:
+                    result.msg || 'Your Blox does not support this command!',
+                });
+              }
+            } catch (error) {
+              queueToast({
+                type: 'success',
+                title: 'Blox has been reset to hotspot mode!',
+              });
+            } finally {
+              setResetingBloxHotspot(false);
+            }
+          },
+          style: 'destructive',
+        },
+        {
+          text: 'No',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+  const handleOnRebootBloxPress = (peerId: string) => {
+    Alert.alert(
+      'Reboot blox!',
+      `Are you sure want to reboot Blox '${bloxs[peerId]?.name}', your Blox reboots in 5 seconds!`,
+      [
+        {
+          text: 'Yes',
+          onPress: async () => {
+            try {
+              setRebootingBlox(true)
+              const result = await fxblox.reboot();
+              if (result.status) {
+                bloxInfoBottomSheetRef.current.close();
+                queueToast({
+                  type: 'success',
+                  title: 'The Blox rebooted successfully!',
+                });
+              } else {
+                queueToast({
+                  type: 'error',
+                  title: 'Failed',
+                  message:
+                    result.msg || 'Your Blox does not support this command!',
+                });
+              }
+            } catch (error) {
+              queueToast({
+                type: 'error',
+                title: error,
+              });
+            }finally{
+              setRebootingBlox(false)
+            }
+          },
+          style: 'destructive',
+        },
+        {
+          text: 'No',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
       <BloxHeader
@@ -174,23 +304,28 @@ export const BloxScreen = () => {
             selectedMode={selectedMode}
             //setSelectedMode={setSelectedMode}
             onBloxChange={handleOnBloxChanged}
-            onConnectionPress={() => connectionOptionsSheetRef.current.present()}
+            onConnectionPress={() =>
+              connectionOptionsSheetRef.current.present()
+            }
             onBloxPress={() => bloxInfoBottomSheetRef.current.present()}
           />
           <FxSpacer height={24} />
-          {currentBloxSpaceInfo?.size != undefined &&
+          {currentBloxSpaceInfo?.size != undefined && (
             <UsageBar
               divisionPercent={divisionSplit}
               totalCapacity={currentBloxSpaceInfo?.size || 1000}
-            />}
+            />
+          )}
           <DeviceCard
             onRefreshPress={updateBloxSpace}
             loading={loadingBloxSpace}
             data={{
               capacity: currentBloxSpaceInfo?.size || 0,
               name: 'Hard Disk',
-              status: currentBloxSpaceInfo ? EDeviceStatus.InUse : EDeviceStatus.NotAvailable,
-              associatedDevices: ['Blox Set Up']
+              status: currentBloxSpaceInfo
+                ? EDeviceStatus.InUse
+                : EDeviceStatus.NotAvailable,
+              associatedDevices: ['Blox Set Up'],
             }}
           />
           {/* <FxSpacer height={8} />
@@ -214,9 +349,23 @@ export const BloxScreen = () => {
         selectedMode={selectedMode}
         onSelectMode={handleSelectMode}
       />
-      <BloxInfoBottomSheet ref={bloxInfoBottomSheetRef} bloxInfo={bloxs[currentBloxPeerId]} onBloxRemovePress={handleOnBloxRemovePress} />
-      <ProfileBottomSheet ref={profileBottomSheetRef} onBloxDiscovery={handleOnBloxDiscovery} />
-      <ConnectionOptionsSheet ref={connectionOptionsSheetRef} onSelected={handleOnConnectionOptionSelect} />
+      <BloxInfoBottomSheet
+        ref={bloxInfoBottomSheetRef}
+        bloxInfo={bloxs[currentBloxPeerId]}
+        onBloxRemovePress={handleOnBloxRemovePress}
+        onRestToHotspotPress={handleOnResetToHotspotPress}
+        onRebootBloxPress={handleOnRebootBloxPress}
+        resetingBloxHotspot={resetingBloxHotspot}
+        rebootingBlox={rebootingBlox}
+      />
+      <ProfileBottomSheet
+        ref={profileBottomSheetRef}
+        onBloxDiscovery={handleOnBloxDiscovery}
+      />
+      <ConnectionOptionsSheet
+        ref={connectionOptionsSheetRef}
+        onSelected={handleOnConnectionOptionSelect}
+      />
     </FxSafeAreaBox>
   );
 };

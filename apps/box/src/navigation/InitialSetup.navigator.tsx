@@ -15,7 +15,7 @@ import { ConnectToExistingBloxScreen } from '../screens/InitialSetup/ConnectToEx
 
 export const InitialSetupNavigator = () => {
   return (
-    <InitialSetupStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={Routes.ConnectToWallet}>
+    <InitialSetupStack.Navigator screenOptions={{ headerShown: false }}>
       <InitialSetupStack.Screen
         name={Routes.Welcome}
         component={WelcomeScreen}
