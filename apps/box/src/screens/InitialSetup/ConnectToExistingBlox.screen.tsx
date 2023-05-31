@@ -185,7 +185,7 @@ export const ConnectToExistingBloxScreen = () => {
         </FxCard >
       );
     },
-    [bloxs]
+    [bloxs, appPeerId]
   );
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
