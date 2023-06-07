@@ -132,7 +132,7 @@ export const BluetoothCommandsScreen = () => {
               </FxText>
               <FxText paddingTop="16" marginStart="16" lineHeight={20}>
                 1. Begin by resetting the Blox device. Once reset, you will have
-                a 2-minute window to pair it with your phone (Through your phone
+                a 4-minute window to pair it with your phone (Through your phone
                 bluetooth settings).
               </FxText>
               <FxText paddingTop="8" marginStart="16" lineHeight={20}>
