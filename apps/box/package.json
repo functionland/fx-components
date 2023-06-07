@@ -57,6 +57,7 @@
     "@functionland/fula-sec": "*",
     "text-encoding-polyfill": "*",
     "react-native-keychain": "*",
-    "react-native-keyboard-aware-scroll-view": "*"
+    "react-native-keyboard-aware-scroll-view": "*",
+    "react-native-ble-manager": "*"
   }
 }

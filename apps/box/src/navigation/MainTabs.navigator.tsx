@@ -36,22 +36,26 @@ import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useLogger } from '../hooks';
 import { useBloxsStore } from '../stores';
 import shallow from 'zustand/shallow';
+import { BluetoothCommandsScreen } from '../screens/Settings/Bluetooth/BluetoothCommands.screen';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
-  const [password, signiture, setFulaIsReady, fulaIsReady] = useUserProfileStore((state) => [
-    state.password,
-    state.signiture,
-    state.setFulaIsReady,
-    state.fulaIsReady
-  ], shallow);
-  const [bloxs, currentBloxPeerId, updateBloxsStore] = useBloxsStore((state) => [
-    state.bloxs,
-    state.currentBloxPeerId,
-    state.update
-  ], shallow);
+  const [password, signiture, setFulaIsReady, fulaIsReady] =
+    useUserProfileStore(
+      (state) => [
+        state.password,
+        state.signiture,
+        state.setFulaIsReady,
+        state.fulaIsReady,
+      ],
+      shallow
+    );
+  const [bloxs, currentBloxPeerId, updateBloxsStore] = useBloxsStore(
+    (state) => [state.bloxs, state.currentBloxPeerId, state.update],
+    shallow
+  );
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
-  const logger = useLogger()
+  const logger = useLogger();
 
   const openGlobalBottomSheet = () => {
     globalBottomSheetRef.current.present();
@@ -61,35 +65,37 @@ export const MainTabsNavigator = () => {
     globalBottomSheetRef.current.close();
   };
   useEffect(() => {
-    const bloxsArray = Object.values(bloxs || {})
+    const bloxsArray = Object.values(bloxs || {});
     if (!currentBloxPeerId && bloxsArray.length) {
       updateBloxsStore({
-        currentBloxPeerId: bloxsArray[0].peerId || 'PeerId is empty'
-      })
+        currentBloxPeerId: bloxsArray[0].peerId || 'PeerId is empty',
+      });
     }
-  }, [currentBloxPeerId])
+  }, [currentBloxPeerId]);
   useEffect(() => {
     if (password && signiture && currentBloxPeerId) {
-      setFulaIsReady(false)
+      setFulaIsReady(false);
       logger.log('MainTabsNavigator:intiFula', {
         bloxPeerId: currentBloxPeerId,
         password: password ? 'Has password' : undefined,
         signiture: signiture ? 'Has signiture' : undefined,
-        bloxs
-      })
+        bloxs,
+      });
       try {
         Helper.initFula({
           password,
           signiture,
           //bloxAddr: '/ip4/192.168.0.167/tcp/40001/p2p/12D3KooWGawPDngmHEfynixQGsg9nQTrRufa2TD8TQkQQsf76PUF',
           bloxPeerId: currentBloxPeerId,
-        }).then(() => {
-          setFulaIsReady(true)
-        }).catch(() => {
-          setFulaIsReady(false)
-        });;
+        })
+          .then(() => {
+            setFulaIsReady(true);
+          })
+          .catch(() => {
+            setFulaIsReady(false);
+          });
       } catch (error) {
-        logger.logError('MainTabsNavigator:intiFula', error)
+        logger.logError('MainTabsNavigator:intiFula', error);
       }
     }
   }, [password, signiture, currentBloxPeerId]);
@@ -212,6 +218,10 @@ const SettingsNavigator = () => {
       <SettingsStack.Screen name={Routes.Mode} component={ModeScreen} />
       <SettingsStack.Screen name={Routes.Pools} component={PoolsScreen} />
       <SettingsStack.Screen name={Routes.About} component={AboutScreen} />
+      <SettingsStack.Screen
+        name={Routes.BluetoothCommands}
+        component={BluetoothCommandsScreen}
+      />
 
       <SettingsStack.Screen
         options={() => ({

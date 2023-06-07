@@ -36,6 +36,7 @@ export enum Routes {
   Pools = 'Pools',
   About = 'About',
   ComponentGallery = 'Component Gallery',
+  BluetoothCommands = 'BluetoothCommands',
 
   // Component Gallery
   Avatars = 'Avatars',
@@ -74,11 +75,12 @@ export type SettingsStackParamList = {
     appName?: string;
     bundleId?: string;
     peerId?: string;
-    returnDeepLink?: string
+    returnDeepLink?: string;
   };
   [Routes.Mode]: undefined;
   [Routes.Pools]: undefined;
   [Routes.About]: undefined;
+  [Routes.BluetoothCommands]: undefined;
   [Routes.ComponentGallery]: NavigatorScreenParams<ComponentGalleryStackParamList>;
 };
 

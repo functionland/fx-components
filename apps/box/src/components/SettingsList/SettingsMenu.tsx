@@ -41,14 +41,22 @@ export const SettingsMenu = () => {
     {
       name: 'Blox discovery',
       detail: null,
-      onPress: () => rootNavigation.navigate(Routes.InitialSetup, { screen: Routes.ConnectToExistingBlox })
+      onPress: () =>
+        rootNavigation.navigate(Routes.InitialSetup, {
+          screen: Routes.ConnectToExistingBlox,
+        }),
+    },
+    {
+      name: 'Bluetooth commands',
+      detail: null,
+      onPress: () => navigation.navigate(Routes.BluetoothCommands),
     },
     {
       name: 'About',
       detail: null,
       onPress: () => navigation.navigate(Routes.About),
     },
-    ...appGallery
+    ...appGallery,
   ];
 
   return (
