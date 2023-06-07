@@ -23,7 +23,7 @@ import { useLogger } from '../../hooks';
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
   const walletConnect = useWalletConnect();
-  const [selectedChainId, setSelectedChainId] = useState(1);// defualt is Etherum
+  const [selectedChainId, setSelectedChainId] = useState(80001);// Mumbai Polygon Testnet
   const { queueToast } = useToast();
   const [networkConfirmed, setNetwordConfirmed] = useState(false)
   const [walletId, signiture, password, setWalletId] = useUserProfileStore(
@@ -130,7 +130,7 @@ export const ConnectToWalletScreen = () => {
                 <FxPickerItem key={1} label='Ethereum Mainnet' value={1} />
                 <FxPickerItem key={5} label='Goerli Ethereum Testnet' value={5} />
                 <FxPickerItem key={137} label='Polygon Mainnet' value={137} />
-                <FxPickerItem key={80001} label='Mumbai Polygon Testnet' value={137} />
+                <FxPickerItem key={80001} label='Mumbai Polygon Testnet' value={80001} />
               </FxPicker>
 
             </FxBox>
