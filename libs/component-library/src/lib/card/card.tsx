@@ -65,7 +65,7 @@ const FxCard = ({
       disabled={(!onPress && !onLongPress) || disabled}
       padding="16"
       paddingVertical="24"
-      backgroundColor="backgroundPrimary"
+      backgroundColor={disabled?"border":"backgroundPrimary"}
       borderRadius="s"
       opacity={isPressed ? 0.5 : 1}
       {...rest}

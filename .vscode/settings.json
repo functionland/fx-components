@@ -1,3 +1,4 @@
 {
-  "cSpell.words": ["Blox", "functionland", "Pressable", "SSID"]
+  "cSpell.words": ["Blox", "functionland", "Pressable", "SSID"],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
 }
