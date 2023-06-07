@@ -90,7 +90,7 @@ export const FxBottomSheetModal = React.forwardRef<
           flexDirection="row"
           backgroundColor="backgroundApp"
           alignItems="center"
-          justifyContent={title ? 'space-between' : 'flex-end'}
+          justifyContent={title ? 'center' : 'flex-end'}
           paddingHorizontal="20"
         >
           {title && (
