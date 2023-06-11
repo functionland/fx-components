@@ -17,6 +17,7 @@ import BloxWifiDevice from '../../app/icons/blox-wifi-device.svg';
 import { ActivityIndicator, PermissionsAndroid, Platform } from 'react-native';
 import shallow from 'zustand/shallow';
 import { useBloxsStore } from '../../stores';
+import { NetInfoStateType, fetch } from '@react-native-community/netinfo';
 
 const connectionStatusStrings = {
   [EConnectionStatus.connecting]: 'Connecting',
@@ -28,11 +29,6 @@ const connectionStatusStrings = {
 export const ConnectToBloxScreen = () => {
   const navigation = useInitialSetupNavigation();
   const { queueToast } = useToast();
-
-  const [bloxs, bloxsPropertyInfo] = useBloxsStore((state) => [
-    state.bloxs,
-    state.bloxsPropertyInfo
-  ], shallow);
 
   const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
     EConnectionStatus.notConnected
@@ -67,6 +63,15 @@ export const ConnectToBloxScreen = () => {
       return;
     }
     setConnectionStatus(EConnectionStatus.connecting);
+    const network = await fetch('wifi');
+    if (
+      network.type === NetInfoStateType.wifi &&
+      network.details.ssid === DEFAULT_NETWORK_NAME &&
+      network.isConnected
+    ) {
+      setConnectionStatus(EConnectionStatus.connected);
+      return;
+    }
     WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(
       () => {
         setConnectionStatus(EConnectionStatus.connected);
@@ -153,9 +158,7 @@ export const ConnectToBloxScreen = () => {
             <FxButton
               width={150}
               onPress={connectToBox}
-              disabled={
-                connectionStatus === EConnectionStatus.connecting
-              }
+              disabled={connectionStatus === EConnectionStatus.connecting}
             >
               {connectionStatus != EConnectionStatus.connecting ? (
                 'Connect'
