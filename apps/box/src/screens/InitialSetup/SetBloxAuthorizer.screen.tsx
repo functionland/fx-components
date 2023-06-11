@@ -190,7 +190,7 @@ export const SetBloxAuthorizerScreen = () => {
             Adding the Blox App peerId as an owner on the Blox
           </FxText>
           {error_exchange?.message === 'Network Error' &&
-            <FxWarning padding='16' marginBottom='8' error="In some cases you need to turn the mobile data off, please make sure the phone is connected to the Blox's Hotspot and mobile data is off" />
+            <FxWarning padding='16' marginBottom='8' error="In some cases you need to turn the mobile data off, please make sure the phone is connected to the Blox's Hotspot and mobile data/VPN is off" />
           }
           {newBloxPeerId && !data_bloxProperties?.data?.bloxFreeSpace && !loading_bloxProperties &&
             <FxWarning padding='16' marginBottom='8' error='To proceed successfully you need to attach an external storage to the Blox!' />
