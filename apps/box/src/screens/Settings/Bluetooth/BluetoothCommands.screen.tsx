@@ -65,7 +65,7 @@ export const BluetoothCommandsScreen = () => {
             currentPeripheral.id,
             Constants.BluetoothServices['command'].serviceUUID,
             Constants.BluetoothServices['command'].characteristicUUID,
-            command + params ? ` ${params}` : ''
+            command + (params ? ` ${params}` : '')
           );
           queueToast({
             type: 'success',
