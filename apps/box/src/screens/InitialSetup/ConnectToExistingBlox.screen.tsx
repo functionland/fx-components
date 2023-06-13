@@ -176,12 +176,12 @@ export const ConnectToExistingBloxScreen = () => {
       const alreadyExist = !!bloxs[item.txt?.bloxPeerIdString];
       return (
         <FxCard
-          disabled={!authorized || !appPeerId}
+          disabled={!authorized || !appPeerId || alreadyExist}
           onPress={() => handleOnItemPress(item.txt?.bloxPeerIdString)}
         >
           <FxCard.Row>
             <FxBox flexDirection="row" alignItems="center">
-              <FxRadioButton value={item.txt?.bloxPeerIdString} />
+              <FxRadioButton value={item.txt?.bloxPeerIdString} disabled={!authorized || !appPeerId || alreadyExist} />
               <FxText variant="bodyMediumRegular" paddingStart="16">
                 {item.host}
               </FxText>
