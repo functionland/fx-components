@@ -4,7 +4,6 @@ import { InitialSetupNavigator } from './InitialSetup.navigator';
 import { MainTabsNavigator } from './MainTabs.navigator';
 import { Routes, RootStackParamList } from './navigationConfig';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
-import { useWalletConnect } from '@walletconnect/react-native-dapp';
 import { useBloxsStore } from '../stores';
 import { FxBox } from '@functionland/component-library';
 import { ActivityIndicator } from 'react-native';
@@ -18,13 +17,12 @@ export const RootNavigator = () => {
     state._hasHydrated,
     state.bloxs,
   ]);
-  const walletConnect = useWalletConnect();
   const [initialRoute, setInitialRoute] = useState(undefined);
   useEffect(() => {
     if (_hasHydrated && _hasHydrated_bloxs && !initialRoute) {
       if (
         appPeerId &&
-        walletConnect.connected &&
+        //walletConnect.connected &&
         appPeerId &&
         Object.keys(bloxs).length > 0
       ) {

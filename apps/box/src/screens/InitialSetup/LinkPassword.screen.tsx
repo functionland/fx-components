@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 // @ts-ignore-next-line
 import { HDKEY } from '@functionland/fula-sec';
 import {
@@ -10,18 +10,19 @@ import {
   FxTextInput,
   useToast,
 } from '@functionland/component-library';
-import { useWalletConnect } from '@walletconnect/react-native-dapp';
 import { useInitialSetupNavigation, useLogger } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
+import { useWeb3Modal } from '@web3modal/react-native';
 import shallow from 'zustand/shallow';
-
+import {ethers} from 'ethers'
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const walletConnector = useWalletConnect();
+  const { isConnected, provider } = useWeb3Modal();
+
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
   const [passwordInput, setInputPasswordInput] = useState('');
@@ -29,8 +30,11 @@ export const LinkPasswordScreen = () => {
     (state) => [state.setKeyChainValue, state.signiture, state.password],
     shallow
   );
+  const web3Provider = useMemo(
+    () => (provider ? new ethers.providers.Web3Provider(provider) : undefined),
+    [provider],
+  );
   const logger = useLogger();
-
   const handleLinkPassword = async () => {
     try {
       if (linking) {
@@ -40,12 +44,11 @@ export const LinkPasswordScreen = () => {
       setLinking(true);
       const ed = new HDKEY(passwordInput);
       const chainCode = ed.chainCode;
-      if (!walletConnector.session?.connected)
-        await walletConnector.createSession();
-      const walletSignature = await walletConnector.signPersonalMessage([
-        chainCode,
-        walletConnector?.accounts[0],
-      ]);
+      const walletSignature = await helper.signMessage({
+        message: chainCode,
+        web3Provider,
+      });
+      console.log('walletSignature\n\r',walletSignature)
       await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
       await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
     } catch (err) {
@@ -67,7 +70,7 @@ export const LinkPasswordScreen = () => {
   };
   const handleConnectToExistingBlox = () => {
     navigation.navigate(Routes.ConnectToExistingBlox);
-  }
+  };
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={40} />
@@ -109,7 +112,7 @@ export const LinkPasswordScreen = () => {
             >
               Reconnect to existing blox
             </FxButton>
-            <FxButton size="large" marginTop='16' onPress={handleConnectToBlox}>
+            <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
               Connect to Blox
             </FxButton>
           </FxBox>
@@ -117,9 +120,17 @@ export const LinkPasswordScreen = () => {
           <FxButton
             size="large"
             disabled={!passwordInput}
-            onPress={handleLinkPassword}
+            onPress={provider ? handleLinkPassword : null}
           >
-            {linking ? 'Canncel' : 'Link Password'}
+            {provider && isConnected ? (
+              linking ? (
+                'Canncel'
+              ) : (
+                'Link Password'
+              )
+            ) : (
+              <ActivityIndicator />
+            )}
           </FxButton>
         )}
       </FxBox>

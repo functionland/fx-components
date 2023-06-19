@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet } from 'react-native';
-import { useWalletConnect, withWalletConnect } from '@walletconnect/react-native-dapp';
+import { ActivityIndicator, Image, StyleSheet } from 'react-native';
 import {
   FxBox,
   FxButton,
@@ -15,17 +14,20 @@ import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { getWalletImage } from '../../utils/media';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { Helper } from '../../utils';
+import { Helper, WalletConnectConfigs } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
 import shallow from 'zustand/shallow';
 import { useLogger } from '../../hooks';
+import { Web3Button, Web3Modal, useWeb3Modal } from '@web3modal/react-native';
+import { ethers } from 'ethers';
+import { copyToClipboard } from '../../utils/clipboard';
 
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const walletConnect = useWalletConnect();
-  const [selectedChainId, setSelectedChainId] = useState(80001);// Mumbai Polygon Testnet
+  const { isConnected, provider, open, close, address } = useWeb3Modal();
+  const [selectedChainId, setSelectedChainId] = useState(80001); // Mumbai Polygon Testnet
   const { queueToast } = useToast();
-  const [networkConfirmed, setNetwordConfirmed] = useState(false)
+  const [networkConfirmed, setNetwordConfirmed] = useState(false);
   const [walletId, signiture, password, setWalletId] = useUserProfileStore(
     (state) => [
       state.walletId,
@@ -35,12 +37,18 @@ export const ConnectToWalletScreen = () => {
     ],
     shallow
   );
-  const logger = useLogger()
-
+  const logger = useLogger();
   useEffect(() => {
-    if (!walletConnect.connected)
-      return;
-    switch (walletConnect.chainId) {
+    console.log('isConnected', isConnected);
+    checkChainId();
+  }, [isConnected, provider, address]);
+  const checkChainId = async () => {
+    if (!isConnected || !provider || !address) return;
+    const ethersProvider = new ethers.providers.Web3Provider(provider);
+    const network = await ethersProvider.getNetwork();
+    const chainId = network.chainId;
+    console.log('Connected chainId:', chainId);
+    switch (chainId) {
       case 1:
         // Ethereum Mainnet
         break;
@@ -55,7 +63,7 @@ export const ConnectToWalletScreen = () => {
         break;
       default:
         // Unknown network
-        walletConnect.killSession()
+        //walletConnect.killSession();
         queueToast({
           title: 'Invalid network',
           message: 'The network you have chosen is invalid',
@@ -64,22 +72,24 @@ export const ConnectToWalletScreen = () => {
         });
         return;
     }
-    if (walletConnect.accounts[0] !== walletId) {
-      setWalletId(walletConnect.accounts[0], true);
+    //setNetwordConfirmed(true);
+    if (address !== walletId) {
+      setWalletId(address, true);
     }
-  }, [walletConnect.connected])
+  };
   const handleWalletConnect = async () => {
     try {
-      if (walletConnect.connected)
-        await walletConnect.killSession()
-      const wallet = await walletConnect.connect(
-        {
-          chainId: selectedChainId
-        }
-      );
+      if (provider) {
+        //sawait provider.cleanupPendingPairings()
+      }
+      open();
+      // if (walletConnect.connected) await walletConnect.killSession();
+      // const wallet = await walletConnect.connect({
+      //   chainId: selectedChainId,
+      // });
     } catch (err) {
       console.log(err);
-      logger.logError('handleWalletConnect', err)
+      logger.logError('handleWalletConnect', err);
       queueToast({
         title: 'WalletConnect Error',
         message: err.toString(),
@@ -98,13 +108,17 @@ export const ConnectToWalletScreen = () => {
   };
   const handleConnectToExistingBlox = () => {
     navigation.navigate(Routes.ConnectToExistingBlox);
-  }
+  };
+  const onCopy = (value: string) => {
+    copyToClipboard(value);
+  };
+
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={20} />
 
       <FxBox flex={1} justifyContent="space-between" paddingVertical="80">
-        {walletConnect.connected && networkConfirmed ? (
+        {isConnected && networkConfirmed ? (
           <>
             <WalletDetails allowChangeWallet={true} />
             {password && signiture ? (
@@ -124,41 +138,77 @@ export const ConnectToWalletScreen = () => {
               Connect To Wallet
             </FxText>
             <FxBox>
-              <FxText variant="h200" marginBottom='8'>Select nerwork</FxText>
-              <FxPicker selectedValue={selectedChainId}
-                onValueChange={(itemValue: number) => setSelectedChainId(itemValue)}>
-                <FxPickerItem key={1} label='Ethereum Mainnet' value={1} enabled={false}/>
-                <FxPickerItem key={5} label='Goerli Ethereum Testnet' value={5} />
-                <FxPickerItem key={137} label='Polygon Mainnet' value={137} enabled={false} />
-                <FxPickerItem key={80001} label='Mumbai Polygon Testnet' value={80001} />
+              <FxText variant="h200" marginBottom="8">
+                Select nerwork
+              </FxText>
+              <FxPicker
+                selectedValue={selectedChainId}
+                onValueChange={(itemValue: number) =>
+                  setSelectedChainId(itemValue)
+                }
+              >
+                <FxPickerItem
+                  key={1}
+                  label="Ethereum Mainnet"
+                  value={1}
+                  enabled={false}
+                />
+                <FxPickerItem
+                  key={5}
+                  label="Goerli Ethereum Testnet"
+                  value={5}
+                />
+                <FxPickerItem
+                  key={137}
+                  label="Polygon Mainnet"
+                  value={137}
+                  enabled={false}
+                />
+                <FxPickerItem
+                  key={80001}
+                  label="Mumbai Polygon Testnet"
+                  value={80001}
+                />
               </FxPicker>
-
             </FxBox>
-
           </>
         )}
 
-        {!walletConnect.connected ? (
-          <FxButton size="large" onPress={handleWalletConnect}>
-            Connect to Wallet
+        {!isConnected ? (
+          <FxButton
+            size="large"
+            onPress={provider ? handleWalletConnect : null}
+          >
+            {provider ? 'Connect to Wallet' : <ActivityIndicator />}
           </FxButton>
         ) : !signiture ? (
           <FxButton size="large" onPress={handleLinkPassword}>
-            Link Password
+            {provider ? 'Link Passwordt' : <ActivityIndicator />}
           </FxButton>
         ) : (
           <FxBox>
-            <FxButton size="large" variant='inverted' onPress={handleConnectToExistingBlox}>
+            <FxButton
+              size="large"
+              variant="inverted"
+              onPress={handleConnectToExistingBlox}
+            >
               Reconnect to existing blox
             </FxButton>
-            <FxButton size="large" marginTop='16' onPress={handleConnectToBlox}>
+            <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
               Connect to new blox
             </FxButton>
           </FxBox>
         )}
       </FxBox>
+      <Web3Modal
+        projectId={'94a4ca39db88ee0be8f6df95fdfb560a'}
+        providerMetadata={WalletConnectConfigs.providerMetadata}
+        sessionParams={{
+          ...WalletConnectConfigs.sessionParams,
+          chainIds: [`eip155:${selectedChainId}`],
+        }}
+        onCopyClipboard={onCopy}
+      />
     </FxSafeAreaBox>
   );
 };
-
-
