@@ -14,7 +14,6 @@
     "@shopify/restyle": "*",
     "@testing-library/jest-native": "*",
     "@testing-library/react-native": "*",
-    "@walletconnect/react-native-dapp": "*",
     "@react-native-firebase/app": "*",
     "@react-native-firebase/crashlytics": "*",
     "axios": "*",
@@ -58,6 +57,10 @@
     "text-encoding-polyfill": "*",
     "react-native-keychain": "*",
     "react-native-keyboard-aware-scroll-view": "*",
-    "react-native-ble-manager": "*"
+    "react-native-ble-manager": "*",
+    "@web3modal/react-native": "*",
+    "react-native-get-random-values": "*",
+    "react-native-modal": "*",
+    "big-integer": "*"
   }
 }

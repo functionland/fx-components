@@ -9,8 +9,6 @@ import {
   FxPressableOpacity,
 } from '@functionland/component-library';
 import { RootNavigator } from '../navigation/Root.navigator';
-import { WalletConnectProvider } from '@walletconnect/react-native-dapp/dist/providers';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavContainer } from '../navigation/NavContainer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppState, Platform, Share, StatusBar, StyleSheet, UIManager } from 'react-native';
@@ -49,13 +47,6 @@ export const App = () => {
   }, [loadAllCredentials]);
   return (
     <ThemeProvider theme={theme}>
-      <WalletConnectProvider
-        redirectUrl={'yourappscheme://'}
-        storageOptions={{
-          // @ts-ignore
-          asyncStorage: AsyncStorage,
-        }}
-      >
         <ToastProvider>
           <GestureHandlerRootView style={styles.flex1}>
             <StatusBar
@@ -69,7 +60,6 @@ export const App = () => {
             </SafeAreaProvider>
           </GestureHandlerRootView>
         </ToastProvider>
-      </WalletConnectProvider>
     </ThemeProvider>
   );
 };
