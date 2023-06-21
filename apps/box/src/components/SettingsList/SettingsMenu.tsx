@@ -16,11 +16,15 @@ export const SettingsMenu = () => {
   const mode = useSettingsStore().getMode();
 
   // Add app component gallery in development mode
-  const appGallery = __DEV__ ? [{
-    name: 'Component Gallery',
-    detail: null,
-    onPress: () => navigation.navigate(Routes.ComponentGallery),
-  }] : []
+  const appGallery = __DEV__
+    ? [
+        {
+          name: 'Component Gallery',
+          detail: null,
+          onPress: () => navigation.navigate(Routes.ComponentGallery),
+        },
+      ]
+    : [];
 
   const menuItems = [
     {
@@ -49,7 +53,10 @@ export const SettingsMenu = () => {
     {
       name: 'Bluetooth commands',
       detail: null,
-      onPress: () => navigation.navigate(Routes.BluetoothCommands),
+      onPress: () =>
+        rootNavigation.navigate(Routes.InitialSetup, {
+          screen: Routes.BluetoothCommands,
+        }),
     },
     {
       name: 'About',

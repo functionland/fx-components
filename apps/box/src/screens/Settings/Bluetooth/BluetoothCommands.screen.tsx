@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import {
+  FxArrowLeftIcon,
   FxBottomSheetModalMethods,
   FxBox,
   FxPlugIcon,
@@ -15,8 +16,9 @@ import ScanBluetoothModal from './modals/ScanBluetoothModal';
 import { BleCommandsMenu } from 'apps/box/src/components/SettingsList/BleCommandsMenu';
 import { Constants } from '../../../utils';
 import { InputWifiPasswordModal } from './modals/InputWifiPasswordModal';
-import { useLogger } from 'apps/box/src/hooks';
+import { useLogger, useRootNavigation } from 'apps/box/src/hooks';
 export const BluetoothCommandsScreen = () => {
+  const rootNavigation = useRootNavigation();
   const scanBluetoothModalRef = useRef<FxBottomSheetModalMethods>(null);
   const inputWifiPasswordModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [currentPeripheral, setCurrentPeripheral] = useState<Peripheral>(null);
@@ -105,6 +107,9 @@ export const BluetoothCommandsScreen = () => {
   };
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
+      <FxPressableOpacity onPress={() => rootNavigation.pop()}>
+        <FxArrowLeftIcon color="white" />
+      </FxPressableOpacity>
       <FxBox
         marginTop="16"
         flexDirection="row"
@@ -131,9 +136,9 @@ export const BluetoothCommandsScreen = () => {
                 To pair the Blox device with your phone, follow these steps:
               </FxText>
               <FxText paddingTop="16" marginStart="16" lineHeight={20}>
-                1. Begin by resetting the Blox device. Once reset, you will have
-                a 4-minute window to pair it with your phone (Through your phone
-                bluetooth settings).
+                1. Begin by restarting the Blox device. Once restart, you will
+                have a 4-minute window to pair it with your phone (Through your
+                phone bluetooth settings).
               </FxText>
               <FxText paddingTop="8" marginStart="16" lineHeight={20}>
                 2. Choose the Blox device available devices list by pressing the

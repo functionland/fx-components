@@ -112,6 +112,9 @@ export const ConnectToWalletScreen = () => {
   const onCopy = (value: string) => {
     copyToClipboard(value);
   };
+  const handleOnBluetoothCommand=()=>{
+    navigation.navigate(Routes.BluetoothCommands);
+  }
 
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
@@ -194,6 +197,16 @@ export const ConnectToWalletScreen = () => {
             >
               Reconnect to existing blox
             </FxButton>
+            {logger.isDebugModeEnable && (
+              <FxButton
+                size="large"
+                variant="inverted"
+                marginTop="16"
+                onPress={handleOnBluetoothCommand}
+              >
+                Bluetooth commands
+              </FxButton>
+            )}
             <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
               Connect to new blox
             </FxButton>

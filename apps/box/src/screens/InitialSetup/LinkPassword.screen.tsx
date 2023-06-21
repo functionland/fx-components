@@ -18,11 +18,10 @@ import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
 import { useWeb3Modal } from '@web3modal/react-native';
 import shallow from 'zustand/shallow';
-import {ethers} from 'ethers'
+import { ethers } from 'ethers';
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
   const { isConnected, provider } = useWeb3Modal();
-
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
   const [passwordInput, setInputPasswordInput] = useState('');
@@ -32,7 +31,7 @@ export const LinkPasswordScreen = () => {
   );
   const web3Provider = useMemo(
     () => (provider ? new ethers.providers.Web3Provider(provider) : undefined),
-    [provider],
+    [provider]
   );
   const logger = useLogger();
   const handleLinkPassword = async () => {
@@ -48,7 +47,6 @@ export const LinkPasswordScreen = () => {
         message: chainCode,
         web3Provider,
       });
-      console.log('walletSignature\n\r',walletSignature)
       await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
       await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
     } catch (err) {
@@ -71,6 +69,10 @@ export const LinkPasswordScreen = () => {
   const handleConnectToExistingBlox = () => {
     navigation.navigate(Routes.ConnectToExistingBlox);
   };
+  const handleOnBluetoothCommand=()=>{
+    navigation.navigate(Routes.BluetoothCommands);
+  }
+
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={40} />
@@ -112,6 +114,16 @@ export const LinkPasswordScreen = () => {
             >
               Reconnect to existing blox
             </FxButton>
+            {logger.isDebugModeEnable && (
+              <FxButton
+                size="large"
+                variant="inverted"
+                marginTop="16"
+                onPress={handleOnBluetoothCommand}
+              >
+                Bluetooth commands
+              </FxButton>
+            )}
             <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
               Connect to Blox
             </FxButton>
