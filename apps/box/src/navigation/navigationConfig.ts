@@ -94,6 +94,7 @@ export type InitialSetupStackParamList = {
   [Routes.CheckConnection]: { ssid: string };
   [Routes.SetupComplete]: undefined;
   [Routes.SetBloxAuthorizer]: undefined;
+  [Routes.BluetoothCommands]: undefined;
 };
 
 export type ComponentGalleryStackParamList = {

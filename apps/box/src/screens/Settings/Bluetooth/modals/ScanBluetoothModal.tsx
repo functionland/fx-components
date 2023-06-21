@@ -186,7 +186,7 @@ const ScanBluetoothModal = React.forwardRef<
         {!scanning && Array.from(peripherals.values()).length === 0 && (
           <FxBox padding="20">
             <FxText textAlign="center">
-              No Blox Peripherals, press "Scan Bluetooth" bellow.
+              No Blox Peripherals, press "Scan Bluetooth" below.
             </FxText>
           </FxBox>
         )}
