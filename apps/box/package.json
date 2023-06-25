@@ -61,6 +61,7 @@
     "@web3modal/react-native": "*",
     "react-native-get-random-values": "*",
     "react-native-modal": "*",
-    "big-integer": "*"
+    "big-integer": "*",
+    "@walletconnect/encoding": "*"
   }
 }
