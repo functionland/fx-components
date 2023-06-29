@@ -34,7 +34,7 @@
     "@react-navigation/stack": "^6.3.2",
     "@react-spring/three": "^9.5.0",
     "@react-three/fiber": "^8.1.0",
-    "@shopify/react-native-skia": "^0.1.136",
+    "@shopify/react-native-skia": "^0.1.195",
     "@shopify/restyle": "^2.1.0",
     "@visx/scale": "^2.2.2",
     "@walletconnect/encoding": "^1.0.2",
