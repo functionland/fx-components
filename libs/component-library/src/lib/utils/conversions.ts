@@ -16,9 +16,22 @@ const convertPascalToSentence = (str: string) => {
 function capitalizeFirstLetter(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
-
+const convertByteToCapacityUnit = (bytes: number, isBinary?: boolean) => {
+  const constant = isBinary
+    ? MEGABYTE_BINARY_CONSTANT
+    : MEGABYTE_DECIMAL_CONSTANT;
+  const tera = bytes / (constant * 1000 * 1000 * 1000 * 1000);
+  if (tera > 1) return tera.toFixed(2) + ' TB';
+  const giga = bytes / (constant * 1000 * 1000 * 1000);
+  if (giga > 1) return giga.toFixed(2) + ' GB';
+  const mega = bytes / (constant * 1000 * 1000);
+  if (mega > 1) return mega.toFixed(2) + ' MB';
+  const kilo = bytes / (constant * 1000);
+  return kilo.toFixed(2) + ' KB';
+};
 export {
   convertMegabyteToGigabyte,
+  convertByteToCapacityUnit,
   convertPascalToSentence,
   capitalizeFirstLetter,
 };
