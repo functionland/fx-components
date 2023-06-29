@@ -27,30 +27,35 @@ export const InputWifiPasswordModal = React.forwardRef<
   const [connectionStatus, setConnectionStatus] =
     useState<EConnectionStatus>(null);
   const [password, setPassword] = useState<string>('');
-  const logger = useLogger()
+  const logger = useLogger();
   const connectWifi = async () => {
     try {
       logger.log('connectWifi:FormData', {
         ssid: _.ssid,
-        password:'***',
+        password: '***',
         countryCode: RNLocalize.getCountry(),
-      })
+      });
       setConnectionStatus(EConnectionStatus.connecting);
       const result = await postWifiConnect({
         ssid: _.ssid,
         password,
         countryCode: RNLocalize.getCountry(),
       });
-      logger.log('connectWifi', result)
-      queueToast({
-        title: 'Unable to connect to wifi',
-        message: result.statusText,
-        type: 'error',
-        autoHideDuration: 5000,
-      });
+      logger.log('connectWifi', result);
+      if ((result.data as string)?.includes('Wifi conncted!')) {
+        setConnectionStatus(EConnectionStatus.connected);
+        _.onConnect?.(_?.ssid);
+      } else {
+        queueToast({
+          title: 'Unable to connect to wifi',
+          message: result.statusText,
+          type: 'error',
+          autoHideDuration: 5000,
+        });
+      }
     } catch (err) {
-      console.log('connectWifi', err)
-      logger.logError('connectWifi', err)
+      console.log('connectWifi', err);
+      logger.logError('connectWifi', err);
       setConnectionStatus(EConnectionStatus.connected);
       _.onConnect?.(_?.ssid);
     }
@@ -63,7 +68,7 @@ export const InputWifiPasswordModal = React.forwardRef<
 
         <FxSpacer height={40} />
         <FxTextInput
-          caption='Country code'
+          caption="Country code"
           value={RNLocalize.getCountry()}
           disabled={true}
           editable={false}
