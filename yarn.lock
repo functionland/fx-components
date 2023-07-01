@@ -3410,18 +3410,18 @@
   resolved "https://registry.yarnpkg.com/@react-native-community/slider/-/slider-4.3.3.tgz#281e90523ab3fac3463edf271ffe465cfd9932c9"
   integrity sha512-eVhMaVR08wWlseVWlDS7zgdhbVY0n2i7BF1qRxK+2N1VIKd7NsTIRzL57sFLgHVjbUmu/+hHfxCzLHmEaGxIQg==
 
-"@react-native-firebase/app@^17.4.3":
-  version "17.4.3"
-  resolved "https://registry.yarnpkg.com/@react-native-firebase/app/-/app-17.4.3.tgz#50ea42f50bc9d4fec8a60633c163cbdb008ca52c"
-  integrity sha512-D+Cez5HrUmDzYcQxzYH8cM2ZENYaz4daTRshVqJEEQWeUerYdRAy8M6JAhP/wjQlSHkeDWnrJ1nVzBgeLFSyYQ==
+"@react-native-firebase/app@^18.1.0":
+  version "18.1.0"
+  resolved "https://registry.yarnpkg.com/@react-native-firebase/app/-/app-18.1.0.tgz#35b21dc8003026542b2b545ee924d367302dd9fc"
+  integrity sha512-GZSlkNjSZlyB6I2t/5MmD9uDvnteyPOzvYNshaffS/hzRK6LL+3xYTnxqwPl6Kntm8z28FdaQM06OIlkPGQ3+g==
   dependencies:
     opencollective-postinstall "^2.0.1"
     superstruct "^0.6.2"
 
-"@react-native-firebase/crashlytics@^17.4.3":
-  version "17.4.3"
-  resolved "https://registry.yarnpkg.com/@react-native-firebase/crashlytics/-/crashlytics-17.4.3.tgz#1dbbdbfcb87087b88d25d68767dc0baad047433e"
-  integrity sha512-RbUVTAHOT/ilL6V7wf4VCNJIQ9FdIdfCEnYjnJs7RfqBPHaGFj1OutN3NSMKtPz927MuKcOGQ4VYDIfhSzsg6Q==
+"@react-native-firebase/crashlytics@^18.1.0":
+  version "18.1.0"
+  resolved "https://registry.yarnpkg.com/@react-native-firebase/crashlytics/-/crashlytics-18.1.0.tgz#5dd3a9e20dedd17fab488924333f6ceb62ca1e45"
+  integrity sha512-IIN68Z3aRFmeoAo1z2GrXjWx6NHH3qe4U9xPDyYiaAEPdmn3dEVb5zeMuX2Vms5uI0ABeaTjDw2QBF4kqsQhMQ==
   dependencies:
     stacktrace-js "^2.0.0"
 
