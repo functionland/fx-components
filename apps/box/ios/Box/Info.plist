@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>To find the nearby Blox hardwares by bluetooth the app needs to access to the bluetooth</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>To find the nearby Blox hardwares by bluetooth the app needs to access to the bluetooth</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -36,7 +40,7 @@
 		</dict>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>The blox app needs to manage the wifi, and it needs location permission</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Montserrat-Medium.ttf</string>
