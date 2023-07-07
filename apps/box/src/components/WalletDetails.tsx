@@ -10,7 +10,7 @@ import {
 import { getWalletImage } from '../utils/media';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { copyToClipboard } from '../utils/clipboard';
-import { Helper } from '../utils';
+import { Helper, WalletConnectConfigs } from '../utils';
 import { CopyIcon } from './Icons';
 import { useBloxsStore } from '../stores';
 import shallow from 'zustand/shallow';
@@ -42,7 +42,6 @@ export const WalletDetails = ({
     state.signiture,
     state.password,
   ]);
-
   const DID = useMemo(() => {
     if (password && signiture) return Helper.getMyDID(password, signiture);
     return null;
@@ -80,6 +79,7 @@ export const WalletDetails = ({
                     <FxText variant="body" textAlign="center">
                         {walletConnect.peerMeta.name}
                     </FxText> */}
+          <FxText variant="bodyMediumRegular">Wallet Address</FxText>
           <FxText
             variant="bodySmallRegular"
             textAlign="center"
@@ -169,6 +169,10 @@ export const WalletDetails = ({
           </FxBox>
         </>
       )}
+      <Web3Modal
+        projectId={'94a4ca39db88ee0be8f6df95fdfb560a'}
+        providerMetadata={WalletConnectConfigs.providerMetadata}
+      />
     </FxBox>
   );
 };

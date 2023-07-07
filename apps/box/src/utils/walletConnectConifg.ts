@@ -1,4 +1,4 @@
-import {IProviderMetadata} from '@web3modal/react-native';
+import { IProviderMetadata } from '@web3modal/react-native';
 
 export const providerMetadata: IProviderMetadata = {
   name: 'Blox dApp',
