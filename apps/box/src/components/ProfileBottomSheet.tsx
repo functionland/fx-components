@@ -34,43 +34,56 @@ export const ProfileBottomSheet = React.forwardRef<
   FxBottomSheetModalMethods,
   ProfileBottomSheetProps
 >((_, ref) => {
-  const [accounts, createAccount] = useUserProfileStore(
-    state => [state.accounts, state.createAccount])
-  const addAccountModalRef = useRef<FxBottomSheetModalMethods>(null)
-  const { queueToast } = useToast()
-  const logger = useLogger()
+  const [accounts, createAccount] = useUserProfileStore((state) => [
+    state.accounts,
+    state.createAccount,
+  ]);
+  const addAccountModalRef = useRef<FxBottomSheetModalMethods>(null);
+  const { queueToast } = useToast();
+  const logger = useLogger();
   const addAccount = async (form: AddAccountForm) => {
     try {
-      const account = await createAccount({ seed: form.seed })
-      console.log('addAccount account', account)
-      addAccountModalRef.current.close()
+      const account = await createAccount({ seed: form.seed });
+      console.log('addAccount account', account);
+      addAccountModalRef.current.close();
     } catch (error) {
       queueToast({
         type: 'error',
         title: 'Create account error',
-        message: error
-      })
-      logger.logError('addAccount', error,)
-      logger.log('addAccount:form', form)
+        message: error,
+      });
+      logger.logError('addAccount', error);
+      logger.log('addAccount:form', form);
     }
-  }
-  return (<>
-    <FxBottomSheetModal ref={ref}>
-      <FxBox height={SCREEN_HEIGHT * 0.75}>
-        <FxText variant="bodyMediumRegular" textAlign='center' fontSize={24} >Profile</FxText>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <FxBox paddingVertical="20">
-            <WalletDetails showDID={true} showPeerId={true} showBloxPeerIds={false} />
-          </FxBox>
-          <FxBox paddingVertical="20">
-            <FxButton variant='inverted' size='large' onPress={_.onBloxDiscovery}>
-              Blox Discovery
-            </FxButton>
-          </FxBox>
-          {/**
-           * Added accounts here
-           */}
-          {/* <FxHeader
+  };
+  return (
+    <>
+      <FxBottomSheetModal ref={ref}>
+        <FxBox height={SCREEN_HEIGHT * 0.75}>
+          <FxText variant="bodyMediumRegular" textAlign="center" fontSize={24}>
+            Profile
+          </FxText>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <FxBox paddingVertical="20">
+              <WalletDetails
+                showDID={true}
+                showPeerId={true}
+                showBloxPeerIds={false}
+              />
+            </FxBox>
+            <FxBox paddingVertical="20">
+              <FxButton
+                variant="inverted"
+                size="large"
+                onPress={_.onBloxDiscovery}
+              >
+                Blox Discovery
+              </FxButton>
+            </FxBox>
+            {/**
+             * Added accounts here
+             */}
+            {/* <FxHeader
             title="Accounts"
             onAddPress={() => addAccountModalRef.current.present()}
           />
@@ -84,11 +97,10 @@ export const ProfileBottomSheet = React.forwardRef<
               />
             );
           })} */}
-
-        </ScrollView>
-      </FxBox>
-    </FxBottomSheetModal>
-    <AddAccountModal ref={addAccountModalRef} onSubmit={addAccount} />
-  </>
+          </ScrollView>
+        </FxBox>
+      </FxBottomSheetModal>
+      <AddAccountModal ref={addAccountModalRef} onSubmit={addAccount} />
+    </>
   );
 });
