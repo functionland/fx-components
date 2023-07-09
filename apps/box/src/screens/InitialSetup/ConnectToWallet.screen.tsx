@@ -12,19 +12,21 @@ import {
 } from '@functionland/component-library';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
-import { getWalletImage } from '../../utils/media';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Helper, WalletConnectConfigs } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
 import shallow from 'zustand/shallow';
 import { useLogger } from '../../hooks';
-import { Web3Button, Web3Modal, useWeb3Modal } from '@web3modal/react-native';
+import {
+  WalletConnectModal,
+  useWalletConnectModal,
+} from '@walletconnect/modal-react-native';
 import { ethers } from 'ethers';
 import { copyToClipboard } from '../../utils/clipboard';
 
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const { isConnected, provider, open, close, address } = useWeb3Modal();
+  const { isConnected, provider, open, address } = useWalletConnectModal();
   const [selectedChainId, setSelectedChainId] = useState(80001); // Mumbai Polygon Testnet
   const { queueToast } = useToast();
   const [networkConfirmed, setNetwordConfirmed] = useState(false);
@@ -112,9 +114,9 @@ export const ConnectToWalletScreen = () => {
   const onCopy = (value: string) => {
     copyToClipboard(value);
   };
-  const handleOnBluetoothCommand=()=>{
+  const handleOnBluetoothCommand = () => {
     navigation.navigate(Routes.BluetoothCommands);
-  }
+  };
 
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
@@ -213,12 +215,11 @@ export const ConnectToWalletScreen = () => {
           </FxBox>
         )}
       </FxBox>
-      <Web3Modal
+      <WalletConnectModal
         projectId={'94a4ca39db88ee0be8f6df95fdfb560a'}
         providerMetadata={WalletConnectConfigs.providerMetadata}
         sessionParams={{
-          ...WalletConnectConfigs.sessionParams,
-          chainIds: [`eip155:${selectedChainId}`],
+          ...WalletConnectConfigs.sessionParams(selectedChainId),
         }}
         onCopyClipboard={onCopy}
       />

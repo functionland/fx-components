@@ -13,11 +13,11 @@ import { ActivityIndicator, Alert } from 'react-native';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Routes } from '../../navigation/navigationConfig';
 import { useLogger, useRootNavigation } from '../../hooks';
-import { useWeb3Modal } from '@web3modal/react-native';
+import { useWalletConnectModal } from '@walletconnect/modal-react-native';
 
 export const SettingsScreen = () => {
   const [reset] = useUserProfileStore((state) => [state.reset]);
-  const { isConnected, provider } = useWeb3Modal();
+  const { isConnected, provider } = useWalletConnectModal();
   const rootNavigation = useRootNavigation();
   const { logError } = useLogger();
   const handleLogout = () => {

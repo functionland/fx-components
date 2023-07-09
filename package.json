@@ -38,7 +38,7 @@
     "@shopify/restyle": "^2.1.0",
     "@visx/scale": "^2.2.2",
     "@walletconnect/encoding": "^1.0.2",
-    "@web3modal/react-native": "^1.0.0-alpha.8",
+    "@walletconnect/modal-react-native": "^1.0.0-rc.5",
     "axios": "^0.27.2",
     "big-integer": "^1.6.51",
     "expo": "^46.0.0-alpha.2",
