@@ -16,12 +16,12 @@ import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
-import { useWeb3Modal } from '@web3modal/react-native';
+import { useWalletConnectModal } from '@walletconnect/modal-react-native';
 import shallow from 'zustand/shallow';
 import { ethers } from 'ethers';
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const { isConnected, provider } = useWeb3Modal();
+  const { isConnected, provider } = useWalletConnectModal();
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
   const [passwordInput, setInputPasswordInput] = useState('');
@@ -69,9 +69,9 @@ export const LinkPasswordScreen = () => {
   const handleConnectToExistingBlox = () => {
     navigation.navigate(Routes.ConnectToExistingBlox);
   };
-  const handleOnBluetoothCommand=()=>{
+  const handleOnBluetoothCommand = () => {
     navigation.navigate(Routes.BluetoothCommands);
-  }
+  };
 
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">

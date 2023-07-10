@@ -7,14 +7,16 @@ import {
   FxText,
   useToast,
 } from '@functionland/component-library';
-import { getWalletImage } from '../utils/media';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { copyToClipboard } from '../utils/clipboard';
 import { Helper, WalletConnectConfigs } from '../utils';
 import { CopyIcon } from './Icons';
 import { useBloxsStore } from '../stores';
 import shallow from 'zustand/shallow';
-import { Web3Button, Web3Modal, useWeb3Modal } from '@web3modal/react-native';
+import {
+  WalletConnectModal,
+  useWalletConnectModal,
+} from '@walletconnect/modal-react-native';
 
 interface WalletDetailsProps {
   allowChangeWallet?: boolean;
@@ -28,7 +30,7 @@ export const WalletDetails = ({
   showDID,
   showBloxPeerIds = false,
 }: WalletDetailsProps) => {
-  const { isConnected, address } = useWeb3Modal();
+  const { isConnected, address } = useWalletConnectModal();
 
   const [walletId, setWalletId, appPeerId] = useUserProfileStore((state) => [
     state.walletId,
@@ -169,7 +171,7 @@ export const WalletDetails = ({
           </FxBox>
         </>
       )}
-      <Web3Modal
+      <WalletConnectModal
         projectId={'94a4ca39db88ee0be8f6df95fdfb560a'}
         providerMetadata={WalletConnectConfigs.providerMetadata}
       />

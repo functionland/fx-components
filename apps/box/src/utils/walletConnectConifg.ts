@@ -1,4 +1,4 @@
-import { IProviderMetadata } from '@web3modal/react-native';
+import { IProviderMetadata } from '@walletconnect/modal-react-native';
 
 export const providerMetadata: IProviderMetadata = {
   name: 'Blox dApp',
@@ -10,7 +10,7 @@ export const providerMetadata: IProviderMetadata = {
   },
 };
 
-export const sessionParams = {
+export const sessionParams = (chainId: number) => ({
   namespaces: {
     eip155: {
       methods: [
@@ -21,9 +21,9 @@ export const sessionParams = {
         //'eth_signTypedData',
       ],
       //chains: ['eip155:1','eip155:137','eip155:5','eip155:80001'], //['Ethereum Mainnet','polygon','Goerli Testnet','Mumbai Testnet']
-      chains: ['eip155:137'],
+      chains: [`eip155:${chainId}`],
       events: ['chainChanged', 'accountsChanged'],
       rpcMap: {},
     },
   },
-};
+});
