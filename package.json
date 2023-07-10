@@ -41,6 +41,7 @@
     "@walletconnect/modal-react-native": "^1.0.0-rc.5",
     "axios": "^0.27.2",
     "big-integer": "^1.6.51",
+    "ethers": "^6.6.2",
     "expo": "^46.0.0-alpha.2",
     "expo-gl": "^11.4.0",
     "expo-three": "^6.1.0",
