@@ -66,7 +66,6 @@ export type MainTabsParamList = {
   [Routes.DevicesTab]: undefined;
   [Routes.SettingsTab]: NavigatorScreenParams<SettingsStackParamList>;
   [Routes.InitialSetup]: undefined;
-
 };
 
 export type SettingsStackParamList = {
@@ -92,8 +91,8 @@ export type InitialSetupStackParamList = {
   [Routes.ConnectToExistingBlox]: undefined;
   [Routes.ConnectToWifi]: undefined;
   [Routes.CheckConnection]: { ssid: string };
-  [Routes.SetupComplete]: undefined;
-  [Routes.SetBloxAuthorizer]: undefined;
+  [Routes.SetupComplete]: { isManualSetup?: boolean };
+  [Routes.SetBloxAuthorizer]: { isManualSetup?: boolean };
   [Routes.BluetoothCommands]: undefined;
 };
 

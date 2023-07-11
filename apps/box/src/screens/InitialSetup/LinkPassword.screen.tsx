@@ -72,7 +72,9 @@ export const LinkPasswordScreen = () => {
   const handleOnBluetoothCommand = () => {
     navigation.navigate(Routes.BluetoothCommands);
   };
-
+  const handleSkipToManulaSetup = () => {
+    navigation.navigate(Routes.SetBloxAuthorizer, { isManualSetup: true });
+  };
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={40} />
@@ -126,6 +128,13 @@ export const LinkPasswordScreen = () => {
             )}
             <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
               Connect to Blox
+            </FxButton>
+            <FxButton
+              variant="inverted"
+              marginTop="16"
+              onPress={handleSkipToManulaSetup}
+            >
+              Skip to manula setup
             </FxButton>
           </FxBox>
         ) : (
