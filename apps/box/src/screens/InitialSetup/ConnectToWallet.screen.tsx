@@ -117,7 +117,9 @@ export const ConnectToWalletScreen = () => {
   const handleOnBluetoothCommand = () => {
     navigation.navigate(Routes.BluetoothCommands);
   };
-
+  const handleSkipToManulaSetup = () => {
+    navigation.navigate(Routes.SetBloxAuthorizer, { isManualSetup: true });
+  };
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={20} />
@@ -211,6 +213,13 @@ export const ConnectToWalletScreen = () => {
             )}
             <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
               Connect to new blox
+            </FxButton>
+            <FxButton
+              variant="inverted"
+              marginTop="16"
+              onPress={handleSkipToManulaSetup}
+            >
+              Skip to manula setup
             </FxButton>
           </FxBox>
         )}
