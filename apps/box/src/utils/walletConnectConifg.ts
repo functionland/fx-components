@@ -1,5 +1,6 @@
 import { IProviderMetadata } from '@walletconnect/modal-react-native';
 
+export const WaletConnect_Project_Id = '94a4ca39db88ee0be8f6df95fdfb560a';
 export const providerMetadata: IProviderMetadata = {
   name: 'Blox dApp',
   description: 'Blox hardware dApp',

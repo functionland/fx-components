@@ -62,6 +62,7 @@
     "react-native-modal": "*",
     "big-integer": "*",
     "@walletconnect/encoding": "*",
-    "@walletconnect/modal-react-native": "^1.0.0-rc.5"
+    "@walletconnect/modal-react-native": "^1.0.0-rc.5",
+    "ethers": "*"
   }
 }

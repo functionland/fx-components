@@ -225,7 +225,7 @@ export const ConnectToWalletScreen = () => {
         )}
       </FxBox>
       <WalletConnectModal
-        projectId={'94a4ca39db88ee0be8f6df95fdfb560a'}
+        projectId={WalletConnectConfigs.WaletConnect_Project_Id}
         providerMetadata={WalletConnectConfigs.providerMetadata}
         sessionParams={{
           ...WalletConnectConfigs.sessionParams(selectedChainId),
