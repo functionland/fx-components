@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
 import {
   FxBox,
   FxButton,
@@ -172,18 +171,9 @@ export const WalletDetails = ({
         </>
       )}
       <WalletConnectModal
-        projectId={'94a4ca39db88ee0be8f6df95fdfb560a'}
+        projectId={WalletConnectConfigs.WaletConnect_Project_Id}
         providerMetadata={WalletConnectConfigs.providerMetadata}
       />
     </FxBox>
   );
 };
-
-const styles = StyleSheet.create({
-  image: {
-    width: 100,
-    height: 100,
-    resizeMode: 'contain',
-    backgroundColor: 'transparent',
-  },
-});
