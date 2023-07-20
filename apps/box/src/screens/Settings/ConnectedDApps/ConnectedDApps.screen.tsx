@@ -23,6 +23,7 @@ import {
 } from 'apps/box/src/navigation/navigationConfig';
 import { useLogger } from 'apps/box/src/hooks';
 import { Alert, Linking } from 'react-native';
+import { imageMap } from 'apps/box/src/api/connectedDApps';
 
 type Props = NativeStackScreenProps<
   SettingsStackParamList,
