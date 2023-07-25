@@ -3,17 +3,13 @@ import React, { useEffect, useState } from 'react';
 import {
   FxBox,
   FxButton,
-  FxCard,
-  FxCheckIcon,
   FxKeyboardAwareScrollView,
   FxPressableOpacity,
   FxProgressBar,
-  FxRadioButton,
   FxSafeAreaBox,
   FxText,
   FxTextInput,
   FxWarning,
-  FxWarningIcon,
   useToast,
 } from '@functionland/component-library';
 
@@ -23,7 +19,7 @@ import {
   Routes,
 } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { ActivityIndicator, Alert, Share } from 'react-native';
+import { ActivityIndicator, Share } from 'react-native';
 import { Helper } from '../../utils';
 import { exchangeConfig, getBloxProperties } from '../../api/bloxHardware';
 import shallow from 'zustand/shallow';
@@ -96,15 +92,19 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     if (password && signiture) generateAppPeerId();
   }, [password, signiture]);
 
+  useEffect(() => {
+    if (!isManualSetup) {
+      refetch_bloxProperties({ withLoading: true });
+    }
+  }, []);
   //echange config with blox when peerId is ready
   useEffect(() => {
-    if (newPeerId) {
+    if (newPeerId && data_bloxProperties?.data?.ota_version >= 2) {
       if (!isManualSetup) {
         handleExchangeConfig();
-        refetch_bloxProperties();
       }
     }
-  }, [newPeerId]);
+  }, [newPeerId, data_bloxProperties, error_bloxProperties]);
 
   useEffect(() => {
     if (data_bloxProperties?.data?.bloxFreeSpace) {
@@ -146,6 +146,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
           peer_id: newPeerId,
           seed: secretKey.toString(),
         },
+        withLoading: true,
       });
     } catch (error) {
       logger.logError('exchangeConfig', error);
@@ -164,7 +165,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     }
   };
   const goBack = () => navigation.goBack();
-
+  const skipConnectToInternet = () => navigation.navigate(Routes.ConnectToWifi);
   const handleNext = () => {
     if (
       !loading_exchange &&
@@ -234,13 +235,23 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
           <FxText variant="body" textAlign="center" marginBottom="20">
             Adding the Blox App peerId as an owner on the Blox
           </FxText>
-          {error_exchange?.message === 'Network Error' && (
+          {(error_exchange?.message === 'Network Error' ||
+            error_bloxProperties?.message === 'Network Error') && (
             <FxWarning
               padding="16"
               marginBottom="8"
               error="In some cases you need to turn the mobile data off, please make sure the phone is connected to the Blox's Hotspot and mobile data/VPN is off"
             />
           )}
+          {data_bloxProperties &&
+            (!data_bloxProperties?.data?.ota_version ||
+              data_bloxProperties?.data?.ota_version < 2) && (
+              <FxWarning
+                padding="16"
+                marginBottom="8"
+                error="You should upldate your blox backend, Please press 'Skip' button and connect it to your Wifi network."
+              />
+            )}
           {newBloxPeerId &&
             !data_bloxProperties?.data?.bloxFreeSpace &&
             !loading_bloxProperties && (
@@ -336,12 +347,23 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
         left={0}
         paddingHorizontal="20"
         paddingVertical="20"
+        flexDirection="row"
+        justifyContent="space-between"
+        alignItems="center"
       >
+        <FxButton
+          variant="inverted"
+          paddingHorizontal="20"
+          marginRight="12"
+          onPress={skipConnectToInternet}
+        >
+          Skip
+        </FxButton>
         <FxBox
           flexDirection="row"
           justifyContent="flex-end"
           alignItems="center"
-          marginTop="16"
+          //marginTop="16"
         >
           <FxButton
             variant="inverted"
@@ -353,11 +375,16 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
           </FxButton>
           {!newBloxPeerId && !isManualSetup ? (
             <FxButton
-              disabled={loading_exchange}
-              width={150}
+              disabled={
+                loading_exchange ||
+                loading_bloxProperties ||
+                !data_bloxProperties?.data?.ota_version ||
+                data_bloxProperties?.data?.ota_version < 2
+              }
+              width={120}
               onPress={handleSetOwnerPeerId}
             >
-              {!loading_exchange && newPeerId ? (
+              {!loading_exchange && newPeerId && !loading_bloxProperties ? (
                 'Set authorizer'
               ) : (
                 <ActivityIndicator />

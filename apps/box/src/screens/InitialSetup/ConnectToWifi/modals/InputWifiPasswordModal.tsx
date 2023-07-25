@@ -42,7 +42,7 @@ export const InputWifiPasswordModal = React.forwardRef<
         countryCode: RNLocalize.getCountry(),
       });
       logger.log('connectWifi', result);
-      if ((result.data as string)?.includes('Wifi conncted!')) {
+      if ((result.data as string)?.includes('Wifi connected!')) {
         setConnectionStatus(EConnectionStatus.connected);
         _.onConnect?.(_?.ssid);
       } else {
