@@ -16,10 +16,16 @@ import {
 import { FlatList } from 'react-native';
 import { WifiDeviceItem } from './components/WifiDeviceItem';
 import { InputWifiPasswordModal } from './modals/InputWifiPasswordModal';
-import { useInitialSetupNavigation, useFetch } from '../../../hooks';
+import {
+  useInitialSetupNavigation,
+  useFetch,
+  useRootNavigation,
+} from '../../../hooks';
 import { getWifiList } from '../../../api/wifi';
 import { Routes } from '../../../navigation/navigationConfig';
 import BloxWifiDevice from '../../../app/icons/blox-wifi-device.svg';
+import { useUserProfileStore } from '../../../stores/useUserProfileStore';
+import shallow from 'zustand/shallow';
 
 const ItemSeparatorComponent = () => {
   return <FxBox height={1} backgroundColor="backgroundSecondary" />;
@@ -27,12 +33,16 @@ const ItemSeparatorComponent = () => {
 
 export const ConnectToWifiScreen = () => {
   const navigation = useInitialSetupNavigation();
+  const rootNavigation = useRootNavigation();
   const inputWifiPasswordModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [selectedSsid, setSelectedSsid] = useState<string>(null);
   const [connectedSsid, setConnectedSsid] = useState<string>(null);
   const [enabledHiddenNetwork, setEnableHiddenNetwork] =
     React.useState<boolean>(false);
-
+  const [appPeerId] = useUserProfileStore(
+    (state) => [state.appPeerId],
+    shallow
+  );
   const {
     loading,
     error,
@@ -49,7 +59,14 @@ export const ConnectToWifiScreen = () => {
   };
 
   const handleNext = () => {
-    navigation.navigate(Routes.SetupComplete);
+    if (appPeerId) {
+      navigation.navigate(Routes.SetupComplete);
+    } else {
+      rootNavigation.reset({
+        index: 0,
+        routes: [{ name: Routes.InitialSetup }],
+      });
+    }
   };
 
   const handleSelectedWifiDevice = (ssid: string) => {
