@@ -71,13 +71,21 @@ export const ConnectToBloxScreen = () => {
     ) {
       setConnectionStatus(EConnectionStatus.connected);
       return;
+    } else {
+      queueToast({
+        title: 'Not connected!',
+        message:
+          "Unable to reach the blox!, please make sure your phone is connected to Blox's hotspot",
+        type: 'warning',
+        autoHideDuration: 5000,
+      });
     }
-    WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(
-      () => {
-        setConnectionStatus(EConnectionStatus.connected);
-      },
-      () => setConnectionStatus(EConnectionStatus.failed)
-    );
+    // WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(
+    //   () => {
+    //     setConnectionStatus(EConnectionStatus.connected);
+    //   },
+    //   () => setConnectionStatus(EConnectionStatus.failed)
+    // );
   };
 
   const goBack = () => navigation.goBack();
@@ -108,10 +116,22 @@ export const ConnectToBloxScreen = () => {
           <BloxWifiDevice />
         </FxBox>
 
-        <FxBox flex={1}>
-          {connectionStatus != EConnectionStatus.connected ? (
-            <FxText variant="h200" marginTop="24" textAlign="center">
-              Please turn your Blox on and make sure it is on Hotspot mode
+        <FxBox flex={4}>
+          {connectionStatus != EConnectionStatus.connected && (
+            <FxText
+              variant="h200"
+              marginBottom="80"
+              textAlign="center"
+              color="warningBase"
+              //style={{ bottom: 0 }}
+            >
+              {connectionStatusStrings[connectionStatus]}
+            </FxText>
+          )}
+          {connectionStatus !== EConnectionStatus.connected ? (
+            <FxText variant="h200" textAlign="center">
+              Please turn your Blox on and connect your phone to the Blox's
+              hotspot manually
             </FxText>
           ) : (
             <FxText
@@ -124,22 +144,9 @@ export const ConnectToBloxScreen = () => {
             </FxText>
           )}
         </FxBox>
-        <FxBox flex={1}>
-          {connectionStatus != EConnectionStatus.connected && (
-            <FxText
-              variant="h200"
-              marginBottom="80"
-              textAlign="center"
-              color="warningBase"
-              style={{ bottom: 0 }}
-            >
-              {connectionStatusStrings[connectionStatus]}
-            </FxText>
-          )}
-        </FxBox>
       </FxBox>
 
-      <FxBox flex={1} justifyContent="flex-end">
+      <FxBox flex={0} justifyContent="flex-end">
         <FxBox
           flexDirection="row"
           justifyContent="flex-end"
@@ -161,7 +168,7 @@ export const ConnectToBloxScreen = () => {
               disabled={connectionStatus === EConnectionStatus.connecting}
             >
               {connectionStatus != EConnectionStatus.connecting ? (
-                'Connect'
+                'Continue'
               ) : (
                 <ActivityIndicator />
               )}

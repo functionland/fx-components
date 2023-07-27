@@ -42,7 +42,8 @@ export type TBloxProperty = {
   containerInfo_node: DockerContainerInfo;
   hardwareID: string; //"5141290d789694aafce3392b5c17558b289663fc80312b89e6a105c15313c644"
   ota_type?: 'rpi' | 'rk';
-  ota_version?: number;
+  ota_version?: string;
+  restartNeeded?: 'false' | 'true';
 };
 
 export type MDNSBloxService = {

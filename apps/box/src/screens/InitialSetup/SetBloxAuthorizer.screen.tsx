@@ -99,10 +99,12 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   }, []);
   //echange config with blox when peerId is ready
   useEffect(() => {
-    if (newPeerId && data_bloxProperties?.data?.ota_version >= 2) {
-      if (!isManualSetup) {
-        handleExchangeConfig();
-      }
+    if (
+      newPeerId &&
+      data_bloxProperties?.data?.restartNeeded === 'false' &&
+      !isManualSetup
+    ) {
+      handleExchangeConfig();
     }
   }, [newPeerId, data_bloxProperties, error_bloxProperties]);
 
@@ -243,13 +245,17 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
               error="In some cases you need to turn the mobile data off, please make sure the phone is connected to the Blox's Hotspot and mobile data/VPN is off"
             />
           )}
-          {data_bloxProperties &&
-            (!data_bloxProperties?.data?.ota_version ||
-              data_bloxProperties?.data?.ota_version < 2) && (
+          {data_bloxProperties?.data &&
+            (!data_bloxProperties?.data?.restartNeeded ||
+              data_bloxProperties?.data?.restartNeeded === 'true') && (
               <FxWarning
                 padding="16"
                 marginBottom="8"
-                error="You should upldate your blox backend, Please press 'Skip' button and connect it to your Wifi network."
+                error={
+                  data_bloxProperties?.data?.restartNeeded //It is just for backend zero, to check the update needed
+                    ? 'An update is awaiting a manual restart to be applied. you should unplug and plug back your blox to restart it and then try again.'
+                    : "You should upldate your blox backend, Please press 'Skip' button and connect it to your Wifi network."
+                }
               />
             )}
           {newBloxPeerId &&
@@ -351,14 +357,18 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
         justifyContent="space-between"
         alignItems="center"
       >
-        <FxButton
-          variant="inverted"
-          paddingHorizontal="20"
-          marginRight="12"
-          onPress={skipConnectToInternet}
-        >
-          Skip
-        </FxButton>
+        {data_bloxProperties?.data &&
+          (!data_bloxProperties?.data?.restartNeeded ||
+            data_bloxProperties?.data?.restartNeeded === 'true') && (
+            <FxButton
+              variant="inverted"
+              paddingHorizontal="20"
+              marginRight="12"
+              onPress={skipConnectToInternet}
+            >
+              Skip
+            </FxButton>
+          )}
         <FxBox
           flexDirection="row"
           justifyContent="flex-end"
@@ -378,8 +388,8 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
               disabled={
                 loading_exchange ||
                 loading_bloxProperties ||
-                !data_bloxProperties?.data?.ota_version ||
-                data_bloxProperties?.data?.ota_version < 2
+                !data_bloxProperties?.data?.restartNeeded ||
+                data_bloxProperties?.data?.restartNeeded === 'true'
               }
               width={120}
               onPress={handleSetOwnerPeerId}
