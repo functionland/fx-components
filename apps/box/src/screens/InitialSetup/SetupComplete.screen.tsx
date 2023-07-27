@@ -63,7 +63,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   const [currentBloxPeerId, bloxsConnectionStatus, checkBloxConnection] =
     useBloxsStore(
       (state) => [
-        state.currentBloxPeerId,
+        state.currentBloxPeerId, // currentBloxPeerId could be undefined when user skip setAuthorizer step with any reason
         state.bloxsConnectionStatus,
         state.checkBloxConnection,
       ],
@@ -172,10 +172,6 @@ export const SetupCompleteScreen = ({ route }: Props) => {
     }
   };
 
-  const handleBack = () => {
-    navigation.goBack();
-  };
-
   const handleHome = () => {
     rootNavigation.reset({
       index: 0,
@@ -222,34 +218,41 @@ export const SetupCompleteScreen = ({ route }: Props) => {
         <SetupCompleteSvg1 width="100%" />
       </FxBox>
       <FxBox flex={1} alignItems="center" marginTop="8">
-        {(setupStatus === 'CHECKING' || initialWaitForInternet) && (
-          <>
-            <ActivityIndicator size="large" />
-            <FxText variant="bodyLargeRegular" paddingVertical="8">
-              Completing setup
+        {currentBloxPeerId &&
+          (setupStatus === 'CHECKING' || initialWaitForInternet) && (
+            <>
+              <ActivityIndicator size="large" />
+              <FxText variant="bodyLargeRegular" paddingVertical="8">
+                Completing setup
+              </FxText>
+            </>
+          )}
+        {(internetStatus === 'CHECKING' || initialWaitForInternet) &&
+          currentBloxPeerId && (
+            <FxText variant="bodyMediumRegular">
+              Waiting for internet ...
             </FxText>
-          </>
-        )}
-        {(internetStatus === 'CHECKING' || initialWaitForInternet) && (
-          <FxText variant="bodyMediumRegular">Waiting for internet ...</FxText>
-        )}
+          )}
         {internetStatus === 'CONNECTED' &&
           bloxsConnectionStatus[currentBloxPeerId] === 'PENDING' && (
             <FxText variant="bodyMediumRegular">
               Reaching Blox #{bloxReachOutTryCount}...
             </FxText>
           )}
-        {internetStatus === 'NOTCONNECTED' && setupStatus === 'NOTCOMPLETED' && (
-          <FxText
-            variant="bodyMediumRegular"
-            color="warningBase"
-            textAlign="center"
-            paddingHorizontal="16"
-            lineHeight={20}
-          >
-            Make sure your phone is connected to the internet and then try again
-          </FxText>
-        )}
+        {currentBloxPeerId &&
+          internetStatus === 'NOTCONNECTED' &&
+          setupStatus === 'NOTCOMPLETED' && (
+            <FxText
+              variant="bodyMediumRegular"
+              color="warningBase"
+              textAlign="center"
+              paddingHorizontal="16"
+              lineHeight={20}
+            >
+              Make sure your phone is connected to the internet and then try
+              again
+            </FxText>
+          )}
         {bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED' &&
           internetStatus === 'CONNECTED' &&
           setupStatus === 'NOTCOMPLETED' && (
@@ -266,6 +269,18 @@ export const SetupCompleteScreen = ({ route }: Props) => {
               Wi-Fi
             </FxText>
           )}
+        {!currentBloxPeerId && (
+          <FxText
+            variant="bodyMediumRegular"
+            color="warningBase"
+            textAlign="center"
+            paddingHorizontal="16"
+            lineHeight={20}
+          >
+            Your blox is updating, please wait about an hour to update
+            completed!
+          </FxText>
+        )}
       </FxBox>
       <FxBox flex={1} justifyContent="flex-end">
         {setupStatus === 'COMPLETED' && (
@@ -297,29 +312,33 @@ export const SetupCompleteScreen = ({ route }: Props) => {
           </FxButton>
         )}
 
-        {internetStatus === 'NOTCONNECTED' && setupStatus === 'NOTCOMPLETED' && (
-          <FxButton
-            variant="inverted"
-            marginBottom="16"
-            size="large"
-            onPress={handleTryCheckInternet}
-          >
-            Check internet connectivty
-          </FxButton>
-        )}
-        {internetStatus === 'CONNECTED' && setupStatus === 'NOTCOMPLETED' && (
-          <FxButton
-            variant="inverted"
-            marginBottom="16"
-            size="large"
-            onPress={() => {
-              setBloxReachOutTryCount(0);
-              handleTryReachBlox();
-            }}
-          >
-            Try again
-          </FxButton>
-        )}
+        {currentBloxPeerId &&
+          internetStatus === 'NOTCONNECTED' &&
+          setupStatus === 'NOTCOMPLETED' && (
+            <FxButton
+              variant="inverted"
+              marginBottom="16"
+              size="large"
+              onPress={handleTryCheckInternet}
+            >
+              Check internet connectivty
+            </FxButton>
+          )}
+        {currentBloxPeerId &&
+          internetStatus === 'CONNECTED' &&
+          setupStatus === 'NOTCOMPLETED' && (
+            <FxButton
+              variant="inverted"
+              marginBottom="16"
+              size="large"
+              onPress={() => {
+                setBloxReachOutTryCount(0);
+                handleTryReachBlox();
+              }}
+            >
+              Try again
+            </FxButton>
+          )}
         {setupStatus === 'ERROR' && (
           <FxButton
             variant="inverted"
