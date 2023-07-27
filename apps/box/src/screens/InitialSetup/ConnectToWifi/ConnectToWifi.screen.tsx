@@ -59,14 +59,7 @@ export const ConnectToWifiScreen = () => {
   };
 
   const handleNext = () => {
-    if (appPeerId) {
-      navigation.navigate(Routes.SetupComplete);
-    } else {
-      rootNavigation.reset({
-        index: 0,
-        routes: [{ name: Routes.InitialSetup }],
-      });
-    }
+    navigation.navigate(Routes.SetupComplete);
   };
 
   const handleSelectedWifiDevice = (ssid: string) => {

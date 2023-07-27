@@ -20,7 +20,7 @@ import { useBloxsStore } from '../../stores';
 import { NetInfoStateType, fetch } from '@react-native-community/netinfo';
 
 const connectionStatusStrings = {
-  [EConnectionStatus.connecting]: 'Connecting',
+  [EConnectionStatus.connecting]: 'Checking...',
   [EConnectionStatus.connected]: 'Connected',
   [EConnectionStatus.failed]: 'Unable to connect to Hotspot',
   [EConnectionStatus.notConnected]: 'Not Connected',
@@ -52,40 +52,47 @@ export const ConnectToBloxScreen = () => {
     }
   };
   const connectToBox = async () => {
-    if (Platform.OS === 'android' && !(await checkAndroidPermission())) {
-      queueToast({
-        title: 'Permission denied!',
-        message:
-          'The Blox app needs location permission to connect to the WIFI, set it manually!',
-        type: 'warning',
-        autoHideDuration: 5000,
-      });
-      return;
+    try {
+      if (Platform.OS === 'android' && !(await checkAndroidPermission())) {
+        queueToast({
+          title: 'Permission denied!',
+          message:
+            'The Blox app needs location permission to connect to the WIFI, set it manually!',
+          type: 'warning',
+          autoHideDuration: 5000,
+        });
+        return;
+      }
+      setConnectionStatus(EConnectionStatus.connecting);
+      const network = await fetch('wifi');
+      if (
+        network.type === NetInfoStateType.wifi &&
+        network.details.ssid === DEFAULT_NETWORK_NAME &&
+        network.isConnected
+      ) {
+        setConnectionStatus(EConnectionStatus.connected);
+        handleNext();
+        return;
+      } else {
+        setConnectionStatus(EConnectionStatus.notConnected);
+        queueToast({
+          title: 'Not connected!',
+          message:
+            "Unable to reach the blox!, please make sure your phone is connected to Blox's hotspot",
+          type: 'warning',
+          autoHideDuration: 5000,
+        });
+      }
+      // WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(
+      //   () => {
+      //     setConnectionStatus(EConnectionStatus.connected);
+      //   },
+      //   () => setConnectionStatus(EConnectionStatus.failed)
+      // );
+    } catch (error) {
+      console.log('connectToBox', error);
+      setConnectionStatus(EConnectionStatus.notConnected);
     }
-    setConnectionStatus(EConnectionStatus.connecting);
-    const network = await fetch('wifi');
-    if (
-      network.type === NetInfoStateType.wifi &&
-      network.details.ssid === DEFAULT_NETWORK_NAME &&
-      network.isConnected
-    ) {
-      setConnectionStatus(EConnectionStatus.connected);
-      return;
-    } else {
-      queueToast({
-        title: 'Not connected!',
-        message:
-          "Unable to reach the blox!, please make sure your phone is connected to Blox's hotspot",
-        type: 'warning',
-        autoHideDuration: 5000,
-      });
-    }
-    // WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(
-    //   () => {
-    //     setConnectionStatus(EConnectionStatus.connected);
-    //   },
-    //   () => setConnectionStatus(EConnectionStatus.failed)
-    // );
   };
 
   const goBack = () => navigation.goBack();
@@ -117,7 +124,7 @@ export const ConnectToBloxScreen = () => {
         </FxBox>
 
         <FxBox flex={4}>
-          {connectionStatus != EConnectionStatus.connected && (
+          {connectionStatus !== EConnectionStatus.connected && (
             <FxText
               variant="h200"
               marginBottom="80"
@@ -161,7 +168,18 @@ export const ConnectToBloxScreen = () => {
           >
             Back
           </FxButton>
-          {connectionStatus != EConnectionStatus.connected ? (
+          <FxButton
+            width={150}
+            onPress={connectToBox}
+            disabled={connectionStatus === EConnectionStatus.connecting}
+          >
+            {connectionStatus !== EConnectionStatus.connecting ? (
+              'Continue'
+            ) : (
+              <ActivityIndicator />
+            )}
+          </FxButton>
+          {/* {connectionStatus !== EConnectionStatus.connected ? (
             <FxButton
               width={150}
               onPress={connectToBox}
@@ -177,7 +195,7 @@ export const ConnectToBloxScreen = () => {
             <FxButton width={150} onPress={handleNext}>
               Next
             </FxButton>
-          )}
+          )} */}
         </FxBox>
       </FxBox>
     </FxSafeAreaBox>
