@@ -210,7 +210,14 @@ export const SetupCompleteScreen = ({ route }: Props) => {
       );
     }
   };
-
+  const handleBackToHome = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: Routes.InitialSetup }],
+      })
+    );
+  };
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={100} />
@@ -270,16 +277,31 @@ export const SetupCompleteScreen = ({ route }: Props) => {
             </FxText>
           )}
         {!currentBloxPeerId && (
-          <FxText
-            variant="bodyMediumRegular"
-            color="warningBase"
-            textAlign="center"
-            paddingHorizontal="16"
-            lineHeight={20}
-          >
-            Your blox is updating, please wait about an hour to update
-            completed!
-          </FxText>
+          <>
+            <FxText
+              variant="bodyMediumRegular"
+              color="warningBase"
+              textAlign="center"
+              paddingHorizontal="16"
+              lineHeight={20}
+            >
+              Your blox is updating. Please wait for an hour for the update to
+              complete.
+            </FxText>
+            <FxText
+              variant="bodyMediumLight"
+              color="warningBase"
+              textAlign="center"
+              paddingHorizontal="16"
+              paddingVertical="16"
+              lineHeight={20}
+            >
+              Meanwhile, feel free to disconnect your phone from FxBlox hotspot.
+            </FxText>
+            <FxButton marginTop="24" width="80%" onPress={handleBackToHome}>
+              Home Screen
+            </FxButton>
+          </>
         )}
       </FxBox>
       <FxBox flex={1} justifyContent="flex-end">
