@@ -21,7 +21,12 @@ import {
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { ActivityIndicator, Share } from 'react-native';
 import { Helper } from '../../utils';
-import { exchangeConfig, getBloxProperties } from '../../api/bloxHardware';
+import {
+  bloxDeleteFulaConfig,
+  bloxFormatDisk,
+  exchangeConfig,
+  getBloxProperties,
+} from '../../api/bloxHardware';
 import shallow from 'zustand/shallow';
 import { useBloxsStore } from '../../stores';
 import { DeviceCard } from '../../components';
@@ -80,6 +85,19 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     apiMethod: exchangeConfig,
   });
   const {
+    loading: loading_bloxFormatDisk,
+    data: data_bloxFormatDisk,
+    error: error_bloxFormatDisk,
+    refetch: refetch_bloxFormatDisk,
+  } = useFetch({
+    initialLoading: false,
+    apiMethod: bloxFormatDisk,
+  });
+  const { refetch: refetch_bloxDeleteFulaConfig } = useFetch({
+    initialLoading: false,
+    apiMethod: bloxDeleteFulaConfig,
+  });
+  const {
     loading: loading_bloxProperties,
     data: data_bloxProperties,
     error: error_bloxProperties,
@@ -126,19 +144,47 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
 
   useEffect(() => {
     if (data_exchange?.data?.peer_id) {
-      setNewBloxPeerId(data_exchange?.data?.peer_id);
+      const peer_id = data_exchange?.data?.peer_id?.trim()?.split(/\r?\n/)?.[0];
+      if (!peer_id || peer_id?.length !== 52) {
+        queueToast({
+          type: 'error',
+          title: 'Set authotizer',
+          message: 'Blox peerId is invalid!',
+        });
+        refetch_bloxDeleteFulaConfig();
+      } else {
+        setNewBloxPeerId(peer_id);
+      }
     } else if (error_exchange) {
       queueToast({
         type: 'error',
         title: 'Set authotizer',
         message: error_exchange?.message,
       });
+      refetch_bloxDeleteFulaConfig();
     }
     logger.log('handleExchangeConfig:result', {
       data_exchange,
       error_exchange,
     });
   }, [data_exchange, error_exchange]);
+
+  //Handle format disk API Response
+  useEffect(() => {
+    if (data_bloxFormatDisk?.data && !data_bloxFormatDisk?.data?.status) {
+      queueToast({
+        type: 'error',
+        title: 'Format disk',
+        message: data_bloxFormatDisk?.data?.msg,
+      });
+    } else if (error_bloxFormatDisk?.message) {
+      queueToast({
+        type: 'error',
+        title: 'Format disk',
+        message: error_bloxFormatDisk?.message,
+      });
+    }
+  }, [data_bloxFormatDisk, error_bloxFormatDisk]);
 
   const handleExchangeConfig = () => {
     try {
@@ -219,7 +265,9 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       handleExchangeConfig();
     }
   };
-
+  const handleFormatDisk = () => {
+    refetch_bloxFormatDisk({ withLoading: true });
+  };
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={80} />
@@ -341,7 +389,16 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
             }}
             onRefreshPress={refetch_bloxProperties}
             loading={loading_bloxProperties}
-          />
+          >
+            {data_bloxProperties?.data?.bloxFreeSpace?.size === 0 && (
+              <FxButton
+                onPress={loading_bloxFormatDisk ? null : handleFormatDisk}
+              >
+                {loading_bloxFormatDisk ? <ActivityIndicator /> : null}
+                Format Disk
+              </FxButton>
+            )}
+          </DeviceCard>
         )}
       </FxKeyboardAwareScrollView>
 
@@ -373,6 +430,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
           flexDirection="row"
           justifyContent="flex-end"
           alignItems="center"
+          flex={1}
           //marginTop="16"
         >
           <FxButton

@@ -31,6 +31,7 @@ export const DeviceCard = ({
   showEject,
   loading,
   onRefreshPress,
+  children,
   ...rest
 }: DeviceCardProps) => {
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
@@ -95,6 +96,7 @@ export const DeviceCard = ({
           Eject Device
         </FxButton>
       )}
+      {children}
       <FxBottomSheetModal ref={bottomSheetRef} title="Device Bottom Sheet">
         <FxBox
           height={200}
