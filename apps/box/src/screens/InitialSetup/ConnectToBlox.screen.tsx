@@ -136,10 +136,21 @@ export const ConnectToBloxScreen = () => {
             </FxText>
           )}
           {connectionStatus !== EConnectionStatus.connected ? (
-            <FxText variant="h200" textAlign="center">
-              Please turn your Blox on and connect your phone to the Blox's
-              hotspot manually
-            </FxText>
+            <>
+              <FxText variant="h200" textAlign="center">
+                Please turn your Blox on and connect your phone to the Blox's
+                hotspot manually
+              </FxText>
+              <FxText
+                variant="bodyMediumRegular"
+                textAlign="center"
+                color="warningBase"
+                paddingTop="8"
+              >
+                If you don't see FxBlox Wifi or connot connect to it, please
+                restart your Blox
+              </FxText>
+            </>
           ) : (
             <FxText
               variant="h200"
