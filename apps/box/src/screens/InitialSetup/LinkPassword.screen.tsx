@@ -109,6 +109,9 @@ export const LinkPasswordScreen = () => {
 
         {signiture ? (
           <FxBox>
+            <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
+              Connect to Blox
+            </FxButton>
             <FxButton
               size="large"
               variant="inverted"
@@ -126,9 +129,6 @@ export const LinkPasswordScreen = () => {
                 Bluetooth commands
               </FxButton>
             )}
-            <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
-              Connect to Blox
-            </FxButton>
             <FxButton
               variant="inverted"
               marginTop="16"
