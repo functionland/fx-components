@@ -127,7 +127,7 @@ export const ConnectToBloxScreen = () => {
           {connectionStatus !== EConnectionStatus.connected && (
             <FxText
               variant="h200"
-              marginBottom="80"
+              marginBottom="40"
               textAlign="center"
               color="warningBase"
               //style={{ bottom: 0 }}
@@ -139,7 +139,7 @@ export const ConnectToBloxScreen = () => {
             <>
               <FxText variant="h200" textAlign="center">
                 Please turn your Blox on and connect your phone to the Blox's
-                hotspot manually
+                hotspot manually, and turn off mobile data.
               </FxText>
               <FxText
                 variant="bodyMediumRegular"
@@ -148,7 +148,16 @@ export const ConnectToBloxScreen = () => {
                 paddingTop="8"
               >
                 If you don't see FxBlox Wifi or connot connect to it, please
-                restart your Blox
+                restart (plug/unplug) your Blox
+              </FxText>
+              <FxText
+                variant="bodySmallRegular"
+                textAlign="center"
+                color="warningBase"
+                paddingTop="8"
+              >
+                In the first setup, you need to restart (plug/unplug) it 3 times
+                with 1 min interval between each.
               </FxText>
             </>
           ) : (

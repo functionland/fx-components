@@ -194,6 +194,9 @@ export const ConnectToWalletScreen = () => {
           </FxButton>
         ) : (
           <FxBox>
+            <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
+              Connect to new blox
+            </FxButton>
             <FxButton
               size="large"
               variant="inverted"
@@ -211,9 +214,6 @@ export const ConnectToWalletScreen = () => {
                 Bluetooth commands
               </FxButton>
             )}
-            <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
-              Connect to new blox
-            </FxButton>
             <FxButton
               variant="inverted"
               marginTop="16"

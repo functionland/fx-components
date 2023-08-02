@@ -290,7 +290,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
             <FxWarning
               padding="16"
               marginBottom="8"
-              error="In some cases you need to turn the mobile data off, please make sure the phone is connected to the Blox's Hotspot and mobile data/VPN is off"
+              error="In some cases you need to turn the mobile data off, please make sure the phone is connected to the Blox's Hotspot and mobile data/VPN is off, Then press back and try again please"
             />
           )}
           {data_bloxProperties?.data &&
