@@ -5,6 +5,8 @@ import {
   FxBox,
   FxButton,
   FxProgressBar,
+  FxRadioButton,
+  FxRadioButtonWithLabel,
   FxSafeAreaBox,
   FxText,
   FxTextInput,
@@ -22,6 +24,7 @@ import { ethers } from 'ethers';
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
   const { isConnected, provider } = useWalletConnectModal();
+  const [iKnow, setIKnow] = useState(false);
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
   const [passwordInput, setInputPasswordInput] = useState('');
@@ -104,12 +107,39 @@ export const LinkPasswordScreen = () => {
             ) : (
               <ActivityIndicator />
             )}
+            <FxBox>
+              <FxText
+                variant="bodyMediumRegular"
+                color="warningBase"
+                textAlign="center"
+                paddingBottom="20"
+              >
+                Make sure to safeguard this password and the chain you used,
+                it's the key to decrypt your data from new devices
+              </FxText>
+              <FxRadioButton.Group
+                value={iKnow ? [1] : []}
+                onValueChange={(val) =>
+                  setIKnow(val && val[0] === 1 ? true : false)
+                }
+              >
+                <FxRadioButtonWithLabel
+                  paddingVertical="8"
+                  label="I understand the risk of losing my password"
+                  value={1}
+                />
+              </FxRadioButton.Group>
+            </FxBox>
           </>
         )}
 
         {signiture ? (
           <FxBox>
-            <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
+            <FxButton
+              size="large"
+              marginBottom="16"
+              onPress={handleConnectToBlox}
+            >
               Connect to Blox
             </FxButton>
             <FxButton
@@ -140,7 +170,7 @@ export const LinkPasswordScreen = () => {
         ) : (
           <FxButton
             size="large"
-            disabled={!passwordInput}
+            disabled={!passwordInput || !iKnow}
             onPress={provider ? handleLinkPassword : null}
           >
             {provider && isConnected ? (
