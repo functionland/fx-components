@@ -1,4 +1,10 @@
-import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import Carousel, { ICarouselInstance } from 'react-native-reanimated-carousel';
 import {
   FxBox,
@@ -20,12 +26,12 @@ import { CircleFilledIcon } from 'apps/box/src/components';
 import shallow from 'zustand/shallow';
 
 type TBloxInteractionProps = {
-  bloxs: TBloxInteraction[],
+  bloxs: TBloxInteraction[];
   selectedMode: EBloxInteractionType;
   setSelectedMode?: Dispatch<SetStateAction<EBloxInteractionType>>;
-  onConnectionPress?: () => void
-  onBloxChange?: (index: number) => void
-  onBloxPress?: (peerId: string) => void
+  onConnectionPress?: () => void;
+  onBloxChange?: (index: number) => void;
+  onBloxPress?: (peerId: string) => void;
 };
 
 export const BloxInteraction = ({
@@ -34,18 +40,19 @@ export const BloxInteraction = ({
   setSelectedMode,
   onConnectionPress,
   onBloxChange,
-  onBloxPress
+  onBloxPress,
 }: TBloxInteractionProps) => {
   const carouselRef = useRef<ICarouselInstance>(null);
   const { colorScheme } = useSettingsStore((store) => ({
     colorScheme: store.colorScheme,
   }));
   const { colors } = useFxTheme();
-  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const [bloxsConnectionStatus] = useBloxsStore((state) => [
-    state.bloxsConnectionStatus,
-  ], shallow);
+  const [bloxsConnectionStatus] = useBloxsStore(
+    (state) => [state.bloxsConnectionStatus],
+    shallow
+  );
 
   // useEffect(() => {
   //   if (fulaIsReady && currentBloxPeerId) {
@@ -68,9 +75,9 @@ export const BloxInteraction = ({
     carouselRef?.current?.next();
   };
   const onSnapToItem = (index: number) => {
-    setSelectedIndex(index)
-    onBloxChange?.(index)
-  }
+    setSelectedIndex(index);
+    onBloxChange?.(index);
+  };
   return (
     <FxBox position="relative">
       <Carousel
@@ -84,9 +91,17 @@ export const BloxInteraction = ({
         }}
         data={bloxs}
         renderItem={({ item }) => {
-          const Icon = colorScheme === 'dark' ? item.darkIcon || OfficeBloxUnitDark : item.lightIcon || OfficeBloxUnitLight;
+          const Icon =
+            colorScheme === 'dark'
+              ? item.darkIcon || OfficeBloxUnitDark
+              : item.lightIcon || OfficeBloxUnitLight;
           return (
-            <FxPressableOpacity onPress={() => onBloxPress?.(item.peerId)} height="100%" flexDirection="column" alignItems="center" >
+            <FxPressableOpacity
+              onPress={() => onBloxPress?.(item.peerId)}
+              height="100%"
+              flexDirection="column"
+              alignItems="center"
+            >
               <Icon />
               <FxText variant="bodyLargeRegular" marginTop="12">
                 {item.title}
@@ -94,24 +109,30 @@ export const BloxInteraction = ({
               <FxPressableOpacity
                 flexDirection="row"
                 alignItems="center"
-                paddingVertical='4'
+                paddingVertical="4"
                 onPress={onConnectionPress}
               >
                 <CircleFilledIcon
                   color={
-                    bloxsConnectionStatus[item.peerId] === 'CONNECTED' ? 'successBase' :
-                      (bloxsConnectionStatus[item.peerId] === 'PENDING' ? 'warningBase' : 'errorBase')
+                    bloxsConnectionStatus[item.peerId] === 'CONNECTED'
+                      ? 'successBase'
+                      : bloxsConnectionStatus[item.peerId] === 'PENDING'
+                      ? 'warningBase'
+                      : 'errorBase'
                   }
                 />
                 <FxText
-                  paddingStart='4'
+                  paddingStart="4"
                   color={
-                    bloxsConnectionStatus[item.peerId] === 'CONNECTED' ? 'successBase' :
-                      (bloxsConnectionStatus[item.peerId] === 'PENDING' ? 'warningBase' : 'errorBase')
+                    bloxsConnectionStatus[item.peerId] === 'CONNECTED'
+                      ? 'successBase'
+                      : bloxsConnectionStatus[item.peerId] === 'PENDING'
+                      ? 'warningBase'
+                      : 'errorBase'
                   }
                 >
-                  {bloxsConnectionStatus[item.peerId]?.toString() || 'UNCECKED '}
-
+                  {bloxsConnectionStatus[item.peerId]?.toString() ||
+                    'UNCECKED '}
                 </FxText>
                 <FxChevronDownIcon
                   width={16}
@@ -120,13 +141,6 @@ export const BloxInteraction = ({
                   fill={colors.content1}
                 />
               </FxPressableOpacity>
-
-              <FxBox marginTop='12'>
-
-                <FxText>
-
-                </FxText>
-              </FxBox>
             </FxPressableOpacity>
           );
         }}

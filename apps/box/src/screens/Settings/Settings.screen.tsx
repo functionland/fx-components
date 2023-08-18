@@ -30,13 +30,13 @@ export const SettingsScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              if (provider.close) {
+              if (provider) {
                 // If the cached provider is not cleared,
                 // WalletConnect will default to the existing session
                 // and does not allow to re-scan the QR code with a new wallet.
                 // Depending on your use case you may want or want not his behavir.
                 await provider.disconnect();
-                await provider.close();
+                await provider.cleanupPendingPairings();
                 reset();
                 rootNavigation.reset({
                   index: 0,
@@ -62,6 +62,7 @@ export const SettingsScreen = () => {
         <SettingsMenu />
         <FxHorizontalRule marginVertical="16" />
         <FxButton
+          disabled={!(provider && isConnected)}
           size={'large'}
           onPress={provider && isConnected ? handleLogout : null}
         >

@@ -30,12 +30,7 @@ export const WalletDetails = ({
   showBloxPeerIds = false,
 }: WalletDetailsProps) => {
   const { isConnected, address } = useWalletConnectModal();
-
-  const [walletId, setWalletId, appPeerId] = useUserProfileStore((state) => [
-    state.walletId,
-    state.setWalletId,
-    state.appPeerId,
-  ]);
+  const appPeerId = useUserProfileStore((state) => state.appPeerId);
   const [bloxs = {}] = useBloxsStore((state) => [state.bloxs], shallow);
   const bloxsArray = Object.values(bloxs);
   const { queueToast } = useToast();
