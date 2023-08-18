@@ -49,8 +49,7 @@ export const BloxScreen = () => {
   const [resetingBloxHotspot, setResetingBloxHotspot] = useState(false);
   const [rebootingBlox, setRebootingBlox] = useState(false);
   const [loadingBloxSpace, setLoadingBloxSpace] = useState(false);
-  const [divisionPercentage, setDivisionPercentage] =
-    useState<number>(DEFAULT_DIVISION);
+
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
     EBloxInteractionType.OfficeBloxUnit
   );
@@ -128,10 +127,6 @@ export const BloxScreen = () => {
   const handleSelectMode = (mode: EBloxInteractionType) => {
     setSelectedMode(mode);
     bloxInteractionModalRef.current.close();
-  };
-
-  const handleUpdateDivisionPercentage = (percentage: number) => {
-    setDivisionPercentage(percentage);
   };
 
   const showProfileModal = () => {
@@ -256,7 +251,7 @@ export const BloxScreen = () => {
           text: 'Yes',
           onPress: async () => {
             try {
-              setRebootingBlox(true)
+              setRebootingBlox(true);
               const result = await fxblox.reboot();
               if (result.status) {
                 bloxInfoBottomSheetRef.current.close();
@@ -277,8 +272,8 @@ export const BloxScreen = () => {
                 type: 'error',
                 title: error,
               });
-            }finally{
-              setRebootingBlox(false)
+            } finally {
+              setRebootingBlox(false);
             }
           },
           style: 'destructive',
