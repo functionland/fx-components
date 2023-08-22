@@ -319,7 +319,7 @@ PODS:
     - react-native-config/App (= 1.4.6)
   - react-native-config/App (1.4.6):
     - React-Core
-  - react-native-fula (1.9.0):
+  - react-native-fula (1.14.2):
     - Mobile (~> 0.0.3)
     - React-Core
   - react-native-get-random-values (1.9.0):
@@ -747,7 +747,7 @@ SPEC CHECKSUMS:
   React-logger: ca970551cb7eea2fd814d0d5f6fc1a471eb53b76
   react-native-ble-manager: 5e5b0d83782b7a8a5c64fd00f24e4b8e2b3a284d
   react-native-config: 7cd105e71d903104e8919261480858940a6b9c0e
-  react-native-fula: 5fd5672e74c80e434eecdd0dc6ba1f626cd77c56
+  react-native-fula: f5df65aaf01fc035b204ab1e7fdcc7fa09ef46db
   react-native-get-random-values: dee677497c6a740b71e5612e8dbd83e7539ed5bb
   react-native-netinfo: 2517ad504b3d303e90d7a431b0fcaef76d207983
   react-native-pager-view: 54bed894cecebe28cede54c01038d9d1e122de43
@@ -784,6 +784,6 @@ SPEC CHECKSUMS:
   RNWifi: 94c5dd913df64acbd5024f051552ffdd1681642d
   Yoga: 7ab6e3ee4ce47d7b789d1cb520163833e515f452
 
-PODFILE CHECKSUM: 9c153716b97bc7812419e6e210d148f995ae6f34
+PODFILE CHECKSUM: 94d313e83d826207241814eb02c7e1e74882602b
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.12.1
