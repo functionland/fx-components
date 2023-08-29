@@ -26,7 +26,7 @@ import {
 } from '../../icons/icons';
 import BaseToast from './BaseToast';
 import { FxReanimatedBox } from '../../box/box';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { PanGestureHandler, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 interface GestureContext {
   startY?: number;
@@ -195,14 +195,16 @@ const ToasterInternal: React.FC = () => {
   };
 
   return (
-    <PanGestureHandler onGestureEvent={gestureHandler}>
-      <FxReanimatedBox
-        onLayout={onLayout}
-        style={[s.toastBox, reanimatedStyle]}
-      >
-        {renderContent()}
-      </FxReanimatedBox>
-    </PanGestureHandler>
+    <GestureHandlerRootView>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <FxReanimatedBox
+          onLayout={onLayout}
+          style={[s.toastBox, reanimatedStyle]}
+        >
+          {renderContent()}
+        </FxReanimatedBox>
+      </PanGestureHandler>
+    </GestureHandlerRootView>
   );
 };
 

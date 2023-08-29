@@ -9,6 +9,7 @@ import {
 import { Logo } from './Icons';
 import {
   PanGestureHandler,
+  GestureHandlerRootView,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import { clamp, withBouncing } from 'react-native-redash';
@@ -132,11 +133,13 @@ export const AnimatedLogo = () => {
         boundsY.value = { low: yBounds[0], high: yBounds[1] };
       }}
     >
-      <PanGestureHandler onGestureEvent={onGestureEvent}>
-        <FxReanimatedBox style={panStyle}>
-          <Logo color="greenBase" />
-        </FxReanimatedBox>
-      </PanGestureHandler>
+      <GestureHandlerRootView>
+        <PanGestureHandler onGestureEvent={onGestureEvent}>
+          <FxReanimatedBox style={panStyle}>
+            <Logo color="greenBase" />
+          </FxReanimatedBox>
+        </PanGestureHandler>
+      </GestureHandlerRootView>
     </FxBox>
   );
 };

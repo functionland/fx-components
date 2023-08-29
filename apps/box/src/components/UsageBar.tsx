@@ -7,6 +7,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import {
   PanGestureHandler,
+  GestureHandlerRootView,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import {
@@ -170,16 +171,18 @@ export const UsageBar = ({
       }}
     >
       {isEditable && (
-        <PanGestureHandler onGestureEvent={onGestureEvent}>
-          <FxReanimatedBox
-            zIndex="foreground"
-            position="absolute"
-            alignItems="center"
-            width={TOUCHABLE_WIDTH}
-            height={TOUCHABLE_HEIGHT}
-            style={[panStyle, { marginTop: HEIGHT - TOUCHABLE_HEIGHT }]}
-          />
-        </PanGestureHandler>
+        <GestureHandlerRootView>
+          <PanGestureHandler onGestureEvent={onGestureEvent}>
+            <FxReanimatedBox
+              zIndex="foreground"
+              position="absolute"
+              alignItems="center"
+              width={TOUCHABLE_WIDTH}
+              height={TOUCHABLE_HEIGHT}
+              style={[panStyle, { marginTop: HEIGHT - TOUCHABLE_HEIGHT }]}
+            />
+          </PanGestureHandler>
+        </GestureHandlerRootView>
       )}
       <FxReanimatedBox
         style={poolUsageStyle}

@@ -6,6 +6,7 @@ import { FxBox, FxReanimatedBox } from '../box/box';
 import { StyleSheet, ViewProps, ViewStyle } from 'react-native';
 import {
   PanGestureHandler,
+  GestureHandlerRootView,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import {
@@ -141,20 +142,22 @@ const FxSlider = ({
       {...rest}
     >
       <Track style={trackStyle} />
-      <PanGestureHandler onGestureEvent={onGestureEvent}>
-        <FxReanimatedBox position="absolute" style={positionerStyle}>
-          <Label
-            style={[labelStyle, styles.label]}
-            onLayout={(e) => {
-              const layout = e.nativeEvent.layout;
-              labelWidth.value = layout.width;
-            }}
-            value={value}
-            label={label}
-          />
-          <Thumb />
-        </FxReanimatedBox>
-      </PanGestureHandler>
+      <GestureHandlerRootView>
+        <PanGestureHandler onGestureEvent={onGestureEvent}>
+          <FxReanimatedBox position="absolute" style={positionerStyle}>
+            <Label
+              style={[labelStyle, styles.label]}
+              onLayout={(e) => {
+                const layout = e.nativeEvent.layout;
+                labelWidth.value = layout.width;
+              }}
+              value={value}
+              label={label}
+            />
+            <Thumb />
+          </FxReanimatedBox>
+        </PanGestureHandler>
+      </GestureHandlerRootView>
     </FxBox>
   );
 };
