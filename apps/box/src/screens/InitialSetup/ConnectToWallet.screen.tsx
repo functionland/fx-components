@@ -82,7 +82,9 @@ export const ConnectToWalletScreen = () => {
   const handleWalletConnect = async () => {
     try {
       if (provider) {
-        //sawait provider.cleanupPendingPairings()
+        provider.setDefaultChain(`eip155:${selectedChainId}`);
+        provider.abortPairingAttempt();
+        //await provider.cleanupPendingPairings();
       }
       open();
       // if (walletConnect.connected) await walletConnect.killSession();

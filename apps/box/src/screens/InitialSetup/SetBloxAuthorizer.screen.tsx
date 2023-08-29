@@ -444,6 +444,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
           {!newBloxPeerId && !isManualSetup ? (
             <FxButton
               disabled={
+                !newPeerId ||
                 loading_exchange ||
                 loading_bloxProperties ||
                 !data_bloxProperties?.data?.restartNeeded ||
@@ -452,7 +453,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
               width={120}
               onPress={handleSetOwnerPeerId}
             >
-              {!loading_exchange && newPeerId && !loading_bloxProperties ? (
+              {!loading_exchange && !loading_bloxProperties ? (
                 'Set authorizer'
               ) : (
                 <ActivityIndicator />

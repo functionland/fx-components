@@ -16,9 +16,12 @@ import { useInitialSetupNavigation, useLogger } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { KeyChain } from '../../utils';
+import { KeyChain, WalletConnectConfigs } from '../../utils';
 import { ActivityIndicator } from 'react-native';
-import { useWalletConnectModal } from '@walletconnect/modal-react-native';
+import {
+  WalletConnectModal,
+  useWalletConnectModal,
+} from '@walletconnect/modal-react-native';
 import shallow from 'zustand/shallow';
 import { ethers } from 'ethers';
 export const LinkPasswordScreen = () => {
@@ -46,10 +49,13 @@ export const LinkPasswordScreen = () => {
       setLinking(true);
       const ed = new HDKEY(passwordInput);
       const chainCode = ed.chainCode;
+      provider.abortPairingAttempt();
+      await provider.cleanupPendingPairings();
       const walletSignature = await helper.signMessage({
         message: chainCode,
         web3Provider,
       });
+      console.log('walletSignature', walletSignature);
       await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
       await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
     } catch (err) {
