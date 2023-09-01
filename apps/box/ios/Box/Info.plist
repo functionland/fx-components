@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>To find the nearby Blox hardwares by bluetooth the app needs to access to the bluetooth</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
