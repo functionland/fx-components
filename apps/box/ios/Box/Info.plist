@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>To find the nearby Blox hardwares by bluetooth the app needs to access to the bluetooth</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
@@ -37,6 +39,11 @@
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<true/>
 			</dict>
+			<key>10.42.0.1</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
 		</dict>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -48,6 +55,14 @@
 		<string>OpenSans-Light.ttf</string>
 		<string>OpenSans-Regular.ttf</string>
 		<string>OpenSans-SemiBold.ttf</string>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+	<string>metamask</string>
+	<string>trust</string>
+	<string>safe</string>
+	<string>rainbow</string>
+	<string>uniswap</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

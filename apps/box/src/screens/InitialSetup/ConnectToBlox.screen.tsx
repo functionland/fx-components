@@ -7,16 +7,12 @@ import {
   FxSafeAreaBox,
   useToast,
 } from '@functionland/component-library';
-import WifiManager from 'react-native-wifi-reborn';
 import { DEFAULT_NETWORK_NAME } from '../../hooks/useIsConnectedToBox';
-import { useIsConnectedToBox } from '../../hooks/useIsConnectedToBox';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { EConnectionStatus } from '../../models';
 import BloxWifiDevice from '../../app/icons/blox-wifi-device.svg';
 import { ActivityIndicator, PermissionsAndroid, Platform } from 'react-native';
-import shallow from 'zustand/shallow';
-import { useBloxsStore } from '../../stores';
 import { NetInfoStateType, fetch } from '@react-native-community/netinfo';
 
 const connectionStatusStrings = {
@@ -61,6 +57,9 @@ export const ConnectToBloxScreen = () => {
           type: 'warning',
           autoHideDuration: 5000,
         });
+        return;
+      } else if (Platform.OS === 'ios') {
+        handleNext();
         return;
       }
       setConnectionStatus(EConnectionStatus.connecting);

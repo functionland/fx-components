@@ -37,21 +37,21 @@ export const initFula = async ({
 }) => {
   if (password && signiture) {
     // Use FxRelay if bloxAddr is null or empty if bloxPeerId is null
-    let bloxAddress = bloxAddr
+    const bloxAddress = bloxAddr
       ? bloxAddr
       : bloxPeerId
       ? `${Constants.FXRelay}/p2p/${bloxPeerId}`.trim()
       : '';
     const keyPair = getMyDIDKeyPair(password, signiture);
     try {
-      console.log('initFula helper.ts', { bloxAddress, bloxPeerId });
+      console.log('initFula helper.ts', { bloxAddress, bloxPeerId, keyPair });
       //if (await fula.isReady())
       await fula.shutdown();
       const peerId = await fula.newClient(
         keyPair.secretKey.toString(), //bytes of the privateKey of did identity in string format
         ``, // leave empty to use the default temp one
         bloxAddress,
-        bloxAddress ? bloxAddress : 'noop', //leave empty for testing without a backend node
+        bloxAddress ? '' : 'noop', //leave empty for testing without a backend node
         true,
         true,
         true

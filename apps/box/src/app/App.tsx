@@ -4,21 +4,28 @@ import {
   fxLightTheme,
   fxDarkTheme,
   ToastProvider,
-  FxBox,
   FxText,
   FxPressableOpacity,
 } from '@functionland/component-library';
 import { RootNavigator } from '../navigation/Root.navigator';
 import { NavContainer } from '../navigation/NavContainer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { AppState, Platform, Share, StatusBar, StyleSheet, UIManager } from 'react-native';
+import {
+  AppState,
+  Platform,
+  Share,
+  StatusBar,
+  StyleSheet,
+  UIManager,
+} from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSettingsStore } from '../stores';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { firebase } from '@react-native-firebase/crashlytics';
-import moment from 'moment';
 import { useLogger } from '../hooks';
+import { WalletConnectModal } from '@walletconnect/modal-react-native';
+import { WalletConnectConfigs } from '../utils';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -47,51 +54,57 @@ export const App = () => {
   }, [loadAllCredentials]);
   return (
     <ThemeProvider theme={theme}>
-        <ToastProvider>
-          <GestureHandlerRootView style={styles.flex1}>
-            <StatusBar
-              backgroundColor={theme.colors.backgroundApp}
-              barStyle={barStyles[mode]}
-            />
-            <SafeAreaProvider>
-              <BottomSheetModalProvider>
-                <AppContent />
-              </BottomSheetModalProvider>
-            </SafeAreaProvider>
-          </GestureHandlerRootView>
-        </ToastProvider>
+      <ToastProvider>
+        <GestureHandlerRootView style={styles.flex1}>
+          <StatusBar
+            backgroundColor={theme.colors.backgroundApp}
+            barStyle={barStyles[mode]}
+          />
+          <SafeAreaProvider>
+            <BottomSheetModalProvider>
+              <AppContent />
+            </BottomSheetModalProvider>
+          </SafeAreaProvider>
+        </GestureHandlerRootView>
+      </ToastProvider>
     </ThemeProvider>
   );
 };
 const AppContent = () => {
   const appState = useRef(AppState.currentState);
-  const [debugMode] = useSettingsStore((state) => [
-    state.debugMode,
-  ]);
-  const { isDebugModeEnable } = useLogger()
+  const [debugMode] = useSettingsStore((state) => [state.debugMode]);
+  const { isDebugModeEnable } = useLogger();
   useEffect(() => {
     if (!__DEV__) {
-      console.log = () => null
+      console.log = () => null;
       //console.error = () => null
     }
-  }, [])
+  }, []);
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', nextAppState => {
-      console.log('AppState.addEventListener', isDebugModeEnable, nextAppState, appState.current)
-      if (
-        !nextAppState.match(/active/)
-      ) {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      console.log(
+        'AppState.addEventListener',
+        isDebugModeEnable,
+        nextAppState,
+        appState.current
+      );
+      if (!nextAppState.match(/active/)) {
         console.log('App has come to the inactive/background!', debugMode);
         if (!__DEV__ && isDebugModeEnable) {
-          firebase.crashlytics().setUserId(debugMode.uniqueId)
-          firebase.crashlytics().recordError(new Error('On App Close Error Log'), "Self Generated Error")
+          firebase.crashlytics().setUserId(debugMode.uniqueId);
+          firebase
+            .crashlytics()
+            .recordError(
+              new Error('On App Close Error Log'),
+              'Self Generated Error'
+            );
         }
       }
       appState.current = nextAppState;
     });
 
     return () => {
-      console.log('subscription.remove();')
+      console.log('subscription.remove();');
       subscription.remove();
     };
     // return () => {
@@ -99,22 +112,36 @@ const AppContent = () => {
     //     firebase.crashlytics().recordError(new Error('On App Close Error Log'))
     //   }
     // }
-  }, [isDebugModeEnable])
+  }, [isDebugModeEnable]);
   const shareUniqueId = () => {
-    Share.share({
-      message: debugMode.uniqueId
-    }, {
-      dialogTitle: 'Share your debug Id'
-    })
-  }
+    Share.share(
+      {
+        message: debugMode.uniqueId,
+      },
+      {
+        dialogTitle: 'Share your debug Id',
+      }
+    );
+  };
   return (
     <NavContainer>
-      {isDebugModeEnable &&
-        <FxPressableOpacity onPress={shareUniqueId} alignItems='center' backgroundColor='backgroundSecondary'>
-          <FxText textAlign='center' color='warningBase'>Debug mode is enable {debugMode.uniqueId}</FxText>
-        </FxPressableOpacity>}
+      {isDebugModeEnable && (
+        <FxPressableOpacity
+          onPress={shareUniqueId}
+          alignItems="center"
+          backgroundColor="backgroundSecondary"
+        >
+          <FxText textAlign="center" color="warningBase">
+            Debug mode is enable {debugMode.uniqueId}
+          </FxText>
+        </FxPressableOpacity>
+      )}
       <RootNavigator />
-    </NavContainer >
+      <WalletConnectModal
+        projectId={WalletConnectConfigs.WaletConnect_Project_Id}
+        providerMetadata={WalletConnectConfigs.providerMetadata}
+      />
+    </NavContainer>
   );
 };
 
@@ -125,4 +152,3 @@ const styles = StyleSheet.create({
 });
 
 export default App;
-

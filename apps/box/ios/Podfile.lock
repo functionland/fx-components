@@ -320,7 +320,7 @@ PODS:
     - react-native-config/App (= 1.4.6)
   - react-native-config/App (1.4.6):
     - React-Core
-  - react-native-fula (1.14.4):
+  - react-native-fula (1.14.5):
     - CryptoSwift (~> 1.7.1)
     - Fula (~> 1.0.0)
     - React-Core
@@ -757,7 +757,7 @@ SPEC CHECKSUMS:
   React-logger: ca970551cb7eea2fd814d0d5f6fc1a471eb53b76
   react-native-ble-manager: 5e5b0d83782b7a8a5c64fd00f24e4b8e2b3a284d
   react-native-config: 7cd105e71d903104e8919261480858940a6b9c0e
-  react-native-fula: 2c06d9f4e6fb823b222b42082bb6e8bfb1443ee5
+  react-native-fula: 1b1b81609166e2e5ad7a287382709adc8cd52963
   react-native-get-random-values: dee677497c6a740b71e5612e8dbd83e7539ed5bb
   react-native-netinfo: 2517ad504b3d303e90d7a431b0fcaef76d207983
   react-native-pager-view: 54bed894cecebe28cede54c01038d9d1e122de43
@@ -796,6 +796,6 @@ SPEC CHECKSUMS:
   WnfsBindings: 10742440a02c258dd9c065d8f29f24e7029955c3
   Yoga: 7ab6e3ee4ce47d7b789d1cb520163833e515f452
 
-PODFILE CHECKSUM: 94d313e83d826207241814eb02c7e1e74882602b
+PODFILE CHECKSUM: 5e47cd353603a21567dce0ab93e00ad978d6c326
 
 COCOAPODS: 1.12.1
