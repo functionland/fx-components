@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 import {
   FxBox,
   FxButton,
@@ -39,16 +39,21 @@ export const ConnectToWalletScreen = () => {
     ],
     shallow
   );
+  const sessionParams = useMemo(
+    () => WalletConnectConfigs.sessionParams(selectedChainId),
+    [selectedChainId]
+  );
   const logger = useLogger();
   useEffect(() => {
     console.log('isConnected', isConnected);
-    checkChainId();
+    if (isConnected) checkChainId();
   }, [isConnected, provider, address]);
   const checkChainId = async () => {
     if (!isConnected || !provider || !address) return;
     const ethersProvider = new ethers.providers.Web3Provider(provider);
     const network = await ethersProvider.getNetwork();
     const chainId = network.chainId;
+    setSelectedChainId(chainId);
     console.log('Connected chainId:', chainId);
     switch (chainId) {
       case 1:
@@ -229,9 +234,7 @@ export const ConnectToWalletScreen = () => {
       <WalletConnectModal
         projectId={WalletConnectConfigs.WaletConnect_Project_Id}
         providerMetadata={WalletConnectConfigs.providerMetadata}
-        sessionParams={{
-          ...WalletConnectConfigs.sessionParams(selectedChainId),
-        }}
+        sessionParams={sessionParams}
         onCopyClipboard={onCopy}
       />
     </FxSafeAreaBox>
