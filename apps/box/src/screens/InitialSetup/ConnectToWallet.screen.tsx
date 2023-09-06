@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import {
   FxBox,
@@ -13,16 +13,12 @@ import {
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { Helper, WalletConnectConfigs } from '../../utils';
+import { Helper } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
 import shallow from 'zustand/shallow';
 import { useLogger } from '../../hooks';
-import {
-  WalletConnectModal,
-  useWalletConnectModal,
-} from '@walletconnect/modal-react-native';
+import { useWalletConnectModal } from '@walletconnect/modal-react-native';
 import { ethers } from 'ethers';
-import { copyToClipboard } from '../../utils/clipboard';
 
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
@@ -39,10 +35,7 @@ export const ConnectToWalletScreen = () => {
     ],
     shallow
   );
-  const sessionParams = useMemo(
-    () => WalletConnectConfigs.sessionParams(selectedChainId),
-    [selectedChainId]
-  );
+
   const logger = useLogger();
   useEffect(() => {
     console.log('isConnected', isConnected);
@@ -87,11 +80,12 @@ export const ConnectToWalletScreen = () => {
   const handleWalletConnect = async () => {
     try {
       if (provider) {
-        provider.setDefaultChain(`eip155:${selectedChainId}`);
-        provider.abortPairingAttempt();
+        // provider.setDefaultChain(`eip155:${selectedChainId}`);
+        //provider.abortPairingAttempt();
+        //await provider.client.disconnect;
         //await provider.cleanupPendingPairings();
       }
-      open();
+      open({ route: 'ConnectWallet' });
       // if (walletConnect.connected) await walletConnect.killSession();
       // const wallet = await walletConnect.connect({
       //   chainId: selectedChainId,
@@ -107,7 +101,10 @@ export const ConnectToWalletScreen = () => {
       });
     }
   };
-
+  const disconnectWallet = async () => {
+    await provider?.disconnect();
+    await open({ route: 'ConnectWallet' });
+  };
   const handleLinkPassword = () => {
     navigation.navigate(Routes.LinkPassword);
   };
@@ -118,9 +115,7 @@ export const ConnectToWalletScreen = () => {
   const handleConnectToExistingBlox = () => {
     navigation.navigate(Routes.ConnectToExistingBlox);
   };
-  const onCopy = (value: string) => {
-    copyToClipboard(value);
-  };
+
   const handleOnBluetoothCommand = () => {
     navigation.navigate(Routes.BluetoothCommands);
   };
@@ -187,56 +182,65 @@ export const ConnectToWalletScreen = () => {
             </FxBox>
           </>
         )}
-
-        {!isConnected ? (
-          <FxButton
-            size="large"
-            onPress={provider ? handleWalletConnect : null}
-          >
-            {provider ? 'Connect to Wallet' : <ActivityIndicator />}
-          </FxButton>
-        ) : !signiture ? (
-          <FxButton size="large" onPress={handleLinkPassword}>
-            {provider ? 'Link Passwordt' : <ActivityIndicator />}
-          </FxButton>
-        ) : (
-          <FxBox>
-            <FxButton size="large" marginTop="16" onPress={handleConnectToBlox}>
-              Connect to new blox
-            </FxButton>
+        <FxBox>
+          {!isConnected ? (
             <FxButton
               size="large"
-              variant="inverted"
-              onPress={handleConnectToExistingBlox}
+              onPress={provider ? handleWalletConnect : null}
             >
-              Reconnect to existing blox
+              {provider ? 'Connect to Wallet' : <ActivityIndicator />}
             </FxButton>
-            {logger.isDebugModeEnable && (
+          ) : !signiture ? (
+            <FxButton size="large" onPress={handleLinkPassword}>
+              {provider ? 'Link Password' : <ActivityIndicator />}
+            </FxButton>
+          ) : (
+            <>
+              <FxButton
+                size="large"
+                marginVertical="16"
+                onPress={handleConnectToBlox}
+              >
+                Connect to new blox
+              </FxButton>
               <FxButton
                 size="large"
                 variant="inverted"
-                marginTop="16"
-                onPress={handleOnBluetoothCommand}
+                onPress={handleConnectToExistingBlox}
               >
-                Bluetooth commands
+                Reconnect to existing blox
               </FxButton>
-            )}
+              {logger.isDebugModeEnable && (
+                <FxButton
+                  size="large"
+                  variant="inverted"
+                  marginTop="16"
+                  onPress={handleOnBluetoothCommand}
+                >
+                  Bluetooth commands
+                </FxButton>
+              )}
+              <FxButton
+                variant="inverted"
+                marginTop="16"
+                onPress={handleSkipToManulaSetup}
+              >
+                Skip to manula setup
+              </FxButton>
+            </>
+          )}
+          {isConnected && (
             <FxButton
               variant="inverted"
-              marginTop="16"
-              onPress={handleSkipToManulaSetup}
+              size="large"
+              marginTop="8"
+              onPress={disconnectWallet}
             >
-              Skip to manula setup
+              Disconnect wallet
             </FxButton>
-          </FxBox>
-        )}
+          )}
+        </FxBox>
       </FxBox>
-      <WalletConnectModal
-        projectId={WalletConnectConfigs.WaletConnect_Project_Id}
-        providerMetadata={WalletConnectConfigs.providerMetadata}
-        sessionParams={sessionParams}
-        onCopyClipboard={onCopy}
-      />
     </FxSafeAreaBox>
   );
 };

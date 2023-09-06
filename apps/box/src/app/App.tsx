@@ -26,6 +26,7 @@ import { firebase } from '@react-native-firebase/crashlytics';
 import { useLogger } from '../hooks';
 import { WalletConnectModal } from '@walletconnect/modal-react-native';
 import { WalletConnectConfigs } from '../utils';
+import { copyToClipboard } from '../utils/clipboard';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -74,6 +75,7 @@ const AppContent = () => {
   const appState = useRef(AppState.currentState);
   const [debugMode] = useSettingsStore((state) => [state.debugMode]);
   const { isDebugModeEnable } = useLogger();
+
   useEffect(() => {
     if (!__DEV__) {
       console.log = () => null;
@@ -123,6 +125,9 @@ const AppContent = () => {
       }
     );
   };
+  const onCopy = (value: string) => {
+    copyToClipboard(value);
+  };
   return (
     <NavContainer>
       {isDebugModeEnable && (
@@ -140,6 +145,8 @@ const AppContent = () => {
       <WalletConnectModal
         projectId={WalletConnectConfigs.WaletConnect_Project_Id}
         providerMetadata={WalletConnectConfigs.providerMetadata}
+        sessionParams={WalletConnectConfigs.sessionParams}
+        onCopyClipboard={onCopy}
       />
     </NavContainer>
   );
