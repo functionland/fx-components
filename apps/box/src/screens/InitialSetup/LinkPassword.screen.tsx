@@ -16,12 +16,9 @@ import { useInitialSetupNavigation, useLogger } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { KeyChain, WalletConnectConfigs } from '../../utils';
+import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
-import {
-  WalletConnectModal,
-  useWalletConnectModal,
-} from '@walletconnect/modal-react-native';
+import { useWalletConnectModal } from '@walletconnect/modal-react-native';
 import shallow from 'zustand/shallow';
 import { ethers } from 'ethers';
 export const LinkPasswordScreen = () => {

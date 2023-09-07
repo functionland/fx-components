@@ -11,7 +11,7 @@ export const providerMetadata: IProviderMetadata = {
   },
 };
 
-export const sessionParams = (chainId?: number) => ({
+export const sessionParams = {
   namespaces: {
     eip155: {
       methods: [
@@ -22,9 +22,10 @@ export const sessionParams = (chainId?: number) => ({
         //'eth_signTypedData',
       ],
       //chains: ['eip155:1','eip155:137','eip155:5','eip155:80001'], //['Ethereum Mainnet','polygon','Goerli Testnet','Mumbai Testnet']
-      chains: [`eip155:${chainId || 1}`],
+      //chains: [`eip155:${chainId || 1}`],
+      chains: ['eip155:1'],
       events: ['chainChanged', 'accountsChanged'],
       rpcMap: {},
     },
   },
-});
+};
