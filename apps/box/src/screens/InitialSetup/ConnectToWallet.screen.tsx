@@ -122,7 +122,7 @@ export const ConnectToWalletScreen = () => {
               Connect To Wallet
             </FxText>
             <FxBox>
-              <FxText variant="h200" marginBottom='8'>Select nerwork</FxText>
+              <FxText variant="h200" marginBottom='8'>Select network</FxText>
               <FxPicker selectedValue={selectedChainId}
                 onValueChange={(itemValue: number) => setSelectedChainId(itemValue)}>
                 <FxPickerItem key={1} label='Ethereum Mainnet' value={1} />
@@ -146,7 +146,7 @@ export const ConnectToWalletScreen = () => {
           </FxButton>
         ) : (
           <FxButton size="large" onPress={handleConnectToBlox}>
-            Connect to blox
+            Connect to Blox
           </FxButton>
         )}
       </FxBox>

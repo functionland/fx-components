@@ -107,7 +107,7 @@ export const LinkPasswordScreen = () => {
             disabled={!passwordInput}
             onPress={handleLinkPassword}
           >
-            {linking ? 'Canncel' : 'Link Password'}
+            {linking ? 'Cancel' : 'Link Password'}
           </FxButton>
         )}
       </FxBox>
