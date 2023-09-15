@@ -199,7 +199,7 @@ export const SetupCompleteScreen = () => {
         }
         {bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED' && internetStatus === 'CONNECTED' && setupStatus === 'NOTCOMPLETED' &&
           <FxText variant='bodyMediumRegular' color='warningBase' textAlign='center' paddingHorizontal='16' lineHeight={20}>
-            Your blox is not reachable, It seems is not connected to the internet! Please turn your blox off and then turn it on and make sure it is on Hotspot mode, then try to reconnect the blox to the Wi-Fi
+            Your blox is not reachable, seems it is not connected to the internet! Please turn your blox off and then turn it on and make sure it is on Hotspot mode, then try to reconnect the blox to the Wi-Fi
           </FxText>
         }
       </FxBox>
