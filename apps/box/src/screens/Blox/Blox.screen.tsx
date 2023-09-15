@@ -138,7 +138,7 @@ export const BloxScreen = () => {
   }
   const handleOnBloxRemovePress = (peerId: string) => {
     if (Object.values(bloxs)?.length <= 1) {
-      Alert.alert('Warning', 'You cannot remove the last Blox!, please first add new Blox, then remove this one from the list.')
+      Alert.alert('Warning', 'You cannot remove the last Blox! Please first add new Blox, then remove this one from the list.')
       return
     }
     Alert.alert('Remove Blox!', `Are you sure want to remove '${bloxs[peerId]?.name}' from the list?`,

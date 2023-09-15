@@ -23,7 +23,7 @@ export const SettingsScreen = () => {
   const walletConnect = useWalletConnect();
   const { logError } = useLogger()
   const handleLogout = () => {
-    Alert.alert('Log Out!', 'Are you sure want to log out?\r\nThe local app data will remove!',
+    Alert.alert('Log Out!', 'Are you sure want to log out?\r\nThe local app data will be removed!',
       [{
         text: 'Yes',
         style: 'destructive',
