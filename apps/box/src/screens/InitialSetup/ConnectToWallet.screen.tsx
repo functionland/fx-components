@@ -23,7 +23,7 @@ import { useLogger } from '../../hooks';
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
   const walletConnect = useWalletConnect();
-  const [selectedChainId, setSelectedChainId] = useState(1);// defualt is Etherum
+  const [selectedChainId, setSelectedChainId] = useState(1); // default is Ethereum
   const { queueToast } = useToast();
   const [networkConfirmed, setNetwordConfirmed] = useState(false)
   const [walletId, signiture, password, setWalletId] = useUserProfileStore(
