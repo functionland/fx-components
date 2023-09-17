@@ -270,7 +270,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
               paddingHorizontal="16"
               lineHeight={20}
             >
-              Your blox is not reachable, It seems is not connected to the
+              Your Blox is not reachable, seems it is not connected to the
               internet! Please turn your blox off and then turn it on and make
               sure it is on Hotspot mode, then try to reconnect the blox to the
               Wi-Fi

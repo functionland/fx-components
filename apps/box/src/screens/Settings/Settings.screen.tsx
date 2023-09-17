@@ -23,7 +23,7 @@ export const SettingsScreen = () => {
   const handleLogout = () => {
     Alert.alert(
       'Log Out!',
-      'Are you sure want to log out?\r\nThe local app data will remove!',
+      'Are you sure want to log out?\r\nThe local app data will be removed!',
       [
         {
           text: 'Yes',
