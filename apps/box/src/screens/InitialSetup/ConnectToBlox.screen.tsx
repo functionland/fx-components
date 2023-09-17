@@ -146,7 +146,7 @@ export const ConnectToBloxScreen = () => {
                 color="warningBase"
                 paddingTop="8"
               >
-                If you don't see FxBlox Wifi or connot connect to it, please
+                If you don't see FxBlox Wifi or cannot connect to it, please
                 restart (plug/unplug) your Blox
               </FxText>
               <FxText

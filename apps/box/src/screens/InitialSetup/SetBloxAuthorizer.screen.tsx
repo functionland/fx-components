@@ -302,7 +302,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                 error={
                   data_bloxProperties?.data?.restartNeeded //It is just for backend zero, to check the update needed
                     ? 'An update is awaiting a manual restart to be applied. you should unplug and plug back your blox to restart it and then try again.'
-                    : "You should upldate your blox backend, Please press 'Skip' button and connect it to your Wifi network."
+                    : "You should update your blox backend, Please press 'Skip' button and connect it to your Wifi network."
                 }
               />
             )}
