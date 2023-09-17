@@ -15,7 +15,12 @@ type Props = RadioButtonProps & {
 const FxRadioButtonWithLabel = ({ label, ...rest }: Props) => (
   <FxBox flexDirection="row" alignItems="center">
     <FxRadioButton {...rest} />
-    <FxText variant="bodySmallRegular" color="content1" marginLeft="8">
+    <FxText
+      variant="bodySmallRegular"
+      color="content1"
+      marginLeft="8"
+      paddingRight="8"
+    >
       {label}
     </FxText>
   </FxBox>

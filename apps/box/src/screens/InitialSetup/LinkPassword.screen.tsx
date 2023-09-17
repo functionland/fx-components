@@ -1,35 +1,42 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 // @ts-ignore-next-line
 import { HDKEY } from '@functionland/fula-sec';
 import {
   FxBox,
   FxButton,
   FxProgressBar,
+  FxRadioButton,
+  FxRadioButtonWithLabel,
   FxSafeAreaBox,
   FxText,
   FxTextInput,
   useToast,
 } from '@functionland/component-library';
-import { useWalletConnect } from '@walletconnect/react-native-dapp';
 import { useInitialSetupNavigation, useLogger } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
+import { useWalletConnectModal } from '@walletconnect/modal-react-native';
 import shallow from 'zustand/shallow';
-
+import { ethers } from 'ethers';
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const walletConnector = useWalletConnect();
+  const { isConnected, provider } = useWalletConnectModal();
+  const [iKnow, setIKnow] = useState(false);
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
   const [passwordInput, setInputPasswordInput] = useState('');
   const [setKeyChainValue, signiture, password] = useUserProfileStore(
-    (state) => [state.setKeyChainValue, state.signiture, state.password]
-    , shallow);
-  const logger = useLogger()
-
+    (state) => [state.setKeyChainValue, state.signiture, state.password],
+    shallow
+  );
+  const web3Provider = useMemo(
+    () => (provider ? new ethers.providers.Web3Provider(provider) : undefined),
+    [provider]
+  );
+  const logger = useLogger();
   const handleLinkPassword = async () => {
     try {
       if (linking) {
@@ -39,17 +46,18 @@ export const LinkPasswordScreen = () => {
       setLinking(true);
       const ed = new HDKEY(passwordInput);
       const chainCode = ed.chainCode;
-      if (!walletConnector.session?.connected)
-        await walletConnector.createSession();
-      const walletSignature = await walletConnector.signPersonalMessage([
-        chainCode,
-        walletConnector?.accounts[0],
-      ]);
+      provider.abortPairingAttempt();
+      await provider.cleanupPendingPairings();
+      const walletSignature = await helper.signMessage({
+        message: chainCode,
+        web3Provider,
+      });
+      console.log('walletSignature', walletSignature);
       await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
       await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
     } catch (err) {
       console.log(err);
-      logger.logError('handleLinkPassword',err)
+      logger.logError('handleLinkPassword', err);
       queueToast({
         title: 'Error',
         message: 'Unable to sign the wallet address!',
@@ -64,7 +72,15 @@ export const LinkPasswordScreen = () => {
   const handleConnectToBlox = () => {
     navigation.navigate(Routes.ConnectToBlox);
   };
-
+  const handleConnectToExistingBlox = () => {
+    navigation.navigate(Routes.ConnectToExistingBlox);
+  };
+  const handleOnBluetoothCommand = () => {
+    navigation.navigate(Routes.BluetoothCommands);
+  };
+  const handleSkipToManulaSetup = () => {
+    navigation.navigate(Routes.SetBloxAuthorizer, { isManualSetup: true });
+  };
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={40} />
@@ -94,20 +110,81 @@ export const LinkPasswordScreen = () => {
             ) : (
               <ActivityIndicator />
             )}
+            <FxBox>
+              <FxText
+                variant="bodyMediumRegular"
+                color="warningBase"
+                textAlign="center"
+                paddingBottom="20"
+              >
+                Make sure to safeguard this password and the chain you used,
+                it's the key to decrypt your data from new devices
+              </FxText>
+              <FxRadioButton.Group
+                value={iKnow ? [1] : []}
+                onValueChange={(val) =>
+                  setIKnow(val && val[0] === 1 ? true : false)
+                }
+              >
+                <FxRadioButtonWithLabel
+                  paddingVertical="8"
+                  label="I understand the risk of losing my password"
+                  value={1}
+                />
+              </FxRadioButton.Group>
+            </FxBox>
           </>
         )}
 
         {signiture ? (
-          <FxButton size="large" onPress={handleConnectToBlox}>
-            Connect to Blox
-          </FxButton>
+          <FxBox>
+            <FxButton
+              size="large"
+              marginBottom="16"
+              onPress={handleConnectToBlox}
+            >
+              Connect to Blox
+            </FxButton>
+            <FxButton
+              size="large"
+              variant="inverted"
+              onPress={handleConnectToExistingBlox}
+            >
+              Reconnect to existing blox
+            </FxButton>
+            {logger.isDebugModeEnable && (
+              <FxButton
+                size="large"
+                variant="inverted"
+                marginTop="16"
+                onPress={handleOnBluetoothCommand}
+              >
+                Bluetooth commands
+              </FxButton>
+            )}
+            <FxButton
+              variant="inverted"
+              marginTop="16"
+              onPress={handleSkipToManulaSetup}
+            >
+              Skip to manula setup
+            </FxButton>
+          </FxBox>
         ) : (
           <FxButton
             size="large"
-            disabled={!passwordInput}
-            onPress={handleLinkPassword}
+            disabled={!passwordInput || !iKnow}
+            onPress={provider ? handleLinkPassword : null}
           >
-            {linking ? 'Canncel' : 'Link Password'}
+            {provider && isConnected ? (
+              linking ? (
+                'Canncel'
+              ) : (
+                'Link Password'
+              )
+            ) : (
+              <ActivityIndicator />
+            )}
           </FxButton>
         )}
       </FxBox>

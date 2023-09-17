@@ -16,6 +16,7 @@ export enum Routes {
   LinkPassword = 'Link Password',
   ConnectToWallet = 'Connect To Wallet',
   ConnectToBlox = 'Connect To Blox',
+  ConnectToExistingBlox = 'Connect To Existing Blox',
   ConnectToWifi = 'Connect To Wifi',
   CheckConnection = 'Check Connection',
   SetupComplete = 'Setup Complete',
@@ -35,6 +36,7 @@ export enum Routes {
   Pools = 'Pools',
   About = 'About',
   ComponentGallery = 'Component Gallery',
+  BluetoothCommands = 'BluetoothCommands',
 
   // Component Gallery
   Avatars = 'Avatars',
@@ -64,15 +66,20 @@ export type MainTabsParamList = {
   [Routes.DevicesTab]: undefined;
   [Routes.SettingsTab]: NavigatorScreenParams<SettingsStackParamList>;
   [Routes.InitialSetup]: undefined;
-
 };
 
 export type SettingsStackParamList = {
   [Routes.Settings]: undefined;
-  [Routes.ConnectedDApps]: undefined;
+  [Routes.ConnectedDApps]: {
+    appName?: string;
+    bundleId?: string;
+    peerId?: string;
+    returnDeepLink?: string;
+  };
   [Routes.Mode]: undefined;
   [Routes.Pools]: undefined;
   [Routes.About]: undefined;
+  [Routes.BluetoothCommands]: undefined;
   [Routes.ComponentGallery]: NavigatorScreenParams<ComponentGalleryStackParamList>;
 };
 
@@ -81,10 +88,12 @@ export type InitialSetupStackParamList = {
   [Routes.LinkPassword]: undefined;
   [Routes.ConnectToWallet]: { password: string };
   [Routes.ConnectToBlox]: undefined;
+  [Routes.ConnectToExistingBlox]: undefined;
   [Routes.ConnectToWifi]: undefined;
   [Routes.CheckConnection]: { ssid: string };
-  [Routes.SetupComplete]: undefined;
-  [Routes.SetBloxAuthorizer]: undefined;
+  [Routes.SetupComplete]: { isManualSetup?: boolean };
+  [Routes.SetBloxAuthorizer]: { isManualSetup?: boolean };
+  [Routes.BluetoothCommands]: undefined;
 };
 
 export type ComponentGalleryStackParamList = {

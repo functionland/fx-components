@@ -1,8 +1,9 @@
 // @ts-ignore-next-line
 import { HDKEY, DID } from '@functionland/fula-sec';
 import { fula } from '@functionland/react-native-fula';
+import { numberToHex, sanitizeHex, utf8ToHex } from '@walletconnect/encoding';
 import { Constants } from '.';
-import moment from 'moment';
+import { ethers } from 'ethers';
 
 export const getMyDID = (password: string, signiture: string): string => {
   const ed = new HDKEY(password);
@@ -27,25 +28,30 @@ export const initFula = async ({
   password,
   signiture,
   bloxAddr = undefined,
-  bloxPeerId
+  bloxPeerId,
 }: {
-  password: string,
-  signiture: string,
-  bloxAddr?: string,
-  bloxPeerId?: string
+  password: string;
+  signiture: string;
+  bloxAddr?: string;
+  bloxPeerId?: string;
 }) => {
   if (password && signiture) {
     // Use FxRelay if bloxAddr is null or empty if bloxPeerId is null
-    let bloxAddress = bloxAddr ? bloxAddr : (bloxPeerId ? `${Constants.FXRelat}/p2p/${bloxPeerId}`.trim() : '')
+    const bloxAddress = bloxAddr
+      ? bloxAddr
+      : bloxPeerId
+      ? `${Constants.FXRelay}/p2p/${bloxPeerId}`.trim()
+      : '';
     const keyPair = getMyDIDKeyPair(password, signiture);
     try {
-      console.log('initFula helper.ts', {bloxAddress, bloxPeerId})
-      if (await fula.isReady()) await fula.shutdown();
+      console.log('initFula helper.ts', { bloxAddress, bloxPeerId, keyPair });
+      //if (await fula.isReady())
+      await fula.shutdown();
       const peerId = await fula.newClient(
         keyPair.secretKey.toString(), //bytes of the privateKey of did identity in string format
         ``, // leave empty to use the default temp one
         bloxAddress,
-        bloxAddress ? bloxAddress : 'noop', //leave empty for testing without a backend node
+        bloxAddress ? '' : 'noop', //leave empty for testing without a backend node
         true,
         true,
         true
@@ -63,4 +69,26 @@ export const generateUniqueId = () => {
   const timestamp = Date.now();
   const randomNum = Math.random() * Math.pow(10, 18);
   return `${timestamp}-${randomNum}`;
+};
+
+export interface RpcRequestParams {
+  message: string;
+  web3Provider: ethers.providers.Web3Provider;
 }
+
+export const signMessage = async ({
+  web3Provider,
+  message,
+}: RpcRequestParams): Promise<string> => {
+  if (!web3Provider) {
+    throw new Error('web3Provider not connected');
+  }
+  const hexMsg = utf8ToHex(message, true);
+  const [address] = await web3Provider.listAccounts();
+  if (!address) {
+    throw new Error('No address found');
+  }
+
+  const signature = await web3Provider.send('personal_sign', [hexMsg, address]);
+  return signature;
+};

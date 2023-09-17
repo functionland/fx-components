@@ -1,6 +1,6 @@
 {
   "name": "box",
-  "version": "0.0.1",
+  "version": "1.4.6",
   "private": true,
   "dependencies": {
     "@functionland/react-native-fula": "*",
@@ -14,7 +14,6 @@
     "@shopify/restyle": "*",
     "@testing-library/jest-native": "*",
     "@testing-library/react-native": "*",
-    "@walletconnect/react-native-dapp": "*",
     "@react-native-firebase/app": "*",
     "@react-native-firebase/crashlytics": "*",
     "axios": "*",
@@ -36,6 +35,7 @@
     "react-native-tab-view": "*",
     "react-native-webview": "*",
     "react-native-wifi-reborn": "*",
+    "react-native-zeroconf": "*",
     "zustand": "*",
     "@react-three/fiber": "*",
     "expo-gl": "*",
@@ -56,6 +56,13 @@
     "@functionland/fula-sec": "*",
     "text-encoding-polyfill": "*",
     "react-native-keychain": "*",
-    "react-native-keyboard-aware-scroll-view": "*"
+    "react-native-keyboard-aware-scroll-view": "*",
+    "react-native-ble-manager": "*",
+    "react-native-get-random-values": "*",
+    "react-native-modal": "*",
+    "big-integer": "*",
+    "@walletconnect/encoding": "*",
+    "@walletconnect/modal-react-native": "^1.0.0-rc.5",
+    "ethers": "*"
   }
 }

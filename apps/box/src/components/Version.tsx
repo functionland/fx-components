@@ -11,7 +11,7 @@ const Version = (props: FxTextProps) => {
       variant="bodyXXSRegular"
       color="content3"
       {...props}
-    >{`Functionland Blox App version ${version} #${buildNumber}`}</FxText>
+    >{`App version ${version} #${buildNumber}`}</FxText>
   );
 };
 

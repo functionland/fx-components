@@ -11,14 +11,20 @@ import { useSettingsStore } from '../../stores';
 export const SettingsMenu = () => {
   const navigation =
     useNavigation<SettingsStackNavigationProps<Routes.Settings>>();
+  const rootNavigation = useNavigation();
+
   const mode = useSettingsStore().getMode();
-  
+
   // Add app component gallery in development mode
-  const appGallery = __DEV__ ? [{
-    name: 'Component Gallery',
-    detail: null,
-    onPress: () => navigation.navigate(Routes.ComponentGallery),
-  }] : []
+  const appGallery = __DEV__
+    ? [
+        {
+          name: 'Component Gallery',
+          detail: null,
+          onPress: () => navigation.navigate(Routes.ComponentGallery),
+        },
+      ]
+    : [];
 
   const menuItems = [
     {
@@ -37,11 +43,27 @@ export const SettingsMenu = () => {
       onPress: () => navigation.navigate(Routes.Pools),
     },
     {
+      name: 'Blox discovery',
+      detail: null,
+      onPress: () =>
+        rootNavigation.navigate(Routes.InitialSetup, {
+          screen: Routes.ConnectToExistingBlox,
+        }),
+    },
+    {
+      name: 'Bluetooth commands',
+      detail: null,
+      onPress: () =>
+        rootNavigation.navigate(Routes.InitialSetup, {
+          screen: Routes.BluetoothCommands,
+        }),
+    },
+    {
       name: 'About',
       detail: null,
       onPress: () => navigation.navigate(Routes.About),
     },
-    ...appGallery
+    ...appGallery,
   ];
 
   return (

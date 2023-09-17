@@ -1,7 +1,7 @@
 import React from 'react';
 import { CardHeader } from './fields/CardHeader';
 import {
-  convertMegabyteToGigabyte,
+  convertByteToCapacityUnit,
   convertPascalToSentence,
   FxBottomSheetModal,
   FxBox,
@@ -24,9 +24,16 @@ type DeviceCardProps = React.ComponentProps<typeof FxBox> & {
   data: TDevice;
   showEject?: boolean;
   loading?: boolean;
-  onRefreshPress?: () => void
+  onRefreshPress?: () => void;
 };
-export const DeviceCard = ({ data, showEject, loading, onRefreshPress, ...rest }: DeviceCardProps) => {
+export const DeviceCard = ({
+  data,
+  showEject,
+  loading,
+  onRefreshPress,
+  children,
+  ...rest
+}: DeviceCardProps) => {
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
   const { name, capacity, status, associatedDevices, used, free } = data;
 
@@ -36,10 +43,15 @@ export const DeviceCard = ({ data, showEject, loading, onRefreshPress, ...rest }
       onLongPress={() => bottomSheetRef.current?.present()}
       delayLongPress={200}
     >
-      <FxBox flexDirection='row' justifyContent='space-between'>
+      <FxBox flexDirection="row" justifyContent="space-between">
         <FxCard.Title marginBottom="8">{name}</FxCard.Title>
-        {loading ? <ActivityIndicator />
-          : onRefreshPress && <FxRefreshIcon color='white' onPress={onRefreshPress} />}
+        {loading ? (
+          <ActivityIndicator />
+        ) : (
+          onRefreshPress && (
+            <FxRefreshIcon color="white" onPress={onRefreshPress} />
+          )
+        )}
       </FxBox>
       <FxBox flexDirection="row" marginBottom="16">
         {associatedDevices.map((deviceName) => (
@@ -50,29 +62,28 @@ export const DeviceCard = ({ data, showEject, loading, onRefreshPress, ...rest }
       </FxBox>
       <FxCard.Row>
         <FxCard.Row.Title>Capacity</FxCard.Row.Title>
-        <FxCard.Row.Data>
-          {capacity} GB
-        </FxCard.Row.Data>
+        <FxCard.Row.Data>{convertByteToCapacityUnit(capacity)}</FxCard.Row.Data>
       </FxCard.Row>
-      {used != undefined &&
+      {used != undefined && (
         <FxCard.Row>
           <FxCard.Row.Title>Used</FxCard.Row.Title>
-          <FxCard.Row.Data>
-            {used} GB
-          </FxCard.Row.Data>
-        </FxCard.Row>}
-      {free != undefined &&
+          <FxCard.Row.Data>{convertByteToCapacityUnit(used)}</FxCard.Row.Data>
+        </FxCard.Row>
+      )}
+      {free != undefined && (
         <FxCard.Row>
           <FxCard.Row.Title>Free</FxCard.Row.Title>
-          <FxCard.Row.Data>
-            {free} GB
-          </FxCard.Row.Data>
+          <FxCard.Row.Data>{convertByteToCapacityUnit(free)}</FxCard.Row.Data>
         </FxCard.Row>
-      }
+      )}
       <FxCard.Row>
         <FxCard.Row.Title>Status</FxCard.Row.Title>
         <FxBox flexDirection="row" alignItems="center">
-          <FxCard.Row.Data color={status === EDeviceStatus.NotAvailable ? 'errorBase' : 'content2'}>
+          <FxCard.Row.Data
+            color={
+              status === EDeviceStatus.NotAvailable ? 'errorBase' : 'content2'
+            }
+          >
             {convertPascalToSentence(EDeviceStatus[status])}
           </FxCard.Row.Data>
           {status === EDeviceStatus.BackingUp && (
@@ -80,10 +91,12 @@ export const DeviceCard = ({ data, showEject, loading, onRefreshPress, ...rest }
           )}
         </FxBox>
       </FxCard.Row>
-      {showEject &&
+      {showEject && (
         <FxButton disabled={status === EDeviceStatus.BackingUp}>
           Eject Device
-        </FxButton>}
+        </FxButton>
+      )}
+      {children}
       <FxBottomSheetModal ref={bottomSheetRef} title="Device Bottom Sheet">
         <FxBox
           height={200}

@@ -20,7 +20,7 @@ const linking: LinkingOptions<unknown> = {
           [Routes.SettingsTab]: {
             screens: {
               [Routes.ConnectedDApps]:
-                '/connectdapp/:appName/:bundleId/:peerId',
+                '/connectdapp/:appName/:bundleId/:peerId/:returnDeepLink',
             },
           },
         },

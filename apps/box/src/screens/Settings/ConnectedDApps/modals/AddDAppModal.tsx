@@ -1,18 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   FxBottomSheetModal,
   FxBottomSheetModalMethods,
   FxBox,
   FxButton,
+  FxDropdown,
   FxTextInput,
+  useToast,
 } from '@functionland/component-library';
 
 import { SubHeaderText } from './../../../../components/Text';
+import { useBloxsStore } from 'apps/box/src/stores';
+import shallow from 'zustand/shallow';
+import { useUserProfileStore } from 'apps/box/src/stores/useUserProfileStore';
 
 export type AddAppForm = {
   appName?: string;
   bundleId?: string;
   peerId?: string;
+  bloxPeerId?: string
 };
 type AddDAppModalProps = {
   form?: AddAppForm;
@@ -23,25 +29,74 @@ const AddDAppModal = React.forwardRef<
   AddDAppModalProps
 >((props, ref) => {
   const { form, onSubmit } = props;
+  const queueToast = useToast()
+
   const [addForm, setAddForm] = useState<AddAppForm>({
     appName: form?.appName,
     bundleId: form?.bundleId,
     peerId: form?.peerId,
+    bloxPeerId: form?.bloxPeerId
   });
+
+  const [bloxs, currentBloxPeerId, updateBloxStore] = useBloxsStore((state) => [
+    state.bloxs,
+    state.currentBloxPeerId,
+    state.update
+  ], shallow)
+
+  const [fulaIsReady] = useUserProfileStore((state) => [
+    state.fulaIsReady,
+  ], shallow)
+
+  //Update the form
   useEffect(() => {
     setAddForm({
       ...form,
     });
   }, [form]);
+
+  //set the form bloxPeerId
+  useEffect(() => {
+    setAddForm((prev) => ({
+      ...prev,
+      bloxPeerId: currentBloxPeerId,
+    }))
+  }, [currentBloxPeerId])
+
   const addAndAuthorize = async () => {
-    onSubmit?.(form);
+    onSubmit?.(addForm);
   };
+
+  const bloxArray = useMemo(() => Object.values(bloxs), [bloxs])
+
+  const handleOnBloxChange = (peerId: string) => {
+    if (peerId === currentBloxPeerId)
+      return
+    if (bloxs[peerId]) {
+      updateBloxStore({
+        currentBloxPeerId: peerId
+      })
+    } else {
+      queueToast.showToast({
+        type: 'error',
+        message: "Selected Blox's peerId is invalid!"
+      })
+    }
+
+  }
   return (
     <FxBottomSheetModal ref={ref}>
       <FxBox>
         <SubHeaderText textAlign="center" marginVertical={'24'}>
           Authorize dApp
         </SubHeaderText>
+        <FxDropdown
+          selectedValue={currentBloxPeerId}
+          onValueChange={handleOnBloxChange}
+          options={bloxArray?.map(blox => ({ label: blox.name, value: blox.peerId }))}
+          title="Select blox"
+          caption="Select blox"
+        />
         <FxBox marginBottom="24">
           <FxTextInput
             caption="dApp Name"
@@ -76,10 +131,10 @@ const AddDAppModal = React.forwardRef<
         </FxBox>
         <FxButton
           size="large"
-          disabled={!addForm.peerId || !addForm.appName || !addForm.bundleId}
-          onPress={addAndAuthorize}
+          disabled={!addForm.peerId || !addForm.appName || !addForm.bundleId || !addForm?.bloxPeerId}
+          onPress={fulaIsReady ? addAndAuthorize : null}
         >
-          Add and Authorize
+          {fulaIsReady ? 'Add and Authorize' : 'Initialing fula..'}
         </FxButton>
       </FxBox>
     </FxBottomSheetModal>

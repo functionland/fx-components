@@ -10,45 +10,60 @@ import { SmallHeaderText } from '../../../components/Text';
 
 import { AddDAppModal, DAppSettingsModal } from './modals';
 import useCallbackState from './../../../hooks/useCallbackState';
-import { mockConnectedDAppsData, imageMap } from '../../../api/connectedDApps';
 import { DAppCard } from './components';
-import { RouteProp } from '@react-navigation/native';
 import { AddAppForm } from './modals/AddDAppModal';
 import { useDAppsStore } from '../../../stores/dAppsSettingsStore';
-import { useUserProfileStore } from '../../../stores/useUserProfileStore'
 import { TDApp } from '../../../models';
-interface Props {
-  route: RouteProp<{
-    params: { appName?: string; bundleId?: string; peerId?: string };
-  }>;
-}
+import { useBloxsStore } from 'apps/box/src/stores';
+import shallow from 'zustand/shallow';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import {
+  Routes,
+  SettingsStackParamList,
+} from 'apps/box/src/navigation/navigationConfig';
+import { useLogger } from 'apps/box/src/hooks';
+import { Alert, Linking } from 'react-native';
+import { imageMap } from 'apps/box/src/api/connectedDApps';
+
+type Props = NativeStackScreenProps<
+  SettingsStackParamList,
+  Routes.ConnectedDApps
+>;
 export const ConnectedDAppsScreen = ({ route }: Props) => {
+  const logger = useLogger();
   const [isList, setIsList] = React.useState(false);
   const addDAppModalRef = useRef<FxBottomSheetModalMethods>(null);
   const dAppSettingsModalRef = useRef<FxBottomSheetModalMethods>(null);
   const clearDAppDataModalRef = useRef<FxBottomSheetModalMethods>(null);
-  const [bloxIndex] = React.useState(0);
   const [selectedDApp, setSelectedDApp] = useCallbackState<TDApp>(null);
   const [addAppForm, setAddAppForm] = useState<AddAppForm | undefined>();
-  const [connectedDApps, setAuth, addOrUpdateDApp] = useDAppsStore((state) => [
-    state.connectedDApps,
-    state.setAuth,
-    state.addOrUpdateDApp,
-  ]);
-  const [setBloxPeerIds] = useUserProfileStore((state) => [state.setBloxPeerIds])
-  const { queueToast } = useToast();
-
-  const connectedDAppsArray = useMemo(
-    () => Object.values(connectedDApps),
-    [connectedDApps]
+  const [connectedDApps, setAuth, addOrUpdateDApp] = useDAppsStore(
+    (state) => [state.connectedDApps, state.setAuth, state.addOrUpdateDApp],
+    shallow
   );
-  const blox = mockConnectedDAppsData[bloxIndex];
+  const [bloxs, currentBloxPeerId] = useBloxsStore(
+    (state) => [state.bloxs, state.currentBloxPeerId],
+    shallow
+  );
+  const { queueToast } = useToast();
+  const currentBlox = useMemo(
+    () => bloxs[currentBloxPeerId],
+    [bloxs, currentBloxPeerId]
+  );
+  const connectedDAppsArray = useMemo(
+    () => Object.values(connectedDApps?.[currentBloxPeerId] || {}),
+    [connectedDApps, currentBloxPeerId]
+  );
+  console.log('route?.params?.returnDeepLink\n\r', route?.params);
+
+  //const blox = mockConnectedDAppsData[bloxIndex];
   useEffect(() => {
     if (route?.params?.appName) {
       setAddAppForm({
         appName: route?.params?.appName,
         bundleId: route?.params?.bundleId,
         peerId: route?.params?.peerId,
+        bloxPeerId: currentBloxPeerId,
       });
       addDAppModalRef.current?.present();
     }
@@ -64,20 +79,44 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
         peerId: dApp.peerId,
         allow: true,
       });
-      if (bloxPeerId) {
-        setBloxPeerIds([bloxPeerId])
-      }
-      console.log('setAuth result', bloxPeerId);
       addOrUpdateDApp({
         name: dApp.appName,
         peerId: dApp.peerId,
         bundleId: dApp.bundleId,
+        bloxPeerId: dApp.bloxPeerId,
         authorized: true,
         lastUpdate: new Date(),
         storageUsed: 0,
       });
       addDAppModalRef.current?.close();
+      setTimeout(() => {
+        if (
+          route?.params?.returnDeepLink &&
+          Linking.canOpenURL(route?.params?.returnDeepLink)
+        ) {
+          Alert.alert(
+            'Authorized!',
+            `Now you navigate to the ${route?.params?.appName}, to add the blox address!`,
+            [
+              {
+                text: 'Ok',
+                onPress: () => {
+                  Linking.openURL(
+                    decodeURIComponent(route?.params?.returnDeepLink)
+                      ?.replace(
+                        '$bloxName',
+                        currentBlox?.name?.replaceAll(' ', '_')
+                      )
+                      .replace('$bloxPeerId', dApp.bloxPeerId)
+                  );
+                },
+              },
+            ]
+          );
+        }
+      }, 100);
     } catch (error) {
+      logger.logError('addAndAuthorize', error);
       queueToast({
         type: 'error',
         title: 'error',
@@ -92,7 +131,7 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
         <FxHeader
           marginTop="32"
           marginBottom="16"
-          title={blox.name}
+          title={currentBlox?.name}
           isList={isList}
           setIsList={setIsList}
           onAddPress={() => addDAppModalRef.current?.present()}

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from './index'
+import { API_URL } from './index';
 import { TBloxProperty } from '../models';
 
 export type TBlox = {
@@ -11,6 +11,11 @@ export type TBlox = {
     decentralizedId: string;
     storage: number;
   }[];
+};
+
+export type GeneralResponse = {
+  status: boolean;
+  msg?: string;
 };
 
 export const mockBlockHardware: TBlox[] = [
@@ -47,15 +52,32 @@ export const exchangeConfig = async (data: {
   const formData = new URLSearchParams();
   formData.append('peer_id', data?.peer_id);
   formData.append('seed', data?.seed);
-  return axios.post(`${API_URL}/peer/exchange?${formData.toString()}`, undefined, {
-    timeout: 1000 * 15,
-    headers: {
-      'Accept': '*/*',
-      'Content-Type': 'application/x-www-form-urlencoded'
+  return axios.post(
+    `${API_URL}/peer/exchange?${formData.toString()}`,
+    undefined,
+    {
+      timeout: 1000 * 15,
+      headers: {
+        Accept: '*/*',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     }
-  });
+  );
 };
 
 export const getBloxProperties = async (): Promise<{ data: TBloxProperty }> => {
   return axios.get(`${API_URL}/properties`);
+};
+/**
+ * Erase partition
+ * @returns
+ */
+export const bloxFormatDisk = async (): Promise<{ data: GeneralResponse }> => {
+  return axios.post(`${API_URL}/partition`);
+};
+
+export const bloxDeleteFulaConfig = async (): Promise<{
+  data: GeneralResponse;
+}> => {
+  return axios.post(`${API_URL}/delete-fula-config`);
 };

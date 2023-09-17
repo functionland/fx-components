@@ -11,6 +11,8 @@ import {
   SetBloxAuthorizerScreen,
 } from '../screens/InitialSetup';
 import { Routes, InitialSetupStackParamList } from './navigationConfig';
+import { ConnectToExistingBloxScreen } from '../screens/InitialSetup/ConnectToExistingBlox.screen';
+import { BluetoothCommandsScreen } from '../screens/Settings/Bluetooth/BluetoothCommands.screen';
 
 export const InitialSetupNavigator = () => {
   return (
@@ -46,6 +48,14 @@ export const InitialSetupNavigator = () => {
       <InitialSetupStack.Screen
         name={Routes.SetBloxAuthorizer}
         component={SetBloxAuthorizerScreen}
+      />
+       <InitialSetupStack.Screen
+        name={Routes.ConnectToExistingBlox}
+        component={ConnectToExistingBloxScreen}
+      />
+      <InitialSetupStack.Screen
+        name={Routes.BluetoothCommands}
+        component={BluetoothCommandsScreen}
       />
     </InitialSetupStack.Navigator>
   );

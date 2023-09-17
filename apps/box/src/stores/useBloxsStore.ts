@@ -1,8 +1,9 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TBlox, TBloxFreeSpace, TBloxConectionStatus } from '../models';
+import { TBlox, TBloxFreeSpace, TBloxConectionStatus, TBloxProperty } from '../models';
 import { blockchain, fula } from '@functionland/react-native-fula';
+import { firebase } from '@react-native-firebase/crashlytics';
 
 interface BloxsActionSlice {
 
@@ -14,6 +15,8 @@ interface BloxsActionSlice {
   addBlox: (blox: TBlox) => void
   updateBlox: (blox: Partial<TBlox> & Pick<TBlox, 'peerId'>) => void
   removeBlox: (peerId: string) => void
+  updateBloxPropertyInfo: (peerId: string, info: TBloxProperty) => void
+  updateBloxSpaceInfo: (peerId: string, info: TBloxFreeSpace) => void
   reset: () => void
 
   /**
@@ -25,6 +28,8 @@ interface BloxsActionSlice {
 interface BloxsModel {
   _hasHydrated: boolean;
   bloxs: Record<string, TBlox>
+  bloxsSpaceInfo?: Record<string, TBloxFreeSpace>
+  bloxsPropertyInfo?: Record<string, TBloxProperty>
   bloxsConnectionStatus: Record<string, TBloxConectionStatus>
   currentBloxPeerId?: string
 }
@@ -32,6 +37,8 @@ export interface BloxsModelSlice extends BloxsModel, BloxsActionSlice { }
 const inittalState: BloxsModel = {
   _hasHydrated: false,
   bloxs: {},
+  bloxsSpaceInfo: {},
+  bloxsPropertyInfo: {},
   bloxsConnectionStatus: {},
   currentBloxPeerId: undefined
 }
@@ -81,11 +88,19 @@ const createModeSlice: StateCreator<
       })
     },
     removeBlox: (peerId: string) => {
-      const { bloxs: currentBloxs } = get()
+      const { bloxs: currentBloxs, bloxsPropertyInfo, bloxsSpaceInfo } = get()
+      delete bloxsPropertyInfo[peerId]
+      delete bloxsSpaceInfo[peerId]
       delete currentBloxs[peerId]
       set({
         bloxs: {
           ...currentBloxs,
+        },
+        bloxsPropertyInfo: {
+          ...bloxsPropertyInfo,
+        },
+        bloxsSpaceInfo: {
+          ...bloxsSpaceInfo
         }
       })
     },
@@ -99,18 +114,15 @@ const createModeSlice: StateCreator<
      */
     getBloxSpace: async (updateStore = true) => {
       try {
-        const { bloxs: currentBloxs, currentBloxPeerId } = get()
+        const { bloxsSpaceInfo, currentBloxPeerId } = get()
         const bloxSpace = await blockchain.bloxFreeSpace();
-        if (updateStore) {
+        if (updateStore && bloxSpace?.size) {
           set({
-            bloxs: {
-              ...currentBloxs,
+            bloxsSpaceInfo: {
+              ...bloxsSpaceInfo,
               [currentBloxPeerId]: {
-                ...currentBloxs[currentBloxPeerId],
-                freeSpace: bloxSpace.size != undefined ? {
-                  ...bloxSpace
-                } : undefined
-              }
+                ...bloxSpace
+              } as TBloxFreeSpace
             }
           })
         }
@@ -118,6 +130,28 @@ const createModeSlice: StateCreator<
       } catch (error) {
         throw error;
       }
+    },
+    updateBloxPropertyInfo: (peerId, info) => {
+      const { bloxsPropertyInfo } = get()
+      set({
+        bloxsPropertyInfo: {
+          ...bloxsPropertyInfo,
+          [peerId]: {
+            ...info
+          }
+        }
+      })
+    },
+    updateBloxSpaceInfo: (peerId, info) => {
+      const { bloxsSpaceInfo } = get()
+      set({
+        bloxsSpaceInfo: {
+          ...bloxsSpaceInfo,
+          [peerId]: {
+            ...info
+          }
+        }
+      })
     },
     checkBloxConnection: async () => {
       const { bloxsConnectionStatus: currentBloxsConnectionStatus, currentBloxPeerId } = get()
@@ -149,7 +183,7 @@ const createModeSlice: StateCreator<
   }),
   {
     name: 'bloxsModelSlice',
-    version: 1,
+    version: 2,
     getStorage: () => AsyncStorage,
     serialize: (state) => JSON.stringify(state),
     deserialize: (str) => JSON.parse(str),
@@ -160,8 +194,43 @@ const createModeSlice: StateCreator<
       };
     },
     partialize: (state): Partial<BloxsModelSlice> => ({
-      bloxs: state.bloxs
-    })
+      bloxs: state.bloxs,
+      bloxsSpaceInfo: state.bloxsSpaceInfo,
+      bloxsPropertyInfo: state.bloxsPropertyInfo
+    }),
+    migrate: async (persistedState, version) => {
+      const bloxsModel = persistedState as Partial<BloxsModelSlice>
+      try {
+        if (version === 1) {
+          if (persistedState) {
+            const bloxs = Object.values(bloxsModel?.bloxs || {})
+            const bloxsSapceInfo = bloxs.reduce((obj, blox) => {
+              //@ts-ignore
+              obj[blox?.peerId] = { ...blox?.freeSpace }
+              return obj;
+            }, {})
+            const bloxsPropertyInfo = bloxs.reduce((obj, blox) => {
+              //@ts-ignore
+              obj[blox?.peerId] = { ...blox?.propertyInfo }
+              return obj;
+            }, {})
+            return {
+              ...bloxsModel,
+              bloxsPropertyInfo: {
+                ...bloxsPropertyInfo
+              },
+              bloxsSpaceInfo: {
+                ...bloxsSapceInfo
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.log(error)
+        firebase.crashlytics().recordError(error, `BloxsModelSlice migrate:version(${version})`)
+      }
+      return bloxsModel
+    }
   }
 );
 

@@ -9,12 +9,14 @@ import {
 type TSettingMenuItemProps = {
   name: string;
   detail: string;
+  disable?: boolean;
   onPress: VoidFunction;
 };
 
 export const SettingMenuItem = ({
   name,
   detail,
+  disable,
   onPress,
 }: TSettingMenuItemProps) => {
   return (
@@ -25,12 +27,15 @@ export const SettingMenuItem = ({
       paddingHorizontal="16"
       paddingVertical="16"
       onPress={onPress}
+      disabled={disable}
     >
-      <FxText variant="bodyMediumRegular">{name}</FxText>
-      <FxBox flexDirection="row" alignItems="center">
-        <FxText variant="bodyXXSRegular" marginRight="8">
+      <FxBox>
+        <FxText variant="bodyMediumRegular">{name}</FxText>
+        {detail &&<FxText variant="bodyXSRegular" marginEnd='8'>
           {detail}
-        </FxText>
+        </FxText>}
+      </FxBox>
+      <FxBox flexDirection="row" alignItems="center">
         <FxChevronRightIcon color="content1" />
       </FxBox>
     </FxCard>
