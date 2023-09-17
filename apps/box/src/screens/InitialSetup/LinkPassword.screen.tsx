@@ -178,7 +178,7 @@ export const LinkPasswordScreen = () => {
           >
             {provider && isConnected ? (
               linking ? (
-                'Canncel'
+                'Cancel'
               ) : (
                 'Link Password'
               )

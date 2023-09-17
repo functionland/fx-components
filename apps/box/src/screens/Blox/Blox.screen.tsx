@@ -176,7 +176,7 @@ export const BloxScreen = () => {
     if (Object.values(bloxs)?.length <= 1) {
       Alert.alert(
         'Warning',
-        'You cannot remove the last Blox!, please first add new Blox, then remove this one from the list.'
+        'You cannot remove the last Blox! Please first add new Blox, then remove this one from the list.'
       );
       return;
     }

@@ -148,7 +148,7 @@ export const ConnectToWalletScreen = () => {
             </FxText>
             <FxBox>
               <FxText variant="h200" marginBottom="8">
-                Select nerwork
+                Select network
               </FxText>
               <FxPicker
                 selectedValue={selectedChainId}
@@ -201,14 +201,14 @@ export const ConnectToWalletScreen = () => {
                 marginVertical="16"
                 onPress={handleConnectToBlox}
               >
-                Connect to new blox
+                Connect to new Blox
               </FxButton>
               <FxButton
                 size="large"
                 variant="inverted"
                 onPress={handleConnectToExistingBlox}
               >
-                Reconnect to existing blox
+                Reconnect to existing Blox
               </FxButton>
               {logger.isDebugModeEnable && (
                 <FxButton
