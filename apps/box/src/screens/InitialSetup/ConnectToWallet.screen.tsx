@@ -225,7 +225,7 @@ export const ConnectToWalletScreen = () => {
                 marginTop="16"
                 onPress={handleSkipToManulaSetup}
               >
-                Skip to manula setup
+                Skip to manual setup
               </FxButton>
             </>
           )}

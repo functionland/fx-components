@@ -283,7 +283,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
             Set Blox Owner
           </FxText>
           <FxText variant="body" textAlign="center" marginBottom="20">
-            Adding the Blox App peerId as an owner on the Blox
+            Adding the Blox App Peer ID as an owner on the Blox
           </FxText>
           {(error_exchange?.message === 'Network Error' ||
             error_bloxProperties?.message === 'Network Error') && (
@@ -301,7 +301,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                 marginBottom="8"
                 error={
                   data_bloxProperties?.data?.restartNeeded //It is just for backend zero, to check the update needed
-                    ? 'An update is awaiting a manual restart to be applied. you should unplug and plug back your blox to restart it and then try again.'
+                    ? 'An update is awaiting a manual restart to be applied. You should unplug and plug back your blox to restart it and then try again.'
                     : "You should update your blox backend, Please press 'Skip' button and connect it to your Wifi network."
                 }
               />
@@ -454,7 +454,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
               onPress={handleSetOwnerPeerId}
             >
               {!loading_exchange && !loading_bloxProperties ? (
-                'Set authorizer'
+                'Set Authorizer'
               ) : (
                 <ActivityIndicator />
               )}
