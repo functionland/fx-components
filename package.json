@@ -50,6 +50,7 @@
     "big-integer": "^1.6.52",
     "ethers": "6.9.0",
     "expo": "^49.0.21",
+    "expo-updates": "*",
     "expo-asset": "*",
     "expo-file-system": "^13.2.0",
     "expo-font": "*",

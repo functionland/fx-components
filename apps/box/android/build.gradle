@@ -3,7 +3,11 @@
 buildscript {
     ext {
         buildToolsVersion = "33.0.0"
+<<<<<<< HEAD
         minSdkVersion = 21
+=======
+        minSdkVersion = 26
+>>>>>>> 5e521cb (fix native codes manually)
         compileSdkVersion = 33
         targetSdkVersion = 33
         kotlinVersion = "1.8.20"
@@ -19,6 +23,11 @@ buildscript {
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        // // Add the dependency for the Google services Grad
+        // classpath 'com.google.gms:google-services:4.3.15'
+
+        // // NOTE: 2.9.4 has issues: https://github.com/invertase/react-native-firebase/issues/6983
+        // classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.2'
     }
 }
 
