@@ -8,15 +8,3 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
-
-## HERMES
--keep class com.facebook.hermes.unicode.** { *; }
--keep class com.facebook.jni.** { *; }
--keep class com.swmansion.reanimated.** { *; }
--keep class com.facebook.react.turbomodule.** { *; }
-
-### react-native-device-info
-## Install Referrer tracking
--keepclassmembers class com.android.installreferrer.api.** {
-  *;
-}
