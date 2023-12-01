@@ -2,11 +2,11 @@ module.exports = {
   displayName: 'box',
   preset: 'react-native',
   testRunner: 'jest-jasmine2',
-  resolver: '@nrwl/jest/plugins/resolver',
+  resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   moduleNameMapper: {
-    '.svg': '@nrwl/react-native/plugins/jest/svg-mock',
+    '.svg': '@nx/react-native/plugins/jest/svg-mock',
   },
   transform: {
     '\\.(js|ts|tsx)$': require.resolve('react-native/jest/preprocessor.js'),

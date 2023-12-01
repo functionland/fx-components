@@ -1,12 +1,12 @@
 {
   "root": true,
   "ignorePatterns": ["**/*"],
-  "plugins": ["@nrwl/nx", "prettier", "jest"],
+  "plugins": ["@nx", "prettier", "jest"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
-        "@nrwl/nx/enforce-module-boundaries": [
+        "@nx/enforce-module-boundaries": [
           "error",
           {
             "enforceBuildableLibDependency": true,
@@ -24,7 +24,7 @@
     {
       "files": ["*.ts", "*.tsx"],
       "extends": [
-        "plugin:@nrwl/nx/typescript",
+        "plugin:@nx/typescript",
         "plugin:prettier/recommended",
         "@react-native-community",
         "prettier"
@@ -36,7 +36,7 @@
     {
       "files": ["*.js", "*.jsx"],
       "extends": [
-        "plugin:@nrwl/nx/javascript",
+        "plugin:@nx/javascript",
         "plugin:prettier/recommended",
         "prettier"
       ],

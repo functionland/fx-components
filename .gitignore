@@ -311,3 +311,4 @@ node_modules/
 
 apps/filemanager-e2e/artifacts
 Pods
+.nx/cache
