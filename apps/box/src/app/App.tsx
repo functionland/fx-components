@@ -1,4 +1,8 @@
 import React, { useEffect, useRef } from 'react';
+import '@walletconnect/react-native-compat';
+import { WagmiConfig } from 'wagmi'
+import { mainnet, polygon, arbitrum, goerli } from 'viem/chains'
+import { createWeb3Modal, defaultWagmiConfig, Web3Modal } from '@web3modal/wagmi-react-native'
 import { ThemeProvider } from '@shopify/restyle';
 import {
   fxLightTheme,
@@ -8,6 +12,7 @@ import {
   FxPressableOpacity,
 } from '@functionland/component-library';
 import { RootNavigator } from '../navigation/Root.navigator';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavContainer } from '../navigation/NavContainer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -24,7 +29,6 @@ import { useSettingsStore } from '../stores';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { firebase } from '@react-native-firebase/crashlytics';
 import { useLogger } from '../hooks';
-import { WalletConnectModal } from '@walletconnect/modal-react-native';
 import { WalletConnectConfigs } from '../utils';
 import { copyToClipboard } from '../utils/clipboard';
 
@@ -50,6 +54,24 @@ export const App = () => {
   const [loadAllCredentials] = useUserProfileStore((state) => [
     state.loadAllCredentials,
   ]);
+  // 1. Get projectId at https://cloud.walletconnect.com
+  const projectId = WalletConnectConfigs.WaletConnect_Project_Id
+
+  // 2. Create config
+  const metadata = WalletConnectConfigs.providerMetadata
+
+  // const [selectedChainId, setSelectedChainId] = useState(1);// defualt is Etherum
+
+  const chains = [mainnet, polygon, arbitrum, goerli]
+
+  const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata })
+  
+  // 3. Create modal
+  createWeb3Modal({
+    projectId,
+    chains,
+    wagmiConfig
+  })
   useEffect(() => {
     loadAllCredentials();
   }, [loadAllCredentials]);
@@ -145,12 +167,6 @@ const AppContent = () => {
         </FxPressableOpacity>
       )}
       <RootNavigator />
-      <WalletConnectModal
-        projectId={WalletConnectConfigs.WaletConnect_Project_Id}
-        providerMetadata={WalletConnectConfigs.providerMetadata}
-        sessionParams={WalletConnectConfigs.sessionParams}
-        onCopyClipboard={onCopy}
-      />
     </NavContainer>
   );
 };
