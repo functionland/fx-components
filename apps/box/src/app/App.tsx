@@ -1,8 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import '@walletconnect/react-native-compat';
-import { WagmiConfig } from 'wagmi'
-import { mainnet, polygon, arbitrum, goerli } from 'viem/chains'
-import { createWeb3Modal, defaultWagmiConfig, Web3Modal } from '@web3modal/wagmi-react-native'
+import { WagmiConfig } from 'wagmi';
+import { mainnet, polygon, arbitrum, goerli } from 'viem/chains';
+import {
+  createWeb3Modal,
+  defaultWagmiConfig,
+  Web3Modal,
+} from '@web3modal/wagmi-react-native';
 import { ThemeProvider } from '@shopify/restyle';
 import {
   fxLightTheme,
@@ -55,23 +59,23 @@ export const App = () => {
     state.loadAllCredentials,
   ]);
   // 1. Get projectId at https://cloud.walletconnect.com
-  const projectId = WalletConnectConfigs.WaletConnect_Project_Id
+  const projectId = WalletConnectConfigs.WaletConnect_Project_Id;
 
   // 2. Create config
-  const metadata = WalletConnectConfigs.providerMetadata
+  const metadata = WalletConnectConfigs.providerMetadata;
 
   // const [selectedChainId, setSelectedChainId] = useState(1);// defualt is Etherum
 
-  const chains = [mainnet, polygon, arbitrum, goerli]
+  const chains = [mainnet, polygon, arbitrum, goerli];
 
-  const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata })
-  
+  const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
+
   // 3. Create modal
   createWeb3Modal({
     projectId,
     chains,
-    wagmiConfig
-  })
+    wagmiConfig,
+  });
   useEffect(() => {
     loadAllCredentials();
   }, [loadAllCredentials]);

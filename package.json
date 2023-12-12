@@ -56,7 +56,6 @@
     "expo-font": "*",
     "expo-gl": "^13.2.0",
     "expo-three": "^7.0.0",
-    "global": "^4.4.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "node-libs-react-native": "^1.2.1",
@@ -90,7 +89,6 @@
     "text-encoding-polyfill": "^0.6.7",
     "three": "^0.145.0",
     "tslib": "^2.6.2",
-    "webpack": "^4.0.0 || ^5.0.0",
     "viem": "^1.19.9",
     "wagmi": "^1.4.7",
     "zustand": "^4.4.7"

@@ -13,11 +13,12 @@ import { ActivityIndicator, Alert } from 'react-native';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Routes } from '../../navigation/navigationConfig';
 import { useLogger, useRootNavigation } from '../../hooks';
-import { useWalletConnectModal } from '@walletconnect/modal-react-native';
+import { useAccount, useDisconnect } from 'wagmi';
 
 export const SettingsScreen = () => {
   const [reset] = useUserProfileStore((state) => [state.reset]);
-  const { isConnected, provider } = useWalletConnectModal();
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
   const rootNavigation = useRootNavigation();
   const { logError } = useLogger();
   const handleLogout = () => {
@@ -30,13 +31,12 @@ export const SettingsScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              if (provider) {
+              if (isConnected) {
                 // If the cached provider is not cleared,
                 // WalletConnect will default to the existing session
                 // and does not allow to re-scan the QR code with a new wallet.
                 // Depending on your use case you may want or want not his behavir.
-                await provider.disconnect();
-                await provider.cleanupPendingPairings();
+                await disconnect();
                 reset();
                 rootNavigation.reset({
                   index: 0,
@@ -62,11 +62,11 @@ export const SettingsScreen = () => {
         <SettingsMenu />
         <FxHorizontalRule marginVertical="16" />
         <FxButton
-          disabled={!(provider && isConnected)}
+          disabled={!(address && isConnected)}
           size={'large'}
-          onPress={provider && isConnected ? handleLogout : null}
+          onPress={address && isConnected ? handleLogout : null}
         >
-          {provider ? 'Log out' : <ActivityIndicator />}
+          {address ? 'Log out' : <ActivityIndicator />}
         </FxButton>
         <Version marginTop="16" />
       </FxBox>
