@@ -34,7 +34,6 @@ export const ConnectToWalletScreen = () => {
   const { chains, error, isLoading, pendingChainId, switchNetwork } =
     useSwitchNetwork()
   const { open, close } = useWeb3Modal()
-  // const { address, isConnecting, isConnected, isDisconnected } = useAccount()
   const { address, isConnecting, isConnected, isDisconnected } = useAccount()
   const [walletId, signiture, password, setWalletId] = useUserProfileStore(
     (state) => [
@@ -54,8 +53,12 @@ export const ConnectToWalletScreen = () => {
 
   const checkChainId = async () => {
     if (!isConnected || !address) return;
+
+    //TODO: is this a desired behaviour?
+    if (chain === undefined) return;
     setSelectedChainId(chain.id);
     console.log('Connected chainId:', chain.id);
+  
     switch (chain) {
       case mainnet:
         // Ethereum Mainnet

@@ -3,7 +3,8 @@ import { HDKEY, DID } from '@functionland/fula-sec';
 import { fula } from '@functionland/react-native-fula';
 import { numberToHex, sanitizeHex, utf8ToHex } from '@walletconnect/encoding';
 import { Constants } from '.';
-import { ethers } from 'ethers';
+import { useSignMessage, useAccount } from 'wagmi';
+
 
 export const getMyDID = (password: string, signiture: string): string => {
   const ed = new HDKEY(password);
@@ -73,22 +74,23 @@ export const generateUniqueId = () => {
 
 export interface RpcRequestParams {
   message: string;
-  web3Provider: ethers.providers.Web3Provider;
 }
 
 export const signMessage = async ({
-  web3Provider,
   message,
 }: RpcRequestParams): Promise<string> => {
-  if (!web3Provider) {
+
+  const { address, isConnected } = useAccount();
+  if (!isConnected) {
     throw new Error('web3Provider not connected');
   }
-  const hexMsg = utf8ToHex(message, true);
-  const [address] = await web3Provider.listAccounts();
   if (!address) {
     throw new Error('No address found');
   }
 
-  const signature = await web3Provider.send('personal_sign', [hexMsg, address]);
-  return signature;
+  const { data, isError, isLoading, isSuccess, signMessage }  = useSignMessage({message: message});
+  if (!isSuccess || data === undefined) {
+    throw new Error('Failed to sign the message');
+  }
+  return data.toString();
 };
