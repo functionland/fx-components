@@ -1,4 +1,5 @@
 // @ts-ignore-next-line
+import '@walletconnect/react-native-compat';
 import { HDKEY, DID } from '@functionland/fula-sec';
 import { fula } from '@functionland/react-native-fula';
 import { numberToHex, sanitizeHex, utf8ToHex } from '@walletconnect/encoding';

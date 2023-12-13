@@ -1,3 +1,4 @@
+import '@walletconnect/react-native-compat';
 import React, { useMemo, useState } from 'react';
 // @ts-ignore-next-line
 import { HDKEY } from '@functionland/fula-sec';

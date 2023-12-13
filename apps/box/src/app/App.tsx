@@ -1,3 +1,4 @@
+import '@walletconnect/react-native-compat';
 import React, { useEffect, useRef } from 'react';
 import '@walletconnect/react-native-compat';
 import { WagmiConfig } from 'wagmi';

@@ -1,3 +1,4 @@
+import '@walletconnect/react-native-compat';
 import React, { useMemo } from 'react';
 import {
   FxBox,
