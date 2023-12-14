@@ -23,6 +23,7 @@
     "@babel/plugin-transform-arrow-functions": "^7.0.0-0",
     "@babel/plugin-transform-shorthand-properties": "^7.0.0-0",
     "@babel/plugin-transform-template-literals": "^7.0.0-0",
+    "@babel/plugin-proposal-private-methods": "*",
     "@babel/preset-env": "^7.1.6",
     "@functionland/fula-sec": "^2.0.0",
     "@functionland/react-native-fula": "^1.14.8",
