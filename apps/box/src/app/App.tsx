@@ -54,21 +54,24 @@ export const App = () => {
     loadAllCredentials();
   }, [loadAllCredentials]);
   return (
-    <ThemeProvider theme={theme}>
-      <ToastProvider>
-        <GestureHandlerRootView style={styles.flex1}>
-          <StatusBar
-            backgroundColor={theme.colors.backgroundApp}
-            barStyle={barStyles[mode]}
-          />
-          <SafeAreaProvider>
-            <BottomSheetModalProvider>
-              <AppContent />
-            </BottomSheetModalProvider>
-          </SafeAreaProvider>
-        </GestureHandlerRootView>
-      </ToastProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={styles.flex1}>
+    <WagmiConfig config={wagmiConfig}>
+      <ThemeProvider theme={theme}>
+        <ToastProvider>
+            <StatusBar
+              backgroundColor={theme.colors.backgroundApp}
+              barStyle={barStyles[mode]}
+            />
+            <SafeAreaProvider>
+              <BottomSheetModalProvider>
+                <AppContent />
+              </BottomSheetModalProvider>
+            </SafeAreaProvider>
+        </ToastProvider>
+      </ThemeProvider>
+      <Web3Modal />
+    </WagmiConfig>
+    </GestureHandlerRootView>
   );
 };
 const AppContent = () => {

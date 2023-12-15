@@ -25,7 +25,7 @@ import { getWifiList } from '../../../api/wifi';
 import { Routes } from '../../../navigation/navigationConfig';
 import BloxWifiDevice from '../../../app/icons/blox-wifi-device.svg';
 import { useUserProfileStore } from '../../../stores/useUserProfileStore';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 
 const ItemSeparatorComponent = () => {
   return <FxBox height={1} backgroundColor="backgroundSecondary" />;

@@ -11,7 +11,7 @@ import { copyToClipboard } from '../utils/clipboard';
 import { Helper, WalletConnectConfigs } from '../utils';
 import { CopyIcon } from './Icons';
 import { useBloxsStore } from '../stores';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 import {
   WalletConnectModal,
   useWalletConnectModal,

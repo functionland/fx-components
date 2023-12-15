@@ -27,7 +27,7 @@ import {
   exchangeConfig,
   getBloxProperties,
 } from '../../api/bloxHardware';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 import { useBloxsStore } from '../../stores';
 import { DeviceCard } from '../../components';
 import { EDeviceStatus } from '../../api/hub';
