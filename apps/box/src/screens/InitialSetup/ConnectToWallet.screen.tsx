@@ -19,22 +19,21 @@ import { mainnet, polygon, goerli, polygonMumbai } from 'viem/chains';
 import { useWeb3Modal } from '@web3modal/wagmi-react-native';
 import { Helper } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 import { useLogger } from '../../hooks';
 
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
 
   const { queueToast } = useToast();
-  const [ networkConfirmed, setNetwordConfirmed ] = useState(false)
-  //FIXME: =>
-  const [ provider, setProvider ] = useState(true)
+  const [networkConfirmed, setNetwordConfirmed] = useState(false);
+  //TODO: do we need this anymore?
+  const [provider, setProvider] = useState(true);
   const [selectedChainId, setSelectedChainId] = useState(80001); // Mumbai Polygon Testnet
-  const { chain } = useNetwork()
-  const { chains, error, isLoading, pendingChainId, switchNetwork } =
-    useSwitchNetwork()
-  const { open, close } = useWeb3Modal()
-  const { address, isConnecting, isConnected, isDisconnected } = useAccount()
+  const { chain } = useNetwork();
+  const { isLoading, switchNetwork } = useSwitchNetwork();
+  const { open, close } = useWeb3Modal();
+  const { address, isConnected } = useAccount();
   const [walletId, signiture, password, setWalletId] = useUserProfileStore(
     (state) => [
       state.walletId,
@@ -49,32 +48,32 @@ export const ConnectToWalletScreen = () => {
   useEffect(() => {
     console.log('isConnected', isConnected);
     if (isConnected) checkChainId();
-  }, [isConnected, provider, address]);
+  }, [isConnected, chain, address]);
 
   const checkChainId = async () => {
     if (!isConnected || !address) return;
 
-    //TODO: is this a desired behaviour?
     if (chain === undefined) return;
     setSelectedChainId(chain.id);
     console.log('Connected chainId:', chain.id);
-  
-    switch (chain) {
-      case mainnet:
+    console.log('Connected address:', address);
+
+    switch (chain.id) {
+      case mainnet.id:
         // Ethereum Mainnet
         break;
-      case polygon:
+      case polygon.id:
         // polygon
         break;
-      case goerli:
+      case goerli.id:
         // Goerli Testnet
         break;
-      case polygonMumbai:
+      case polygonMumbai.id:
         // Mumbai Testnet
         break;
       default:
         // Unknown network
-        close()
+        close();
         queueToast({
           title: 'Invalid network',
           message: 'The network you have chosen is invalid',

@@ -19,11 +19,13 @@ import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
-import shallow from 'zustand/shallow';
-import { useAccount } from 'wagmi';
+import { shallow } from 'zustand/shallow';
+import { useSignMessage, useAccount } from 'wagmi';
+
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
   const { address, isConnected } = useAccount();
+  const { data, isError, isLoading, isSuccess, signMessageAsync } = useSignMessage();
   const [iKnow, setIKnow] = useState(false);
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
@@ -43,9 +45,19 @@ export const LinkPasswordScreen = () => {
       const ed = new HDKEY(passwordInput);
       const chainCode = ed.chainCode;
 
-      const walletSignature = await helper.signMessage({
+      if (!isConnected) {
+        throw new Error('web3Provider not connected');
+      }
+      if (!address) {
+        throw new Error('No address found');
+      }
+
+      await signMessageAsync({
         message: chainCode,
       });
+      if (!isSuccess || data === undefined) throw new Error('signMessage');
+
+      const walletSignature = data.toString();
       console.log('walletSignature', walletSignature);
       await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
       await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
