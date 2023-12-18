@@ -78,7 +78,7 @@
     "sync-deps": {
       "executor": "@nx/react-native:sync-deps",
       "options": {
-        "include": ["@walletconnect/modal-react-native","react-native-randombytes","react-native-reanimated"]
+        "include": ["@web3modal/wagmi-react-native","react-native-randombytes","react-native-reanimated"]
       }
     },
     "ensure-symlink": {

@@ -1,3 +1,4 @@
+import '@walletconnect/react-native-compat';
 import React, { useMemo, useState } from 'react';
 // @ts-ignore-next-line
 import { HDKEY } from '@functionland/fula-sec';
@@ -18,12 +19,13 @@ import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
-import { useWalletConnectModal } from '@walletconnect/modal-react-native';
-import shallow from 'zustand/shallow';
-import { ethers } from 'ethers';
+import { shallow } from 'zustand/shallow';
+import { useSignMessage, useAccount } from 'wagmi';
+
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const { isConnected, provider } = useWalletConnectModal();
+  const { address, isConnected } = useAccount();
+  const { data, isError, isLoading, isSuccess, signMessageAsync } = useSignMessage();
   const [iKnow, setIKnow] = useState(false);
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
@@ -31,10 +33,6 @@ export const LinkPasswordScreen = () => {
   const [setKeyChainValue, signiture, password] = useUserProfileStore(
     (state) => [state.setKeyChainValue, state.signiture, state.password],
     shallow
-  );
-  const web3Provider = useMemo(
-    () => (provider ? new ethers.providers.Web3Provider(provider) : undefined),
-    [provider]
   );
   const logger = useLogger();
   const handleLinkPassword = async () => {
@@ -46,12 +44,20 @@ export const LinkPasswordScreen = () => {
       setLinking(true);
       const ed = new HDKEY(passwordInput);
       const chainCode = ed.chainCode;
-      provider.abortPairingAttempt();
-      await provider.cleanupPendingPairings();
-      const walletSignature = await helper.signMessage({
+
+      if (!isConnected) {
+        throw new Error('web3Provider not connected');
+      }
+      if (!address) {
+        throw new Error('No address found');
+      }
+
+      await signMessageAsync({
         message: chainCode,
-        web3Provider,
       });
+      if (!isSuccess || data === undefined) throw new Error('signMessage');
+
+      const walletSignature = data.toString();
       console.log('walletSignature', walletSignature);
       await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
       await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
@@ -174,9 +180,9 @@ export const LinkPasswordScreen = () => {
           <FxButton
             size="large"
             disabled={!passwordInput || !iKnow}
-            onPress={provider ? handleLinkPassword : null}
+            onPress={isConnected ? handleLinkPassword : null}
           >
-            {provider && isConnected ? (
+            {isConnected ? (
               linking ? (
                 'Cancel'
               ) : (
