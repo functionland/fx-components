@@ -12,7 +12,7 @@ import { TBlox } from '../models';
 import { ActivityIndicator, Share } from 'react-native';
 import { BloxIcon } from './Icons';
 import { useBloxsStore } from '../stores';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 
 type BloxInfoBottomSheetProps = {
   closeBottomSheet?: VoidFunction;

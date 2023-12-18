@@ -15,7 +15,7 @@ import { AddAppForm } from './modals/AddDAppModal';
 import { useDAppsStore } from '../../../stores/dAppsSettingsStore';
 import { TDApp } from '../../../models';
 import { useBloxsStore } from 'apps/box/src/stores';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   Routes,

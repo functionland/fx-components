@@ -35,7 +35,7 @@ import { Helper } from '../utils';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useLogger } from '../hooks';
 import { useBloxsStore } from '../stores';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 import { BluetoothCommandsScreen } from '../screens/Settings/Bluetooth/BluetoothCommands.screen';
 
 export const MainTabsNavigator = () => {

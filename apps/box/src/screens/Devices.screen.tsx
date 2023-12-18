@@ -8,7 +8,7 @@ import {
 } from '@functionland/component-library';
 import { DeviceCard } from '../components';
 import { useBloxsStore } from '../stores';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useLogger } from '../hooks';
 import { EDeviceStatus } from '../api/hub';

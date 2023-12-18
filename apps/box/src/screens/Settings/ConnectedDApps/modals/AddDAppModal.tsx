@@ -11,7 +11,7 @@ import {
 
 import { SubHeaderText } from './../../../../components/Text';
 import { useBloxsStore } from 'apps/box/src/stores';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 import { useUserProfileStore } from 'apps/box/src/stores/useUserProfileStore';
 
 export type AddAppForm = {

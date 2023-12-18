@@ -62,7 +62,11 @@
     "react-native-modal": "*",
     "big-integer": "*",
     "@walletconnect/encoding": "*",
-    "@walletconnect/modal-react-native": "^1.0.0-rc.5",
-    "ethers": "*"
+    "metro-config": "*",
+    "@react-native/metro-config": "*",
+    "@walletconnect/react-native-compat": "*",
+    "wagmi": "*",
+    "viem": "*",
+    "@web3modal/wagmi-react-native": "*"
   }
 }

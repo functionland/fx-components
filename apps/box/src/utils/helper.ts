@@ -1,9 +1,9 @@
 // @ts-ignore-next-line
+import '@walletconnect/react-native-compat';
 import { HDKEY, DID } from '@functionland/fula-sec';
 import { fula } from '@functionland/react-native-fula';
 import { numberToHex, sanitizeHex, utf8ToHex } from '@walletconnect/encoding';
 import { Constants } from '.';
-import { ethers } from 'ethers';
 
 export const getMyDID = (password: string, signiture: string): string => {
   const ed = new HDKEY(password);
@@ -11,6 +11,7 @@ export const getMyDID = (password: string, signiture: string): string => {
   const did = new DID(keyPair.secretKey);
   return did.did();
 };
+
 
 export const getMyDIDKeyPair = (
   password: string,
@@ -69,26 +70,4 @@ export const generateUniqueId = () => {
   const timestamp = Date.now();
   const randomNum = Math.random() * Math.pow(10, 18);
   return `${timestamp}-${randomNum}`;
-};
-
-export interface RpcRequestParams {
-  message: string;
-  web3Provider: ethers.providers.Web3Provider;
-}
-
-export const signMessage = async ({
-  web3Provider,
-  message,
-}: RpcRequestParams): Promise<string> => {
-  if (!web3Provider) {
-    throw new Error('web3Provider not connected');
-  }
-  const hexMsg = utf8ToHex(message, true);
-  const [address] = await web3Provider.listAccounts();
-  if (!address) {
-    throw new Error('No address found');
-  }
-
-  const signature = await web3Provider.send('personal_sign', [hexMsg, address]);
-  return signature;
 };

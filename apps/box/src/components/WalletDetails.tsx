@@ -1,3 +1,4 @@
+import '@walletconnect/react-native-compat';
 import React, { useMemo } from 'react';
 import {
   FxBox,
@@ -11,11 +12,8 @@ import { copyToClipboard } from '../utils/clipboard';
 import { Helper, WalletConnectConfigs } from '../utils';
 import { CopyIcon } from './Icons';
 import { useBloxsStore } from '../stores';
-import shallow from 'zustand/shallow';
-import {
-  WalletConnectModal,
-  useWalletConnectModal,
-} from '@walletconnect/modal-react-native';
+import { shallow } from 'zustand/shallow';
+import { useAccount } from 'wagmi';
 
 interface WalletDetailsProps {
   allowChangeWallet?: boolean;
@@ -29,7 +27,8 @@ export const WalletDetails = ({
   showDID,
   showBloxPeerIds = false,
 }: WalletDetailsProps) => {
-  const { isConnected, address } = useWalletConnectModal();
+  const { address: adr, isConnected } = useAccount();
+  const address = adr!.toString();
   const appPeerId = useUserProfileStore((state) => state.appPeerId);
   const [bloxs = {}] = useBloxsStore((state) => [state.bloxs], shallow);
   const bloxsArray = Object.values(bloxs);
@@ -165,10 +164,6 @@ export const WalletDetails = ({
           </FxBox>
         </>
       )}
-      <WalletConnectModal
-        projectId={WalletConnectConfigs.WaletConnect_Project_Id}
-        providerMetadata={WalletConnectConfigs.providerMetadata}
-      />
     </FxBox>
   );
 };

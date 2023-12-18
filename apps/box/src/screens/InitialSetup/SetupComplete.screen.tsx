@@ -25,7 +25,7 @@ import NetInfo, {
 import { ActivityIndicator } from 'react-native';
 import { useFetch, useLogger } from '../../hooks';
 import { CommonActions } from '@react-navigation/native';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 import { useBloxsStore } from '../../stores';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 // import SetupCompleteSvg2 from '../../app/icons/setup-complete-2.svg';

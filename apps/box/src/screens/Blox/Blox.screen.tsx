@@ -9,7 +9,7 @@ import {
 } from '@functionland/component-library';
 import { Alert, ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 import {
   BloxInfoBottomSheet,
   ColorSettingsCard,

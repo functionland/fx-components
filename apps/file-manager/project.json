@@ -1,13 +1,19 @@
 {
+  "name": "file-manager",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/file-manager/src",
   "projectType": "application",
   "targets": {
     "start": {
-      "executor": "@nrwl/react-native:start",
+      "executor": "@nx/react-native:start",
       "options": {
         "port": 8081
-      }
+      },
+      "dependsOn": [
+        "ensure-symlink",
+        "sync-deps",
+        "pod-install"
+      ]
     },
     "serve": {
       "executor": "@nrwl/workspace:run-commands",
@@ -16,52 +22,71 @@
       }
     },
     "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
-      "options": {}
+      "executor": "@nx/react-native:run-ios",
+      "options": {},
+      "dependsOn": [
+        "ensure-symlink",
+        "sync-deps",
+        "pod-install"
+      ]
     },
     "bundle-ios": {
-      "executor": "@nrwl/react-native:bundle",
+      "executor": "@nx/react-native:bundle",
       "outputs": [
-        "apps/file-manager/build"
+        "{projectRoot}/build"
       ],
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "ios",
         "bundleOutput": "apps/file-manager/ios/main.jsbundle"
-      }
+      },
+      "dependsOn": [
+        "ensure-symlink"
+      ]
     },
     "run-android": {
-      "executor": "@nrwl/react-native:run-android",
-      "options": {}
+      "executor": "@nx/react-native:run-android",
+      "options": {},
+      "dependsOn": [
+        "ensure-symlink",
+        "sync-deps"
+      ]
     },
     "build-android": {
-      "executor": "@nrwl/react-native:build-android",
+      "executor": "@nx/react-native:build-android",
       "outputs": [
-        "apps/file-manager/android/app/build/outputs/bundle",
-        "apps/file-manager/android/app/build/outputs/apk"
+        "{projectRoot}/android/app/build/outputs/bundle",
+        "{projectRoot}/android/app/build/outputs/apk"
       ],
-      "options": {}
+      "options": {},
+      "dependsOn": [
+        "ensure-symlink",
+        "sync-deps"
+      ]
     },
     "bundle-android": {
-      "executor": "@nrwl/react-native:bundle",
+      "executor": "@nx/react-native:bundle",
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "android",
         "bundleOutput": "dist/apps/file-manager/android/main.jsbundle"
-      }
+      },
+      "dependsOn": [
+        "ensure-symlink"
+      ]
     },
     "sync-deps": {
-      "executor": "@nrwl/react-native:sync-deps",
+      "executor": "@nx/react-native:sync-deps",
       "options": {
         "include": "react-native-reanimated"
       }
     },
     "ensure-symlink": {
-      "executor": "@nrwl/react-native:ensure-symlink",
+      "executor": "@nx/react-native:ensure-symlink",
       "options": {}
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": [
         "{options.outputFile}"
       ],
@@ -72,14 +97,29 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": [
-        "coverage/apps/file-manager"
+        "{workspaceRoot}/coverage/apps/file-manager"
       ],
       "options": {
-        "jestConfig": "apps/file-manager/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "apps/file-manager/jest.config.ts"
       }
+    },
+    "build-ios": {
+      "executor": "@nx/react-native:build-ios",
+      "outputs": [
+        "{projectRoot}/ios/build/Build"
+      ],
+      "options": {},
+      "dependsOn": [
+        "ensure-symlink",
+        "sync-deps",
+        "pod-install"
+      ]
+    },
+    "pod-install": {
+      "executor": "@nx/react-native:pod-install",
+      "options": {}
     }
   },
   "tags": []
