@@ -24,8 +24,8 @@ export const useFetch = <TData, TParams>({
 
   const fetch = async () => {
     try {
+      console.log(apiMethod);
       const response = await apiMethod(params.current);
-
       setError(null);
       if (mungResponse) {
         setData(mungResponse(response));
@@ -34,6 +34,7 @@ export const useFetch = <TData, TParams>({
       }
     } catch (err) {
       setError(err);
+      console.log("err", err);
       setData(null);
     }
   };

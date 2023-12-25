@@ -13,9 +13,27 @@ import { TPool } from '../../api/pool';
 type PoolCardType = React.ComponentProps<typeof FxCard> & {
   pool: TPool;
   isDetailed?: boolean;
+  isRequested: boolean;
+  isJoined: boolean;
+  leavePool: ({ poolID }: { poolID: number }) => Promise<void>;
+  joinPool: ({ poolID }: { poolID: number }) => Promise<void>;
 };
 
-const DetailInfo = ({ pool }: { pool: TPool }) => (
+const DetailInfo = ({
+  pool,
+  isDetailed,
+  isRequested,
+  isJoined,
+  leavePool,
+  joinPool,
+}: {
+  pool: TPool;
+  isDetailed?: boolean;
+  isRequested: boolean;
+  isJoined: boolean;
+  leavePool: ({ poolID }: { poolID: number }) => Promise<void>;
+  joinPool: ({ poolID }: { poolID: number }) => Promise<void>;
+}) => (
   <FxBox>
     <FxSpacer marginTop="24" />
     <FxCard.Row>
@@ -29,11 +47,37 @@ const DetailInfo = ({ pool }: { pool: TPool }) => (
       </FxCard.Row.Data>
     </FxCard.Row>
     <FxSpacer marginTop="24" />
-    <FxButton>Change pool</FxButton>
+    {isDetailed && isRequested && isJoined && (
+      <FxButton
+        onPress={() => leavePool({ poolID: parseInt(pool.poolId, 10) })}
+        flexWrap="wrap"
+      >
+        Leave
+      </FxButton>
+    )}
+    {isDetailed && !isRequested && !isJoined && (
+      <FxButton
+        onPress={() => joinPool({ poolID: parseInt(pool.poolId, 10) })}
+        flexWrap="wrap"
+      >
+        Join
+      </FxButton>
+    )}
+    {isDetailed && !isRequested && isJoined && (
+      <FxButton>Check status...</FxButton>
+    )}
   </FxBox>
 );
 
-export const PoolCard = ({ pool, isDetailed, ...rest }: PoolCardType) => {
+export const PoolCard = ({
+  pool,
+  isDetailed,
+  isRequested,
+  isJoined,
+  leavePool,
+  joinPool,
+  ...rest
+}: PoolCardType) => {
   return (
     <FxCard marginTop="16" {...rest}>
       <FxBox flexDirection="row" alignItems="center">
@@ -46,7 +90,16 @@ export const PoolCard = ({ pool, isDetailed, ...rest }: PoolCardType) => {
           </FxBox>
         </FxBox>
       </FxBox>
-      {isDetailed && <DetailInfo pool={pool} />}
+      {isDetailed && (
+        <DetailInfo
+          pool={pool}
+          isDetailed={isDetailed}
+          isRequested={isRequested}
+          isJoined={isJoined}
+          leavePool={leavePool}
+          joinPool={joinPool}
+        />
+      )}
     </FxCard>
   );
 };

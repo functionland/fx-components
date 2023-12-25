@@ -27,7 +27,9 @@ export const WalletDetails = ({
   showDID,
   showBloxPeerIds = false,
 }: WalletDetailsProps) => {
-  const { address: adr, isConnected } = useAccount();
+  let { address: adr, isConnected } = useAccount();
+  adr = '0x1212';
+  isConnected = true;
   const address = adr!.toString();
   const appPeerId = useUserProfileStore((state) => state.appPeerId);
   const [bloxs = {}] = useBloxsStore((state) => [state.bloxs], shallow);

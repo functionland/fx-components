@@ -65,8 +65,11 @@ export const exchangeConfig = async (data: {
   );
 };
 
-export const getBloxProperties = async (): Promise<{ data: TBloxProperty }> => {
-  return axios.get(`${API_URL}/properties`);
+export const getBloxProperties = async (): Promise<any> => {
+  console.log(`${API_URL}/properties`);
+  const res = await axios.get(`${API_URL}/properties`);
+  console.log('res: ', res);
+  return res;
 };
 /**
  * Erase partition
