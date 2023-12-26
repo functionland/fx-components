@@ -111,6 +111,19 @@ Please always be respectful when contributing.
 
 See [Getting started](#getting-started-with-development)
 
+1- Run `rm -rf node_modules && rm -rf /tmp/metro-*`
+
+2- Run `yarn`
+
+3- Set `ANDROID_HOME` and `JAVA_HOME` envs.
+
+4- Connect an android device or run an emulator.
+
+5- Run `adb reverse tcp:8081 tcp:8081`
+
+6- Run `yarn android box`
+
+
 ## Submitting a PR
 
 - For every PR there should be an accompanying [issue](https://github.com/functionland/apps-monorepo/issues) which the PR solves. If there isn't one please create it.
