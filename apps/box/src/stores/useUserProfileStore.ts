@@ -16,7 +16,7 @@ interface UserProfileActions {
   setAppPeerId: (peerId: string | undefined) => void;
   setBloxPeerIds: (peerIds: string[] | undefined) => void;
   createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
-  getEarnings: () => Promise<string>;
+  getEarnings: () => Promise<void>;
   getBloxSpace: () => Promise<TBloxFreeSpace>;
   logout: () => boolean;
   setFulaIsReady: (value: boolean) => void;
@@ -50,7 +50,7 @@ const initialState: UserProfileSlice = {
   _hasHydrated: false,
   bloxPeerIds: [],
   accounts: [],
-  earnings: '-',
+  earnings: '0.0',
   bloxSpace: undefined,
   fulaIsReady: false,
   bloxConnectionStatus: 'PENDING',
@@ -154,6 +154,7 @@ const createUserProfileSlice: StateCreator<
       });
     },
     createAccount: async ({ seed }) => {
+      // eslint-disable-next-line no-useless-catch
       try {
         const accounts = get().accounts;
         const account = await blockchain.createAccount(`/${seed}`);
@@ -166,10 +167,8 @@ const createUserProfileSlice: StateCreator<
       }
     },
     getEarnings: async () => {
-      console.log("before")
-      const account = await blockchain.getAccount()
+      const account = await blockchain.getAccount();
       // eslint-disable-next-line no-useless-catch
-      console.log("________________________-", account);
       try {
         const earnings = await blockchain.assetsBalance(
           account.account,
@@ -179,9 +178,14 @@ const createUserProfileSlice: StateCreator<
         set({
           earnings: earnings.amount,
         });
-        return earnings;
       } catch (error) {
-        throw error;
+        if (!error.toString().includes('response: 400')) {
+          set({
+            earnings: '0.0',
+          });
+        }
+        //TODO: add better error handling
+        // throw error;
       }
     },
     logout: () => {
@@ -189,15 +193,18 @@ const createUserProfileSlice: StateCreator<
       throw 'Not implemented';
     },
     getBloxSpace: async () => {
+      // eslint-disable-next-line no-useless-catch
       try {
         // if (!await fula.isReady())
         //   throw 'Fula is not ready!'
         const bloxSpace = await blockchain.bloxFreeSpace();
         console.log('bloxSpace', bloxSpace);
         set({
-          bloxSpace,
+          bloxSpace: {
+            ...bloxSpace,
+          } as TBloxFreeSpace,
         });
-        return bloxSpace;
+        return bloxSpace as TBloxFreeSpace;
       } catch (error) {
         throw error;
       }

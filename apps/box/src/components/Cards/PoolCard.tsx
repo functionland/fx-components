@@ -8,15 +8,17 @@ import {
   FxText,
 } from '@functionland/component-library';
 import moment from 'moment';
-import { TPool } from '../../api/pool';
+import { TPool } from '../../models';
 
 type PoolCardType = React.ComponentProps<typeof FxCard> & {
   pool: TPool;
   isDetailed?: boolean;
   isRequested: boolean;
   isJoined: boolean;
-  leavePool: ({ poolID }: { poolID: number }) => Promise<void>;
-  joinPool: ({ poolID }: { poolID: number }) => Promise<void>;
+  numVotes: number;
+  numVoters: number;
+  leavePool: (poolID: number) => Promise<void>;
+  joinPool: (poolID: number) => Promise<void>;
 };
 
 const DetailInfo = ({
@@ -24,6 +26,8 @@ const DetailInfo = ({
   isDetailed,
   isRequested,
   isJoined,
+  numVotes,
+  numVoters,
   leavePool,
   joinPool,
 }: {
@@ -31,14 +35,16 @@ const DetailInfo = ({
   isDetailed?: boolean;
   isRequested: boolean;
   isJoined: boolean;
-  leavePool: ({ poolID }: { poolID: number }) => Promise<void>;
-  joinPool: ({ poolID }: { poolID: number }) => Promise<void>;
+  numVotes: number;
+  numVoters: number;
+  leavePool: (poolID: number) => Promise<void>;
+  joinPool: (poolID: number) => Promise<void>;
 }) => (
   <FxBox>
     <FxSpacer marginTop="24" />
     <FxCard.Row>
       <FxCard.Row.Title>Location</FxCard.Row.Title>
-      <FxCard.Row.Data>{pool.location}</FxCard.Row.Data>
+      <FxCard.Row.Data>{pool.region}</FxCard.Row.Data>
     </FxCard.Row>
     <FxCard.Row>
       <FxCard.Row.Title>Join date</FxCard.Row.Title>
@@ -49,7 +55,7 @@ const DetailInfo = ({
     <FxSpacer marginTop="24" />
     {isDetailed && isRequested && isJoined && (
       <FxButton
-        onPress={() => leavePool({ poolID: parseInt(pool.poolId, 10) })}
+        onPress={() => leavePool(parseInt(pool.requestNumber, 10))}
         flexWrap="wrap"
       >
         Leave
@@ -57,14 +63,16 @@ const DetailInfo = ({
     )}
     {isDetailed && !isRequested && !isJoined && (
       <FxButton
-        onPress={() => joinPool({ poolID: parseInt(pool.poolId, 10) })}
+        onPress={() => joinPool(parseInt(pool.requestNumber, 10))}
         flexWrap="wrap"
       >
         Join
       </FxButton>
     )}
     {isDetailed && !isRequested && isJoined && (
-      <FxButton>Check status...</FxButton>
+      <FxCard.Row.Data>
+        Voting status: {numVotes}/{numVoters}
+      </FxCard.Row.Data>
     )}
   </FxBox>
 );
@@ -74,6 +82,8 @@ export const PoolCard = ({
   isDetailed,
   isRequested,
   isJoined,
+  numVotes,
+  numVoters,
   leavePool,
   joinPool,
   ...rest
@@ -82,8 +92,8 @@ export const PoolCard = ({
     <FxCard marginTop="16" {...rest}>
       <FxBox flexDirection="row" alignItems="center">
         <FxBox>
-          <FxCard.Title>{pool.poolId}</FxCard.Title>
-          <FxText variant="bodyXSRegular">Public</FxText>
+          <FxCard.Title>{pool.name}</FxCard.Title>
+          <FxText variant="bodyXSRegular">ID: {pool.requestNumber}</FxText>
           <FxSpacer marginTop="16" />
           <FxBox flexDirection="row">
             <FxTag>Home Blox Setup</FxTag>
@@ -96,6 +106,8 @@ export const PoolCard = ({
           isDetailed={isDetailed}
           isRequested={isRequested}
           isJoined={isJoined}
+          numVotes={numVotes}
+          numVoters={numVoters}
           leavePool={leavePool}
           joinPool={joinPool}
         />

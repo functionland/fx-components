@@ -56,17 +56,11 @@ export const BloxScreen = () => {
   );
   const navigation = useNavigation();
   const logger = useLogger();
-  const [password, signiture, getEarnings, fulaIsReady] = useUserProfileStore(
-    (state) => [
-      state.password,
-      state.signiture,
-      state.getEarnings,
-      state.fulaIsReady,
-    ],
+  const [earnings, getEarnings, fulaIsReady] = useUserProfileStore(
+    (state) => [state.earnings, state.getEarnings, state.fulaIsReady],
     shallow
   );
-  console.log('@@@@@@@@@@@@@@@@@######@@@@@@@@@@@@@@@@@@@@@@');
-  const earnings = getEarnings();
+  getEarnings();
 
   const [
     bloxs,

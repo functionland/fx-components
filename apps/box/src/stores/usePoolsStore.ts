@@ -7,7 +7,7 @@ import { TPool } from '../models';
 
 interface PoolsActionSlice {
   setHasHydrated: (isHydrated: boolean) => void;
-  getPools: (accountId: string) => Promise<PoolData[]>;
+  getPools: () => Promise<void>;
   addPool?: ({
     seed,
     poolName,
@@ -15,15 +15,15 @@ interface PoolsActionSlice {
     seed: string;
     poolName: string;
   }) => Promise<PoolData>;
-  joinPool?: ({ poolID }: { poolID: number }) => Promise<void>;
-  leavePool?: ({ poolID }: { poolID: number }) => Promise<void>;
-  cancelPoolJoin?: ({ poolID }: { poolID: number }) => Promise<void>;
+  joinPool: (poolID: number) => Promise<void>;
+  leavePool: (poolID: number) => Promise<void>;
+  cancelPoolJoin: (poolID: number) => Promise<void>;
   reset: () => void;
 }
 
 interface PoolsModel {
   _hasHydrated: boolean;
-  pools: Record<string, PoolData>;
+  pools: PoolData[];
 }
 
 export interface PoolData extends TPool {
@@ -36,16 +36,16 @@ export interface PoolData extends TPool {
 export interface PoolsModelSlice extends PoolsModel, PoolsActionSlice {}
 const initialState: PoolsModel = {
   _hasHydrated: false,
-  pools: {},
+  pools: [],
 };
 
 const createPoolsModelSlice: StateCreator<
-PoolsModelSlice,
+  PoolsModelSlice,
   [],
   [['zustand/persist', Partial<PoolsModelSlice>]],
   PoolsModelSlice
 > = persist(
-  (set, get) => ({
+  (set, _get) => ({
     ...initialState,
     _hasHydrated: false,
     setHasHydrated: (isHydrated) => {
@@ -53,18 +53,19 @@ PoolsModelSlice,
         _hasHydrated: isHydrated,
       });
     },
-    getPools: async (accountId: string) => {
+    getPools: async () => {
       try {
-        // if(!await fula.isReady())
-        //   throw 'Fula is not ready!'
-        const currentPools = get().pools;
         const api = await chainApi.init();
         const poolList = await chainApi.listPools(api);
         console.log(poolList);
 
+        const account = await blockchain.getAccount();
+        const accountId = account.account;
         const userPool = await chainApi.getUserPool(api, accountId);
+        console.log('userPool:', userPool);
         let requested = false;
         let joined = false;
+        let numVotes = 0;
         let poolIdOfInterest = 0;
         if (userPool !== null) {
           if (
@@ -72,54 +73,53 @@ PoolsModelSlice,
             userPool?.requestPoolId !== ''
           ) {
             poolIdOfInterest = parseInt(userPool?.requestPoolId, 10);
+            const joinRequestInfo = await chainApi.checkJoinRequest(
+              api,
+              parseInt(userPool.requestPoolId, 10),
+              accountId
+            );
+            console.log('joinRequestInfo:', joinRequestInfo);
+            numVotes = joinRequestInfo ? joinRequestInfo.voted.length : 0;
+            requested = true;
+            joined = false;
           } else if (userPool?.poolID > 0) {
             requested = true;
             joined = true;
             poolIdOfInterest = parseInt(userPool?.requestPoolId, 10);
           }
         }
-
         const newPools = (poolList?.pools || []) as TPool[];
+        const poolDatas = newPools.map((pool) => {
+          let joinInfo = {
+            requested: false,
+            joined: false,
+            numVotes: 0,
+            numVoters: 0,
+          };
+          if (
+            requested &&
+            parseInt(pool.requestNumber, 10) === poolIdOfInterest
+          ) {
+            joinInfo = {
+              requested: requested,
+              joined: joined,
+              numVotes: numVotes,
+              numVoters: pool.participants.length,
+            };
+          }
+          return {
+            ...pool,
+            ...joinInfo,
+          } as PoolData;
+        }) as PoolData[];
         set({
-          pools: {
-            ...currentPools,
-            ...newPools.reduce(async (obj, pool) => {
-              let joinInfo;
-              if (requested && pool.poolID === poolIdOfInterest) {
-                joinInfo = {
-                  requested: true,
-                  joined: true,
-                  numVotes: 0,
-                  numVoters: 0,
-                };
-                if (!joined) {
-                  const joinRequestInfo = await chainApi.checkJoinRequest(
-                    api,
-                    pool.poolID,
-                    accountId
-                  );
-                  joinInfo = {
-                    requested: joinRequestInfo ? true : false,
-                    joined: false,
-                    numVotes: joinRequestInfo
-                      ? joinRequestInfo.voted.length
-                      : 0,
-                    numVoters: newPools.length,
-                  };
-                }
-              }
-              obj[pool.poolID] = {
-                ...pool,
-                ...joinInfo,
-              } as PoolData;
-              return obj;
-            }, {}),
-          },
+          pools: poolDatas,
         });
-        return newPools;
       } catch (error) {
-        console.log('getPools: ', error);
-        throw error;
+        set({
+          pools: [] as PoolData[],
+        });
+        // throw error;
       }
     },
     joinPool: async (poolID: number) => {

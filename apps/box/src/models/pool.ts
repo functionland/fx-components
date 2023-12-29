@@ -1,7 +1,8 @@
 export type TPool = {
-  poolID: number;
+  requestNumber: string;
   owner: string;
-  poolName: string;
+  region: string;
+  name: string;
   parent: string;
   participants: string[];
 };

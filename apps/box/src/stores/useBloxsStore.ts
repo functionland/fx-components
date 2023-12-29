@@ -130,7 +130,8 @@ const createModeSlice: StateCreator<
         return bloxSpace as TBloxFreeSpace;
       } catch (error) {
         console.log(error);
-        throw error;
+        //TODO: add better error handling
+        // throw error;
       }
     },
     updateBloxPropertyInfo: (peerId, info) => {
