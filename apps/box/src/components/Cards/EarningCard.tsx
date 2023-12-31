@@ -29,26 +29,6 @@ export const EarningCard = ({ totalFula }: EarningCardType) => {
             Home Blox Setup
           </FxText>
         </FxBox>
-        <FxHorizontalRule marginTop="16" marginBottom="16" />
-        <FxBox flexDirection="row">
-          <FxBox flex={1} alignItems="center">
-            <FxText variant="bodySmallRegular" color="content3">
-              24h change
-            </FxText>
-            <FxText variant="bodyLargeRegular" marginTop="8">
-              +10.342%
-            </FxText>
-          </FxBox>
-          <FxVerticalRule />
-          <FxBox flex={1} alignItems="center">
-            <FxText variant="bodySmallRegular" color="content3">
-              7d change
-            </FxText>
-            <FxText variant="bodyLargeRegular" marginTop="8">
-              +18.721%
-            </FxText>
-          </FxBox>
-        </FxBox>
       </FxCard>
     </>
   );

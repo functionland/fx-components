@@ -28,7 +28,7 @@ export const PoolsScreen = () => {
         />
       }
       data={pools}
-      keyExtractor={(item) => item.requestNumber}
+      keyExtractor={(item) => item.poolID}
       renderItem={({ item }) => (
         <PoolCard
           pool={item}

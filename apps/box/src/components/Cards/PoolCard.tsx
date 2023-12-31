@@ -55,7 +55,7 @@ const DetailInfo = ({
     <FxSpacer marginTop="24" />
     {isDetailed && isRequested && isJoined && (
       <FxButton
-        onPress={() => leavePool(parseInt(pool.requestNumber, 10))}
+        onPress={() => leavePool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
       >
         Leave
@@ -63,7 +63,7 @@ const DetailInfo = ({
     )}
     {isDetailed && !isRequested && !isJoined && (
       <FxButton
-        onPress={() => joinPool(parseInt(pool.requestNumber, 10))}
+        onPress={() => joinPool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
       >
         Join
@@ -93,7 +93,7 @@ export const PoolCard = ({
       <FxBox flexDirection="row" alignItems="center">
         <FxBox>
           <FxCard.Title>{pool.name}</FxCard.Title>
-          <FxText variant="bodyXSRegular">ID: {pool.requestNumber}</FxText>
+          <FxText variant="bodyXSRegular">ID: {pool.poolID}</FxText>
           <FxSpacer marginTop="16" />
           <FxBox flexDirection="row">
             <FxTag>Home Blox Setup</FxTag>

@@ -147,13 +147,14 @@ export const ConnectToWalletScreen = () => {
             </FxText>
             <FxBox>
               <FxText variant="h200" marginBottom="8">
-                Select network {isLoading && ' (switching)'}
+                Select network
               </FxText>
               <FxPicker
                 selectedValue={selectedChainId}
-                enabled={!isLoading}
                 onValueChange={(itemValue: number) =>
-                  switchNetwork?.(itemValue)
+                  isConnected
+                    ? switchNetwork?.(itemValue)
+                    : setSelectedChainId(itemValue)
                 }
               >
                 <FxPickerItem

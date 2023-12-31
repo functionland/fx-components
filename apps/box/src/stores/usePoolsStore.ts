@@ -98,7 +98,7 @@ const createPoolsModelSlice: StateCreator<
           };
           if (
             requested &&
-            parseInt(pool.requestNumber, 10) === poolIdOfInterest
+            parseInt(pool.poolID, 10) === poolIdOfInterest
           ) {
             joinInfo = {
               requested: requested,

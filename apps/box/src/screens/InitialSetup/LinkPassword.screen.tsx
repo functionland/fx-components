@@ -1,5 +1,5 @@
 import '@walletconnect/react-native-compat';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 // @ts-ignore-next-line
 import { HDKEY } from '@functionland/fula-sec';
 import {
@@ -25,7 +25,8 @@ import { useSignMessage, useAccount } from 'wagmi';
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
   const { address, isConnected } = useAccount();
-  const { data, isError, isLoading, isSuccess, signMessageAsync } = useSignMessage();
+  // const [messageData, setMessageData] = useState('');
+  const { data, isError, error, signMessage } = useSignMessage();
   const [iKnow, setIKnow] = useState(false);
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
@@ -35,6 +36,18 @@ export const LinkPasswordScreen = () => {
     shallow
   );
   const logger = useLogger();
+  useEffect(() => {
+    const setKeys = async (walletSignature: string) => {
+      await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
+      await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
+      setLinking(false);
+    };
+    if (data) {
+      const walletSignature = data.toString();
+      console.log('walletSignature', walletSignature);
+      setKeys(walletSignature);
+    }
+  }, [data]);
   const handleLinkPassword = async () => {
     try {
       if (linking) {
@@ -51,16 +64,12 @@ export const LinkPasswordScreen = () => {
       if (!address) {
         throw new Error('No address found');
       }
-
-      await signMessageAsync({
-        message: chainCode,
-      });
-      if (!isSuccess || data === undefined) throw new Error('signMessage');
-
-      const walletSignature = data.toString();
-      console.log('walletSignature', walletSignature);
-      await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
-      await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
+      console.log('before signing...');
+      signMessage({ message: chainCode });
+      if (isError) {
+        throw error;
+      }
+      console.log('after signing...');
     } catch (err) {
       console.log(err);
       logger.logError('handleLinkPassword', err);
