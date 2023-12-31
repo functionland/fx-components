@@ -66,7 +66,7 @@ export const ConnectToBloxScreen = () => {
       const network = await fetch('wifi');
       if (
         network.type === NetInfoStateType.wifi &&
-        // network.details.ssid === DEFAULT_NETWORK_NAME &&
+        network.details.ssid === DEFAULT_NETWORK_NAME &&
         network.isConnected
       ) {
         setConnectionStatus(EConnectionStatus.connected);
