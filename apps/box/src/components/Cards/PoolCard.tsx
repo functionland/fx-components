@@ -46,12 +46,14 @@ const DetailInfo = ({
       <FxCard.Row.Title>Location</FxCard.Row.Title>
       <FxCard.Row.Data>{pool.region}</FxCard.Row.Data>
     </FxCard.Row>
-    <FxCard.Row>
-      <FxCard.Row.Title>Join date</FxCard.Row.Title>
-      <FxCard.Row.Data>
-        {moment(pool.connectionDate).format('MM/DD/YYYY')}
-      </FxCard.Row.Data>
-    </FxCard.Row>
+    {isJoined && (
+      <FxCard.Row>
+        <FxCard.Row.Title>Join date</FxCard.Row.Title>
+        <FxCard.Row.Data>
+          {moment(pool.connectionDate).format('MM/DD/YYYY')}
+        </FxCard.Row.Data>
+      </FxCard.Row>
+    )}
     <FxSpacer marginTop="24" />
     {isDetailed && isRequested && isJoined && (
       <FxButton
