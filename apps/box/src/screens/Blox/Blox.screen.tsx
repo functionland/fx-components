@@ -34,7 +34,8 @@ import { useLogger } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import { useNavigation } from '@react-navigation/native';
 import { useBloxsStore } from '../../stores';
-import { fxblox } from '@functionland/react-native-fula';
+import { blockchain, fxblox } from '@functionland/react-native-fula';
+import { Helper } from '../../utils';
 const DEFAULT_DIVISION = 30;
 
 export const BloxScreen = () => {
@@ -55,10 +56,11 @@ export const BloxScreen = () => {
   );
   const navigation = useNavigation();
   const logger = useLogger();
-  const [fulaIsReady] = useUserProfileStore(
-    (state) => [state.fulaIsReady],
+  const [earnings, getEarnings, fulaIsReady] = useUserProfileStore(
+    (state) => [state.earnings, state.getEarnings, state.fulaIsReady],
     shallow
   );
+  getEarnings();
 
   const [
     bloxs,
@@ -323,6 +325,7 @@ export const BloxScreen = () => {
               associatedDevices: ['Blox Set Up'],
             }}
           />
+          <EarningCard totalFula={parseFloat(earnings)} />
           {/* <FxSpacer height={8} />
           <QuoteStat divisionPercentage={divisionPercentage} />
           <FxSpacer height={24} />

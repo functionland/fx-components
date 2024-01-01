@@ -3,19 +3,18 @@ import { StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import { FxHeader } from '@functionland/component-library';
 import { PoolCard } from '../../components/Cards/PoolCard';
-import { mockPoolData } from '../../api/pool';
-import {blockchain} from '@functionland/react-native-fula'
+import { usePoolsStore } from '../../stores/usePoolsStore';
+import { shallow } from 'zustand/shallow';
 export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
-  useEffect(()=>{
-    loadPools()
-  },[])
-  
-  const loadPools=async ()=>{
-    //console.log('blockchain.init',blockchain.init())
-    const pools=await blockchain.listPools()
-    console.log('listPools',pools)
-  }
+  const [pools, joinPool, getPools, leavePool] = usePoolsStore(
+    (state) => [state.pools, state.joinPool, state.getPools, state.leavePool],
+    shallow
+  );
+  useEffect(() => {
+    getPools();
+  }, [getPools]);
+  console.log(pools);
 
   return (
     <Reanimated.FlatList
@@ -28,9 +27,20 @@ export const PoolsScreen = () => {
           setIsList={setIsList}
         />
       }
-      data={mockPoolData}
-      keyExtractor={(item) => item.poolId}
-      renderItem={({ item }) => <PoolCard pool={item} isDetailed={!isList} />}
+      data={pools}
+      keyExtractor={(item) => item.poolID}
+      renderItem={({ item }) => (
+        <PoolCard
+          pool={item}
+          isDetailed={!isList}
+          isRequested={item.requested}
+          isJoined={item.joined}
+          numVotes={item.numVotes}
+          numVoters={item.numVoters}
+          leavePool={leavePool}
+          joinPool={joinPool}
+        />
+      )}
     />
   );
 };

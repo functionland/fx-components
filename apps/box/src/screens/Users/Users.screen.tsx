@@ -21,7 +21,6 @@ import Reanimated, {
 import { UsersCard } from '../../components/Cards/UsersCard';
 import { mockFriendData, mockUserData, TUser } from '../../api/users';
 import { UserHeader } from './UserHeader';
-import { WalletDetails } from '../../components/WalletDetails';
 
 const OFFSET_START = 270;
 const FADE_OFFSET = 50;

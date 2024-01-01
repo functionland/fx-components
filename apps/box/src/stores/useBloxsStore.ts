@@ -116,6 +116,7 @@ const createModeSlice: StateCreator<
       try {
         const { bloxsSpaceInfo, currentBloxPeerId } = get()
         const bloxSpace = await blockchain.bloxFreeSpace();
+        console.log(bloxSpace);
         if (updateStore && bloxSpace?.size) {
           set({
             bloxsSpaceInfo: {
@@ -128,7 +129,9 @@ const createModeSlice: StateCreator<
         }
         return bloxSpace as TBloxFreeSpace;
       } catch (error) {
-        throw error;
+        console.log(error);
+        //TODO: add better error handling
+        // throw error;
       }
     },
     updateBloxPropertyInfo: (peerId, info) => {

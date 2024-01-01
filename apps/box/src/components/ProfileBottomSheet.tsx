@@ -38,6 +38,7 @@ export const ProfileBottomSheet = React.forwardRef<
     state.accounts,
     state.createAccount,
   ]);
+  console.log('########################################################');
   const addAccountModalRef = useRef<FxBottomSheetModalMethods>(null);
   const { queueToast } = useToast();
   const logger = useLogger();

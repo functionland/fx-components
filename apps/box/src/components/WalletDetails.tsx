@@ -13,7 +13,7 @@ import { Helper, WalletConnectConfigs } from '../utils';
 import { CopyIcon } from './Icons';
 import { useBloxsStore } from '../stores';
 import { shallow } from 'zustand/shallow';
-import { useAccount } from 'wagmi';
+import { useWalletClient } from 'wagmi';
 
 interface WalletDetailsProps {
   allowChangeWallet?: boolean;
@@ -27,12 +27,28 @@ export const WalletDetails = ({
   showDID,
   showBloxPeerIds = false,
 }: WalletDetailsProps) => {
-  const { address: adr, isConnected } = useAccount();
-  const address = adr!.toString();
+  const { queueToast } = useToast();
+  const { data: walletClient, error } = useWalletClient();
+  // let { address: adr, isConnected } = useAccount();
+  let isConnected = true;
+  let addr = '';
+  console.log(error);
+  console.log(walletClient);
+  if (error != null || walletClient == null) {
+    console.log(error);
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    queueToast({
+      type: 'error',
+      title: 'Error connecting to wallet',
+      message: error?.toString(),
+    });
+    isConnected = false;
+  }
+  addr = walletClient?.account.address;
+  const address = addr ? addr! : '';
   const appPeerId = useUserProfileStore((state) => state.appPeerId);
   const [bloxs = {}] = useBloxsStore((state) => [state.bloxs], shallow);
   const bloxsArray = Object.values(bloxs);
-  const { queueToast } = useToast();
   const [signiture, password] = useUserProfileStore((state) => [
     state.signiture,
     state.password,

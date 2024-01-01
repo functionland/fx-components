@@ -26,7 +26,7 @@
     "@babel/plugin-proposal-private-methods": "*",
     "@babel/preset-env": "^7.1.6",
     "@functionland/fula-sec": "^2.0.0",
-    "@functionland/react-native-fula": "^1.14.8",
+    "@functionland/react-native-fula": "1.36.0",
     "@gorhom/bottom-sheet": "^4.5.1",
     "@react-native-async-storage/async-storage": "1.21.0",
     "@react-native-clipboard/clipboard": "^1.12.1",

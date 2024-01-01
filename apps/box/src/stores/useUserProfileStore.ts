@@ -1,13 +1,13 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { blockchain, fula } from '@functionland/react-native-fula'
+import { blockchain, fula } from '@functionland/react-native-fula';
 import { TAccount, TBloxFreeSpace } from '../models';
 import { KeyChain } from '../utils';
 import { useBloxsStore } from './useBloxsStore';
 import { firebase } from '@react-native-firebase/crashlytics';
 
-type BloxConectionStatus = 'CONNECTED' | 'PENDING' | 'DISCONNECTED'
+type BloxConectionStatus = 'CONNECTED' | 'PENDING' | 'DISCONNECTED';
 interface UserProfileActions {
   setHasHydrated: (isHydrated: boolean) => void;
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
@@ -16,11 +16,12 @@ interface UserProfileActions {
   setAppPeerId: (peerId: string | undefined) => void;
   setBloxPeerIds: (peerIds: string[] | undefined) => void;
   createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
+  getEarnings: () => Promise<void>;
   getBloxSpace: () => Promise<TBloxFreeSpace>;
   logout: () => boolean;
   setFulaIsReady: (value: boolean) => void;
   checkBloxConnection: () => Promise<boolean>;
-  reset: () => void
+  reset: () => void;
 }
 export interface UserProfileSlice {
   _hasHydrated: boolean;
@@ -38,17 +39,18 @@ export interface UserProfileSlice {
   appPeerId?: string | undefined;
   bloxPeerIds?: string[] | undefined;
   accounts: TAccount[];
+  earnings: string;
   activeAccount?: TAccount | undefined;
   bloxSpace: TBloxFreeSpace | undefined;
   fulaIsReady: boolean;
   bloxConnectionStatus: BloxConectionStatus;
-
 }
 // define the initial state
 const initialState: UserProfileSlice = {
   _hasHydrated: false,
   bloxPeerIds: [],
   accounts: [],
+  earnings: '0.0',
   bloxSpace: undefined,
   fulaIsReady: false,
   bloxConnectionStatus: 'PENDING',
@@ -57,9 +59,8 @@ const initialState: UserProfileSlice = {
   fulaPeerId: undefined,
   signiture: undefined,
   password: undefined,
-  walletId: undefined
-
-}
+  walletId: undefined,
+};
 const createUserProfileSlice: StateCreator<
   UserProfileSlice & UserProfileActions,
   [],
@@ -153,15 +154,38 @@ const createUserProfileSlice: StateCreator<
       });
     },
     createAccount: async ({ seed }) => {
+      // eslint-disable-next-line no-useless-catch
       try {
         const accounts = get().accounts;
         const account = await blockchain.createAccount(`/${seed}`);
         set({
-          accounts: [account, ...accounts]
-        })
+          accounts: [account, ...accounts],
+        });
         return account;
       } catch (error) {
         throw error;
+      }
+    },
+    getEarnings: async () => {
+      const account = await blockchain.getAccount();
+      // eslint-disable-next-line no-useless-catch
+      try {
+        const earnings = await blockchain.assetsBalance(
+          account.account,
+          '120',
+          '100'
+        );
+        set({
+          earnings: earnings.amount,
+        });
+      } catch (error) {
+        if (!error.toString().includes('response: 400')) {
+          set({
+            earnings: '0.0',
+          });
+        }
+        //TODO: add better error handling
+        // throw error;
       }
     },
     logout: () => {
@@ -169,47 +193,50 @@ const createUserProfileSlice: StateCreator<
       throw 'Not implemented';
     },
     getBloxSpace: async () => {
+      // eslint-disable-next-line no-useless-catch
       try {
         // if (!await fula.isReady())
         //   throw 'Fula is not ready!'
         const bloxSpace = await blockchain.bloxFreeSpace();
-        console.log('bloxSpace', bloxSpace)
+        console.log('bloxSpace', bloxSpace);
         set({
-          bloxSpace
-        })
-        return bloxSpace;
+          bloxSpace: {
+            ...bloxSpace,
+          } as TBloxFreeSpace,
+        });
+        return bloxSpace as TBloxFreeSpace;
       } catch (error) {
         throw error;
       }
     },
     setFulaIsReady: (value: boolean) => {
       set({
-        fulaIsReady: value
-      })
+        fulaIsReady: value,
+      });
     },
     checkBloxConnection: async () => {
       try {
         // if (!await fula.isReady())
         //   throw 'Fula is not ready!'
         set({
-          bloxConnectionStatus: 'PENDING'
-        })
+          bloxConnectionStatus: 'PENDING',
+        });
         const connected = await fula.checkConnection();
-        console.log('checkBloxConnection', connected)
+        console.log('checkBloxConnection', connected);
         set({
-          bloxConnectionStatus: connected ? 'CONNECTED' : 'DISCONNECTED'
-        })
+          bloxConnectionStatus: connected ? 'CONNECTED' : 'DISCONNECTED',
+        });
         return connected;
       } catch (error) {
         set({
-          bloxConnectionStatus: 'DISCONNECTED'
-        })
+          bloxConnectionStatus: 'DISCONNECTED',
+        });
         throw error;
       }
     },
     reset: () => {
-      set(initialState)
-    }
+      set(initialState);
+    },
   }),
   {
     name: 'userProfileSlice',
@@ -231,32 +258,37 @@ const createUserProfileSlice: StateCreator<
       activeAccount: state.activeAccount,
     }),
     migrate: async (persistedState, version) => {
-      const { setState } = useBloxsStore
+      const { setState } = useBloxsStore;
       try {
         if (version === 0) {
           if (persistedState) {
-            const userPrfoile = persistedState as UserProfileSlice
-            const bloxs = userPrfoile?.bloxPeerIds?.reduce((obj, peerId, index) => {
-              obj[peerId] = {
-                peerId,
-                name: `Blox Unit #${index}`
-              }
-              return obj
-            }, {}) || {}
+            const userPrfoile = persistedState as UserProfileSlice;
+            const bloxs =
+              userPrfoile?.bloxPeerIds?.reduce((obj, peerId, index) => {
+                obj[peerId] = {
+                  peerId,
+                  name: `Blox Unit #${index}`,
+                };
+                return obj;
+              }, {}) || {};
             setState({
-              bloxs
-            })
+              bloxs,
+            });
           }
         }
       } catch (error) {
-        console.log(error)
-        firebase.crashlytics().recordError(error, `UserProfileStore migrate:version(${version})`)
+        console.log(error);
+        firebase
+          .crashlytics()
+          .recordError(error, `UserProfileStore migrate:version(${version})`);
       }
-      return persistedState
-    }
+      return persistedState;
+    },
   }
 );
 
-export const useUserProfileStore = create<UserProfileSlice & UserProfileActions>()((...a) => ({
+export const useUserProfileStore = create<
+  UserProfileSlice & UserProfileActions
+>()((...a) => ({
   ...createUserProfileSlice(...a),
 }));

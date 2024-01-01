@@ -85,7 +85,7 @@ export const MainTabsNavigator = () => {
         Helper.initFula({
           password,
           signiture,
-          //bloxAddr: '/ip4/192.168.0.167/tcp/40001/p2p/12D3KooWGawPDngmHEfynixQGsg9nQTrRufa2TD8TQkQQsf76PUF',
+          // bloxAddr: '/ip4/172.20.10.5/tcp/40001/p2p/12D3KooWDwaDDECmQq3mHHwWumWh6o4ThQ2JQDdTYcWjm5nUf7ga',
           bloxPeerId: currentBloxPeerId,
         })
           .then(() => {
