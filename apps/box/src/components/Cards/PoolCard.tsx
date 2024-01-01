@@ -57,6 +57,7 @@ const DetailInfo = ({
       <FxButton
         onPress={() => leavePool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
+        paddingHorizontal="32"
       >
         Leave
       </FxButton>
@@ -65,6 +66,7 @@ const DetailInfo = ({
       <FxButton
         onPress={() => joinPool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
+        paddingHorizontal="32"
       >
         Join
       </FxButton>
