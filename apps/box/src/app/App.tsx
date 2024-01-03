@@ -36,6 +36,7 @@ import { firebase } from '@react-native-firebase/crashlytics';
 import { useLogger } from '../hooks';
 import { WalletConnectConfigs } from '../utils';
 import { copyToClipboard } from '../utils/clipboard';
+import { fula } from '@functionland/react-native-fula';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -111,6 +112,12 @@ const AppContent = () => {
       console.log = () => null;
       //console.error = () => null
     }
+    fula
+      .registerLifecycleListener()
+      .then(() => console.log('Lifecycle listener registered'))
+      .catch((error) =>
+        console.error('Failed to register lifecycle listener', error)
+      );
   }, []);
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
