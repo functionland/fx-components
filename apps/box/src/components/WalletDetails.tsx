@@ -1,5 +1,5 @@
 import '@walletconnect/react-native-compat';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   FxBox,
   FxButton,
@@ -9,12 +9,11 @@ import {
 } from '@functionland/component-library';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { copyToClipboard } from '../utils/clipboard';
-import { Helper, WalletConnectConfigs } from '../utils';
+import { Helper } from '../utils';
 import { CopyIcon } from './Icons';
 import { useBloxsStore } from '../stores';
 import { shallow } from 'zustand/shallow';
-import { useWalletClient } from 'wagmi';
-
+import { useWalletClient, useConfig, useConnect, useAccount } from 'wagmi';
 interface WalletDetailsProps {
   allowChangeWallet?: boolean;
   showPeerId?: boolean;
@@ -28,24 +27,6 @@ export const WalletDetails = ({
   showBloxPeerIds = false,
 }: WalletDetailsProps) => {
   const { queueToast } = useToast();
-  const { data: walletClient, error } = useWalletClient();
-  // let { address: adr, isConnected } = useAccount();
-  let isConnected = true;
-  let addr = '';
-  console.log(error);
-  console.log(walletClient);
-  if (error != null || walletClient == null) {
-    console.log(error);
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    queueToast({
-      type: 'error',
-      title: 'Error connecting to wallet',
-      message: error?.toString(),
-    });
-    isConnected = false;
-  }
-  addr = walletClient?.account.address;
-  const address = addr ? addr! : '';
   const appPeerId = useUserProfileStore((state) => state.appPeerId);
   const [bloxs = {}] = useBloxsStore((state) => [state.bloxs], shallow);
   const bloxsArray = Object.values(bloxs);
@@ -53,6 +34,26 @@ export const WalletDetails = ({
     state.signiture,
     state.password,
   ]);
+  const { data: walletClient, error } = useWalletClient();
+  // const { connectors } = useConfig();
+  // const { connect, isSuccess } = useConnect({ connector: connectors[0] });
+  // let { address: adr, isConnected } = useAccount();
+  const [isConnected, setIsConnected] = useState(false);
+  const [address, setAddress] = useState('');
+
+  // connect();
+  useEffect(() => {
+    if (error != null || walletClient == null) {
+      console.log(error);
+      setAddress('');
+      setIsConnected(false);
+    } else {
+      const addr = walletClient?.account.address;
+      setAddress(addr ? addr! : '');
+      setIsConnected(true);
+    }
+  }, [walletClient]);
+
   const DID = useMemo(() => {
     if (password && signiture) return Helper.getMyDID(password, signiture);
     return null;
