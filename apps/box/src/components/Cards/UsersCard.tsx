@@ -72,7 +72,7 @@ export const UsersCard = ({ showCardHeader = true, data }: TUsersCard) => {
       {data.length === 0 ? (
         <EmptyCard
           placeholder="No friends added"
-          showAddButton
+          
           addButtonTitle="Add friends"
         />
       ) : (
