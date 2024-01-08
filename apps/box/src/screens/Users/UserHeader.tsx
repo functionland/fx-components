@@ -28,7 +28,6 @@ export const UserHeader = ({ userData }: UserHeaderProps) => {
       <FxText variant="bodyXSRegular">
         Connected wallet: {userData.walletName}
       </FxText> */}
-      <FxSpacer marginTop="32" />
       <FxBox paddingVertical="20">
         <WalletDetails
           showDID={true}

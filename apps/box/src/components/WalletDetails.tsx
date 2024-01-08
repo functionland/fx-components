@@ -92,22 +92,17 @@ export const WalletDetails = ({
                         {walletConnect.peerMeta.name}
                     </FxText> */}
           <FxText variant="bodyMediumRegular">Wallet Address</FxText>
-          <FxButton
-            onPress={() => copyToClipboard(address)}
-            iconLeft={<CopyIcon />}
-            flexWrap="wrap"
-            paddingHorizontal="32"
-          >
-            <FxBox style={{ flex: 1, width: 250 }}>
-              <FxText
-                ellipsizeMode="tail"
-                numberOfLines={1}
-                style={{ width: 250 }}
-              >
-                {address}
-              </FxText>
-            </FxBox>
-          </FxButton>
+          <FxBox marginTop="24" width="100%">
+            <FxButton
+              onPress={() => copyToClipboard(address)}
+              iconLeft={<CopyIcon />}
+              flexWrap="wrap"
+              paddingHorizontal="32"
+              size="large"
+            >
+              {address}
+            </FxButton>
+          </FxBox>
         </>
       ) : (
         <FxText variant="body" marginBottom="24" textAlign="center">
@@ -131,16 +126,9 @@ export const WalletDetails = ({
             iconLeft={<CopyIcon />}
             flexWrap="wrap"
             paddingHorizontal="32"
+            size="large"
           >
-            <FxBox style={{ flex: 1, width: 250 }}>
-              <FxText
-                ellipsizeMode="tail"
-                numberOfLines={1}
-                style={{ width: 250 }}
-              >
-                {DID}
-              </FxText>
-            </FxBox>
+            {DID}
           </FxButton>
         </FxBox>
       )}
@@ -151,14 +139,9 @@ export const WalletDetails = ({
             iconLeft={<CopyIcon />}
             flexWrap="wrap"
             paddingHorizontal="32"
+            size="large"
           >
-            <FxBox style={{ flex: 1, width: 250 }}>
-              <FxText
-                ellipsizeMode="tail"
-                numberOfLines={1}
-                style={{ width: 250 }}
-              >{`PeerId:${appPeerId}`}</FxText>
-            </FxBox>
+            {`PeerId:${appPeerId}`}
           </FxButton>
         </FxBox>
       )}
