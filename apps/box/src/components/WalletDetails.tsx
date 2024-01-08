@@ -92,13 +92,22 @@ export const WalletDetails = ({
                         {walletConnect.peerMeta.name}
                     </FxText> */}
           <FxText variant="bodyMediumRegular">Wallet Address</FxText>
-          <FxText
-            variant="bodySmallRegular"
-            textAlign="center"
+          <FxButton
             onPress={() => copyToClipboard(address)}
+            iconLeft={<CopyIcon />}
+            flexWrap="wrap"
+            paddingHorizontal="32"
           >
-            {address}
-          </FxText>
+            <FxBox style={{ flex: 1, width: 250 }}>
+              <FxText
+                ellipsizeMode="tail"
+                numberOfLines={1}
+                style={{ width: 250 }}
+              >
+                {address}
+              </FxText>
+            </FxBox>
+          </FxButton>
         </>
       ) : (
         <FxText variant="body" marginBottom="24" textAlign="center">
