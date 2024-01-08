@@ -58,29 +58,14 @@ export const ConnectToWalletScreen = () => {
     console.log('Connected chainId:', chain.id);
     console.log('Connected address:', address);
 
-    switch (chain.id) {
-      case mainnet.id:
-        // Ethereum Mainnet
-        break;
-      case polygon.id:
-        // polygon
-        break;
-      case goerli.id:
-        // Goerli Testnet
-        break;
-      case polygonMumbai.id:
-        // Mumbai Testnet
-        break;
-      default:
-        // Unknown network
-        close();
-        queueToast({
-          title: 'Invalid network',
-          message: 'The network you have chosen is invalid',
-          type: 'error',
-          autoHideDuration: 6000,
-        });
-        return;
+    if (chain.id !== selectedChainId) {
+      close();
+      queueToast({
+        title: 'Invalid network',
+        message: 'The network you have chosen is invalid',
+        type: 'error',
+        autoHideDuration: 6000,
+      });
     }
     if (address !== walletId) {
       setWalletId(address, true);
