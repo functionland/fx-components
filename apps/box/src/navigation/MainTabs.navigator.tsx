@@ -146,21 +146,7 @@ export const MainTabsNavigator = () => {
             tabBarLabel: 'Users',
           }}
         />
-        <MainTabs.Screen
-          name={Routes.HubTab}
-          component={HubScreen}
-          options={{
-            // eslint-disable-next-line react/no-unstable-nested-components
-            tabBarIcon: ({ color }) => <FxArrowUpIcon fill={color} />,
-            tabBarLabel: '',
-          }}
-          listeners={() => ({
-            tabPress: (e) => {
-              e.preventDefault();
-              openGlobalBottomSheet();
-            },
-          })}
-        />
+
         <MainTabs.Screen
           name={Routes.DevicesTab}
           component={DevicesScreen}
