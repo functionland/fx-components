@@ -17,7 +17,7 @@ type UserHeaderProps = {
 export const UserHeader = ({ userData }: UserHeaderProps) => {
   return (
     <FxBox alignItems="center">
-      <FxAvatar source={Number(userData.imageUrl)} size="xl" icon="edit" />
+      <FxAvatar source={Number(userData.imageUrl)} size="xl" />
       {/* <FxSpacer marginTop="16" />
       <FxText variant="bodyLargeRegular">@{userData.username}</FxText>
       <FxSpacer marginTop="4" /> */}
@@ -28,7 +28,6 @@ export const UserHeader = ({ userData }: UserHeaderProps) => {
       <FxText variant="bodyXSRegular">
         Connected wallet: {userData.walletName}
       </FxText> */}
-      <FxSpacer marginTop="32" />
       <FxBox paddingVertical="20">
         <WalletDetails
           showDID={true}

@@ -67,28 +67,6 @@ export const UsersScreen = () => {
             <UserHeader userData={mockUserData} />
           </FxBox>
           <FxSpacer marginTop="48" />
-          <FxHeader
-            title="All Friends"
-            isList={isList}
-            setIsList={setIsList}
-            onAddPress={() => console.log('add')}
-          />
-          <FxSpacer marginTop="24" />
-          {!isList ? (
-            <UsersCard data={mockFriendData} />
-          ) : (
-            <>
-              {mockFriendData.map((friend) => {
-                return (
-                  <UserCardCondensed
-                    key={friend.decentralizedId}
-                    marginTop="16"
-                    userData={friend}
-                  />
-                );
-              })}
-            </>
-          )}
         </Reanimated.ScrollView>
         <FxReanimatedBox
           backgroundColor="backgroundApp"
