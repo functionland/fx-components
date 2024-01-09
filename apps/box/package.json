@@ -67,6 +67,9 @@
     "@walletconnect/react-native-compat": "*",
     "wagmi": "*",
     "viem": "*",
-    "@web3modal/wagmi-react-native": "*"
+    "@web3modal/wagmi-react-native": "*",
+    "react-content-loader": "*",
+    "react-native-elements": "*",
+    "react-native-paper": "*"
   }
 }
