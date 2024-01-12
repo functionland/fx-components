@@ -19,11 +19,13 @@ interface PoolsActionSlice {
   leavePool: (poolID: number) => Promise<void>;
   cancelPoolJoin: (poolID: number) => Promise<void>;
   reset: () => void;
+  setDirty: () => void;
 }
 
 interface PoolsModel {
   _hasHydrated: boolean;
   pools: PoolData[];
+  dirty: boolean;
 }
 
 export interface PoolData extends TPool {
@@ -37,6 +39,7 @@ export interface PoolsModelSlice extends PoolsModel, PoolsActionSlice {}
 const initialState: PoolsModel = {
   _hasHydrated: false,
   pools: [],
+  dirty: false,
 };
 
 const createPoolsModelSlice: StateCreator<
@@ -66,7 +69,7 @@ const createPoolsModelSlice: StateCreator<
         let requested = false;
         let joined = false;
         let numVotes = 0;
-        let poolIdOfInterest = 0;
+        let poolIdOfInterest = -1;
         if (userPool !== null) {
           if (
             userPool?.requestPoolId !== null &&
@@ -82,49 +85,61 @@ const createPoolsModelSlice: StateCreator<
             numVotes = joinRequestInfo ? joinRequestInfo.voted.length : 0;
             requested = true;
             joined = false;
-          } else if (userPool?.poolID > 0) {
+          } else if (
+            userPool.poolId !== undefined &&
+            userPool.poolId.length > 0 &&
+            parseInt(userPool.poolId, 10) >= 0
+          ) {
             requested = true;
             joined = true;
-            poolIdOfInterest = parseInt(userPool?.requestPoolId, 10);
+            poolIdOfInterest = parseInt(userPool.poolId, 10);
           }
         }
         const newPools = (poolList?.pools || []) as TPool[];
-        const poolDatas = newPools.map((pool) => {
-          let joinInfo = {
-            requested: false,
-            joined: false,
-            numVotes: 0,
-            numVoters: 0,
-          };
-          if (
-            requested &&
-            parseInt(pool.poolID, 10) === poolIdOfInterest
-          ) {
-            joinInfo = {
+        const userPoolData = newPools
+          .filter((pool) => parseInt(pool.poolID, 10) === poolIdOfInterest)
+          .map((pool) => {
+            const joinInfo = {
               requested: requested,
               joined: joined,
               numVotes: numVotes,
               numVoters: pool.participants.length,
             };
-          }
-          return {
-            ...pool,
-            ...joinInfo,
-          } as PoolData;
-        }) as PoolData[];
+            return {
+              ...pool,
+              ...joinInfo,
+            } as PoolData;
+          }) as PoolData[];
+        const poolDatas = newPools
+          .filter((pool) => parseInt(pool.poolID, 10) !== poolIdOfInterest)
+          .map((pool) => {
+            const joinInfo = {
+              requested: false,
+              joined: false,
+              numVotes: 0,
+              numVoters: 0,
+            };
+            return {
+              ...pool,
+              ...joinInfo,
+            } as PoolData;
+          }) as PoolData[];
         set({
-          pools: poolDatas,
+          pools: [...userPoolData, ...poolDatas],
+          dirty: false,
         });
       } catch (error) {
         set({
           pools: [] as PoolData[],
+          dirty: false,
         });
-        // throw error;
+        throw error;
       }
     },
     joinPool: async (poolID: number) => {
       try {
         await blockchain.joinPool(poolID);
+        set({ dirty: true });
       } catch (error) {
         console.log('joinPool: ', error);
         throw error;
@@ -133,6 +148,7 @@ const createPoolsModelSlice: StateCreator<
     cancelPoolJoin: async (poolID: number) => {
       try {
         await blockchain.cancelPoolJoin(poolID);
+        set({ dirty: true });
       } catch (error) {
         console.log('cancelPoolJoin: ', error);
         throw error;
@@ -141,10 +157,14 @@ const createPoolsModelSlice: StateCreator<
     leavePool: async (poolID: number) => {
       try {
         await blockchain.leavePool(poolID);
+        set({ dirty: true });
       } catch (error) {
         console.log('leavePool: ', error);
         throw error;
       }
+    },
+    setDirty: () => {
+      set({ dirty: true });
     },
     reset: () => {
       set(initialState);

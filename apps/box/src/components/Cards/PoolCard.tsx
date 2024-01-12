@@ -3,22 +3,24 @@ import {
   FxBox,
   FxButton,
   FxCard,
+  FxPoolIcon,
   FxSpacer,
   FxTag,
   FxText,
 } from '@functionland/component-library';
-import moment from 'moment';
 import { TPool } from '../../models';
 
 type PoolCardType = React.ComponentProps<typeof FxCard> & {
   pool: TPool;
-  isDetailed?: boolean;
+  isDetailed: boolean;
   isRequested: boolean;
   isJoined: boolean;
   numVotes: number;
   numVoters: number;
   leavePool: (poolID: number) => Promise<void>;
-  joinPool: (poolID: number) => Promise<void>;
+  // Undefined meaning we should not show it!
+  joinPool?: (poolID: number) => Promise<void>;
+  cancelJoinPool: (poolID: number) => Promise<void>;
 };
 
 const DetailInfo = ({
@@ -30,6 +32,7 @@ const DetailInfo = ({
   numVoters,
   leavePool,
   joinPool,
+  cancelJoinPool,
 }: {
   pool: TPool;
   isDetailed?: boolean;
@@ -38,7 +41,8 @@ const DetailInfo = ({
   numVotes: number;
   numVoters: number;
   leavePool: (poolID: number) => Promise<void>;
-  joinPool: (poolID: number) => Promise<void>;
+  joinPool?: (poolID: number) => Promise<void>;
+  cancelJoinPool: (poolID: number) => Promise<void>;
 }) => (
   <FxBox>
     <FxSpacer marginTop="24" />
@@ -48,27 +52,44 @@ const DetailInfo = ({
     </FxCard.Row>
     {isJoined && (
       <FxCard.Row>
-        <FxCard.Row.Title>Join date</FxCard.Row.Title>
+        <FxCard.Row.Title>Status </FxCard.Row.Title>
+        <FxCard.Row.Data>Joined</FxCard.Row.Data>
+      </FxCard.Row>
+    )}
+    {isRequested && !isJoined && (
+      <FxCard.Row>
+        <FxCard.Row.Title>Status </FxCard.Row.Title>
         <FxCard.Row.Data>
-          {moment(pool.connectionDate).format('MM/DD/YYYY')}
+          Requested (votes: {numVotes}/{numVoters})
         </FxCard.Row.Data>
       </FxCard.Row>
     )}
-    <FxSpacer marginTop="24" />
-    {isDetailed && isRequested && isJoined && (
+    {isDetailed && isJoined && (
       <FxButton
         onPress={() => leavePool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
-        paddingHorizontal="32"
+        paddingHorizontal="16"
+        iconLeft={<FxPoolIcon />}
       >
         Leave
       </FxButton>
     )}
-    {isDetailed && !isRequested && !isJoined && (
+    {isDetailed && isRequested && !isJoined && (
+      <FxButton
+        onPress={() => cancelJoinPool(parseInt(pool.poolID, 10))}
+        flexWrap="wrap"
+        paddingHorizontal="16"
+        iconLeft={<FxPoolIcon />}
+      >
+        Cancel
+      </FxButton>
+    )}
+    {isDetailed && !(isRequested && isJoined) && joinPool !== undefined && (
       <FxButton
         onPress={() => joinPool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
-        paddingHorizontal="32"
+        paddingHorizontal="16"
+        iconLeft={<FxPoolIcon />}
       >
         Join
       </FxButton>
@@ -90,6 +111,7 @@ export const PoolCard = ({
   numVoters,
   leavePool,
   joinPool,
+  cancelJoinPool,
   ...rest
 }: PoolCardType) => {
   return (
@@ -114,6 +136,7 @@ export const PoolCard = ({
           numVoters={numVoters}
           leavePool={leavePool}
           joinPool={joinPool}
+          cancelJoinPool={cancelJoinPool}
         />
       )}
     </FxCard>
