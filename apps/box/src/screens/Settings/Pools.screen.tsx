@@ -6,6 +6,7 @@ import {
   FxButton,
   FxHeader,
   FxRefreshIcon,
+  FxSpacer,
   FxText,
   FxTextInput,
 } from '@functionland/component-library';
@@ -18,64 +19,77 @@ export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
-  const [allowJoin, setAllowJoin] = useState<boolean>(true);
+  const [retry, setRetry] = useState<boolean>(true);
+  const [allowJoin, setAllowJoin] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
   const [
     pools,
+    enableInteraction,
     joinPool,
     cancelPoolJoin,
     getPools,
     leavePool,
     dirty,
-    setDirty,
   ] = usePoolsStore(
     (state) => [
       state.pools,
+      state.enableInteraction,
       state.joinPool,
       state.cancelPoolJoin,
       state.getPools,
       state.leavePool,
       state.dirty,
-      state.setDirty,
     ],
     shallow
   );
 
+
   const onChangeSearch = (query) => setSearch(query ? query : '');
   useEffect(() => {
+    if (!dirty && !retry) {
+      return;
+    }
+    if (retry) {
+      setRetry(false);
+    }
     setIsLoaded(false);
     setIsError(false);
     getPools()
       .then((_) => {
         setIsLoaded(true);
         setIsError(false);
+        setAllowJoin(
+          pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
+            enableInteraction
+        );
       })
       .catch((e) => {
         setIsLoaded(false);
         setIsError(true);
         console.log('error getting pools: ', e);
       });
-    if (pools.filter((pool) => pool.joined || pool.requested).length > 0) {
-      setAllowJoin(false);
-    } else {
-      setAllowJoin(true);
-    }
-  }, [dirty]);
+  }, [dirty, retry]);
   console.log(pools);
 
   if (isError) {
     return (
-      <FxBox>
+      <FxBox
+        flex={3}
+        justifyContent="center"
+        paddingVertical="20"
+        alignItems="center"
+      >
         <FxText variant="bodyMediumRegular" textAlign="center" fontSize={24}>
-          Error getting list of pools!
+          Error loading pools!
         </FxText>
+        <FxSpacer marginTop="16" />
         <FxButton
-          onPress={() => setDirty()}
+          onPress={() => setRetry(true)}
           flexWrap="wrap"
           paddingHorizontal="16"
           iconLeft={<FxRefreshIcon />}
         >
-          Join
+          Retry
         </FxButton>
       </FxBox>
     );
