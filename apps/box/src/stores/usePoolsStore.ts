@@ -7,7 +7,7 @@ import { TPool } from '../models';
 
 interface PoolsActionSlice {
   setHasHydrated: (isHydrated: boolean) => void;
-  getPools: (search: string) => Promise<void>;
+  getPools: () => Promise<void>;
   addPool?: ({
     seed,
     poolName,
@@ -19,11 +19,13 @@ interface PoolsActionSlice {
   leavePool: (poolID: number) => Promise<void>;
   cancelPoolJoin: (poolID: number) => Promise<void>;
   reset: () => void;
+  setDirty: () => void;
 }
 
 interface PoolsModel {
   _hasHydrated: boolean;
   pools: PoolData[];
+  dirty: boolean;
 }
 
 export interface PoolData extends TPool {
@@ -37,6 +39,7 @@ export interface PoolsModelSlice extends PoolsModel, PoolsActionSlice {}
 const initialState: PoolsModel = {
   _hasHydrated: false,
   pools: [],
+  dirty: false,
 };
 
 const createPoolsModelSlice: StateCreator<
@@ -53,7 +56,7 @@ const createPoolsModelSlice: StateCreator<
         _hasHydrated: isHydrated,
       });
     },
-    getPools: async (search: string) => {
+    getPools: async () => {
       try {
         const api = await chainApi.init();
         const poolList = await chainApi.listPools(api);
@@ -108,11 +111,7 @@ const createPoolsModelSlice: StateCreator<
             } as PoolData;
           }) as PoolData[];
         const poolDatas = newPools
-          .filter(
-            (pool) =>
-              parseInt(pool.poolID, 10) !== poolIdOfInterest &&
-              (search !== '' ? pool.name.includes(search) : true)
-          )
+          .filter((pool) => parseInt(pool.poolID, 10) !== poolIdOfInterest)
           .map((pool) => {
             const joinInfo = {
               requested: false,
@@ -127,10 +126,12 @@ const createPoolsModelSlice: StateCreator<
           }) as PoolData[];
         set({
           pools: [...userPoolData, ...poolDatas],
+          dirty: false,
         });
       } catch (error) {
         set({
           pools: [] as PoolData[],
+          dirty: false,
         });
         throw error;
       }
@@ -138,6 +139,7 @@ const createPoolsModelSlice: StateCreator<
     joinPool: async (poolID: number) => {
       try {
         await blockchain.joinPool(poolID);
+        set({ dirty: true });
       } catch (error) {
         console.log('joinPool: ', error);
         throw error;
@@ -146,6 +148,7 @@ const createPoolsModelSlice: StateCreator<
     cancelPoolJoin: async (poolID: number) => {
       try {
         await blockchain.cancelPoolJoin(poolID);
+        set({ dirty: true });
       } catch (error) {
         console.log('cancelPoolJoin: ', error);
         throw error;
@@ -154,10 +157,14 @@ const createPoolsModelSlice: StateCreator<
     leavePool: async (poolID: number) => {
       try {
         await blockchain.leavePool(poolID);
+        set({ dirty: true });
       } catch (error) {
         console.log('leavePool: ', error);
         throw error;
       }
+    },
+    setDirty: () => {
+      set({ dirty: true });
     },
     reset: () => {
       set(initialState);

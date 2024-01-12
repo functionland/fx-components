@@ -12,13 +12,14 @@ import { TPool } from '../../models';
 
 type PoolCardType = React.ComponentProps<typeof FxCard> & {
   pool: TPool;
-  isDetailed?: boolean;
+  isDetailed: boolean;
   isRequested: boolean;
   isJoined: boolean;
   numVotes: number;
   numVoters: number;
   leavePool: (poolID: number) => Promise<void>;
-  joinPool: (poolID: number) => Promise<void>;
+  // Undefined meaning we should not show it!
+  joinPool?: (poolID: number) => Promise<void>;
   cancelJoinPool: (poolID: number) => Promise<void>;
 };
 
@@ -40,7 +41,7 @@ const DetailInfo = ({
   numVotes: number;
   numVoters: number;
   leavePool: (poolID: number) => Promise<void>;
-  joinPool: (poolID: number) => Promise<void>;
+  joinPool?: (poolID: number) => Promise<void>;
   cancelJoinPool: (poolID: number) => Promise<void>;
 }) => (
   <FxBox>
@@ -63,7 +64,6 @@ const DetailInfo = ({
         </FxCard.Row.Data>
       </FxCard.Row>
     )}
-    <FxSpacer marginTop="24" />
     {isDetailed && isJoined && (
       <FxButton
         onPress={() => leavePool(parseInt(pool.poolID, 10))}
@@ -84,14 +84,14 @@ const DetailInfo = ({
         Cancel
       </FxButton>
     )}
-    {isDetailed && !isRequested && !isJoined && (
+    {isDetailed && !(isRequested && isJoined) && joinPool !== undefined && (
       <FxButton
         onPress={() => joinPool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
         paddingHorizontal="16"
         iconLeft={<FxPoolIcon />}
       >
-        Change
+        Join
       </FxButton>
     )}
     {isDetailed && !isRequested && isJoined && (

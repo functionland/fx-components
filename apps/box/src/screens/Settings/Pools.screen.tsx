@@ -3,7 +3,9 @@ import { StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import {
   FxBox,
+  FxButton,
   FxHeader,
+  FxRefreshIcon,
   FxText,
   FxTextInput,
 } from '@functionland/component-library';
@@ -11,31 +13,39 @@ import { PoolCard } from '../../components/Cards/PoolCard';
 import { usePoolsStore } from '../../stores/usePoolsStore';
 import { shallow } from 'zustand/shallow';
 import MyLoader from '../../components/ContentLoader';
-import { SearchBar } from 'react-native-screens';
-import { range } from 'lodash';
 
 export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
+  const [allowJoin, setAllowJoin] = useState<boolean>(true);
   const [search, setSearch] = useState<string>('');
-  const [pools, joinPool, cancelPoolJoin, getPools, leavePool] = usePoolsStore(
+  const [
+    pools,
+    joinPool,
+    cancelPoolJoin,
+    getPools,
+    leavePool,
+    dirty,
+    setDirty,
+  ] = usePoolsStore(
     (state) => [
       state.pools,
       state.joinPool,
       state.cancelPoolJoin,
       state.getPools,
       state.leavePool,
+      state.dirty,
+      state.setDirty,
     ],
     shallow
   );
 
   const onChangeSearch = (query) => setSearch(query ? query : '');
-
   useEffect(() => {
     setIsLoaded(false);
     setIsError(false);
-    getPools(search)
+    getPools()
       .then((_) => {
         setIsLoaded(true);
         setIsError(false);
@@ -45,14 +55,29 @@ export const PoolsScreen = () => {
         setIsError(true);
         console.log('error getting pools: ', e);
       });
-  }, [search]);
+    if (pools.filter((pool) => pool.joined || pool.requested).length > 0) {
+      setAllowJoin(false);
+    } else {
+      setAllowJoin(true);
+    }
+  }, [dirty]);
   console.log(pools);
 
   if (isError) {
     return (
-      <FxText variant="bodyMediumRegular" textAlign="center" fontSize={24}>
-        Error getting list of pools!
-      </FxText>
+      <FxBox>
+        <FxText variant="bodyMediumRegular" textAlign="center" fontSize={24}>
+          Error getting list of pools!
+        </FxText>
+        <FxButton
+          onPress={() => setDirty()}
+          flexWrap="wrap"
+          paddingHorizontal="16"
+          iconLeft={<FxRefreshIcon />}
+        >
+          Join
+        </FxButton>
+      </FxBox>
     );
   }
   return (
@@ -74,7 +99,13 @@ export const PoolsScreen = () => {
         </FxBox>
       }
       data={
-        isLoaded ? pools : Array.from({ length: 5 }, (_value, index) => index)
+        isLoaded
+          ? pools.filter((pool) =>
+              search !== ''
+                ? pool.name.includes(search) || pool.requested
+                : true
+            )
+          : Array.from({ length: 5 }, (_value, index) => index)
       }
       keyExtractor={(item) => item.poolID}
       renderItem={({ item }) =>
@@ -89,7 +120,7 @@ export const PoolsScreen = () => {
             numVotes={item.numVotes}
             numVoters={item.numVoters}
             leavePool={leavePool}
-            joinPool={joinPool}
+            joinPool={allowJoin ? joinPool : undefined}
             cancelJoinPool={cancelPoolJoin}
           />
         )
