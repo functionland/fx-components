@@ -57,7 +57,6 @@ export const PoolsScreen = () => {
     getPools()
       .then((_) => {
         setIsLoaded(true);
-        setIsError(false);
         setAllowJoin(
           pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
             enableInteraction
@@ -65,11 +64,10 @@ export const PoolsScreen = () => {
       })
       .catch((e) => {
         setIsLoaded(false);
-        setIsError(true);
         console.log('error getting pools: ', e);
       });
   }, [dirty, retry]);
-  console.log(pools);
+  console.log('$$$$$$$$$$$$$ allow join: ', allowJoin);
 
   if (isError) {
     return (

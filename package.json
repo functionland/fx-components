@@ -50,7 +50,7 @@
     "@walletconnect/encoding": "^1.0.2",
     "@walletconnect/react-native-compat": "^2.10.5",
     "@web3modal/core-react-native": "*",
-    "@web3modal/wagmi-react-native": "^1.0.0",
+    "@web3modal/wagmi-react-native": "^1.1.1",
     "axios": "^1.6.2",
     "big-integer": "^1.6.52",
     "expo": "49.0.21",
@@ -93,8 +93,8 @@
     "text-encoding-polyfill": "^0.6.7",
     "three": "^0.145.0",
     "tslib": "^2.6.2",
-    "viem": "^1.19.9",
-    "wagmi": "^1.4.7",
+    "viem": "1.21.4",
+    "wagmi": "1.4.13",
     "zustand": "^4.4.7"
   },
   "devDependencies": {

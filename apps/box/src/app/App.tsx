@@ -2,7 +2,8 @@ import '@walletconnect/react-native-compat';
 import React, { useEffect, useRef } from 'react';
 import '@walletconnect/react-native-compat';
 import { WagmiConfig } from 'wagmi';
-import { mainnet, polygon, arbitrum, goerli } from 'viem/chains';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { mainnet, polygon, arbitrum, goerli, polygonMumbai } from 'viem/chains';
 import {
   createWeb3Modal,
   defaultWagmiConfig,
@@ -17,7 +18,6 @@ import {
   FxPressableOpacity,
 } from '@functionland/component-library';
 import { RootNavigator } from '../navigation/Root.navigator';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavContainer } from '../navigation/NavContainer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -68,12 +68,13 @@ export const App = () => {
 
   // const [selectedChainId, setSelectedChainId] = useState(1);// defualt is Etherum
 
-  const chains = [mainnet, polygon, arbitrum, goerli];
+  const chains = [polygonMumbai, polygon, mainnet, arbitrum, goerli];
 
   const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
 
   // 3. Create modal
   createWeb3Modal({
+    // defaultChain: polygonMumbai,
     projectId,
     chains,
     wagmiConfig,
@@ -83,9 +84,9 @@ export const App = () => {
   }, [loadAllCredentials]);
   return (
     <GestureHandlerRootView style={styles.flex1}>
-    <WagmiConfig config={wagmiConfig}>
-      <ThemeProvider theme={theme}>
-        <ToastProvider>
+      <WagmiConfig config={wagmiConfig}>
+        <ThemeProvider theme={theme}>
+          <ToastProvider>
             <StatusBar
               backgroundColor={theme.colors.backgroundApp}
               barStyle={barStyles[mode]}
@@ -95,10 +96,10 @@ export const App = () => {
                 <AppContent />
               </BottomSheetModalProvider>
             </SafeAreaProvider>
-        </ToastProvider>
-      </ThemeProvider>
-      <Web3Modal />
-    </WagmiConfig>
+          </ToastProvider>
+        </ThemeProvider>
+        <Web3Modal />
+      </WagmiConfig>
     </GestureHandlerRootView>
   );
 };

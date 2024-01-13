@@ -59,6 +59,7 @@ const createPoolsModelSlice: StateCreator<
       });
     },
     getPools: async () => {
+      // throw "error"
       try {
         const api = await chainApi.init();
         const poolList = await chainApi.listPools(api);

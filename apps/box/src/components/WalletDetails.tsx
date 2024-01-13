@@ -145,7 +145,7 @@ export const WalletDetails = ({
           </FxButton>
         </FxBox>
       )}
-      {bloxsArray.length && showBloxPeerIds && (
+      {bloxsArray.length > 0 && showBloxPeerIds && (
         <>
           <FxHeader
             alignSelf="flex-start"
