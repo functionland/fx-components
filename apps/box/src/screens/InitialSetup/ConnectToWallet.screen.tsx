@@ -248,7 +248,7 @@ export const ConnectToWalletScreen = () => {
             </FxButton>
           ) : !signiture ? (
             <FxButton size="large" onPress={handleLinkPassword}>
-              {!networkConfirmed ? 'Link Password' : <ActivityIndicator />}
+              {networkConfirmed ? 'Link Password' : <ActivityIndicator />}
             </FxButton>
           ) : (
             <>
