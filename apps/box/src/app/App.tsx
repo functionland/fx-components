@@ -1,5 +1,12 @@
 import React, { useEffect, useRef } from 'react';
+<<<<<<< HEAD
 import AsyncStorage from '@react-native-async-storage/async-storage';
+=======
+import '@walletconnect/react-native-compat';
+import { WagmiConfig } from 'wagmi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { mainnet, polygon, arbitrum, goerli, polygonMumbai } from 'viem/chains';
+>>>>>>> f72296b (improve wallet connect)
 import {
   MetaMaskProvider,
   SDKConfigProvider,
