@@ -14,11 +14,6 @@ import {
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-<<<<<<< HEAD
-=======
-import { useAccount, useNetwork, useDisconnect } from 'wagmi';
-import { useWeb3Modal } from '@web3modal/wagmi-react-native';
->>>>>>> f72296b (improve wallet connect)
 import { Helper } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
 import { useSDK } from '@metamask/sdk-react';
@@ -196,13 +191,8 @@ export const ConnectToWalletScreen = () => {
               </FxText>
               <FxPicker
                 selectedValue={selectedChainId}
-<<<<<<< HEAD
                 enabled={!connected}
                 onValueChange={(itemValue: string) =>
-=======
-                enabled={!isConnected}
-                onValueChange={(itemValue: number) =>
->>>>>>> f72296b (improve wallet connect)
                   setSelectedChainId(itemValue)
                 }
               >
@@ -233,18 +223,9 @@ export const ConnectToWalletScreen = () => {
           </>
         )}
         <FxBox>
-<<<<<<< HEAD
           {!connected ? (
             <FxButton size="large" onPress={handleConnect}>
               {provider ? 'Connect to Wallet' : <ActivityIndicator />}
-=======
-          {!isConnected || !networkConfirmed ? (
-            <FxButton
-              size="large"
-              onPress={!networkConfirmed ? handleWalletConnect : null}
-            >
-              {!networkConfirmed ? 'Connect to Wallet' : <ActivityIndicator />}
->>>>>>> f72296b (improve wallet connect)
             </FxButton>
           ) : !signiture ? (
             <FxButton size="large" onPress={handleLinkPassword}>
@@ -285,11 +266,7 @@ export const ConnectToWalletScreen = () => {
               </FxButton>
             </>
           )}
-<<<<<<< HEAD
           {provider && connected && (
-=======
-          {isConnected && networkConfirmed && (
->>>>>>> f72296b (improve wallet connect)
             <FxButton
               variant="inverted"
               size="large"
