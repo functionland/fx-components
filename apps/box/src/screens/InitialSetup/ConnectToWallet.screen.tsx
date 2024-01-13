@@ -51,7 +51,11 @@ export const ConnectToWalletScreen = () => {
   }, [isConnected, address]);
 
   useEffect(() => {
-    if (chain === undefined) return;
+    if (!isConnected) {
+      setNetwordConfirmed(false);
+      return;
+    }
+    if (chain === undefined || networkConfirmed) return;
     console.log('chainId: ', chain?.id);
     if (!isConnected) {
       console.log('Chain connected: ', isConnected);
@@ -69,7 +73,6 @@ export const ConnectToWalletScreen = () => {
         type: 'error',
         autoHideDuration: 6000,
       });
-      setNetwordConfirmed(false);
       return;
     }
 
@@ -91,6 +94,7 @@ export const ConnectToWalletScreen = () => {
     }
   };
   const disconnectWallet = () => {
+    setNetwordConfirmed(false);
     disconnect();
     close();
     open();

@@ -67,7 +67,6 @@ export const PoolsScreen = () => {
         console.log('error getting pools: ', e);
       });
   }, [dirty, retry]);
-  console.log('$$$$$$$$$$$$$ allow join: ', allowJoin);
 
   if (isError) {
     return (

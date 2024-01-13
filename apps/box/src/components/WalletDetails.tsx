@@ -14,6 +14,7 @@ import { CopyIcon } from './Icons';
 import { useBloxsStore } from '../stores';
 import { shallow } from 'zustand/shallow';
 import { useWalletClient, useConfig, useConnect, useAccount } from 'wagmi';
+import { useWeb3Modal } from '@web3modal/wagmi-react-native';
 interface WalletDetailsProps {
   allowChangeWallet?: boolean;
   showPeerId?: boolean;
@@ -35,6 +36,7 @@ export const WalletDetails = ({
     state.password,
   ]);
   const { data: walletClient, error } = useWalletClient();
+  const { open, close } = useWeb3Modal();
   // const { connectors } = useConfig();
   // const { connect, isSuccess } = useConnect({ connector: connectors[0] });
   // let { address: adr, isConnected } = useAccount();
@@ -61,11 +63,8 @@ export const WalletDetails = ({
 
   const handleChangeWallet = async () => {
     try {
-      // await walletConnect.killSession();
-      // const wallet = await walletConnect.connect();
-      // if (wallet.accounts[0] !== walletId) {
-      //     setWalletId(wallet.accounts[0], true);
-      // }
+      close();
+      open();
     } catch (err) {
       console.log(err);
       queueToast({
