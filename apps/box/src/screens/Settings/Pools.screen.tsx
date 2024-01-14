@@ -6,6 +6,7 @@ import {
   FxButton,
   FxHeader,
   FxRefreshIcon,
+  FxSearchIcon,
   FxSpacer,
   FxText,
   FxTextInput,
@@ -14,6 +15,7 @@ import { PoolCard } from '../../components/Cards/PoolCard';
 import { usePoolsStore } from '../../stores/usePoolsStore';
 import { shallow } from 'zustand/shallow';
 import MyLoader from '../../components/ContentLoader';
+import { TextInput } from 'react-native-gesture-handler';
 
 export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
@@ -42,7 +44,6 @@ export const PoolsScreen = () => {
     ],
     shallow
   );
-
 
   const onChangeSearch = (query) => setSearch(query ? query : '');
   useEffect(() => {
@@ -102,11 +103,30 @@ export const PoolsScreen = () => {
             isList={isList}
             setIsList={setIsList}
           />
-          <FxTextInput
-            placeholder="Search pools..."
-            onChangeText={onChangeSearch}
-            value={search}
-          />
+          <FxBox
+            flexDirection="row"
+            alignItems="center"
+            justifyContent="space-evenly"
+          >
+            <FxBox flex={1}>
+              <FxTextInput
+                placeholder="Search pools..."
+                onChangeText={onChangeSearch}
+                alignContent="stretch"
+                value={search}
+              />
+            </FxBox>
+            <FxBox flex={0} paddingLeft="16" flexDirection="column">
+              <FxButton
+                onPress={() => setRetry(true)}
+                paddingHorizontal="16"
+                flex={1}
+                icon={<FxRefreshIcon />}
+              >
+                Retry
+              </FxButton>
+            </FxBox>
+          </FxBox>
         </FxBox>
       }
       data={
