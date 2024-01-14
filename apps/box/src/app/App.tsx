@@ -74,7 +74,7 @@ export const App = () => {
 
   // 3. Create modal
   createWeb3Modal({
-    // defaultChain: polygonMumbai,
+    defaultChain: polygonMumbai,
     projectId,
     chains,
     wagmiConfig,
