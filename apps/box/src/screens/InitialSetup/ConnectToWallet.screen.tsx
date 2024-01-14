@@ -14,8 +14,7 @@ import {
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi';
-import { mainnet, polygon, goerli, polygonMumbai } from 'viem/chains';
+import { useAccount, useNetwork, useDisconnect } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi-react-native';
 import { Helper } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
@@ -26,12 +25,10 @@ export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
 
   const { queueToast } = useToast();
-  const [networkConfirmed, setNetwordConfirmed] = useState(false);
-  //TODO: do we need this anymore?
-  const [provider, setProvider] = useState(true);
+  const [networkConfirmed, setNetwordConfirmed] = useState<boolean>(false);
   const [selectedChainId, setSelectedChainId] = useState(80001); // Mumbai Polygon Testnet
   const { chain } = useNetwork();
-  const { isLoading, switchNetwork } = useSwitchNetwork();
+  const { disconnect } = useDisconnect();
   const { open, close } = useWeb3Modal();
   const { address, isConnected } = useAccount();
   const [walletId, signiture, password, setWalletId] = useUserProfileStore(
@@ -47,30 +44,41 @@ export const ConnectToWalletScreen = () => {
   const logger = useLogger();
   useEffect(() => {
     console.log('isConnected', isConnected);
-    if (isConnected) checkChainId();
-  }, [isConnected, chain, address]);
-
-  const checkChainId = async () => {
     if (!isConnected || !address) return;
+    if (address !== walletId) {
+      setWalletId(address, true);
+    }
+  }, [isConnected, address]);
 
-    if (chain === undefined) return;
-    setSelectedChainId(chain.id);
-    console.log('Connected chainId:', chain.id);
-    console.log('Connected address:', address);
+  useEffect(() => {
+    if (!isConnected) {
+      setNetwordConfirmed(false);
+      return;
+    }
+    if (chain === undefined || networkConfirmed) return;
+    console.log('chainId: ', chain?.id);
+    if (!isConnected) {
+      console.log('Chain connected: ', isConnected);
+      return;
+    }
+    handleNetwork();
+  }, [chain]);
 
-    if (chain.id !== selectedChainId) {
-      close();
+  const handleNetwork = async () => {
+    if (chain?.id !== selectedChainId) {
+      disconnectWallet();
       queueToast({
         title: 'Invalid network',
         message: 'The network you have chosen is invalid',
         type: 'error',
         autoHideDuration: 6000,
       });
+      return;
     }
-    if (address !== walletId) {
-      setWalletId(address, true);
-    }
+
+    setNetwordConfirmed(true);
   };
+
   const handleWalletConnect = async () => {
     try {
       open();
@@ -85,7 +93,9 @@ export const ConnectToWalletScreen = () => {
       });
     }
   };
-  const disconnectWallet = async () => {
+  const disconnectWallet = () => {
+    setNetwordConfirmed(false);
+    disconnect();
     close();
     open();
   };
@@ -136,10 +146,9 @@ export const ConnectToWalletScreen = () => {
               </FxText>
               <FxPicker
                 selectedValue={selectedChainId}
+                enabled={!isConnected}
                 onValueChange={(itemValue: number) =>
-                  isConnected
-                    ? switchNetwork?.(itemValue)
-                    : setSelectedChainId(itemValue)
+                  setSelectedChainId(itemValue)
                 }
               >
                 <FxPickerItem
@@ -169,16 +178,16 @@ export const ConnectToWalletScreen = () => {
           </>
         )}
         <FxBox>
-          {!isConnected ? (
+          {!isConnected || !networkConfirmed ? (
             <FxButton
               size="large"
-              onPress={provider ? handleWalletConnect : null}
+              onPress={!networkConfirmed ? handleWalletConnect : null}
             >
-              {provider ? 'Connect to Wallet' : <ActivityIndicator />}
+              {!networkConfirmed ? 'Connect to Wallet' : <ActivityIndicator />}
             </FxButton>
           ) : !signiture ? (
             <FxButton size="large" onPress={handleLinkPassword}>
-              {provider ? 'Link Password' : <ActivityIndicator />}
+              {networkConfirmed ? 'Link Password' : <ActivityIndicator />}
             </FxButton>
           ) : (
             <>
@@ -215,7 +224,7 @@ export const ConnectToWalletScreen = () => {
               </FxButton>
             </>
           )}
-          {isConnected && (
+          {isConnected && networkConfirmed && (
             <FxButton
               variant="inverted"
               size="large"
