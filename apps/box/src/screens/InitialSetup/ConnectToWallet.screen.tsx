@@ -14,7 +14,7 @@ import {
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { useAccount, useNetwork, useDisconnect } from 'wagmi';
+import { useAccount, useNetwork, useDisconnect, useSwitchNetwork } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi-react-native';
 import { Helper } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
@@ -28,6 +28,7 @@ export const ConnectToWalletScreen = () => {
   const [networkConfirmed, setNetwordConfirmed] = useState<boolean>(false);
   const [selectedChainId, setSelectedChainId] = useState(80001); // Mumbai Polygon Testnet
   const { chain } = useNetwork();
+  const { switchNetwork } = useSwitchNetwork();
   const { disconnect } = useDisconnect();
   const { open, close } = useWeb3Modal();
   const { address, isConnected } = useAccount();
@@ -66,6 +67,10 @@ export const ConnectToWalletScreen = () => {
 
   const handleNetwork = async () => {
     if (chain?.id !== selectedChainId) {
+      if (switchNetwork) {
+        switchNetwork();
+        return;
+      }
       disconnectWallet();
       queueToast({
         title: 'Invalid network',
