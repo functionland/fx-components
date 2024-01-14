@@ -15,7 +15,6 @@ import { PoolCard } from '../../components/Cards/PoolCard';
 import { usePoolsStore } from '../../stores/usePoolsStore';
 import { shallow } from 'zustand/shallow';
 import MyLoader from '../../components/ContentLoader';
-import { TextInput } from 'react-native-gesture-handler';
 
 export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
@@ -82,7 +81,10 @@ export const PoolsScreen = () => {
         </FxText>
         <FxSpacer marginTop="16" />
         <FxButton
-          onPress={() => setRetry(true)}
+          onPress={() => {
+            setSearch('');
+            setRetry(true);
+          }}
           flexWrap="wrap"
           paddingHorizontal="16"
           iconLeft={<FxRefreshIcon />}
@@ -112,13 +114,17 @@ export const PoolsScreen = () => {
               <FxTextInput
                 placeholder="Search pools..."
                 onChangeText={onChangeSearch}
+                clearButtonMode="always"
                 alignContent="stretch"
                 value={search}
               />
             </FxBox>
             <FxBox flex={0} paddingLeft="16" flexDirection="column">
               <FxButton
-                onPress={() => setRetry(true)}
+                onPress={() => {
+                  setSearch('');
+                  setRetry(true);
+                }}
                 paddingHorizontal="16"
                 flex={1}
                 icon={<FxRefreshIcon />}
@@ -133,7 +139,7 @@ export const PoolsScreen = () => {
         isLoaded
           ? pools.filter((pool) =>
               search !== ''
-                ? pool.name.includes(search) || pool.requested
+                ? pool.name?.toLowerCase().includes(search?.toLowerCase())
                 : true
             )
           : Array.from({ length: 5 }, (_value, index) => index)
