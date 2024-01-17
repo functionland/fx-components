@@ -12,7 +12,8 @@ export const postProperties = async (data) => {
 };
 
 export const getWifiList = async (): Promise<{ data: { essid: string }[] }> => {
-  return axios.get(`${API_URL}/wifi/list`);
+  // return axios.get(`${API_URL}/wifi/list`);
+  return {data: [{essid: "Blox"}]}
 };
 
 export const getWifiStatus = async () => {
@@ -29,12 +30,13 @@ export const postWifiConnect = async (data: {
   formData.append('password', data?.password);
   formData.append('countryCode', data?.countryCode || 'CA');
   
-  return axios.post(`${API_URL}/wifi/connect?${formData.toString()}`, undefined, {
-    timeout: 1000 * 15,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  });
+  // return axios.post(`${API_URL}/wifi/connect?${formData.toString()}`, undefined, {
+  //   timeout: 1000 * 15,
+  //   headers: {
+  //     'Content-Type': 'application/x-www-form-urlencoded'
+  //   }
+  // });
+  return { data: 'Wifi connected!' };
 };
 
 export const putApDisable = async () => {
