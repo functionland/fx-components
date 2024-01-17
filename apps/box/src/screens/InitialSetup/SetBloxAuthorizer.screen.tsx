@@ -329,8 +329,9 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                 }
               />
             )}
-          {(!data_bloxProperties?.data?.bloxFreeSpace ||
-            (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) === 0) &&
+          {!isManualSetup &&
+            (!data_bloxProperties?.data?.bloxFreeSpace ||
+              (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) === 0) &&
             !loading_bloxProperties && (
               <FxWarning
                 padding="16"

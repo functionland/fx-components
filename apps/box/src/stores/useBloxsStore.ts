@@ -1,23 +1,28 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TBlox, TBloxFreeSpace, TBloxConectionStatus, TBloxProperty } from '../models';
+import {
+  TBlox,
+  TBloxFreeSpace,
+  TBloxConectionStatus,
+  TBloxProperty,
+} from '../models';
 import { blockchain, fula } from '@functionland/react-native-fula';
 import { firebase } from '@react-native-firebase/crashlytics';
+import { BloxFreeSpaceResponse } from '@functionland/react-native-fula/lib/typescript/types/blockchain';
 
 interface BloxsActionSlice {
-
   /**
    * Local actions
    */
   setHasHydrated: (isHydrated: boolean) => void;
-  update: (model: Partial<BloxsModel>) => void,
-  addBlox: (blox: TBlox) => void
-  updateBlox: (blox: Partial<TBlox> & Pick<TBlox, 'peerId'>) => void
-  removeBlox: (peerId: string) => void
-  updateBloxPropertyInfo: (peerId: string, info: TBloxProperty) => void
-  updateBloxSpaceInfo: (peerId: string, info: TBloxFreeSpace) => void
-  reset: () => void
+  update: (model: Partial<BloxsModel>) => void;
+  addBlox: (blox: TBlox) => void;
+  updateBlox: (blox: Partial<TBlox> & Pick<TBlox, 'peerId'>) => void;
+  removeBlox: (peerId: string) => void;
+  updateBloxPropertyInfo: (peerId: string, info: TBloxProperty) => void;
+  updateBloxSpaceInfo: (peerId: string, info: TBloxFreeSpace) => void;
+  reset: () => void;
 
   /**
    * Remote actions
@@ -27,21 +32,21 @@ interface BloxsActionSlice {
 }
 interface BloxsModel {
   _hasHydrated: boolean;
-  bloxs: Record<string, TBlox>
-  bloxsSpaceInfo?: Record<string, TBloxFreeSpace>
-  bloxsPropertyInfo?: Record<string, TBloxProperty>
-  bloxsConnectionStatus: Record<string, TBloxConectionStatus>
-  currentBloxPeerId?: string
+  bloxs: Record<string, TBlox>;
+  bloxsSpaceInfo?: Record<string, TBloxFreeSpace>;
+  bloxsPropertyInfo?: Record<string, TBloxProperty>;
+  bloxsConnectionStatus: Record<string, TBloxConectionStatus>;
+  currentBloxPeerId?: string;
 }
-export interface BloxsModelSlice extends BloxsModel, BloxsActionSlice { }
+export interface BloxsModelSlice extends BloxsModel, BloxsActionSlice {}
 const inittalState: BloxsModel = {
   _hasHydrated: false,
   bloxs: {},
   bloxsSpaceInfo: {},
   bloxsPropertyInfo: {},
   bloxsConnectionStatus: {},
-  currentBloxPeerId: undefined
-}
+  currentBloxPeerId: undefined,
+};
 
 const createModeSlice: StateCreator<
   BloxsModelSlice,
@@ -61,37 +66,37 @@ const createModeSlice: StateCreator<
     },
     update: (model) => {
       set({
-        ...model
-      })
+        ...model,
+      });
     },
     addBlox: (blox) => {
-      const { bloxs: currentBloxs } = get()
+      const { bloxs: currentBloxs } = get();
       set({
         bloxs: {
           ...currentBloxs,
           [blox.peerId]: {
-            ...blox
-          }
-        }
-      })
+            ...blox,
+          },
+        },
+      });
     },
     updateBlox: (blox) => {
-      const { bloxs: currentBloxs } = get()
+      const { bloxs: currentBloxs } = get();
       set({
         bloxs: {
           ...currentBloxs,
           [blox.peerId]: {
             ...currentBloxs[blox.peerId],
-            ...blox
-          }
-        }
-      })
+            ...blox,
+          },
+        },
+      });
     },
     removeBlox: (peerId: string) => {
-      const { bloxs: currentBloxs, bloxsPropertyInfo, bloxsSpaceInfo } = get()
-      delete bloxsPropertyInfo[peerId]
-      delete bloxsSpaceInfo[peerId]
-      delete currentBloxs[peerId]
+      const { bloxs: currentBloxs, bloxsPropertyInfo, bloxsSpaceInfo } = get();
+      delete bloxsPropertyInfo[peerId];
+      delete bloxsSpaceInfo[peerId];
+      delete currentBloxs[peerId];
       set({
         bloxs: {
           ...currentBloxs,
@@ -100,86 +105,94 @@ const createModeSlice: StateCreator<
           ...bloxsPropertyInfo,
         },
         bloxsSpaceInfo: {
-          ...bloxsSpaceInfo
-        }
-      })
+          ...bloxsSpaceInfo,
+        },
+      });
     },
     reset: () => {
       set({
-        ...inittalState
-      })
+        ...inittalState,
+      });
     },
     /**
      * Remote actions implementaions
      */
     getBloxSpace: async (updateStore = true) => {
       try {
-        const { bloxsSpaceInfo, currentBloxPeerId } = get()
-        const bloxSpace = await blockchain.bloxFreeSpace();
+        const { bloxsSpaceInfo, currentBloxPeerId } = get();
+        // const bloxSpace = await blockchain.bloxFreeSpace();
+        const bloxSpace: BloxFreeSpaceResponse = {
+          size: 1000000000000,
+          avail: 1000000000,
+          used: 70,
+          used_percentage: 70,
+        };
         console.log(bloxSpace);
         if (updateStore && bloxSpace?.size) {
           set({
             bloxsSpaceInfo: {
               ...bloxsSpaceInfo,
               [currentBloxPeerId]: {
-                ...bloxSpace
-              } as TBloxFreeSpace
-            }
-          })
+                ...bloxSpace,
+              } as TBloxFreeSpace,
+            },
+          });
         }
         return bloxSpace as TBloxFreeSpace;
       } catch (error) {
         console.log(error);
-        //TODO: add better error handling
-        // throw error;
+        throw error;
       }
     },
     updateBloxPropertyInfo: (peerId, info) => {
-      const { bloxsPropertyInfo } = get()
+      const { bloxsPropertyInfo } = get();
       set({
         bloxsPropertyInfo: {
           ...bloxsPropertyInfo,
           [peerId]: {
-            ...info
-          }
-        }
-      })
+            ...info,
+          },
+        },
+      });
     },
     updateBloxSpaceInfo: (peerId, info) => {
-      const { bloxsSpaceInfo } = get()
+      const { bloxsSpaceInfo } = get();
       set({
         bloxsSpaceInfo: {
           ...bloxsSpaceInfo,
           [peerId]: {
-            ...info
-          }
-        }
-      })
+            ...info,
+          },
+        },
+      });
     },
     checkBloxConnection: async () => {
-      const { bloxsConnectionStatus: currentBloxsConnectionStatus, currentBloxPeerId } = get()
+      const {
+        bloxsConnectionStatus: currentBloxsConnectionStatus,
+        currentBloxPeerId,
+      } = get();
       try {
         set({
           bloxsConnectionStatus: {
             ...currentBloxsConnectionStatus,
-            [currentBloxPeerId]: 'PENDING'
-          }
-        })
+            [currentBloxPeerId]: 'PENDING',
+          },
+        });
         const connected = await fula.checkConnection();
         set({
           bloxsConnectionStatus: {
             ...currentBloxsConnectionStatus,
-            [currentBloxPeerId]: connected ? 'CONNECTED' : 'DISCONNECTED'
-          }
-        })
+            [currentBloxPeerId]: connected ? 'CONNECTED' : 'DISCONNECTED',
+          },
+        });
         return connected;
       } catch (error) {
         set({
           bloxsConnectionStatus: {
             ...currentBloxsConnectionStatus,
-            [currentBloxPeerId]: 'DISCONNECTED'
-          }
-        })
+            [currentBloxPeerId]: 'DISCONNECTED',
+          },
+        });
         throw error;
       }
     },
@@ -199,41 +212,43 @@ const createModeSlice: StateCreator<
     partialize: (state): Partial<BloxsModelSlice> => ({
       bloxs: state.bloxs,
       bloxsSpaceInfo: state.bloxsSpaceInfo,
-      bloxsPropertyInfo: state.bloxsPropertyInfo
+      bloxsPropertyInfo: state.bloxsPropertyInfo,
     }),
     migrate: async (persistedState, version) => {
-      const bloxsModel = persistedState as Partial<BloxsModelSlice>
+      const bloxsModel = persistedState as Partial<BloxsModelSlice>;
       try {
         if (version === 1) {
           if (persistedState) {
-            const bloxs = Object.values(bloxsModel?.bloxs || {})
+            const bloxs = Object.values(bloxsModel?.bloxs || {});
             const bloxsSapceInfo = bloxs.reduce((obj, blox) => {
               //@ts-ignore
-              obj[blox?.peerId] = { ...blox?.freeSpace }
+              obj[blox?.peerId] = { ...blox?.freeSpace };
               return obj;
-            }, {})
+            }, {});
             const bloxsPropertyInfo = bloxs.reduce((obj, blox) => {
               //@ts-ignore
-              obj[blox?.peerId] = { ...blox?.propertyInfo }
+              obj[blox?.peerId] = { ...blox?.propertyInfo };
               return obj;
-            }, {})
+            }, {});
             return {
               ...bloxsModel,
               bloxsPropertyInfo: {
-                ...bloxsPropertyInfo
+                ...bloxsPropertyInfo,
               },
               bloxsSpaceInfo: {
-                ...bloxsSapceInfo
-              }
-            }
+                ...bloxsSapceInfo,
+              },
+            };
           }
         }
       } catch (error) {
-        console.log(error)
-        firebase.crashlytics().recordError(error, `BloxsModelSlice migrate:version(${version})`)
+        console.log(error);
+        firebase
+          .crashlytics()
+          .recordError(error, `BloxsModelSlice migrate:version(${version})`);
       }
-      return bloxsModel
-    }
+      return bloxsModel;
+    },
   }
 );
 

@@ -1,35 +1,42 @@
 import '@walletconnect/react-native-compat';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   FxBox,
   FxButton,
   FxHeader,
+  FxOpenInIcon,
   FxText,
   useToast,
 } from '@functionland/component-library';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { copyToClipboard } from '../utils/clipboard';
 import { Helper } from '../utils';
-import { CopyIcon } from './Icons';
+import { BloxIcon, CopyIcon } from './Icons';
 import { useBloxsStore } from '../stores';
 import { shallow } from 'zustand/shallow';
 import { useSDK } from '@metamask/sdk-react';
 import { chainNames } from '../utils/walletConnectConifg';
+import { blockchain } from '@functionland/react-native-fula';
 interface WalletDetailsProps {
   allowChangeWallet?: boolean;
   showPeerId?: boolean;
   showDID?: boolean;
   showBloxPeerIds?: boolean;
+  showNetwork?: boolean;
+  showBloxAccount?: boolean;
 }
 export const WalletDetails = ({
   allowChangeWallet,
+  showNetwork = true,
   showPeerId,
+  showBloxAccount = false,
   showDID,
   showBloxPeerIds = false,
 }: WalletDetailsProps) => {
   const appPeerId = useUserProfileStore((state) => state.appPeerId);
   const [bloxs = {}] = useBloxsStore((state) => [state.bloxs], shallow);
   const bloxsArray = Object.values(bloxs);
+  const [bloxAccountId, setBloxAccountId] = useState('');
   const [signiture, password] = useUserProfileStore((state) => [
     state.signiture,
     state.password,
@@ -37,12 +44,18 @@ export const WalletDetails = ({
   const { account, chainId, sdk, connected } = useSDK();
 
   useEffect(() => {
-    if (!connected) {
-      tryConnect();
+    if (showBloxAccount) {
+      updateBloxAccount();
     }
   }, []);
 
+  const updateBloxAccount = async () => {
+    const bloxAccount = { account: 'Ccdvdsvdsvs.....' };
+    setBloxAccountId(bloxAccount.account);
+  };
+
   const tryConnect = async () => {
+    await sdk?.terminate();
     await sdk?.connect();
   };
 
@@ -53,44 +66,57 @@ export const WalletDetails = ({
 
   return (
     <FxBox paddingVertical="12" alignItems="center">
-      {connected ? (
-        <>
-          {/* <Image
-                        source={
-                            walletConnect.peerMeta?.name === 'MetaMask'
-                                ? getWalletImage(walletConnect.peerMeta.name)
-                                : { uri: walletConnect.peerMeta.icons[0] }
-                        }
-                        style={styles.image}
-                    />
-                    <FxText variant="body" textAlign="center">
-                        {walletConnect.peerMeta.name}
-                    </FxText> */}
-          <FxText variant="bodyMediumRegular">Wallet Address</FxText>
-          <FxBox marginTop="24" width="100%">
-            <FxButton
-              onPress={() => copyToClipboard(account ? account : '')}
-              iconLeft={<CopyIcon />}
-              flexWrap="wrap"
-              paddingHorizontal="32"
-              size="large"
-            >
-              {account}
-            </FxButton>
-            <FxBox>
-              <FxText variant="h300" textAlign="center">
-                Network
-              </FxText>
-              <FxText textAlign="center" marginTop="8">
-                {chainId ? chainNames[chainId] : 'Unknown'}
-              </FxText>
-            </FxBox>
+      <FxText variant="bodyMediumRegular">Wallet Address</FxText>
+      <FxBox marginTop="24" width="100%">
+        {connected && account ? (
+          <FxButton
+            onPress={() => {
+              copyToClipboard(account ? account : '');
+            }}
+            iconLeft={<CopyIcon />}
+            flexWrap="wrap"
+            paddingHorizontal="32"
+            size="large"
+          >
+            {account}
+          </FxButton>
+        ) : (
+          <FxButton
+            onPress={() => {
+              tryConnect();
+            }}
+            flexWrap="wrap"
+            paddingHorizontal="32"
+            size="large"
+            variant="inverted"
+            alignContent="center"
+          >
+            Connect to MetaMask
+          </FxButton>
+        )}
+        {showNetwork && (
+          <FxBox>
+            <FxText variant="h300" textAlign="center">
+              Network
+            </FxText>
+            <FxText textAlign="center" marginTop="8">
+              {chainId ? chainNames[chainId] : 'Unknown'}
+            </FxText>
           </FxBox>
-        </>
-      ) : (
-        <FxText variant="body" marginBottom="24" textAlign="center">
-          You are not connected to any wallet
-        </FxText>
+        )}
+      </FxBox>
+      {bloxAccountId && showBloxAccount && (
+        <FxBox marginTop="24" width="100%">
+          <FxButton
+            onPress={() => copyToClipboard(bloxAccountId)}
+            iconLeft={<CopyIcon />}
+            flexWrap="wrap"
+            paddingHorizontal="32"
+            size="large"
+          >
+            Blox account: {bloxAccountId}
+          </FxButton>
+        </FxBox>
       )}
       {password && signiture && showDID && (
         <FxBox marginTop="24" width="100%">
@@ -105,6 +131,7 @@ export const WalletDetails = ({
           </FxButton>
         </FxBox>
       )}
+
       {appPeerId && showPeerId && (
         <FxBox marginTop="24" width="100%">
           <FxButton

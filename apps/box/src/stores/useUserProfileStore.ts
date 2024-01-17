@@ -167,25 +167,25 @@ const createUserProfileSlice: StateCreator<
       }
     },
     getEarnings: async () => {
-      const account = await blockchain.getAccount();
-      // eslint-disable-next-line no-useless-catch
       try {
+        const account = await blockchain.getAccount();
         const earnings = await blockchain.assetsBalance(
           account.account,
-          '120',
-          '100'
+          120,
+          100
         );
         set({
           earnings: earnings.amount,
         });
       } catch (error) {
         if (!error.toString().includes('response: 400')) {
-          set({
-            earnings: '0.0',
-          });
+          console.log('Bad request: ', error.toString());
         }
-        //TODO: add better error handling
-        // throw error;
+        throw error;
+      } finally {
+        set({
+          earnings: 'NaN',
+        });
       }
     },
     logout: () => {
