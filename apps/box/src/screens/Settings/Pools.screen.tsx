@@ -21,7 +21,7 @@ import { useLogger } from '../../hooks';
 export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(true);
   const [allowJoin, setAllowJoin] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
   const logger = useLogger();
@@ -91,6 +91,7 @@ export const PoolsScreen = () => {
   const reloading = async () => {
     try {
       await getPools();
+      console.log('enableInteraction: ', enableInteraction);
       setAllowJoin(
         pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
           enableInteraction

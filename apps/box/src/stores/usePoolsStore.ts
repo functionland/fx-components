@@ -41,7 +41,7 @@ const initialState: PoolsModel = {
   _hasHydrated: false,
   pools: [],
   dirty: false,
-  enableInteraction: false,
+  enableInteraction: true,
 };
 
 const createPoolsModelSlice: StateCreator<
@@ -71,6 +71,7 @@ const createPoolsModelSlice: StateCreator<
         try {
           const account = await blockchain.getAccount();
           const accountId = account.account;
+          console.log('account: ', accountId);
           const userPool = await chainApi.getUserPool(api, accountId);
           console.log('userPool:', userPool);
 
@@ -99,6 +100,7 @@ const createPoolsModelSlice: StateCreator<
               poolIdOfInterest = parseInt(userPool.poolId, 10);
             }
           }
+          console.log('trying to enable interaction: ');
           set({ enableInteraction: true });
         } catch (error) {
           console.log('error getting join info, (skipping for now): ', error);
