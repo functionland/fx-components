@@ -14,12 +14,11 @@ import { ActivityIndicator, Alert } from 'react-native';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Routes } from '../../navigation/navigationConfig';
 import { useLogger, useRootNavigation } from '../../hooks';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useSDK } from '@metamask/sdk-react';
 
 export const SettingsScreen = () => {
   const [reset] = useUserProfileStore((state) => [state.reset]);
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
+  const { account, sdk, connected } = useSDK();
   const rootNavigation = useRootNavigation();
   const { logError } = useLogger();
   const handleLogout = () => {
@@ -32,12 +31,12 @@ export const SettingsScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              if (isConnected) {
+              if (connected) {
                 // If the cached provider is not cleared,
                 // WalletConnect will default to the existing session
                 // and does not allow to re-scan the QR code with a new wallet.
                 // Depending on your use case you may want or want not his behavir.
-                await disconnect();
+                await sdk?.terminate();
                 reset();
                 rootNavigation.reset({
                   index: 0,
@@ -63,11 +62,11 @@ export const SettingsScreen = () => {
         <SettingsMenu />
         <FxHorizontalRule marginVertical="16" />
         <FxButton
-          disabled={!(address && isConnected)}
+          disabled={!(account && connected)}
           size={'large'}
-          onPress={address && isConnected ? handleLogout : null}
+          onPress={account && connected ? handleLogout : null}
         >
-          {address ? 'Log out' : <ActivityIndicator />}
+          {account ? 'Log out' : <ActivityIndicator />}
         </FxButton>
         <Version marginTop="16" />
       </FxBox>

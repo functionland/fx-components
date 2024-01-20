@@ -14,26 +14,24 @@ import {
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi';
-import { mainnet, polygon, goerli, polygonMumbai } from 'viem/chains';
-import { useWeb3Modal } from '@web3modal/wagmi-react-native';
 import { Helper } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
+import { useSDK } from '@metamask/sdk-react';
 import { shallow } from 'zustand/shallow';
 import { useLogger } from '../../hooks';
+import {
+  chains,
+  goerliChainId,
+  mumbaiChainId,
+} from '../../utils/walletConnectConifg';
 
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
-
+  const [networkConfirmed, setNetwordConfirmed] = useState<boolean>(false);
+  const [selectedChainId, setSelectedChainId] = useState<string>(mumbaiChainId); // Mumbai Polygon Testnet
   const { queueToast } = useToast();
-  const [networkConfirmed, setNetwordConfirmed] = useState(false);
-  //TODO: do we need this anymore?
-  const [provider, setProvider] = useState(true);
-  const [selectedChainId, setSelectedChainId] = useState(80001); // Mumbai Polygon Testnet
-  const { chain } = useNetwork();
-  const { isLoading, switchNetwork } = useSwitchNetwork();
-  const { open, close } = useWeb3Modal();
-  const { address, isConnected } = useAccount();
+  const { account, chainId, provider, sdk, connected } = useSDK();
+
   const [walletId, signiture, password, setWalletId] = useUserProfileStore(
     (state) => [
       state.walletId,
@@ -44,50 +42,107 @@ export const ConnectToWalletScreen = () => {
     shallow
   );
 
+  const switchChain = async (_chainId: string) => {
+    return await provider?.request({
+      method: 'wallet_switchEthereumChain',
+      params: [
+        {
+          chainId: _chainId,
+        },
+      ],
+    });
+  };
+
+  const addChain = async (_chainId: string) => {
+    return await provider?.request({
+      method: 'wallet_addEthereumChain',
+      params: [
+        {
+          ...chains[_chainId],
+        },
+      ],
+    });
+  };
+
   const logger = useLogger();
   useEffect(() => {
-    console.log('isConnected', isConnected);
-    if (isConnected) checkChainId();
-  }, [isConnected, chain, address]);
-
-  const checkChainId = async () => {
-    if (!isConnected || !address) return;
-
-    if (chain === undefined) return;
-    setSelectedChainId(chain.id);
-    console.log('Connected chainId:', chain.id);
-    console.log('Connected address:', address);
-
-    if (chain.id !== selectedChainId) {
-      close();
-      queueToast({
-        title: 'Invalid network',
-        message: 'The network you have chosen is invalid',
-        type: 'error',
-        autoHideDuration: 6000,
-      });
+    console.log('provider', provider);
+    if (!provider || !account) return;
+    if (account !== walletId) {
+      setWalletId(account, true);
     }
-    if (address !== walletId) {
-      setWalletId(address, true);
-    }
-  };
-  const handleWalletConnect = async () => {
+  }, [provider, account]);
+
+  const handleConnect = async () => {
     try {
-      open();
+      await sdk?.connect();
     } catch (err) {
       console.log(err);
-      logger.logError('handleWalletConnect', err);
+      logger.logError('handleConnect', err);
       queueToast({
-        title: 'WalletConnect Error',
+        title: 'Metamask linking error',
         message: err.toString(),
         type: 'error',
         autoHideDuration: 3000,
       });
     }
   };
-  const disconnectWallet = async () => {
-    close();
-    open();
+
+  useEffect(() => {
+    if (chainId === undefined || networkConfirmed) {
+      return;
+    }
+    if (!connected || chainId === undefined) {
+      setNetwordConfirmed(false);
+      return;
+    }
+    handleNetwork();
+  }, [chainId]);
+
+  const handleNetwork = async () => {
+    if (chainId !== selectedChainId) {
+      try {
+        await switchChain(selectedChainId);
+      } catch (e) {
+        console.log('###################### chain not found, try adding: ', e);
+
+        try {
+          await addChain(selectedChainId);
+          // eslint-disable-next-line no-catch-shadow
+        } catch (e) {
+          console.log(e);
+          logger.logError('handleNetwork, add chain', e);
+          queueToast({
+            title: 'Error adding chain to MetaMask',
+            message: e.toString(),
+            type: 'error',
+            autoHideDuration: 3000,
+          });
+          return;
+        }
+        try {
+          await switchChain(selectedChainId);
+          // eslint-disable-next-line no-catch-shadow
+        } catch (e) {
+          console.log(e);
+          logger.logError('handleNetwork, switch chain', e);
+          queueToast({
+            title: 'Error switching chain to MetaMask',
+            message: e.toString(),
+            type: 'error',
+            autoHideDuration: 3000,
+          });
+        }
+      }
+      return;
+    }
+
+    setNetwordConfirmed(true);
+  };
+
+  const disconnectWallet = () => {
+    setNetwordConfirmed(false);
+    sdk?.terminate();
   };
   const handleLinkPassword = () => {
     navigation.navigate(Routes.LinkPassword);
@@ -111,7 +166,7 @@ export const ConnectToWalletScreen = () => {
       <FxProgressBar progress={20} />
 
       <FxBox flex={1} justifyContent="space-between" paddingVertical="80">
-        {isConnected && networkConfirmed ? (
+        {provider && connected ? (
           <>
             <WalletDetails allowChangeWallet={true} />
             {password && signiture ? (
@@ -136,44 +191,40 @@ export const ConnectToWalletScreen = () => {
               </FxText>
               <FxPicker
                 selectedValue={selectedChainId}
-                onValueChange={(itemValue: number) =>
-                  isConnected
-                    ? switchNetwork?.(itemValue)
-                    : setSelectedChainId(itemValue)
+                enabled={!connected}
+                onValueChange={(itemValue: string) =>
+                  setSelectedChainId(itemValue)
                 }
               >
                 <FxPickerItem
                   key={1}
                   label="Ethereum Mainnet"
-                  value={1}
+                  value={'0x1'}
                   enabled={false}
                 />
                 <FxPickerItem
                   key={5}
                   label="Goerli Ethereum Testnet"
-                  value={5}
+                  value={goerliChainId}
                 />
                 <FxPickerItem
                   key={137}
                   label="Polygon Mainnet"
-                  value={137}
+                  value={'0x89'}
                   enabled={false}
                 />
                 <FxPickerItem
                   key={80001}
                   label="Mumbai Polygon Testnet"
-                  value={80001}
+                  value={mumbaiChainId}
                 />
               </FxPicker>
             </FxBox>
           </>
         )}
         <FxBox>
-          {!isConnected ? (
-            <FxButton
-              size="large"
-              onPress={provider ? handleWalletConnect : null}
-            >
+          {!connected ? (
+            <FxButton size="large" onPress={handleConnect}>
               {provider ? 'Connect to Wallet' : <ActivityIndicator />}
             </FxButton>
           ) : !signiture ? (
@@ -215,7 +266,7 @@ export const ConnectToWalletScreen = () => {
               </FxButton>
             </>
           )}
-          {isConnected && (
+          {provider && connected && (
             <FxButton
               variant="inverted"
               size="large"
