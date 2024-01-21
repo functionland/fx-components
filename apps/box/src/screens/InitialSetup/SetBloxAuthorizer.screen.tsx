@@ -125,8 +125,8 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       if (bloxSize > 0) {
         return;
       }
-      console.log('refetching');
       if (!isManualSetup && bloxSize === 0) {
+        console.log('refetching');
         refetch_bloxProperties({ withLoading: true });
       }
     }, 5000);

@@ -85,6 +85,7 @@ export const ConnectToWalletScreen = () => {
         type: 'error',
         autoHideDuration: 3000,
       });
+      disconnectWallet();
     }
   };
 

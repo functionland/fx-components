@@ -10,15 +10,13 @@ import React from 'react';
 import { SettingsMenu } from '../../components/SettingsList';
 import { HeaderText } from '../../components/Text';
 import Version from '../../components/Version';
-import { ActivityIndicator, Alert } from 'react-native';
+import { Alert } from 'react-native';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Routes } from '../../navigation/navigationConfig';
 import { useLogger, useRootNavigation } from '../../hooks';
-import { useSDK } from '@metamask/sdk-react';
 
 export const SettingsScreen = () => {
   const [reset] = useUserProfileStore((state) => [state.reset]);
-  const { account, sdk, connected } = useSDK();
   const rootNavigation = useRootNavigation();
   const { logError } = useLogger();
   const handleLogout = () => {
@@ -31,18 +29,15 @@ export const SettingsScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              if (connected) {
-                // If the cached provider is not cleared,
-                // WalletConnect will default to the existing session
-                // and does not allow to re-scan the QR code with a new wallet.
-                // Depending on your use case you may want or want not his behavir.
-                await sdk?.terminate();
-                reset();
-                rootNavigation.reset({
-                  index: 0,
-                  routes: [{ name: Routes.InitialSetup }],
-                });
-              }
+              // If the cached provider is not cleared,
+              // WalletConnect will default to the existing session
+              // and does not allow to re-scan the QR code with a new wallet.
+              // Depending on your use case you may want or want not his behavir.
+              reset();
+              rootNavigation.reset({
+                index: 0,
+                routes: [{ name: Routes.InitialSetup }],
+              });
             } catch (error) {
               logError('handleLogout', error);
             }
@@ -61,12 +56,8 @@ export const SettingsScreen = () => {
         <HeaderText>Settings</HeaderText>
         <SettingsMenu />
         <FxHorizontalRule marginVertical="16" />
-        <FxButton
-          disabled={!(account && connected)}
-          size={'large'}
-          onPress={account && connected ? handleLogout : null}
-        >
-          {account ? 'Log out' : <ActivityIndicator />}
+        <FxButton size={'large'} onPress={handleLogout}>
+          Log out
         </FxButton>
         <Version marginTop="16" />
       </FxBox>

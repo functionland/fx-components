@@ -47,7 +47,6 @@ export const PoolsScreen = () => {
     shallow
   );
 
-
   const onChangeSearch = (query) => setSearch(query ? query : '');
 
   useEffect(() => {
@@ -67,25 +66,34 @@ export const PoolsScreen = () => {
 
   const wrappedJoinPool = async (poolID: number) => {
     try {
+      setRefreshing(true);
       await joinPool(poolID);
     } catch (e) {
       handlePoolActionErrors('Error joining pool', e.toString());
+    } finally {
+      setRefreshing(false);
     }
   };
 
   const wrappedLeavePool = async (poolID: number) => {
     try {
+      setRefreshing(true);
       await leavePool(poolID);
     } catch (e) {
       handlePoolActionErrors('Error leaving', e.toString());
+    } finally {
+      setRefreshing(false);
     }
   };
 
   const wrappedCancelJoinPool = async (poolID: number) => {
     try {
+      setRefreshing(true);
       await cancelPoolJoin(poolID);
     } catch (e) {
       handlePoolActionErrors('Error canceling pool join request', e.toString());
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -140,7 +148,7 @@ export const PoolsScreen = () => {
     <Reanimated.FlatList
       refreshControl={
         <RefreshControl
-          refreshing={refreshing}
+          refreshing={false}
           onRefresh={() => setRefreshing(true)}
         />
       }

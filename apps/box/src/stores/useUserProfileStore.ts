@@ -34,6 +34,7 @@ export interface UserProfileSlice {
    * signiture is the result of signing password and did secret key by wallet
    */
   signiture?: string | undefined;
+  address?: string | undefined;
   fulaPeerId?: string | undefined;
   fulaRoodCID?: string | undefined;
   appPeerId?: string | undefined;
@@ -59,6 +60,7 @@ const initialState: UserProfileSlice = {
   fulaPeerId: undefined,
   signiture: undefined,
   password: undefined,
+  address: undefined,
   walletId: undefined,
 };
 const createUserProfileSlice: StateCreator<
@@ -83,11 +85,14 @@ const createUserProfileSlice: StateCreator<
         (await KeyChain.load(KeyChain.Service.FULARootCID)) || undefined;
       const signiture =
         (await KeyChain.load(KeyChain.Service.Signiture)) || undefined;
+      const address =
+        (await KeyChain.load(KeyChain.Service.Address)) || undefined;
       set({
         password: password?.password,
         fulaPeerId: fulaPeerId?.password,
         fulaRoodCID: fulaRoodCID?.password,
         signiture: signiture?.password,
+        address: address?.password,
       });
     },
     setKeyChainValue: async (service, value) => {
@@ -124,6 +129,14 @@ const createUserProfileSlice: StateCreator<
           });
           break;
         }
+        case KeyChain.Service.Address: {
+          const address =
+            (await KeyChain.save('Address', value, service)) || undefined;
+          set({
+            address: address?.password,
+          });
+          break;
+        }
         default:
           break;
       }
@@ -132,10 +145,12 @@ const createUserProfileSlice: StateCreator<
       if (clearSigniture) {
         await KeyChain.reset(KeyChain.Service.DIDPassword);
         await KeyChain.reset(KeyChain.Service.Signiture);
+        await KeyChain.reset(KeyChain.Service.Address);
         set({
           walletId,
           password: undefined,
           signiture: undefined,
+          address: undefined,
         });
       } else {
         set({

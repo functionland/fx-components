@@ -37,26 +37,27 @@ export const WalletDetails = ({
   const [bloxs = {}] = useBloxsStore((state) => [state.bloxs], shallow);
   const bloxsArray = Object.values(bloxs);
   const [bloxAccountId, setBloxAccountId] = useState('');
-  const [signiture, password] = useUserProfileStore((state) => [
+  const [walletAddress, setWalletAddress] = useState('');
+  const [signiture, password, address] = useUserProfileStore((state) => [
     state.signiture,
     state.password,
+    state.address,
   ]);
-  const { account, chainId, sdk, connected } = useSDK();
+  const { account, chainId } = useSDK();
 
   useEffect(() => {
     if (showBloxAccount) {
       updateBloxAccount();
     }
-  }, []);
+    setWalletAddress(address ? address : '');
+    if (!address) {
+      setWalletAddress(account ? account : '');
+    }
+  }, [account, address]);
 
   const updateBloxAccount = async () => {
-    const bloxAccount = { account: 'Ccdvdsvdsvs.....' };
+    const bloxAccount = await blockchain.getAccount();
     setBloxAccountId(bloxAccount.account);
-  };
-
-  const tryConnect = async () => {
-    await sdk?.terminate();
-    await sdk?.connect();
   };
 
   const DID = useMemo(() => {
@@ -66,36 +67,23 @@ export const WalletDetails = ({
 
   return (
     <FxBox paddingVertical="12" alignItems="center">
-      <FxText variant="bodyMediumRegular">Wallet Address</FxText>
-      <FxBox marginTop="24" width="100%">
-        {connected && account ? (
-          <FxButton
-            onPress={() => {
-              copyToClipboard(account ? account : '');
-            }}
-            iconLeft={<CopyIcon />}
-            flexWrap="wrap"
-            paddingHorizontal="32"
-            size="large"
-          >
-            {account}
-          </FxButton>
-        ) : (
-          <FxButton
-            onPress={() => {
-              tryConnect();
-            }}
-            flexWrap="wrap"
-            paddingHorizontal="32"
-            size="large"
-            variant="inverted"
-            alignContent="center"
-          >
-            Connect to MetaMask
-          </FxButton>
+      <FxText variant="h300">Wallet Address</FxText>
+      <FxBox width="100%">
+        {walletAddress && (
+          <FxBox marginTop="24" width="100%">
+            <FxButton
+              onPress={() => copyToClipboard(walletAddress)}
+              iconLeft={<CopyIcon />}
+              flexWrap="wrap"
+              paddingHorizontal="32"
+              size="large"
+            >
+              {walletAddress}
+            </FxButton>
+          </FxBox>
         )}
         {showNetwork && (
-          <FxBox>
+          <FxBox marginTop="24">
             <FxText variant="h300" textAlign="center">
               Network
             </FxText>

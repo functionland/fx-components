@@ -11,6 +11,10 @@ export enum Service {
    */
   Signiture = 'Signiture',
   /**
+   * Wallet address
+   */
+  Address = 'Address',
+  /**
    * WNFS' root cid
    */
   FULARootCID = 'FULARootCID',
