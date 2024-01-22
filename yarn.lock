@@ -1843,10 +1843,10 @@
     "@babel/runtime" "~7.17.2"
     "@protobuf-ts/runtime" "~2.2.2"
 
-"@functionland/react-native-fula@1.39.2":
-  version "1.39.2"
-  resolved "https://registry.yarnpkg.com/@functionland/react-native-fula/-/react-native-fula-1.39.2.tgz#7ee9a304f0ddf8e5e1223f63385592199bdfa98a"
-  integrity sha512-l93X6QN3L8p7r5YqDRtpaG3w4vNVdcdrY6iXRCFd++HLebiteSuqm+UH4fhZsRysIBlBx9L3mZgMntA49Lhtcw==
+"@functionland/react-native-fula@1.41.1":
+  version "1.41.0"
+  resolved "https://registry.yarnpkg.com/@functionland/react-native-fula/-/react-native-fula-1.41.0.tgz#071db28c061475337d5c595786d92d4c4f9dfde3"
+  integrity sha512-oy7r/5i1qe2vLLRhT0//eCWC44kYJqSIvxyAP7UZ6t7bQJ86yP54VA6dgdmJvPYXaUrO9wIYt+qd+X3t1V4tEQ==
   dependencies:
     "@polkadot/api" "^9.11.3"
     "@polkadot/keyring" "^10.2.6"

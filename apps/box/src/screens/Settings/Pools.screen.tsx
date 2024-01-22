@@ -17,6 +17,7 @@ import { usePoolsStore } from '../../stores/usePoolsStore';
 import { shallow } from 'zustand/shallow';
 import MyLoader from '../../components/ContentLoader';
 import { useLogger } from '../../hooks';
+import { enableFreeze } from 'react-native-screens';
 
 export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
@@ -53,6 +54,8 @@ export const PoolsScreen = () => {
     setIsError(false);
     reloading();
   }, [dirty, refreshing]);
+
+  useEffect(() => {}, [enableInteraction]);
 
   const handlePoolActionErrors = (title: string, message: string) => {
     console.log(title, message);
