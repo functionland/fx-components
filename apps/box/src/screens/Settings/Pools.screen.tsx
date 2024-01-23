@@ -6,7 +6,6 @@ import {
   FxButton,
   FxHeader,
   FxRefreshIcon,
-  FxSearchIcon,
   FxSpacer,
   FxText,
   FxTextInput,
@@ -17,7 +16,6 @@ import { usePoolsStore } from '../../stores/usePoolsStore';
 import { shallow } from 'zustand/shallow';
 import MyLoader from '../../components/ContentLoader';
 import { useLogger } from '../../hooks';
-import { enableFreeze } from 'react-native-screens';
 
 export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
