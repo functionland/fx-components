@@ -1843,7 +1843,7 @@
     "@babel/runtime" "~7.17.2"
     "@protobuf-ts/runtime" "~2.2.2"
 
-"@functionland/react-native-fula@1.41.1":
+"@functionland/react-native-fula@1.41.0":
   version "1.41.0"
   resolved "https://registry.yarnpkg.com/@functionland/react-native-fula/-/react-native-fula-1.41.0.tgz#071db28c061475337d5c595786d92d4c4f9dfde3"
   integrity sha512-oy7r/5i1qe2vLLRhT0//eCWC44kYJqSIvxyAP7UZ6t7bQJ86yP54VA6dgdmJvPYXaUrO9wIYt+qd+X3t1V4tEQ==
