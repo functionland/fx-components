@@ -154,8 +154,8 @@ export const SetupCompleteScreen = ({ route }: Props) => {
     try {
       const network = await NetInfo.fetch();
       if (
-        network.isInternetReachable &&
-        network?.type === NetInfoStateType.wifi
+        network.isInternetReachable // &&
+        //network?.type === NetInfoStateType.wifi
       ) {
         setInternetStatus('CONNECTED');
         setInitialWaitForInternet(false);

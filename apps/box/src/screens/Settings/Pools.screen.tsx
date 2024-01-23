@@ -1,28 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { RefreshControl, StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import {
   FxBox,
   FxButton,
   FxHeader,
   FxRefreshIcon,
-  FxSearchIcon,
   FxSpacer,
   FxText,
   FxTextInput,
+  useToast,
 } from '@functionland/component-library';
 import { PoolCard } from '../../components/Cards/PoolCard';
 import { usePoolsStore } from '../../stores/usePoolsStore';
 import { shallow } from 'zustand/shallow';
 import MyLoader from '../../components/ContentLoader';
+import { useLogger } from '../../hooks';
 
 export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
-  const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
-  const [retry, setRetry] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState(true);
   const [allowJoin, setAllowJoin] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
+  const logger = useLogger();
+  const { queueToast } = useToast();
   const [
     pools,
     enableInteraction,
@@ -45,29 +47,78 @@ export const PoolsScreen = () => {
   );
 
   const onChangeSearch = (query) => setSearch(query ? query : '');
-  useEffect(() => {
-    if (!dirty && !retry) {
-      return;
-    }
-    if (retry) {
-      setRetry(false);
-    }
-    setIsLoaded(false);
-    setIsError(false);
-    getPools()
-      .then((_) => {
-        setIsLoaded(true);
-        setAllowJoin(
-          pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
-            enableInteraction
-        );
-      })
-      .catch((e) => {
-        setIsLoaded(false);
-        console.log('error getting pools: ', e);
-      });
-  }, [dirty, retry]);
 
+  useEffect(() => {
+    setIsError(false);
+    reloading();
+  }, [dirty, refreshing]);
+
+  useEffect(() => {}, [enableInteraction]);
+
+  const handlePoolActionErrors = (title: string, message: string) => {
+    console.log(title, message);
+    queueToast({
+      type: 'error',
+      title: title,
+      message: message,
+    });
+    logger.logError('Pools action error: ', message);
+  };
+
+  const wrappedJoinPool = async (poolID: number) => {
+    try {
+      setRefreshing(true);
+      await joinPool(poolID);
+    } catch (e) {
+      handlePoolActionErrors('Error joining pool', e.toString());
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const wrappedLeavePool = async (poolID: number) => {
+    try {
+      setRefreshing(true);
+      await leavePool(poolID);
+    } catch (e) {
+      handlePoolActionErrors('Error leaving', e.toString());
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const wrappedCancelJoinPool = async (poolID: number) => {
+    try {
+      setRefreshing(true);
+      await cancelPoolJoin(poolID);
+    } catch (e) {
+      handlePoolActionErrors('Error canceling pool join request', e.toString());
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const reloading = async () => {
+    try {
+      await getPools();
+      console.log('enableInteraction: ', enableInteraction);
+      setAllowJoin(
+        pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
+          enableInteraction
+      );
+    } catch (e) {
+      setIsError(true);
+      console.log('Error getting pools: ', e);
+      queueToast({
+        type: 'error',
+        title: 'Error getting pools',
+        message: e.toString(),
+      });
+      logger.logError('Pools::reloading', e);
+    } finally {
+      setRefreshing(false);
+    }
+  };
   if (isError) {
     return (
       <FxBox
@@ -83,7 +134,7 @@ export const PoolsScreen = () => {
         <FxButton
           onPress={() => {
             setSearch('');
-            setRetry(true);
+            setRefreshing(true);
           }}
           flexWrap="wrap"
           paddingHorizontal="16"
@@ -96,6 +147,12 @@ export const PoolsScreen = () => {
   }
   return (
     <Reanimated.FlatList
+      refreshControl={
+        <RefreshControl
+          refreshing={false}
+          onRefresh={() => setRefreshing(true)}
+        />
+      }
       contentContainerStyle={styles.list}
       ListHeaderComponent={
         <FxBox>
@@ -123,7 +180,7 @@ export const PoolsScreen = () => {
               <FxButton
                 onPress={() => {
                   setSearch('');
-                  setRetry(true);
+                  setRefreshing(true);
                 }}
                 paddingHorizontal="16"
                 flex={1}
@@ -136,7 +193,7 @@ export const PoolsScreen = () => {
         </FxBox>
       }
       data={
-        isLoaded
+        !refreshing
           ? pools.filter((pool) =>
               search !== ''
                 ? pool.name?.toLowerCase().includes(search?.toLowerCase())
@@ -146,7 +203,7 @@ export const PoolsScreen = () => {
       }
       keyExtractor={(item) => item.poolID}
       renderItem={({ item }) =>
-        !isLoaded ? (
+        refreshing ? (
           <MyLoader />
         ) : (
           <PoolCard
@@ -156,9 +213,9 @@ export const PoolsScreen = () => {
             isJoined={item.joined}
             numVotes={item.numVotes}
             numVoters={item.numVoters}
-            leavePool={leavePool}
-            joinPool={allowJoin ? joinPool : undefined}
-            cancelJoinPool={cancelPoolJoin}
+            leavePool={wrappedLeavePool}
+            joinPool={allowJoin ? wrappedJoinPool : undefined}
+            cancelJoinPool={wrappedCancelJoinPool}
           />
         )
       }

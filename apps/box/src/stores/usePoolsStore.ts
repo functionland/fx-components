@@ -41,7 +41,7 @@ const initialState: PoolsModel = {
   _hasHydrated: false,
   pools: [],
   dirty: false,
-  enableInteraction: false,
+  enableInteraction: true,
 };
 
 const createPoolsModelSlice: StateCreator<
@@ -62,7 +62,7 @@ const createPoolsModelSlice: StateCreator<
       // throw "error"
       try {
         const api = await chainApi.init();
-        const poolList = await chainApi.listPools(api);
+        const poolList = await chainApi.listPools(api, 1, 25);
         console.log(poolList);
         let requested = false;
         let joined = false;
@@ -71,6 +71,7 @@ const createPoolsModelSlice: StateCreator<
         try {
           const account = await blockchain.getAccount();
           const accountId = account.account;
+          console.log('account: ', accountId);
           const userPool = await chainApi.getUserPool(api, accountId);
           console.log('userPool:', userPool);
 

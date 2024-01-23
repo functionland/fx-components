@@ -41,7 +41,7 @@ export const LinkPasswordScreen = () => {
     }
   }, []);
 
-  useEffect(() => {}, [signiture]);
+  useEffect(() => {}, [signiture, password]);
 
   const tryConnect = async () => {
     await sdk?.connect();
@@ -57,9 +57,21 @@ export const LinkPasswordScreen = () => {
   const logger = useLogger();
   useEffect(() => {
     const setKeys = async (walletSignature: string) => {
-      await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
-      await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
-      setLinking(false);
+      try {
+        await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
+        await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
+      } catch (err) {
+        console.log(err);
+        logger.logError('handleLinkPassword', err);
+        queueToast({
+          title: 'Error',
+          message: 'Unable to sign the wallet address!',
+          type: 'error',
+          autoHideDuration: 3000,
+        });
+      } finally {
+        setLinking(false);
+      }
     };
     if (signatureData) {
       const walletSignature = signatureData.toString();

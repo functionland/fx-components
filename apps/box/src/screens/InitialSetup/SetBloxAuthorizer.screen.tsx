@@ -125,8 +125,8 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       if (bloxSize > 0) {
         return;
       }
-      console.log('refetching');
       if (!isManualSetup && bloxSize === 0) {
+        console.log('refetching');
         refetch_bloxProperties({ withLoading: true });
       }
     }, 5000);
@@ -329,8 +329,9 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                 }
               />
             )}
-          {(!data_bloxProperties?.data?.bloxFreeSpace ||
-            (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) === 0) &&
+          {!isManualSetup &&
+            (!data_bloxProperties?.data?.bloxFreeSpace ||
+              (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) === 0) &&
             !loading_bloxProperties && (
               <FxWarning
                 padding="16"

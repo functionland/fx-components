@@ -31,6 +31,8 @@ export const UserHeader = ({ userData }: UserHeaderProps) => {
       <FxBox paddingVertical="20">
         <WalletDetails
           showDID={true}
+          showNetwork={false}
+          showBloxAccount={true}
           showPeerId={true}
           showBloxPeerIds={false}
         />
