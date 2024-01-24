@@ -1,7 +1,12 @@
 import React from 'react';
 import { FxBox, FxCard, FxRefreshIcon } from '@functionland/component-library';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
-import { ActivityIndicator } from 'react-native';
+import {
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  Linking,
+} from 'react-native';
 
 type EarningCardProps = React.ComponentProps<typeof FxBox> & {
   data: { totalFula: string };
@@ -34,10 +39,21 @@ export const EarningCard = ({
         )}
       </FxBox>
       {totalFula !== undefined && (
-        <FxCard.Row>
-          <FxCard.Row.Title>Total fula</FxCard.Row.Title>
-          <FxCard.Row.Data>{totalFula}</FxCard.Row.Data>
-        </FxCard.Row>
+        <>
+          <FxCard.Row>
+            <FxCard.Row.Title>Total fula</FxCard.Row.Title>
+            <FxCard.Row.Data>
+              {totalFula === 'NaN' ? <Text>0</Text> : <Text>{totalFula}</Text>}
+            </FxCard.Row.Data>
+          </FxCard.Row>
+          <TouchableOpacity
+            onPress={() =>
+              Linking.openURL('https://fund.functionyard.fula.network/')
+            }
+          >
+            <Text>Join Fula Testnet</Text>
+          </TouchableOpacity>
+        </>
       )}
     </FxCard>
   );
