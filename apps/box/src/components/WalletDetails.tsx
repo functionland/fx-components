@@ -67,7 +67,7 @@ export const WalletDetails = ({
 
   return (
     <FxBox paddingVertical="12" alignItems="center">
-      <FxText variant="h300">Wallet Address</FxText>
+      <FxText variant="h300">Account Details</FxText>
       <FxBox width="100%">
         {walletAddress && (
           <FxBox marginTop="24" width="100%">
