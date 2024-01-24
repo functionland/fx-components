@@ -50,6 +50,7 @@ export const BloxScreen = () => {
   const [resetingBloxHotspot, setResetingBloxHotspot] = useState(false);
   const [rebootingBlox, setRebootingBlox] = useState(false);
   const [loadingBloxSpace, setLoadingBloxSpace] = useState(false);
+  const [loadingFulaEarnings, setLoadingFulaEarnings] = useState(false);
 
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
     EBloxInteractionType.OfficeBloxUnit
@@ -60,7 +61,6 @@ export const BloxScreen = () => {
     (state) => [state.earnings, state.getEarnings, state.fulaIsReady],
     shallow
   );
-  getEarnings();
 
   const [
     bloxs,
@@ -104,17 +104,20 @@ export const BloxScreen = () => {
     if (fulaIsReady && !screenIsLoaded) {
       setScreenIsLoaded(true);
       updateBloxSpace();
+      updateFulaEarnings();
       checkBloxConnection();
     } else if (fulaIsReady && !bloxsConnectionStatus[currentBloxPeerId]) {
       checkBloxConnection();
     }
   }, [fulaIsReady]);
+
   const updateBloxSpace = async () => {
     try {
       setLoadingBloxSpace(true);
       if (fulaIsReady) {
         const space = await getBloxSpace();
         logger.log('updateBloxSpace', space);
+        
       }
     } catch (error) {
       logger.logError('GetBloxSpace Error', error);
@@ -122,6 +125,21 @@ export const BloxScreen = () => {
       setLoadingBloxSpace(false);
     }
   };
+
+  const updateFulaEarnings = async () => {
+    try {
+      setLoadingFulaEarnings(true);
+      if (fulaIsReady) {
+        const space = await getEarnings();
+        logger.log('updateFulaEarnings', space);
+      }
+    } catch (error) {
+      logger.logError('updateFulaEarnings Error', error);
+    } finally {
+      setLoadingFulaEarnings(false);
+    }
+  };
+
   const showInteractionModal = () => {
     bloxInteractionModalRef.current.present();
   };
@@ -325,7 +343,14 @@ export const BloxScreen = () => {
               associatedDevices: ['Blox Set Up'],
             }}
           />
-          <EarningCard totalFula={parseFloat(earnings)} />
+          <EarningCard
+            marginTop="8"
+            onRefreshPress={updateFulaEarnings}
+            loading={loadingFulaEarnings}
+            data={{
+              totalFula: earnings,
+            }}
+          />
           {/* <FxSpacer height={8} />
           <QuoteStat divisionPercentage={divisionPercentage} />
           <FxSpacer height={24} />

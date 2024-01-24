@@ -1,13 +1,11 @@
-import '@walletconnect/react-native-compat';
 import React, { useEffect, useRef } from 'react';
-import '@walletconnect/react-native-compat';
-import { WagmiConfig } from 'wagmi';
-import { mainnet, polygon, arbitrum, goerli } from 'viem/chains';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  createWeb3Modal,
-  defaultWagmiConfig,
-  Web3Modal,
-} from '@web3modal/wagmi-react-native';
+  MetaMaskProvider,
+  SDKConfigProvider,
+  useSDKConfig,
+} from '@metamask/sdk-react';
+
 import { ThemeProvider } from '@shopify/restyle';
 import {
   fxLightTheme,
@@ -17,7 +15,6 @@ import {
   FxPressableOpacity,
 } from '@functionland/component-library';
 import { RootNavigator } from '../navigation/Root.navigator';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavContainer } from '../navigation/NavContainer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -34,9 +31,16 @@ import { useSettingsStore } from '../stores';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { firebase } from '@react-native-firebase/crashlytics';
 import { useLogger } from '../hooks';
-import { WalletConnectConfigs } from '../utils';
+import { COMM_SERVER_URL, INFURA_API_KEY } from '../utils/walletConnectConifg';
 import { copyToClipboard } from '../utils/clipboard';
 import { fula } from '@functionland/react-native-fula';
+import { Linking } from 'react-native';
+import BackgroundTimer from 'react-native-background-timer';
+
+// TODO how to properly make sure we only try to open link when the app is active?
+// current problem is that sdk declaration is outside of the react scope so I cannot directly verify the state
+// hence usage of a global variable.
+const canOpenLink = true;
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -54,51 +58,91 @@ const barStyles = {
   dark: 'light-content',
 } as const;
 
+const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
+  const {
+    socketServer,
+    infuraAPIKey,
+    useDeeplink,
+    debug,
+    checkInstallationImmediately,
+  } = useSDKConfig();
+
+  return (
+    <MetaMaskProvider
+      // debug={debug}
+      sdkOptions={{
+        // communicationServerUrl: socketServer,
+        // TODO: change to enableAnalytics when updating the SDK version
+        // enableDebug: true,
+        infuraAPIKey,
+        readonlyRPCMap: {
+          '0x539': process.env.NEXT_PUBLIC_PROVIDER_RPCURL ?? '',
+        },
+        logging: {
+          developerMode: true,
+          plaintext: true,
+        },
+        openDeeplink: (link: string, _target?: string) => {
+          console.debug(`App::openDeepLink() ${link}`);
+          if (canOpenLink) {
+            Linking.openURL(link);
+          } else {
+            console.debug(
+              'useBlockchainProiver::openDeepLink app is not active - skip link',
+              link
+            );
+          }
+        },
+        timer: BackgroundTimer,
+        useDeeplink,
+        checkInstallationImmediately,
+        storage: {
+          enabled: true,
+        },
+        dappMetadata: {
+          name: 'devreactnative',
+        },
+        i18nOptions: {
+          enabled: true,
+        },
+      }}>
+      {children}
+    </MetaMaskProvider>
+  );
+};
+
 export const App = () => {
   const mode = useSettingsStore().getMode();
   const theme = fullTheme[mode];
   const [loadAllCredentials] = useUserProfileStore((state) => [
     state.loadAllCredentials,
   ]);
-  // 1. Get projectId at https://cloud.walletconnect.com
-  const projectId = WalletConnectConfigs.WaletConnect_Project_Id;
 
-  // 2. Create config
-  const metadata = WalletConnectConfigs.providerMetadata;
-
-  // const [selectedChainId, setSelectedChainId] = useState(1);// defualt is Etherum
-
-  const chains = [mainnet, polygon, arbitrum, goerli];
-
-  const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
-
-  // 3. Create modal
-  createWeb3Modal({
-    projectId,
-    chains,
-    wagmiConfig,
-  });
   useEffect(() => {
     loadAllCredentials();
   }, [loadAllCredentials]);
   return (
     <GestureHandlerRootView style={styles.flex1}>
-    <WagmiConfig config={wagmiConfig}>
-      <ThemeProvider theme={theme}>
-        <ToastProvider>
-            <StatusBar
-              backgroundColor={theme.colors.backgroundApp}
-              barStyle={barStyles[mode]}
-            />
-            <SafeAreaProvider>
-              <BottomSheetModalProvider>
-                <AppContent />
-              </BottomSheetModalProvider>
-            </SafeAreaProvider>
-        </ToastProvider>
-      </ThemeProvider>
-      <Web3Modal />
-    </WagmiConfig>
+      <SDKConfigProvider
+        initialSocketServer={COMM_SERVER_URL}
+        initialInfuraKey={INFURA_API_KEY}
+      >
+        <WithSDKConfig>
+          <ThemeProvider theme={theme}>
+            <ToastProvider>
+              <StatusBar
+                backgroundColor={theme.colors.backgroundApp}
+                barStyle={barStyles[mode]}
+              />
+              <SafeAreaProvider>
+                <BottomSheetModalProvider>
+                  <AppContent />
+                </BottomSheetModalProvider>
+              </SafeAreaProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </WithSDKConfig>
+      </SDKConfigProvider>
     </GestureHandlerRootView>
   );
 };

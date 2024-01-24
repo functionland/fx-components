@@ -115,11 +115,34 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       refetch_bloxProperties({ withLoading: true });
     }
   }, []);
+  useEffect(() => {
+    let interval = setInterval(() => {
+      if (interval === null) {
+        // if the component has unmounted, don't run this function.
+        return;
+      }
+      const bloxSize = data_bloxProperties?.data?.bloxFreeSpace?.size || 0;
+      if (bloxSize > 0) {
+        return;
+      }
+      if (!isManualSetup && bloxSize === 0) {
+        console.log('refetching');
+        refetch_bloxProperties({ withLoading: true });
+      }
+    }, 5000);
+    return () => {
+      // clear interval on unmount to prevent memory leaks
+      clearInterval(interval);
+      interval = null;
+    };
+  }, [data_bloxProperties, error_bloxProperties]);
+
   //echange config with blox when peerId is ready
   useEffect(() => {
     if (
       newPeerId &&
       data_bloxProperties?.data?.restartNeeded === 'false' &&
+      (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) > 0 &&
       !isManualSetup
     ) {
       handleExchangeConfig();
@@ -306,8 +329,9 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                 }
               />
             )}
-          {newBloxPeerId &&
-            !data_bloxProperties?.data?.bloxFreeSpace &&
+          {!isManualSetup &&
+            (!data_bloxProperties?.data?.bloxFreeSpace ||
+              (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) === 0) &&
             !loading_bloxProperties && (
               <FxWarning
                 padding="16"
@@ -448,7 +472,8 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                 loading_exchange ||
                 loading_bloxProperties ||
                 !data_bloxProperties?.data?.restartNeeded ||
-                data_bloxProperties?.data?.restartNeeded === 'true'
+                data_bloxProperties?.data?.restartNeeded === 'true' ||
+                (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) === 0
               }
               width={120}
               onPress={handleSetOwnerPeerId}

@@ -1,43 +1,60 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { FxBox, FxCard, FxRefreshIcon } from '@functionland/component-library';
+import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 import {
-  FxBox,
-  FxCard,
-  FxHorizontalRule,
-  FxVerticalRule,
-  FxText,
-} from '@functionland/component-library';
-import { CardHeader } from './fields/CardHeader';
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  Linking,
+} from 'react-native';
 
-type EarningCardType = React.ComponentProps<typeof FxCard> & {
-  totalFula: number;
+type EarningCardProps = React.ComponentProps<typeof FxBox> & {
+  data: { totalFula: string };
+  loading?: boolean;
+  onRefreshPress?: () => void;
 };
+export const EarningCard = ({
+  data,
+  loading,
+  onRefreshPress,
+  ...rest
+}: EarningCardProps) => {
+  const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
+  const { totalFula } = data;
 
-export const EarningCard = ({ totalFula }: EarningCardType) => {
   return (
-    <>
-      <CardHeader>Earning</CardHeader>
-      <FxCard padding="0">
-        <FxBox alignItems="center">
-          <FxText variant="bodySmallRegular" color="content3">
-            Total Fula
-          </FxText>
-          <FxBox flexDirection="row" marginTop="16">
-            <FxText style={styles.totalFulaText}>{totalFula}</FxText>
-          </FxBox>
-          <FxText variant="bodySmallRegular" color="content3">
-            Home Blox Setup
-          </FxText>
-        </FxBox>
-      </FxCard>
-    </>
+    <FxCard
+      {...rest}
+      onLongPress={() => bottomSheetRef.current?.present()}
+      delayLongPress={200}
+    >
+      <FxBox flexDirection="row" justifyContent="space-between">
+        <FxCard.Title marginBottom="8">Earning</FxCard.Title>
+        {loading ? (
+          <ActivityIndicator />
+        ) : (
+          onRefreshPress && (
+            <FxRefreshIcon color="white" onPress={onRefreshPress} />
+          )
+        )}
+      </FxBox>
+      {totalFula !== undefined && (
+        <>
+          <FxCard.Row>
+            <FxCard.Row.Title>Total fula</FxCard.Row.Title>
+            <FxCard.Row.Data>
+              {totalFula === 'NaN' ? <Text>0</Text> : <Text>{totalFula}</Text>}
+            </FxCard.Row.Data>
+          </FxCard.Row>
+          <TouchableOpacity
+            onPress={() =>
+              Linking.openURL('https://fund.functionyard.fula.network/')
+            }
+          >
+            <Text>Join Fula Testnet</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </FxCard>
   );
 };
-
-const styles = StyleSheet.create({
-  totalFulaText: {
-    fontSize: 40,
-    lineHeight: 40,
-    fontFamily: 'OpenSans-Regular',
-  },
-});

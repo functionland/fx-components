@@ -20,34 +20,66 @@ import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
 import { shallow } from 'zustand/shallow';
-import { useSignMessage, useAccount } from 'wagmi';
-
+import { useSDK } from '@metamask/sdk-react';
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const { address, isConnected } = useAccount();
-  // const [messageData, setMessageData] = useState('');
-  const { data, isError, error, signMessage } = useSignMessage();
+  const { account, sdk, provider, connected } = useSDK();
+
   const [iKnow, setIKnow] = useState(false);
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
+  const [signatureData, setSignatureData] = useState<string>('');
   const [passwordInput, setInputPasswordInput] = useState('');
   const [setKeyChainValue, signiture, password] = useUserProfileStore(
     (state) => [state.setKeyChainValue, state.signiture, state.password],
     shallow
   );
+
+  useEffect(() => {
+    if (!connected) {
+      tryConnect();
+    }
+  }, []);
+
+  useEffect(() => {}, [signiture, password]);
+
+  const tryConnect = async () => {
+    await sdk?.connect();
+  };
+
+  const personalSign = async (msg: string) => {
+    return await provider?.request({
+      method: 'personal_sign',
+      params: [msg, account],
+    });
+  };
+
   const logger = useLogger();
   useEffect(() => {
     const setKeys = async (walletSignature: string) => {
-      await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
-      await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
-      setLinking(false);
+      try {
+        await setKeyChainValue(KeyChain.Service.DIDPassword, passwordInput);
+        await setKeyChainValue(KeyChain.Service.Signiture, walletSignature);
+      } catch (err) {
+        console.log(err);
+        logger.logError('handleLinkPassword', err);
+        queueToast({
+          title: 'Error',
+          message: 'Unable to sign the wallet address!',
+          type: 'error',
+          autoHideDuration: 3000,
+        });
+      } finally {
+        setLinking(false);
+      }
     };
-    if (data) {
-      const walletSignature = data.toString();
+    if (signatureData) {
+      const walletSignature = signatureData.toString();
       console.log('walletSignature', walletSignature);
       setKeys(walletSignature);
     }
-  }, [data]);
+  }, [signatureData]);
+
   const handleLinkPassword = async () => {
     try {
       if (linking) {
@@ -58,17 +90,19 @@ export const LinkPasswordScreen = () => {
       const ed = new HDKEY(passwordInput);
       const chainCode = ed.chainCode;
 
-      if (!isConnected) {
+      if (!connected || !sdk) {
         throw new Error('web3Provider not connected');
       }
-      if (!address) {
+      if (!account) {
         throw new Error('No address found');
       }
       console.log('before signing...');
-      signMessage({ message: chainCode });
-      if (isError) {
-        throw error;
+      const sig = await personalSign(chainCode);
+      if (!sig || sig === undefined || sig === null) {
+        throw 'Sign failed';
       }
+      console.log('Signature: ', sig);
+      setSignatureData(sig);
       console.log('after signing...');
     } catch (err) {
       console.log(err);
@@ -189,9 +223,9 @@ export const LinkPasswordScreen = () => {
           <FxButton
             size="large"
             disabled={!passwordInput || !iKnow}
-            onPress={isConnected ? handleLinkPassword : null}
+            onPress={connected ? handleLinkPassword : null}
           >
-            {isConnected ? (
+            {connected ? (
               linking ? (
                 'Cancel'
               ) : (

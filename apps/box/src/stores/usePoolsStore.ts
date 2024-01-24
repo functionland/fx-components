@@ -26,6 +26,7 @@ interface PoolsModel {
   _hasHydrated: boolean;
   pools: PoolData[];
   dirty: boolean;
+  enableInteraction: boolean;
 }
 
 export interface PoolData extends TPool {
@@ -40,6 +41,7 @@ const initialState: PoolsModel = {
   _hasHydrated: false,
   pools: [],
   dirty: false,
+  enableInteraction: true,
 };
 
 const createPoolsModelSlice: StateCreator<
@@ -57,43 +59,51 @@ const createPoolsModelSlice: StateCreator<
       });
     },
     getPools: async () => {
+      // throw "error"
       try {
         const api = await chainApi.init();
-        const poolList = await chainApi.listPools(api);
+        const poolList = await chainApi.listPools(api, 1, 25);
         console.log(poolList);
-
-        const account = await blockchain.getAccount();
-        const accountId = account.account;
-        const userPool = await chainApi.getUserPool(api, accountId);
-        console.log('userPool:', userPool);
         let requested = false;
         let joined = false;
         let numVotes = 0;
         let poolIdOfInterest = -1;
-        if (userPool !== null) {
-          if (
-            userPool?.requestPoolId !== null &&
-            userPool?.requestPoolId !== ''
-          ) {
-            poolIdOfInterest = parseInt(userPool?.requestPoolId, 10);
-            const joinRequestInfo = await chainApi.checkJoinRequest(
-              api,
-              parseInt(userPool.requestPoolId, 10),
-              accountId
-            );
-            console.log('joinRequestInfo:', joinRequestInfo);
-            numVotes = joinRequestInfo ? joinRequestInfo.voted.length : 0;
-            requested = true;
-            joined = false;
-          } else if (
-            userPool.poolId !== undefined &&
-            userPool.poolId.length > 0 &&
-            parseInt(userPool.poolId, 10) >= 0
-          ) {
-            requested = true;
-            joined = true;
-            poolIdOfInterest = parseInt(userPool.poolId, 10);
+        try {
+          const account = await blockchain.getAccount();
+          const accountId = account.account;
+          console.log('account: ', accountId);
+          const userPool = await chainApi.getUserPool(api, accountId);
+          console.log('userPool:', userPool);
+
+          if (userPool !== null) {
+            if (
+              userPool?.requestPoolId !== null &&
+              userPool?.requestPoolId !== ''
+            ) {
+              poolIdOfInterest = parseInt(userPool?.requestPoolId, 10);
+              const joinRequestInfo = await chainApi.checkJoinRequest(
+                api,
+                parseInt(userPool.requestPoolId, 10),
+                accountId
+              );
+              console.log('joinRequestInfo:', joinRequestInfo);
+              numVotes = joinRequestInfo ? joinRequestInfo.voted.length : 0;
+              requested = true;
+              joined = false;
+            } else if (
+              userPool.poolId !== undefined &&
+              userPool.poolId.length > 0 &&
+              parseInt(userPool.poolId, 10) >= 0
+            ) {
+              requested = true;
+              joined = true;
+              poolIdOfInterest = parseInt(userPool.poolId, 10);
+            }
           }
+          set({ enableInteraction: true });
+        } catch (error) {
+          console.log('error getting join info, (skipping for now): ', error);
+          set({ enableInteraction: false });
         }
         const newPools = (poolList?.pools || []) as TPool[];
         const userPoolData = newPools
