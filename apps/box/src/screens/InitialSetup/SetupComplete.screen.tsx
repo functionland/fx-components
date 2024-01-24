@@ -97,35 +97,50 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   }, [inetInfo]);
 
   // Initiate fula
+  // Initiate fula
+  const sleep = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
   useEffect(() => {
-    if (password && signiture && currentBloxPeerId) {
-      logger.log('SetupCompleteScreen:intiFula', {
-        password: password ? 'Has password' : undefined,
-        signiture: signiture ? 'Has signiture' : undefined,
-        bloxPeerId: currentBloxPeerId,
-      });
-      try {
-        Helper.initFula({
-          password,
-          signiture,
+    const initFula = async () => {
+      if (
+        password &&
+        signiture &&
+        currentBloxPeerId &&
+        internetStatus === 'CONNECTED' &&
+        !fulaIsReady
+      ) {
+        await sleep(10000);
+        logger.log('SetupCompleteScreen:intiFula', {
+          password: password ? 'Has password' : undefined,
+          signiture: signiture ? 'Has signiture' : undefined,
           bloxPeerId: currentBloxPeerId,
-        })
-          .then(() => {
-            setFulaIsReady(true);
-          })
-          .catch(() => {
-            setFulaIsReady(false);
-            setSetupStatus('ERROR');
-            queueToast({
-              type: 'error',
-              message: 'Unable to initial the fula network!',
-            });
+        });
+        try {
+          await Helper.initFula({
+            password,
+            signiture,
+            bloxPeerId: currentBloxPeerId,
           });
-      } catch (error) {
-        logger.logError('SetupCompleteScreen:intiFula', error);
+          setFulaIsReady(true);
+        } catch (error) {
+          setFulaIsReady(false);
+          setSetupStatus('ERROR');
+          queueToast({
+            type: 'error',
+            message:
+              'Unable to initialize the fula network! error: ' +
+              error.message +
+              ' for fulaIsReady=' +
+              fulaIsReady,
+          });
+          logger.logError('SetupCompleteScreen:intiFula', error);
+        }
       }
-    }
-  }, [password, signiture, currentBloxPeerId]);
+    };
+
+    initFula();
+  }, [password, signiture, currentBloxPeerId, internetStatus]);
 
   //Check the blox conectivity
   useEffect(() => {

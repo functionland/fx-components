@@ -47,7 +47,11 @@ export const initFula = async ({
     try {
       console.log('initFula helper.ts', { bloxAddress, bloxPeerId, keyPair });
       //if (await fula.isReady())
-      await fula.shutdown();
+      try {
+        await fula.shutdown();
+      } catch (error) {
+        console.log('fula shutdown failed', error);
+      }
       const peerId = await fula.newClient(
         keyPair.secretKey.toString(), //bytes of the privateKey of did identity in string format
         ``, // leave empty to use the default temp one
@@ -60,7 +64,7 @@ export const initFula = async ({
       console.log('peerId: ', peerId);
       return peerId;
     } catch (error) {
-      console.log('initFula', error);
+      console.log('initFula failed for bloxAddress='+bloxAddress, error);
       throw error;
     }
   }
