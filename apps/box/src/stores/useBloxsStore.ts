@@ -119,6 +119,7 @@ const createModeSlice: StateCreator<
      */
     getBloxSpace: async (updateStore = true) => {
       try {
+        await fula.isReady();
         const { bloxsSpaceInfo, currentBloxPeerId } = get();
         const bloxSpace = await blockchain.bloxFreeSpace();
         // const bloxSpace: BloxFreeSpaceResponse = {

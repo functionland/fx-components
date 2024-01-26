@@ -1,7 +1,7 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { blockchain, chainApi } from '@functionland/react-native-fula';
+import { blockchain, chainApi, fula } from '@functionland/react-native-fula';
 
 import { TPool } from '../models';
 
@@ -69,6 +69,7 @@ const createPoolsModelSlice: StateCreator<
         let numVotes = 0;
         let poolIdOfInterest = -1;
         try {
+          await fula.isReady();
           const account = await blockchain.getAccount();
           const accountId = account.account;
           console.log('account: ', accountId);
@@ -148,6 +149,7 @@ const createPoolsModelSlice: StateCreator<
     },
     joinPool: async (poolID: number) => {
       try {
+        await fula.isReady();
         await blockchain.joinPool(poolID);
         set({ dirty: true });
       } catch (error) {
@@ -157,6 +159,7 @@ const createPoolsModelSlice: StateCreator<
     },
     cancelPoolJoin: async (poolID: number) => {
       try {
+        await fula.isReady();
         await blockchain.cancelPoolJoin(poolID);
         set({ dirty: true });
       } catch (error) {
@@ -166,6 +169,7 @@ const createPoolsModelSlice: StateCreator<
     },
     leavePool: async (poolID: number) => {
       try {
+        await fula.isReady();
         await blockchain.leavePool(poolID);
         set({ dirty: true });
       } catch (error) {

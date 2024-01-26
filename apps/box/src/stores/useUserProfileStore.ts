@@ -172,6 +172,7 @@ const createUserProfileSlice: StateCreator<
       // eslint-disable-next-line no-useless-catch
       try {
         const accounts = get().accounts;
+        await fula.isReady();
         const account = await blockchain.createAccount(`/${seed}`);
         set({
           accounts: [account, ...accounts],
@@ -183,6 +184,7 @@ const createUserProfileSlice: StateCreator<
     },
     getEarnings: async () => {
       try {
+        await fula.isReady();
         const account = await blockchain.getAccount();
         const earnings = await blockchain.assetsBalance(
           account.account,
@@ -212,6 +214,7 @@ const createUserProfileSlice: StateCreator<
       try {
         // if (!await fula.isReady())
         //   throw 'Fula is not ready!'
+        await fula.isReady();
         const bloxSpace = await blockchain.bloxFreeSpace();
         console.log('bloxSpace', bloxSpace);
         set({

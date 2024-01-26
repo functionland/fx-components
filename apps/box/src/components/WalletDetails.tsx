@@ -16,7 +16,7 @@ import { useBloxsStore } from '../stores';
 import { shallow } from 'zustand/shallow';
 import { useSDK } from '@metamask/sdk-react';
 import { chainNames } from '../utils/walletConnectConifg';
-import { blockchain } from '@functionland/react-native-fula';
+import { fula, blockchain } from '@functionland/react-native-fula';
 interface WalletDetailsProps {
   allowChangeWallet?: boolean;
   showPeerId?: boolean;
@@ -46,14 +46,26 @@ export const WalletDetails = ({
   const { account, chainId } = useSDK();
 
   useEffect(() => {
-    if (showBloxAccount) {
-      updateBloxAccount();
-    }
-    setWalletAddress(address ? address : '');
-    if (!address) {
-      setWalletAddress(account ? account : '');
-    }
-  }, [account, address]);
+    console.log('inside account useEffect');
+    const updateData = async () => {
+      await fula.isReady();
+      if (showBloxAccount) {
+        await updateBloxAccount();
+      }
+  
+      if (address) {
+        setWalletAddress(address);
+      } else if (account) {
+        setWalletAddress(account);
+      } else {
+        // Handle case where both address and account are not available
+        setWalletAddress('');
+      }
+    };
+  
+    updateData();
+  }, [account, address, showBloxAccount]);
+  
 
   const updateBloxAccount = async () => {
     const bloxAccount = await blockchain.getAccount();
