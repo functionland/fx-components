@@ -66,6 +66,16 @@ yarn android file-manager
 yarn android box
 ```
 
+If you ran into `lstat EEPROM` permission issue, you can follow the below:
+
+```
+npx react-native run-android
+```
+The above build the android version. Then run the below to start the server:
+```
+npx react-native start
+```
+
 Running these commands will install the required native dependencies via Gradle or Cocoapods.
 
 These commands are shorthand for: `nx start [app]` followed by `nx run-ios [app]`.
