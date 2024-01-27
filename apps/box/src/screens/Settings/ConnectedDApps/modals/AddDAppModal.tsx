@@ -18,7 +18,8 @@ export type AddAppForm = {
   appName?: string;
   bundleId?: string;
   peerId?: string;
-  bloxPeerId?: string
+  bloxPeerId?: string;
+  accountId?: string;
 };
 type AddDAppModalProps = {
   form?: AddAppForm;
