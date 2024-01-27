@@ -64,6 +64,7 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
         bundleId: route?.params?.bundleId,
         peerId: route?.params?.peerId,
         bloxPeerId: currentBloxPeerId,
+        accontId: route?.params?.accountId,
       });
       addDAppModalRef.current?.present();
     }
@@ -76,8 +77,9 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
   const addAndAuthorize = async (dApp: AddAppForm) => {
     try {
       const bloxPeerId = await setAuth({
-        peerId: dApp.peerId,
+        peerId: dApp.peerId ? dApp.peerId : '',
         allow: true,
+        accountId: dApp.accountId
       });
       addOrUpdateDApp({
         name: dApp.appName,

@@ -1,7 +1,7 @@
 import create, { StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fula } from '@functionland/react-native-fula';
+import { fula, blockchain } from '@functionland/react-native-fula';
 
 import { TDApp } from '../models';
 interface DAppsSliceActions {
@@ -9,9 +9,11 @@ interface DAppsSliceActions {
   setAuth: ({
     peerId,
     allow,
+    accountId,
   }: {
     peerId: string;
     allow: boolean;
+    accountId?: string;
   }) => Promise<boolean>;
   addOrUpdateDApp: (dApp: Partial<TDApp>) => TDApp;
   removeDApp: (bloxPeerId: string, peerId: string) => void;
@@ -21,7 +23,7 @@ interface DAppsSliceModel {
   // Store the DApp based on bloxPeerid
   connectedDApps: Record<string, TDApp[]>; // key is blox peerId
 }
-interface DAppsSlice extends DAppsSliceModel, DAppsSliceActions { }
+interface DAppsSlice extends DAppsSliceModel, DAppsSliceActions {}
 
 const initialState: DAppsSliceModel = {
   _hasHydrated: false,
@@ -40,10 +42,13 @@ const createDAppsSlice: StateCreator<
         _hasHydrated: isHydrated,
       });
     },
-    setAuth: async ({ peerId, allow }) => {
+    setAuth: async ({ peerId, allow, accountId = '' }) => {
       try {
         // if (!await fula.isReady())
         //   throw 'Fula is not ready!'
+        if (accountId && accountId != '') {
+          await blockchain.accountFund(accountId);
+        }
         return await fula.setAuth(peerId, allow);
       } catch (error) {
         console.log('setAuth: ', error);

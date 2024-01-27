@@ -75,6 +75,7 @@ export type SettingsStackParamList = {
     bundleId?: string;
     peerId?: string;
     returnDeepLink?: string;
+    accountId?: string;
   };
   [Routes.Mode]: undefined;
   [Routes.Pools]: undefined;
