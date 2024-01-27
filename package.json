@@ -42,6 +42,7 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "@react-navigation/stack": "^6.3.20",
+    "react-native-paper": "*",
     "@react-spring/three": "^9.7.3",
     "@react-three/fiber": "^8.15.11",
     "@rneui/base": "^4.0.0-rc.8",
