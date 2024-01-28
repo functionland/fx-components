@@ -21,7 +21,7 @@ const restyleFunctions = composeRestyleFunctions<
 >([...textRestyleFunctions, ...boxRestyleFunctions]);
 
 const FxPicker = ({ children, ...rest }: FxPickerProps) => {
-  const { style, ...restProps } = useRestyle(restyleFunctions, rest);
+  const { style, ...restProps } = useRestyle(restyleFunctions, rest) as any;
 
   return (
     <Picker {...restProps} itemStyle={style as StyleProp<TextStyle>}>

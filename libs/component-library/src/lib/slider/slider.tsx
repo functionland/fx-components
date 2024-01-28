@@ -113,7 +113,7 @@ const FxSlider = ({
   }));
 
   const trackStyle = useAnimatedStyle(() => ({
-    width: `${((translateX.value / boundsX.value.high) * 100).toFixed(2)}%`,
+    width: `${((translateX.value / boundsX.value.high) * 100).toFixed(2)}%` as any,
   }));
 
   const labelStyle = useAnimatedStyle(() => ({

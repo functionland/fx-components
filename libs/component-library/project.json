@@ -18,6 +18,19 @@
       "options": {
         "jestConfig": "libs/component-library/jest.config.ts"
       }
-    }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/component-library",
+        "tsConfig": "libs/component-library/tsconfig.lib.json",
+        "main": "libs/component-library/src/index.ts",
+        "assets": [
+          "libs/component-library/*.md",
+          "libs/component-library/package.json"
+        ]
+      }
+    }    
   }
 }

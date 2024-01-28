@@ -21,15 +21,16 @@ const FxCard = ({
   ...rest
 }: FxCardProps) => {
   const [isPressed, setIsPressed] = React.useState(false);
-  const [pressTimer, setPressTimer] = React.useState<NodeJS.Timer | null>(null);
+  const [pressTimer, setPressTimer] = React.useState<number | null>(null);
 
   const handlePressIn = (e: GestureResponderEvent) => {
     if (onPressIn) onPressIn(e);
     if (onLongPress) {
+      // Cast the return value of setTimeout to number
       setPressTimer(
         setTimeout(() => {
           setIsPressed(true);
-        }, delayLongPress ?? 500)
+        }, delayLongPress ?? 500) as unknown as number
       );
     } else {
       setIsPressed(true);
@@ -38,18 +39,20 @@ const FxCard = ({
 
   const handlePressOut = (e: GestureResponderEvent) => {
     setIsPressed(false);
-    if (pressTimer) clearTimeout(pressTimer);
+    if (pressTimer !== null) clearTimeout(pressTimer);
+    setPressTimer(null); // Reset the timer
     if (onPressOut) onPressOut(e);
   };
 
   const handleTouchMove = (e: GestureResponderEvent) => {
-    if (pressTimer) clearTimeout(pressTimer);
+    if (pressTimer !== null) clearTimeout(pressTimer);
+    setPressTimer(null); // Reset the timer
     if (onTouchMove) onTouchMove(e);
   };
 
   React.useEffect(() => {
     return () => {
-      if (pressTimer) clearTimeout(pressTimer);
+      if (pressTimer !== null) clearTimeout(pressTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

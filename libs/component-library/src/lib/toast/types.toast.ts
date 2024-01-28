@@ -1,5 +1,6 @@
 import { ColorValue } from 'react-native';
-import { Color as SvgColor } from 'react-native-svg';
+
+//import { Color as SvgColor } from 'react-native-svg';
 
 export type LocalType = 'info' | 'success' | 'error' | 'warning';
 
@@ -113,7 +114,7 @@ interface ToastContextSettings {
     OptionalSettings & { onHide?: (props: ToastProps) => void };
 }
 
-export type Color = ColorValue & SvgColor;
+export type Color = ColorValue; // This covers the color types for both SVG and regular components.
 
 export interface ToastComponentsConfig {
   [x: string]: (toast: BaseToastProps) => React.ReactElement;
