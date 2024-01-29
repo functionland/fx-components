@@ -1,5 +1,5 @@
 export const WaletConnect_Project_Id = '94a4ca39db88ee0be8f6df95fdfb560a';
-export const INFURA_API_KEY = 'fc2e181454424779b1f09e1f47304bc3';
+export const INFURA_API_KEY = '7bf8350fe481410d91430dfcce0ce32e';
 export const COMM_SERVER_URL = '';
 export const providerMetadata = {
   name: 'Blox dApp',
