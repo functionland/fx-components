@@ -58,6 +58,18 @@ const barStyles = {
   dark: 'light-content',
 } as const;
 
+const openDeeplink = (link: string, _target?: string) => {
+  console.debug(`App::openDeepLink() ${link}`);
+  if (canOpenLink) {
+    Linking.openURL(link);
+  } else {
+    console.debug(
+      'useBlockchainProiver::openDeepLink app is not active - skip link',
+      link
+    );
+  }
+}
+
 const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
   const {
     socketServer,
@@ -82,17 +94,7 @@ const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
           developerMode: true,
           plaintext: true,
         },
-        openDeeplink: (link: string, _target?: string) => {
-          console.debug(`App::openDeepLink() ${link}`);
-          if (canOpenLink) {
-            Linking.openURL(link);
-          } else {
-            console.debug(
-              'useBlockchainProiver::openDeepLink app is not active - skip link',
-              link
-            );
-          }
-        },
+        openDeeplink: openDeeplink,
         timer: BackgroundTimer,
         useDeeplink,
         checkInstallationImmediately,
@@ -117,6 +119,22 @@ export const App = () => {
   const [loadAllCredentials] = useUserProfileStore((state) => [
     state.loadAllCredentials,
   ]);
+  useEffect(() => {
+    const handleDeepLink = (event) => {
+      // Handle the deep link URL
+      openDeeplink(event.url, undefined)
+      console.log(event.url);
+    };
+  
+    // Listen for incoming links
+    // Subscribe to deep link events
+    const unsubscribe = Linking.addEventListener('url', handleDeepLink);
+
+    // Unsubscribe on cleanup
+    return () => {
+      unsubscribe.remove();
+    };
+  }, []);
 
   useEffect(() => {
     loadAllCredentials();
