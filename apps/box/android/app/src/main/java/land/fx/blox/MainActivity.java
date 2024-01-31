@@ -1,5 +1,8 @@
 package land.fx.blox;
 
+import android.os.Bundle; // Import for Bundle
+import android.content.Intent; // Import for Intent
+import android.net.Uri; // Import for Uri
 import expo.modules.ReactActivityDelegateWrapper;
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
@@ -30,5 +33,14 @@ public class MainActivity extends ReactActivity {
         // If you opted-in for the New Architecture, we enable the Fabric Renderer.
         DefaultNewArchitectureEntryPoint.getFabricEnabled()
         ));
+  }
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    Intent intent = getIntent();
+    String action = intent.getAction();
+    Uri data = intent.getData();
+    // Handle the data (URL) here if necessary
   }
 }

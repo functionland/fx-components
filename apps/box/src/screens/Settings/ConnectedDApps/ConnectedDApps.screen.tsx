@@ -64,7 +64,7 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
         bundleId: route?.params?.bundleId,
         peerId: route?.params?.peerId,
         bloxPeerId: currentBloxPeerId,
-        accontId: route?.params?.accountId,
+        accountId: route?.params?.accountId,
       });
       addDAppModalRef.current?.present();
     }
@@ -86,6 +86,7 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
         peerId: dApp.peerId,
         bundleId: dApp.bundleId,
         bloxPeerId: dApp.bloxPeerId,
+        accountId: dApp.accountId,
         authorized: true,
         lastUpdate: new Date(),
         storageUsed: 0,

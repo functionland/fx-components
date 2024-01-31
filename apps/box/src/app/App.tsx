@@ -58,6 +58,18 @@ const barStyles = {
   dark: 'light-content',
 } as const;
 
+const openDeeplink = (link: string, _target?: string) => {
+  console.debug(`App::openDeepLink() ${link}`);
+  if (canOpenLink) {
+    Linking.openURL(link);
+  } else {
+    console.debug(
+      'useBlockchainProiver::openDeepLink app is not active - skip link',
+      link
+    );
+  }
+}
+
 const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
   const {
     socketServer,
@@ -82,17 +94,7 @@ const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
           developerMode: true,
           plaintext: true,
         },
-        openDeeplink: (link: string, _target?: string) => {
-          console.debug(`App::openDeepLink() ${link}`);
-          if (canOpenLink) {
-            Linking.openURL(link);
-          } else {
-            console.debug(
-              'useBlockchainProiver::openDeepLink app is not active - skip link',
-              link
-            );
-          }
-        },
+        openDeeplink: openDeeplink,
         timer: BackgroundTimer,
         useDeeplink,
         checkInstallationImmediately,

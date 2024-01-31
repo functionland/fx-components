@@ -36,7 +36,8 @@ const AddDAppModal = React.forwardRef<
     appName: form?.appName,
     bundleId: form?.bundleId,
     peerId: form?.peerId,
-    bloxPeerId: form?.bloxPeerId
+    bloxPeerId: form?.bloxPeerId,
+    accountId: form?.accountId,
   });
 
   const [bloxs, currentBloxPeerId, updateBloxStore] = useBloxsStore((state) => [
@@ -126,6 +127,16 @@ const AddDAppModal = React.forwardRef<
               setAddForm((prev) => ({
                 ...prev,
                 peerId: txt,
+              }))
+            }
+          />
+          <FxTextInput
+            caption="App Fula Account"
+            value={addForm.accountId}
+            onChangeText={(txt) =>
+              setAddForm((prev) => ({
+                ...prev,
+                accountId: txt,
               }))
             }
           />
