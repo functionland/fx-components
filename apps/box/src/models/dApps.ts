@@ -3,6 +3,7 @@ export type TDApp = {
   bundleId: string;
   peerId: string;
   bloxPeerId: string;
+  accountId?: string;
   authorized: boolean;
   tag?: string;
   storageUsed?: number;

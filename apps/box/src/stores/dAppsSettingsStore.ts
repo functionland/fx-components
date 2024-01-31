@@ -56,26 +56,33 @@ const createDAppsSlice: StateCreator<
       }
     },
     addOrUpdateDApp: (dApp) => {
-      const dApps = get().connectedDApps;
-      const findDApp = dApps[dApp.bloxPeerId]?.find(app => app.peerId === dApp.peerId && app.bloxPeerId === dApp.bloxPeerId);
-      let newDApp = {} as TDApp
-      if (findDApp) {
-        newDApp = {
-          ...findDApp,
-          ...dApp,
-        } as TDApp;
+      if (dApp?.bloxPeerId){
+        const dApps = get().connectedDApps;
+        const bloxDApps = dApps[dApp?.bloxPeerId] || [];
+      
+        const existingDAppIndex = bloxDApps.findIndex(app => app.peerId === dApp.peerId);
+        console.log('updating current app with index:' + existingDAppIndex)
+        if (existingDAppIndex !== -1) {
+          // Update existing dApp
+          bloxDApps[existingDAppIndex] = { ...bloxDApps[existingDAppIndex], ...dApp };
+        } else {
+          // Add new dApp
+          if (dApp?.name){
+            bloxDApps.push(dApp);
+          }
+        }
+      
+        set({
+          connectedDApps: {
+            ...dApps,
+            [dApp?.bloxPeerId]: bloxDApps
+          },
+        });
+      
+        return dApp;
       } else {
-        newDApp = {
-          ...dApp,
-        } as TDApp;
+        return null
       }
-      set({
-        connectedDApps: {
-          ...dApps,
-          [newDApp.bloxPeerId]: [newDApp, ...(dApps[newDApp.bloxPeerId]||[])]
-        },
-      });
-      return newDApp;
     },
     removeDApp: (bloxPeerId, peerId) => {
       const dApps = get().connectedDApps;
@@ -84,7 +91,7 @@ const createDAppsSlice: StateCreator<
         set({
           connectedDApps: {
             ...dApps,
-            [bloxPeerId]: bloxDApps.filter(dApp => dApp.peerId === peerId)
+            [bloxPeerId]: bloxDApps.filter(dApp => dApp.peerId !== peerId)
           },
         });
       }

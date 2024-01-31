@@ -119,22 +119,6 @@ export const App = () => {
   const [loadAllCredentials] = useUserProfileStore((state) => [
     state.loadAllCredentials,
   ]);
-  useEffect(() => {
-    const handleDeepLink = (event) => {
-      // Handle the deep link URL
-      openDeeplink(event.url, undefined)
-      console.log(event.url);
-    };
-  
-    // Listen for incoming links
-    // Subscribe to deep link events
-    const unsubscribe = Linking.addEventListener('url', handleDeepLink);
-
-    // Unsubscribe on cleanup
-    return () => {
-      unsubscribe.remove();
-    };
-  }, []);
 
   useEffect(() => {
     loadAllCredentials();

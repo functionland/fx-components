@@ -42,7 +42,7 @@ const ClearDAppModal = React.forwardRef<
         Data from File Sync will no longer be backed up to Home Blox Setup.
       </FxText>
       <CancelButton />
-      <FxButton marginTop="16">Confirm</FxButton>
+      <FxButton marginTop="16" onPress={() => close()}>Confirm</FxButton>
     </FxBottomSheetModal>
   );
 });
