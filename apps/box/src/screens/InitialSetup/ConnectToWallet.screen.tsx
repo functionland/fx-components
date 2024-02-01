@@ -198,6 +198,12 @@ export const ConnectToWalletScreen = () => {
                 }
               >
                 <FxPickerItem
+                  key={0}
+                  label="Choose a network"
+                  value={'0x0'}
+                  enabled={true}
+                />
+                <FxPickerItem
                   key={1}
                   label="Ethereum Mainnet"
                   value={'0x1'}
@@ -210,7 +216,7 @@ export const ConnectToWalletScreen = () => {
                 />
                 <FxPickerItem
                   key={137}
-                  label="Polygon Mainnet"
+                  label="Polygon Mainnet (Preferred)"
                   value={'0x89'}
                   enabled={false}
                 />
@@ -263,7 +269,7 @@ export const ConnectToWalletScreen = () => {
                 marginTop="16"
                 onPress={handleSkipToManulaSetup}
               >
-                Skip to manula setup
+                Skip to manual setup
               </FxButton>
             </>
           )}
