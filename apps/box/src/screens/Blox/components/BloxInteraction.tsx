@@ -132,7 +132,7 @@ export const BloxInteraction = ({
                   }
                 >
                   {bloxsConnectionStatus[item.peerId]?.toString() ||
-                    'UNCECKED '}
+                    'CHECKING'}
                 </FxText>
                 <FxChevronDownIcon
                   width={16}

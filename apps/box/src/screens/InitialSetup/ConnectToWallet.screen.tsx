@@ -115,7 +115,7 @@ export const ConnectToWalletScreen = () => {
           logger.logError('handleNetwork, add chain', e);
           queueToast({
             title: 'Error adding chain to MetaMask',
-            message: e.toString(),
+            message: JSON.stringify(e.toString()),
             type: 'error',
             autoHideDuration: 3000,
           });
@@ -216,13 +216,13 @@ export const ConnectToWalletScreen = () => {
                 />
                 <FxPickerItem
                   key={137}
-                  label="Polygon Mainnet (Preferred)"
+                  label="Polygon Mainnet"
                   value={'0x89'}
                   enabled={false}
                 />
                 <FxPickerItem
                   key={80001}
-                  label="Mumbai Polygon Testnet"
+                  label="Mumbai Polygon Testnet (Preferred)"
                   value={mumbaiChainId}
                 />
               </FxPicker>

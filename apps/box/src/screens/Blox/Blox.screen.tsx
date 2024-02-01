@@ -336,7 +336,7 @@ export const BloxScreen = () => {
             loading={loadingBloxSpace}
             data={{
               capacity: currentBloxSpaceInfo?.size || 0,
-              name: 'Hard Disk',
+              name: 'Hard Disks',
               status: currentBloxSpaceInfo
                 ? EDeviceStatus.InUse
                 : EDeviceStatus.NotAvailable,

@@ -15,17 +15,17 @@ export const mumbaiChainId: string = '0x13881';
 export const goerliChainId: string = '0x5';
 export const mumbaiChainParams = {
   chainId: mumbaiChainId,
-  chainName: 'Polygon Mumbai',
+  chainName: 'Mumbai',
   blockExplorerUrls: ['https://mumbai.polygonscan.com'],
   nativeCurrency: { symbol: 'MATIC', decimals: 18 },
-  rpcUrls: ['https://endpoints.omniatech.io/v1/matic/mumbai/public'],
+  rpcUrls: ['https://polygon-mumbai-bor.publicnode.com'],
 };
 export const goerliChainParams = {
   chainId: goerliChainId,
   chainName: 'Goerli',
-  blockExplorerUrls: ['https://ethereum-goerli.publicnode.com'],
-  nativeCurrency: { symbol: 'GETH', decimals: 18 },
-  rpcUrls: ['https://goerli.etherscan.io'],
+  blockExplorerUrls: ['https://goerli.etherscan.io'],
+  nativeCurrency: { symbol: 'ETH', decimals: 18 },
+  rpcUrls: ['https://ethereum-goerli.publicnode.com'],
 };
 
 export const chainNames: Record<string, string> = {
