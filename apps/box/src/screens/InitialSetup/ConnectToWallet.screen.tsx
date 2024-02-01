@@ -198,12 +198,6 @@ export const ConnectToWalletScreen = () => {
                 }
               >
                 <FxPickerItem
-                  key={0}
-                  label="Choose a network"
-                  value={'0x0'}
-                  enabled={true}
-                />
-                <FxPickerItem
                   key={1}
                   label="Ethereum Mainnet"
                   value={'0x1'}

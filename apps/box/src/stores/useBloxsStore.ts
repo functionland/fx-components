@@ -121,15 +121,18 @@ const createModeSlice: StateCreator<
       try {
         await fula.isReady();
         const { bloxsSpaceInfo, currentBloxPeerId } = get();
-        const bloxSpace = await blockchain.bloxFreeSpace();
-        // const bloxSpace: BloxFreeSpaceResponse = {
-        //   size: 1000000000000,
-        //   avail: 1000000000,
-        //   used: 70,
-        //   used_percentage: 70,
-        // };
+        let bloxSpace = await blockchain.bloxFreeSpace();
+        const emptyBloxSpace: BloxFreeSpaceResponse = {
+          size: 0,
+          avail: 0,
+          used: 0,
+          used_percentage: 0,
+        };
         console.log(bloxSpace);
-        if (updateStore && bloxSpace?.size) {
+        if (updateStore) {
+          if (!bloxSpace?.size) {
+            bloxSpace = emptyBloxSpace
+          }
           set({
             bloxsSpaceInfo: {
               ...bloxsSpaceInfo,
