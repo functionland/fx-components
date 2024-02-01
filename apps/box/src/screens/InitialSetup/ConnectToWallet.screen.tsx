@@ -93,7 +93,7 @@ export const ConnectToWalletScreen = () => {
     if (chainId === undefined || networkConfirmed) {
       return;
     }
-    if (connected && chainId !== undefined && chainId !== selectedChainId) {
+    if (connected && chainId !== undefined && chainId !== selectedChainId && networkConfirmed) {
       setNetworkConfirmed(false);
       let err = 'chainId does not match the selected chain';
       console.log(err);
@@ -159,7 +159,7 @@ export const ConnectToWalletScreen = () => {
       <FxProgressBar progress={20} />
 
       <FxBox flex={1} justifyContent="space-between" paddingVertical="80">
-        {provider && connected ? (
+        {provider && chainId && networkConfirmed ? (
           <>
             <WalletDetails allowChangeWallet={true} />
             {password && signiture ? (
@@ -178,47 +178,52 @@ export const ConnectToWalletScreen = () => {
             <FxText variant="h300" textAlign="center">
               Connect To Wallet
             </FxText>
-            <FxBox>
-              <FxText variant="h200" marginBottom="8">
-                Select network
-              </FxText>
-              <FxPicker
-                selectedValue={selectedChainId}
-                enabled={!connected}
-                onValueChange={(itemValue: string) =>
-                  setSelectedChainId(itemValue)
-                }
-              >
-                <FxPickerItem
-                  key={1}
-                  label="Ethereum Mainnet"
-                  value={'0x1'}
-                  enabled={false}
-                />
-                <FxPickerItem
-                  key={5}
-                  label="Goerli Ethereum Testnet"
-                  value={goerliChainId}
-                />
-                <FxPickerItem
-                  key={137}
-                  label="Polygon Mainnet"
-                  value={'0x89'}
-                  enabled={false}
-                />
-                <FxPickerItem
-                  key={80001}
-                  label="Mumbai Polygon Testnet (Preferred)"
-                  value={mumbaiChainId}
-                />
-              </FxPicker>
-            </FxBox>
+            { chainId && 
+              (
+              <FxBox>
+                <FxText variant="h200" marginBottom="8">
+                  Select network
+                </FxText>
+                <FxPicker
+                  selectedValue={selectedChainId}
+                  enabled={connected && !networkConfirmed}
+                  onValueChange={(itemValue: string) =>
+                    setSelectedChainId(itemValue)
+                  }
+                >
+                  <FxPickerItem
+                    key={1}
+                    label="Ethereum Mainnet"
+                    value={'0x1'}
+                    enabled={false}
+                  />
+                  <FxPickerItem
+                    key={5}
+                    label="Goerli Ethereum Testnet"
+                    value={goerliChainId}
+                  />
+                  <FxPickerItem
+                    key={137}
+                    label="Polygon Mainnet"
+                    value={'0x89'}
+                    enabled={false}
+                  />
+                  <FxPickerItem
+                    key={80001}
+                    label="Mumbai Polygon Testnet (Preferred)"
+                    value={mumbaiChainId}
+                  />
+                </FxPicker>
+              </FxBox>
+              )
+            }
           </>
+          
         )}
         <FxBox>
-          {!connected ? (
-            <FxButton size="large" onPress={networkConfirmed ? handleConnect : handleNetwork}>
-              {provider ? (networkConfirmed ? 'Connect to Wallet' : 'Confirm') : <ActivityIndicator />}
+          {!networkConfirmed ? (
+            <FxButton size="large" onPress={chainId ? handleNetwork : handleConnect }>
+              {provider ? (chainId ? 'Confirm' : 'Connect to Wallet' ) : <ActivityIndicator />}
             </FxButton>
           ) : !signiture ? (
             <FxButton size="large" onPress={handleLinkPassword}>
