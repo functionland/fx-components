@@ -27,7 +27,7 @@ import {
 
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const [networkConfirmed, setNetwordConfirmed] = useState<boolean>(false);
+  const [networkConfirmed, setNetworkConfirmed] = useState<boolean>(false);
   const [selectedChainId, setSelectedChainId] = useState<string>(mumbaiChainId); // Mumbai Polygon Testnet
   const { queueToast } = useToast();
   const { account, chainId, provider, sdk, connected } = useSDK();
@@ -93,22 +93,29 @@ export const ConnectToWalletScreen = () => {
     if (chainId === undefined || networkConfirmed) {
       return;
     }
-    if (!connected || chainId === undefined) {
-      setNetwordConfirmed(false);
+    if (connected && chainId !== undefined && chainId !== selectedChainId) {
+      setNetworkConfirmed(false);
+      let err = 'chainId does not match the selected chain';
+      console.log(err);
+      logger.logError('chianId check', err);
+      queueToast({
+        title: 'Metamask chain error',
+        message: err,
+        type: 'error',
+        autoHideDuration: 3000,
+      });
       return;
     }
-    handleNetwork();
   }, [chainId]);
 
   const handleNetwork = async () => {
     if (chainId !== selectedChainId) {
       try {
-        await switchChain(selectedChainId);
+        await addChain(selectedChainId);
       } catch (e) {
-        console.log('###################### chain not found, try adding: ', e);
-
+        console.log('###################### chain could not be added. trying switch: ', e);
         try {
-          await addChain(selectedChainId);
+          await switchChain(selectedChainId);
           // eslint-disable-next-line no-catch-shadow
         } catch (e) {
           console.log(e);
@@ -121,28 +128,13 @@ export const ConnectToWalletScreen = () => {
           });
           return;
         }
-        try {
-          await switchChain(selectedChainId);
-          // eslint-disable-next-line no-catch-shadow
-        } catch (e) {
-          console.log(e);
-          logger.logError('handleNetwork, switch chain', e);
-          queueToast({
-            title: 'Error switching chain to MetaMask',
-            message: e.toString(),
-            type: 'error',
-            autoHideDuration: 3000,
-          });
-        }
       }
-      return;
     }
-
-    setNetwordConfirmed(true);
+    setNetworkConfirmed(true);
   };
 
   const disconnectWallet = () => {
-    setNetwordConfirmed(false);
+    setNetworkConfirmed(false);
     sdk?.terminate();
   };
   const handleLinkPassword = () => {
@@ -225,12 +217,12 @@ export const ConnectToWalletScreen = () => {
         )}
         <FxBox>
           {!connected ? (
-            <FxButton size="large" onPress={handleConnect}>
-              {provider ? 'Connect to Wallet' : <ActivityIndicator />}
+            <FxButton size="large" onPress={networkConfirmed ? handleConnect : handleNetwork}>
+              {provider ? (networkConfirmed ? 'Connect to Wallet' : 'Confirm') : <ActivityIndicator />}
             </FxButton>
           ) : !signiture ? (
             <FxButton size="large" onPress={handleLinkPassword}>
-              {provider ? 'Link Password' : <ActivityIndicator />}
+              {provider ? 'Next' : <ActivityIndicator />}
             </FxButton>
           ) : (
             <>

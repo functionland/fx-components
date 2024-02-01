@@ -229,7 +229,7 @@ export const LinkPasswordScreen = () => {
               linking ? (
                 'Cancel'
               ) : (
-                'Link Password'
+                'Sign'
               )
             ) : (
               <ActivityIndicator />
