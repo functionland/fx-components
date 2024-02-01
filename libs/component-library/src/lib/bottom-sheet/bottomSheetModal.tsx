@@ -68,7 +68,7 @@ export const FxBottomSheetModal = React.forwardRef<
   return (
     <BottomSheetModal
       ref={bottomSheetModalRef}
-      snapPoints={animatedSnapPoints.value}
+      snapPoints={animatedSnapPoints}
       handleHeight={animatedHandleHeight}
       contentHeight={animatedContentHeight}
       keyboardBlurBehavior="restore"

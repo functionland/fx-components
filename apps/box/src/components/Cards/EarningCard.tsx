@@ -4,8 +4,6 @@ import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/typ
 import {
   ActivityIndicator,
   Text,
-  TouchableOpacity,
-  Linking,
 } from 'react-native';
 
 type EarningCardProps = React.ComponentProps<typeof FxBox> & {
@@ -39,21 +37,12 @@ export const EarningCard = ({
         )}
       </FxBox>
       {totalFula !== undefined && (
-        <>
           <FxCard.Row>
             <FxCard.Row.Title>Total fula</FxCard.Row.Title>
             <FxCard.Row.Data>
               {totalFula === 'NaN' ? <Text>0</Text> : <Text>{totalFula}</Text>}
             </FxCard.Row.Data>
           </FxCard.Row>
-          <TouchableOpacity
-            onPress={() =>
-              Linking.openURL('https://fund.functionyard.fula.network/')
-            }
-          >
-            <Text>Join Fula Testnet</Text>
-          </TouchableOpacity>
-        </>
       )}
     </FxCard>
   );

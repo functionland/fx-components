@@ -11,12 +11,13 @@ import {
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { copyToClipboard } from '../utils/clipboard';
 import { Helper } from '../utils';
-import { BloxIcon, CopyIcon } from './Icons';
+import { BloxIcon, CopyIcon, ExternalLinkIcon } from './Icons';
 import { useBloxsStore } from '../stores';
 import { shallow } from 'zustand/shallow';
 import { useSDK } from '@metamask/sdk-react';
 import { chainNames } from '../utils/walletConnectConifg';
 import { fula, blockchain } from '@functionland/react-native-fula';
+import { Linking } from 'react-native';
 interface WalletDetailsProps {
   allowChangeWallet?: boolean;
   showPeerId?: boolean;
@@ -115,6 +116,19 @@ export const WalletDetails = ({
             size="large"
           >
             Blox account: {bloxAccountId}
+          </FxButton>
+        </FxBox>
+      )}
+      {bloxAccountId && showBloxAccount && (
+        <FxBox marginTop="24" width="100%">
+          <FxButton
+            onPress={() => Linking.openURL('https://fund.functionyard.fula.network/?accountId='+bloxAccountId)}
+            iconLeft={<ExternalLinkIcon />}
+            flexWrap="wrap"
+            paddingHorizontal="32"
+            size="large"
+          >
+            Join Fula Testnet
           </FxButton>
         </FxBox>
       )}

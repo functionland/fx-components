@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { FxBox, FxButton, FxPressableOpacity, FxText } from '@functionland/component-library';
-import { Image, ImageBackground, StyleSheet } from 'react-native';
+import { Image, ImageBackground, StyleSheet, Linking } from 'react-native';
 // import { isEmulatorSync } from 'react-native-device-info';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { useSettingsStore } from '../../stores';
@@ -70,9 +70,18 @@ export const WelcomeScreen = () => {
           marginBottom="16"
           color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
         >
-          Start setting up your Blox in a few clicks by clicking on the button
-          below
+          By using this product you agree to the terms and conditions at fx.land/terms, 
+          and would not hold Functionland liable for data loss.
         </FxText>
+        <FxButton
+          marginBottom="8"
+          testID="app-name"
+          size="large"
+          width="100%"
+          onPress={() => Linking.openURL('https://fx.land/terms')}
+        >
+          Terms & Conditions
+        </FxButton>
         <FxButton
           marginBottom="8"
           testID="app-name"
@@ -80,7 +89,7 @@ export const WelcomeScreen = () => {
           width="100%"
           onPress={onConnectToBox}
         >
-          Setup my Blox
+          Agree & Setup my Blox
         </FxButton>
       </FxBox>
     );
