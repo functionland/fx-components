@@ -204,7 +204,7 @@ export const ConnectToWalletScreen = () => {
                     key={1}
                     label="Ethereum Mainnet"
                     value={'0x1'}
-                    enabled={false}
+                    enabled={true}
                   />
                   <FxPickerItem
                     key={5}
