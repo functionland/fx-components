@@ -23,6 +23,7 @@ import {
   chains,
   goerliChainId,
   mumbaiChainId,
+  ethereumChainId,
 } from '../../utils/walletConnectConifg';
 
 export const ConnectToWalletScreen = () => {
@@ -74,6 +75,7 @@ export const ConnectToWalletScreen = () => {
   }, [provider, account]);
 
   const handleConnect = async () => {
+    //Added a `setNetwork` here as we do not need to select chain here anymoe
     try {
       await sdk?.connect();
     } catch (err) {
@@ -90,7 +92,7 @@ export const ConnectToWalletScreen = () => {
   };
 
   useEffect(() => {
-    if (connected && chainId !== undefined && chainId !== selectedChainId && networkConfirmed) {
+    /*if (connected && chainId !== undefined && chainId !== selectedChainId && networkConfirmed) {
       setNetworkConfirmed(false);
       let err = 'chainId does not match the selected chain';
       console.log(err);
@@ -102,8 +104,11 @@ export const ConnectToWalletScreen = () => {
         autoHideDuration: 3000,
       });
       return;
+    }*/
+    if (connected && chainId) {
+      setNetworkConfirmed(true);
     }
-  }, [chainId]);
+  }, [chainId, connected]);
 
   const handleNetwork = async () => {
     if (chainId !== selectedChainId) {
@@ -187,7 +192,7 @@ export const ConnectToWalletScreen = () => {
             <FxText variant="h300" textAlign="center">
               Connect To Wallet
             </FxText>
-            { chainId && 
+            { chainId && !networkConfirmed && 
               (
               <FxBox>
                 <FxText variant="h200" marginBottom="8">
@@ -231,11 +236,11 @@ export const ConnectToWalletScreen = () => {
         )}
         <FxBox>
           {!networkConfirmed ? (
-            <FxButton size="large" onPress={chainId ? handleNetwork : handleConnect }>
+            <FxButton size="large" onPress={provider ? ( chainId ? handleNetwork : handleConnect ) : ()=>{} }>
               {provider ? (chainId ? 'Confirm' : 'Connect to Wallet' ) : <ActivityIndicator />}
             </FxButton>
-          ) : !signiture ? (
-            <FxButton size="large" onPress={handleLinkPassword}>
+          ) : (!signiture && chainId) ? (
+            <FxButton size="large" onPress={provider ? handleLinkPassword: ()=>{}}>
               {provider ? 'Next' : <ActivityIndicator />}
             </FxButton>
           ) : (

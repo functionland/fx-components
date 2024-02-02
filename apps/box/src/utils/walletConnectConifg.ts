@@ -13,6 +13,8 @@ export const providerMetadata = {
 
 export const mumbaiChainId: string = '0x13881';
 export const goerliChainId: string = '0x5';
+export const ethereumChainId: string = '0x1';
+export const polygonChainId: string = '0x89';
 export const mumbaiChainParams = {
   chainId: mumbaiChainId,
   chainName: 'Mumbai',
@@ -27,13 +29,23 @@ export const goerliChainParams = {
   nativeCurrency: { symbol: 'ETH', decimals: 18 },
   rpcUrls: ['https://ethereum-goerli.publicnode.com'],
 };
+export const ethereumChainParams = {
+  chainId: ethereumChainId,
+  chainName: 'Ethereum Mainnet',
+  blockExplorerUrls: ['https://goerli.etherscan.io'],
+  nativeCurrency: { symbol: 'ETH', decimals: 18 },
+  rpcUrls: ['https://ethereum-goerli.publicnode.com'],
+};
 
 export const chainNames: Record<string, string> = {
   '0x13881': 'Polygon Mumbai',
   '0x5': 'Goerli Ethereum testnet',
+  '0x1': 'Ethereum Mainnet',
+  '0x89': 'Polygon',
 };
 
 export const chains: Record<string, any> = {
   '0x13881': mumbaiChainParams,
   '0x5': goerliChainParams,
+  '0x1': ethereumChainParams,
 };

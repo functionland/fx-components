@@ -26,6 +26,25 @@ interface WalletDetailsProps {
   showNetwork?: boolean;
   showBloxAccount?: boolean;
 }
+const useFulaReady = (initialDelay = 1000, maxAttempts = 5) => {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    let attempts = 0;
+    const intervalId = setInterval(async () => {
+      const ready = await fula.isReady();
+      if (ready || attempts >= maxAttempts) {
+        clearInterval(intervalId);
+        setIsReady(ready);
+      }
+      attempts++;
+    }, initialDelay);
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [initialDelay, maxAttempts]);
+
+  return isReady;
+};
 export const WalletDetails = ({
   allowChangeWallet,
   showNetwork = true,
@@ -46,14 +65,11 @@ export const WalletDetails = ({
   ]);
   const { account, chainId } = useSDK();
 
+  const isFulaReady = useFulaReady();
+
   useEffect(() => {
     console.log('inside account useEffect');
     const updateData = async () => {
-      await fula.isReady();
-      if (showBloxAccount) {
-        await updateBloxAccount();
-      }
-  
       if (address) {
         setWalletAddress(address);
       } else if (account) {
@@ -65,7 +81,19 @@ export const WalletDetails = ({
     };
   
     updateData();
-  }, [account, address, showBloxAccount]);
+  }, [account, address]);
+
+  useEffect(() => {
+    console.log('inside account useEffect');
+    const updateData = async () => {
+      await fula.isReady();
+      if (isFulaReady && showBloxAccount) {
+        await updateBloxAccount();
+      }
+    };
+  
+    updateData();
+  }, [showBloxAccount, isFulaReady]);
   
 
   const updateBloxAccount = async () => {
