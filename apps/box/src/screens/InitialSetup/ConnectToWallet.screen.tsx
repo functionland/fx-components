@@ -90,9 +90,6 @@ export const ConnectToWalletScreen = () => {
   };
 
   useEffect(() => {
-    if (chainId === undefined || networkConfirmed) {
-      return;
-    }
     if (connected && chainId !== undefined && chainId !== selectedChainId && networkConfirmed) {
       setNetworkConfirmed(false);
       let err = 'chainId does not match the selected chain';
@@ -126,6 +123,7 @@ export const ConnectToWalletScreen = () => {
             type: 'error',
             autoHideDuration: 3000,
           });
+          disconnectWallet();
           return;
         }
       }
@@ -138,7 +136,18 @@ export const ConnectToWalletScreen = () => {
     sdk?.terminate();
   };
   const handleLinkPassword = () => {
-    navigation.navigate(Routes.LinkPassword);
+    provider?.request({
+      method: 'wallet_requestPermissions ',
+      params: [],
+    }).then((res) => {
+      console.log('handlelink wallet request');
+      console.log(res);
+      navigation.navigate(Routes.LinkPassword);
+    }).catch((e) => {
+      console.log(e);
+      navigation.navigate(Routes.LinkPassword);
+    });
+    
   };
 
   const handleConnectToBlox = () => {

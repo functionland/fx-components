@@ -102,7 +102,7 @@ const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
           enabled: true,
         },
         dappMetadata: {
-          name: 'devreactnative',
+          name: 'fxblox',
         },
         i18nOptions: {
           enabled: true,

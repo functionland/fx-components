@@ -5,10 +5,6 @@
   },
   "defaultProject": "box",
   "targetDefaults": {
-    "lint": {
-      "cache": true,
-      "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
-    },
     "@nx/jest:jest": {
       "cache": true,
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
@@ -21,6 +17,10 @@
           "codeCoverage": true
         }
       }
+    },
+    "@nx/eslint:lint": {
+      "cache": true,
+      "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
     }
   },
   "namedInputs": {

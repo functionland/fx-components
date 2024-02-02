@@ -35,17 +35,8 @@ export const LinkPasswordScreen = () => {
     shallow
   );
 
-  useEffect(() => {
-    if (!connected) {
-      tryConnect();
-    }
-  }, []);
 
   useEffect(() => {}, [signiture, password]);
-
-  const tryConnect = async () => {
-    await sdk?.connect();
-  };
 
   const personalSign = async (msg: string) => {
     return await provider?.request({
@@ -89,12 +80,15 @@ export const LinkPasswordScreen = () => {
       setLinking(true);
       const ed = new HDKEY(passwordInput);
       const chainCode = ed.chainCode;
-
+      console.log(chainCode);
       if (!connected || !sdk) {
+        queueToast({
+          title: 'Error',
+          message: 'web3Provider not connected',
+          type: 'error',
+          autoHideDuration: 3000,
+        });
         throw new Error('web3Provider not connected');
-      }
-      if (!account) {
-        throw new Error('No address found');
       }
       console.log('before signing...');
       const sig = await personalSign(chainCode);
@@ -113,6 +107,7 @@ export const LinkPasswordScreen = () => {
         type: 'error',
         autoHideDuration: 3000,
       });
+      setLinking(false);
     } finally {
       setLinking(false);
     }

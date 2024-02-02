@@ -74,7 +74,8 @@
     "viem": "*",
     "wagmi": "*",
     "zustand": "*",
-    "@types/react-native-background-timer": "*"
+    "@types/react-native-background-timer": "*",
+    "ethers": "*"
   },
   "devDependencies": {
     "@types/react-native-background-timer": "^2.0.2"
