@@ -37,7 +37,7 @@ export const WelcomeScreen = () => {
     // } else {
     //   navigation.navigate(Routes.ConnectToWallet);
     // }
-    navigation.navigate(Routes.ConnectToWallet);
+    navigation.navigate(Routes.LinkPassword);
   };
 
   const renderContent = () => {

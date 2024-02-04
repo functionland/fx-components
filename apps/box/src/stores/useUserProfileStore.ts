@@ -1,4 +1,4 @@
-import create, { StateCreator } from 'zustand';
+import { create, StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { blockchain, fula } from '@functionland/react-native-fula';
@@ -22,6 +22,7 @@ interface UserProfileActions {
   setFulaIsReady: (value: boolean) => void;
   checkBloxConnection: () => Promise<boolean>;
   reset: () => void;
+  checkFulaReadiness: () => Promise<void>; // New method to update fulaReady
 }
 export interface UserProfileSlice {
   _hasHydrated: boolean;
@@ -71,6 +72,25 @@ const createUserProfileSlice: StateCreator<
 > = persist(
   (set, get) => ({
     ...initialState,
+    checkFulaReadiness: async () => {
+      let attempts = 0;
+      const maxAttempts = 20; // or whatever your logic requires
+      const checkInterval = 3000; // milliseconds between checks
+
+      const check = async () => {
+        const ready = await fula.isReady(false);
+        console.log('ready is : '+ready);
+        if (ready || attempts >= maxAttempts) {
+          set({ fulaIsReady: ready });
+          return;
+        } else {
+          console.log('Fula is not ready yet, retrying...');
+          attempts++;
+          setTimeout(check, checkInterval);
+        }
+      };
+      check();
+    },
     setHasHydrated: (isHydrated) => {
       set({
         _hasHydrated: isHydrated,
@@ -172,7 +192,7 @@ const createUserProfileSlice: StateCreator<
       // eslint-disable-next-line no-useless-catch
       try {
         const accounts = get().accounts;
-        await fula.isReady();
+        await fula.isReady(false);
         const account = await blockchain.createAccount(`/${seed}`);
         set({
           accounts: [account, ...accounts],
@@ -184,7 +204,7 @@ const createUserProfileSlice: StateCreator<
     },
     getEarnings: async () => {
       try {
-        await fula.isReady();
+        await fula.isReady(false);
         const account = await blockchain.getAccount();
         const earnings = await blockchain.assetsBalance(
           account.account,
@@ -214,7 +234,7 @@ const createUserProfileSlice: StateCreator<
       try {
         // if (!await fula.isReady())
         //   throw 'Fula is not ready!'
-        await fula.isReady();
+        await fula.isReady(false);
         const bloxSpace = await blockchain.bloxFreeSpace();
         console.log('bloxSpace', bloxSpace);
         set({

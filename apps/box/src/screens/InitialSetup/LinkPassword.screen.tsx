@@ -19,30 +19,40 @@ import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
-import { shallow } from 'zustand/shallow';
 import { useSDK } from '@metamask/sdk-react';
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
-  const { account, sdk, provider, connected } = useSDK();
+  const { account, sdk, provider, connected, error, status, rpcHistory } =
+    useSDK();
 
   const [iKnow, setIKnow] = useState(false);
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
   const [signatureData, setSignatureData] = useState<string>('');
-  const [passwordInput, setInputPasswordInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [setKeyChainValue, signiture, password] = useUserProfileStore(
-    (state) => [state.setKeyChainValue, state.signiture, state.password],
-    shallow
+    (state) => [state.setKeyChainValue, state.signiture, state.password]
   );
 
-
-  useEffect(() => {}, [signiture, password]);
+  useEffect(() => {
+    console.log('in test useEffect');
+    console.log(
+      JSON.stringify({ error: error, status: status, rpcHistory: rpcHistory })
+    );
+  }, [error, status, rpcHistory]);
+  useEffect(() => {
+    console.log('signiture is: ' + signiture + '; password:' + password);
+  }, [signiture, password]);
 
   const personalSign = async (msg: string) => {
-    return await provider?.request({
-      method: 'personal_sign',
-      params: [msg, account],
+    return await sdk?.connectAndSign({
+      msg: msg,
     });
+  };
+
+  const disconnectWallet = () => {
+    setLinking(false);
+    sdk?.terminate();
   };
 
   const logger = useLogger();
@@ -81,15 +91,6 @@ export const LinkPasswordScreen = () => {
       const ed = new HDKEY(passwordInput);
       const chainCode = ed.chainCode;
       console.log(chainCode);
-      if (!connected || !sdk) {
-        queueToast({
-          title: 'Error',
-          message: 'web3Provider not connected',
-          type: 'error',
-          autoHideDuration: 3000,
-        });
-        throw new Error('web3Provider not connected');
-      }
       console.log('before signing...');
       const sig = await personalSign(chainCode);
       if (!sig || sig === undefined || sig === null) {
@@ -149,7 +150,7 @@ export const LinkPasswordScreen = () => {
                 autoFocus
                 secureTextEntry
                 value={passwordInput}
-                onChangeText={setInputPasswordInput}
+                onChangeText={setPasswordInput}
               />
             ) : (
               <ActivityIndicator />
@@ -218,17 +219,15 @@ export const LinkPasswordScreen = () => {
           <FxButton
             size="large"
             disabled={!passwordInput || !iKnow}
-            onPress={connected ? handleLinkPassword : null}
+            onPress={
+              provider
+                ? linking
+                  ? disconnectWallet
+                  : handleLinkPassword
+                : () => {}
+            }
           >
-            {connected ? (
-              linking ? (
-                'Cancel'
-              ) : (
-                'Sign'
-              )
-            ) : (
-              <ActivityIndicator />
-            )}
+            {provider ? linking ? 'Cancel' : 'Sign' : <ActivityIndicator />}
           </FxButton>
         )}
       </FxBox>

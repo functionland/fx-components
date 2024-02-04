@@ -12,7 +12,6 @@ import { TBlox } from '../models';
 import { ActivityIndicator, Share } from 'react-native';
 import { BloxIcon } from './Icons';
 import { useBloxsStore } from '../stores';
-import { shallow } from 'zustand/shallow';
 
 type BloxInfoBottomSheetProps = {
   closeBottomSheet?: VoidFunction;
@@ -40,10 +39,9 @@ export const BloxInfoBottomSheet = React.forwardRef<
     ref
   ) => {
     const theme = useFxTheme();
-    const [bloxsPropertyInfo] = useBloxsStore(
-      (state) => [state.bloxsPropertyInfo],
-      shallow
-    );
+    const [bloxsPropertyInfo] = useBloxsStore((state) => [
+      state.bloxsPropertyInfo,
+    ]);
     const bloxPropertyInfo = bloxsPropertyInfo[bloxInfo?.peerId];
     return (
       <FxBottomSheetModal ref={ref}>

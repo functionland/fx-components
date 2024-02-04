@@ -8,7 +8,6 @@ import {
 } from '@functionland/component-library';
 import { DeviceCard } from '../components';
 import { useBloxsStore } from '../stores';
-import { shallow } from 'zustand/shallow';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useLogger } from '../hooks';
 import { EDeviceStatus } from '../api/hub';
@@ -22,12 +21,10 @@ export const DevicesScreen = () => {
       state.bloxsSpaceInfo,
       state.currentBloxPeerId,
       state.getBloxSpace,
-    ],
-    shallow
+    ]
   );
   const [fulaIsReady] = useUserProfileStore(
-    (state) => [state.fulaIsReady],
-    shallow
+    (state) => [state.fulaIsReady]
   );
   const currentBloxSpaceInfo = useMemo(
     () => bloxsSpaceInfo?.[currentBloxPeerId],

@@ -1,4 +1,4 @@
-import create, { StateCreator } from 'zustand';
+import { create, StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fula, blockchain } from '@functionland/react-native-fula';
@@ -27,8 +27,8 @@ interface DAppsSlice extends DAppsSliceModel, DAppsSliceActions {}
 
 const initialState: DAppsSliceModel = {
   _hasHydrated: false,
-  connectedDApps: {}
-}
+  connectedDApps: {},
+};
 const createDAppsSlice: StateCreator<
   DAppsSlice,
   [],
@@ -56,32 +56,37 @@ const createDAppsSlice: StateCreator<
       }
     },
     addOrUpdateDApp: (dApp) => {
-      if (dApp?.bloxPeerId){
+      if (dApp?.bloxPeerId) {
         const dApps = get().connectedDApps;
         const bloxDApps = dApps[dApp?.bloxPeerId] || [];
-      
-        const existingDAppIndex = bloxDApps.findIndex(app => app.peerId === dApp.peerId);
-        console.log('updating current app with index:' + existingDAppIndex)
+
+        const existingDAppIndex = bloxDApps.findIndex(
+          (app) => app.peerId === dApp.peerId
+        );
+        console.log('updating current app with index:' + existingDAppIndex);
         if (existingDAppIndex !== -1) {
           // Update existing dApp
-          bloxDApps[existingDAppIndex] = { ...bloxDApps[existingDAppIndex], ...dApp };
+          bloxDApps[existingDAppIndex] = {
+            ...bloxDApps[existingDAppIndex],
+            ...dApp,
+          };
         } else {
           // Add new dApp
-          if (dApp?.name){
+          if (dApp?.name) {
             bloxDApps.push(dApp);
           }
         }
-      
+
         set({
           connectedDApps: {
             ...dApps,
-            [dApp?.bloxPeerId]: bloxDApps
+            [dApp?.bloxPeerId]: bloxDApps,
           },
         });
-      
+
         return dApp;
       } else {
-        return null
+        return null;
       }
     },
     removeDApp: (bloxPeerId, peerId) => {
@@ -91,7 +96,7 @@ const createDAppsSlice: StateCreator<
         set({
           connectedDApps: {
             ...dApps,
-            [bloxPeerId]: bloxDApps.filter(dApp => dApp.peerId !== peerId)
+            [bloxPeerId]: bloxDApps.filter((dApp) => dApp.peerId !== peerId),
           },
         });
       }

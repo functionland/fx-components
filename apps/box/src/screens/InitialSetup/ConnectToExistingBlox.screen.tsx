@@ -27,7 +27,6 @@ type DicoveryDeviceType = {
 import Zeroconf from 'react-native-zeroconf';
 import { MDNSBloxService, TBloxProperty } from '../../models';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { shallow } from 'zustand/shallow';
 import { Helper } from '../../utils';
 import { useLogger, useRootNavigation } from '../../hooks';
 import { useBloxsStore } from '../../stores';
@@ -49,8 +48,7 @@ export const ConnectToExistingBloxScreen = () => {
       state.setAppPeerId,
       state.signiture,
       state.password,
-    ],
-    shallow
+    ]
   );
   const [
     bloxs = {},
@@ -65,8 +63,7 @@ export const ConnectToExistingBloxScreen = () => {
       state.addBlox,
       state.removeBlox,
       state.update,
-    ],
-    shallow
+    ]
   );
   const [checkboxState, setCheckboxState] = React.useState<
     Record<string, boolean>

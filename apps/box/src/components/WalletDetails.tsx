@@ -13,7 +13,6 @@ import { copyToClipboard } from '../utils/clipboard';
 import { Helper } from '../utils';
 import { BloxIcon, CopyIcon, ExternalLinkIcon } from './Icons';
 import { useBloxsStore } from '../stores';
-import { shallow } from 'zustand/shallow';
 import { useSDK } from '@metamask/sdk-react';
 import { chainNames } from '../utils/walletConnectConifg';
 import { fula, blockchain } from '@functionland/react-native-fula';
@@ -24,81 +23,75 @@ interface WalletDetailsProps {
   showDID?: boolean;
   showBloxPeerIds?: boolean;
   showNetwork?: boolean;
-  showBloxAccount?: boolean;
 }
-const useFulaReady = (initialDelay = 1000, maxAttempts = 5) => {
-  const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    let attempts = 0;
-    const intervalId = setInterval(async () => {
-      const ready = await fula.isReady();
-      if (ready || attempts >= maxAttempts) {
-        clearInterval(intervalId);
-        setIsReady(ready);
-      }
-      attempts++;
-    }, initialDelay);
-
-    return () => clearInterval(intervalId); // Cleanup on unmount
-  }, [initialDelay, maxAttempts]);
-
-  return isReady;
-};
 export const WalletDetails = ({
   allowChangeWallet,
   showNetwork = true,
   showPeerId,
-  showBloxAccount = false,
   showDID,
   showBloxPeerIds = false,
 }: WalletDetailsProps) => {
-  const appPeerId = useUserProfileStore((state) => state.appPeerId);
-  const [bloxs = {}] = useBloxsStore((state) => [state.bloxs], shallow);
+  const [bloxs = {}] = useBloxsStore((state) => [state.bloxs]);
   const bloxsArray = Object.values(bloxs);
   const [bloxAccountId, setBloxAccountId] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
-  const [signiture, password, address] = useUserProfileStore((state) => [
-    state.signiture,
-    state.password,
-    state.address,
-  ]);
+  const [signiture, password, address, isFulaReady, appPeerId] =
+    useUserProfileStore((state) => [
+      state.signiture,
+      state.password,
+      state.address,
+      state.fulaIsReady,
+      state.appPeerId,
+    ]);
   const { account, chainId } = useSDK();
 
-  const isFulaReady = useFulaReady();
+  const checkFulaReadiness = useUserProfileStore(
+    (state) => state.checkFulaReadiness
+  );
+
+  useEffect(() => {
+    checkFulaReadiness();
+  }, [checkFulaReadiness]);
 
   useEffect(() => {
     console.log('inside account useEffect');
     const updateData = async () => {
       if (address) {
         setWalletAddress(address);
-      } else if (account) {
-        setWalletAddress(account);
       } else {
-        // Handle case where both address and account are not available
         setWalletAddress('');
       }
     };
-  
+
     updateData();
-  }, [account, address]);
+  }, [address]);
 
   useEffect(() => {
     console.log('inside account useEffect');
     const updateData = async () => {
+      setBloxAccountId('Waiting for fula transfer protocol');
       await fula.isReady();
-      if (isFulaReady && showBloxAccount) {
+      if (isFulaReady) {
+        setBloxAccountId('Connecting to blox');
         await updateBloxAccount();
       }
     };
-  
+
     updateData();
-  }, [showBloxAccount, isFulaReady]);
-  
+  }, [isFulaReady]);
 
   const updateBloxAccount = async () => {
-    const bloxAccount = await blockchain.getAccount();
-    setBloxAccountId(bloxAccount.account);
+    blockchain
+      .getAccount()
+      .then((bloxAccount) => {
+        setBloxAccountId(bloxAccount.account);
+      })
+      .catch((e) => {
+        console.log('Inside the updateBloxAccount');
+        console.log(e);
+        setBloxAccountId(e.message || e.toString());
+      });
   };
 
   const DID = useMemo(() => {
@@ -134,7 +127,7 @@ export const WalletDetails = ({
           </FxBox>
         )}
       </FxBox>
-      {bloxAccountId && showBloxAccount && (
+      {bloxAccountId && (
         <FxBox marginTop="24" width="100%">
           <FxButton
             onPress={() => copyToClipboard(bloxAccountId)}
@@ -142,19 +135,27 @@ export const WalletDetails = ({
             flexWrap="wrap"
             paddingHorizontal="32"
             size="large"
+            disabled={!bloxAccountId.startsWith('5')}
           >
             Blox account: {bloxAccountId}
           </FxButton>
         </FxBox>
       )}
-      {bloxAccountId && showBloxAccount && (
+      {bloxAccountId !== undefined && (
         <FxBox marginTop="24" width="100%">
           <FxButton
-            onPress={() => Linking.openURL('https://fund.functionyard.fula.network/?accountId='+bloxAccountId)}
+            onPress={() => {
+              const baseUrl = 'https://fund.functionyard.fula.network/';
+              const url = bloxAccountId.startsWith('5')
+                ? `${baseUrl}?accountId=${bloxAccountId}`
+                : baseUrl;
+              Linking.openURL(url);
+            }}
             iconLeft={<ExternalLinkIcon />}
             flexWrap="wrap"
             paddingHorizontal="32"
             size="large"
+            disabled={!bloxAccountId.startsWith('5')}
           >
             Join Fula Testnet
           </FxButton>

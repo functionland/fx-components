@@ -15,7 +15,6 @@ import { AddAppForm } from './modals/AddDAppModal';
 import { useDAppsStore } from '../../../stores/dAppsSettingsStore';
 import { TDApp } from '../../../models';
 import { useBloxsStore } from 'apps/box/src/stores';
-import { shallow } from 'zustand/shallow';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   Routes,
@@ -37,14 +36,15 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
   const clearDAppDataModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [selectedDApp, setSelectedDApp] = useCallbackState<TDApp>(null);
   const [addAppForm, setAddAppForm] = useState<AddAppForm | undefined>();
-  const [connectedDApps, setAuth, addOrUpdateDApp] = useDAppsStore(
-    (state) => [state.connectedDApps, state.setAuth, state.addOrUpdateDApp],
-    shallow
-  );
-  const [bloxs, currentBloxPeerId] = useBloxsStore(
-    (state) => [state.bloxs, state.currentBloxPeerId],
-    shallow
-  );
+  const [connectedDApps, setAuth, addOrUpdateDApp] = useDAppsStore((state) => [
+    state.connectedDApps,
+    state.setAuth,
+    state.addOrUpdateDApp,
+  ]);
+  const [bloxs, currentBloxPeerId] = useBloxsStore((state) => [
+    state.bloxs,
+    state.currentBloxPeerId,
+  ]);
   const { queueToast } = useToast();
   const currentBlox = useMemo(
     () => bloxs[currentBloxPeerId],
@@ -79,7 +79,7 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
       const bloxPeerId = await setAuth({
         peerId: dApp.peerId ? dApp.peerId : '',
         allow: true,
-        accountId: dApp.accountId
+        accountId: dApp.accountId,
       });
       addOrUpdateDApp({
         name: dApp.appName,

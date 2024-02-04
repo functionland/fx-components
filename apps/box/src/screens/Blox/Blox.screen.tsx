@@ -9,7 +9,6 @@ import {
 } from '@functionland/component-library';
 import { Alert, ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
-import { shallow } from 'zustand/shallow';
 import {
   BloxInfoBottomSheet,
   ColorSettingsCard,
@@ -58,8 +57,7 @@ export const BloxScreen = () => {
   const navigation = useNavigation();
   const logger = useLogger();
   const [earnings, getEarnings, fulaIsReady] = useUserProfileStore(
-    (state) => [state.earnings, state.getEarnings, state.fulaIsReady],
-    shallow
+    (state) => [state.earnings, state.getEarnings, state.fulaIsReady]
   );
 
   const [
@@ -81,8 +79,7 @@ export const BloxScreen = () => {
       state.getBloxSpace,
       state.removeBlox,
       state.update,
-    ],
-    shallow
+    ]
   );
   const bloxInteractions = Object.values(bloxs || {}).map<TBloxInteraction>(
     (blox) => ({

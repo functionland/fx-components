@@ -17,7 +17,6 @@ import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Helper } from '../../utils';
 import { WalletDetails } from '../../components/WalletDetails';
 import { useSDK } from '@metamask/sdk-react';
-import { shallow } from 'zustand/shallow';
 import { useLogger } from '../../hooks';
 import {
   chains,
@@ -31,7 +30,7 @@ export const ConnectToWalletScreen = () => {
   const [networkConfirmed, setNetworkConfirmed] = useState<boolean>(false);
   const [selectedChainId, setSelectedChainId] = useState<string>(mumbaiChainId); // Mumbai Polygon Testnet
   const { queueToast } = useToast();
-  const { account, chainId, provider, sdk, connected } = useSDK();
+  const { account, chainId, provider, sdk, connected, connecting } = useSDK();
 
   const [walletId, signiture, password, setWalletId] = useUserProfileStore(
     (state) => [
@@ -39,8 +38,7 @@ export const ConnectToWalletScreen = () => {
       state.signiture,
       state.password,
       state.setWalletId,
-    ],
-    shallow
+    ]
   );
 
   const switchChain = async (_chainId: string) => {
@@ -115,7 +113,10 @@ export const ConnectToWalletScreen = () => {
       try {
         await addChain(selectedChainId);
       } catch (e) {
-        console.log('###################### chain could not be added. trying switch: ', e);
+        console.log(
+          '###################### chain could not be added. trying switch: ',
+          e
+        );
         try {
           await switchChain(selectedChainId);
           // eslint-disable-next-line no-catch-shadow
@@ -141,18 +142,20 @@ export const ConnectToWalletScreen = () => {
     sdk?.terminate();
   };
   const handleLinkPassword = () => {
-    provider?.request({
-      method: 'wallet_requestPermissions ',
-      params: [],
-    }).then((res) => {
-      console.log('handlelink wallet request');
-      console.log(res);
-      navigation.navigate(Routes.LinkPassword);
-    }).catch((e) => {
-      console.log(e);
-      navigation.navigate(Routes.LinkPassword);
-    });
-    
+    provider
+      ?.request({
+        method: 'wallet_requestPermissions ',
+        params: [],
+      })
+      .then((res) => {
+        console.log('handlelink wallet request');
+        console.log(res);
+        navigation.navigate(Routes.LinkPassword);
+      })
+      .catch((e) => {
+        console.log(e);
+        navigation.navigate(Routes.LinkPassword);
+      });
   };
 
   const handleConnectToBlox = () => {
@@ -192,8 +195,7 @@ export const ConnectToWalletScreen = () => {
             <FxText variant="h300" textAlign="center">
               Connect To Wallet
             </FxText>
-            { chainId && !networkConfirmed && 
-              (
+            {chainId && !networkConfirmed && (
               <FxBox>
                 <FxText variant="h200" marginBottom="8">
                   Select network
@@ -229,18 +231,47 @@ export const ConnectToWalletScreen = () => {
                   />
                 </FxPicker>
               </FxBox>
-              )
-            }
+            )}
           </>
-          
         )}
         <FxBox>
           {!networkConfirmed ? (
-            <FxButton size="large" onPress={provider ? ( chainId ? handleNetwork : handleConnect ) : ()=>{} }>
-              {provider ? (chainId ? 'Confirm' : 'Connect to Wallet' ) : <ActivityIndicator />}
+            <FxButton
+              size="large"
+              onPress={
+                provider
+                  ? chainId
+                    ? handleNetwork
+                    : connecting
+                      ? disconnectWallet
+                      : handleConnect
+                  : () => {
+                      queueToast({
+                        title: 'Provider is not ready',
+                        message: 'Provider is being prepared',
+                        type: 'error',
+                        autoHideDuration: 3000,
+                      });
+                    }
+              }
+            >
+              {provider ? (
+                chainId ? (
+                  'Confirm'
+                ) : connecting ? (
+                  'Disconnect'
+                ) : (
+                  'Connect to Wallet'
+                )
+              ) : (
+                <ActivityIndicator />
+              )}
             </FxButton>
-          ) : (!signiture && chainId) ? (
-            <FxButton size="large" onPress={provider ? handleLinkPassword: ()=>{}}>
+          ) : !signiture && chainId ? (
+            <FxButton
+              size="large"
+              onPress={provider ? handleLinkPassword : () => {}}
+            >
               {provider ? 'Next' : <ActivityIndicator />}
             </FxButton>
           ) : (

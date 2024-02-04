@@ -25,7 +25,6 @@ import { getWifiList } from '../../../api/wifi';
 import { Routes } from '../../../navigation/navigationConfig';
 import BloxWifiDevice from '../../../app/icons/blox-wifi-device.svg';
 import { useUserProfileStore } from '../../../stores/useUserProfileStore';
-import { shallow } from 'zustand/shallow';
 
 const ItemSeparatorComponent = () => {
   return <FxBox height={1} backgroundColor="backgroundSecondary" />;
@@ -39,10 +38,7 @@ export const ConnectToWifiScreen = () => {
   const [connectedSsid, setConnectedSsid] = useState<string>(null);
   const [enabledHiddenNetwork, setEnableHiddenNetwork] =
     React.useState<boolean>(false);
-  const [appPeerId] = useUserProfileStore(
-    (state) => [state.appPeerId],
-    shallow
-  );
+  const [appPeerId] = useUserProfileStore((state) => [state.appPeerId]);
   const {
     loading,
     error,

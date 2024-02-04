@@ -23,7 +23,6 @@ import OfficeBloxUnitLight from '../../../app/icons/office-blox-unit-light.svg';
 import { useBloxsStore, useSettingsStore } from '../../../stores';
 import { EBloxInteractionType, TBloxInteraction } from '../../../models';
 import { CircleFilledIcon } from 'apps/box/src/components';
-import { shallow } from 'zustand/shallow';
 
 type TBloxInteractionProps = {
   bloxs: TBloxInteraction[];
@@ -50,8 +49,7 @@ export const BloxInteraction = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [bloxsConnectionStatus] = useBloxsStore(
-    (state) => [state.bloxsConnectionStatus],
-    shallow
+    (state) => [state.bloxsConnectionStatus]
   );
 
   // useEffect(() => {

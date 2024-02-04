@@ -35,24 +35,19 @@ import { Helper } from '../utils';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useLogger } from '../hooks';
 import { useBloxsStore } from '../stores';
-import { shallow } from 'zustand/shallow';
 import { BluetoothCommandsScreen } from '../screens/Settings/Bluetooth/BluetoothCommands.screen';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
   const [password, signiture, setFulaIsReady, fulaIsReady] =
-    useUserProfileStore(
-      (state) => [
-        state.password,
-        state.signiture,
-        state.setFulaIsReady,
-        state.fulaIsReady,
-      ],
-      shallow
-    );
+    useUserProfileStore((state) => [
+      state.password,
+      state.signiture,
+      state.setFulaIsReady,
+      state.fulaIsReady,
+    ]);
   const [bloxs, currentBloxPeerId, updateBloxsStore] = useBloxsStore(
-    (state) => [state.bloxs, state.currentBloxPeerId, state.update],
-    shallow
+    (state) => [state.bloxs, state.currentBloxPeerId, state.update]
   );
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
   const logger = useLogger();
