@@ -9,7 +9,7 @@ import {
 
 export type AccountOptionsType = 'RESET-CHAIN' | 'NOT_SET'
 type AccountOptionsSheetProps = {
-  closeBottomSheet: VoidFunction;
+  closeBottomSheet?: VoidFunction;
   onSelected?: (item: AccountOptionsType) => void
 };
 

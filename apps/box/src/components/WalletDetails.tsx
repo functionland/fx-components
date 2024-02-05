@@ -36,7 +36,7 @@ export const WalletDetails = ({
   allowChangeWallet,
   showNetwork = true,
   showPeerId,
-  showDID,
+  showDID = true,
   showBloxPeerIds = false,
 }: WalletDetailsProps) => {
   const [bloxs = {}] = useBloxsStore((state) => [state.bloxs]);
@@ -307,7 +307,7 @@ export const WalletDetails = ({
                   flexWrap="wrap"
                   paddingHorizontal="32"
                 >
-                  <FxBox style={{ flex: 1, width: 250 }}>
+                  <FxBox flex={1} width={250}>
                     <FxText
                       ellipsizeMode="tail"
                       numberOfLines={1}
