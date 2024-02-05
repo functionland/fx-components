@@ -20,7 +20,10 @@ interface UserProfileActions {
   getBloxSpace: () => Promise<TBloxFreeSpace>;
   logout: () => boolean;
   setFulaIsReady: (value: boolean) => void;
-  checkBloxConnection: () => Promise<boolean>;
+  checkBloxConnection: (
+    maxTries?: number,
+    waitBetweenRetries?: number
+  ) => Promise<boolean>;
   reset: () => void;
   checkFulaReadiness: () => Promise<void>; // New method to update fulaReady
 }
@@ -79,7 +82,7 @@ const createUserProfileSlice: StateCreator<
 
       const check = async () => {
         const ready = await fula.isReady(false);
-        console.log('ready is : '+ready);
+        console.log('ready is : ' + ready);
         if (ready || attempts >= maxAttempts) {
           set({ fulaIsReady: ready });
           return;
@@ -232,7 +235,7 @@ const createUserProfileSlice: StateCreator<
     getBloxSpace: async () => {
       // eslint-disable-next-line no-useless-catch
       try {
-        // if (!await fula.isReady())
+        // if (!await fula.isReady(false))
         //   throw 'Fula is not ready!'
         await fula.isReady(false);
         const bloxSpace = await blockchain.bloxFreeSpace();
@@ -252,26 +255,47 @@ const createUserProfileSlice: StateCreator<
         fulaIsReady: value,
       });
     },
-    checkBloxConnection: async () => {
-      try {
-        // if (!await fula.isReady())
-        //   throw 'Fula is not ready!'
-        set({
-          bloxConnectionStatus: 'PENDING',
-        });
-        const connected = await fula.checkConnection();
-        console.log('checkBloxConnection', connected);
-        set({
-          bloxConnectionStatus: connected ? 'CONNECTED' : 'DISCONNECTED',
-        });
-        return connected;
-      } catch (error) {
-        set({
-          bloxConnectionStatus: 'DISCONNECTED',
-        });
-        throw error;
-      }
+    checkBloxConnection: async (maxTries = 1, waitBetweenRetries = 5) => {
+      const delay = (seconds: number) =>
+        new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+
+      const attemptConnection = async (attempt = 1) => {
+        console.log('checkBloxConnection attempt ' + attempt);
+        // attempt is now a parameter of attemptConnection
+        set({ bloxConnectionStatus: 'PENDING' });
+        try {
+          const connected = await fula.checkConnection();
+          console.log(
+            'checkBloxConnection attempt:',
+            attempt,
+            'connected:',
+            connected
+          );
+
+          if (connected) {
+            set({ bloxConnectionStatus: 'CONNECTED' });
+            return true; // Connection successful
+          } else if (attempt < maxTries) {
+            console.log(
+              `Attempt ${attempt} failed, retrying after ${waitBetweenRetries} seconds...`
+            );
+            await delay(waitBetweenRetries);
+            return attemptConnection(attempt + 1); // Increment attempt and retry
+          } else {
+            throw new Error('Max retries reached without success.');
+          }
+        } catch (error) {
+          console.log(
+            `Failed to connect after ${attempt} attempts. Error: ${error.message}`
+          );
+          set({ bloxConnectionStatus: 'DISCONNECTED' });
+          return false; // Connection was not successful after max attempts
+        }
+      };
+
+      return attemptConnection(); // Start the attempt process without specifying the attempt, defaults to 1
     },
+
     reset: () => {
       set(initialState);
     },

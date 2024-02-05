@@ -16,11 +16,13 @@ import { useBloxsStore } from '../stores';
 type BloxInfoBottomSheetProps = {
   closeBottomSheet?: VoidFunction;
   onBloxRemovePress?: (peerId: string) => void;
-  onRestToHotspotPress?: (peerId: string) => void;
+  onResetToHotspotPress?: (peerId: string) => void;
   onRebootBloxPress?: (peerId: string) => void;
+  onResetChainPress?: (peerId: string) => void;
   bloxInfo: TBlox;
   resetingBloxHotspot?: boolean;
   rebootingBlox?: boolean;
+  resettingChain?: boolean;
 };
 
 export const BloxInfoBottomSheet = React.forwardRef<
@@ -32,9 +34,11 @@ export const BloxInfoBottomSheet = React.forwardRef<
       bloxInfo,
       resetingBloxHotspot,
       rebootingBlox,
+      resettingChain,
       onBloxRemovePress,
-      onRestToHotspotPress,
+      onResetToHotspotPress,
       onRebootBloxPress,
+      onResetChainPress,
     },
     ref
   ) => {
@@ -106,7 +110,7 @@ export const BloxInfoBottomSheet = React.forwardRef<
             <FxButton
               size="large"
               variant="inverted"
-              onPress={() => onRestToHotspotPress(bloxInfo?.peerId)}
+              onPress={() => onResetToHotspotPress(bloxInfo?.peerId)}
               marginTop="32"
             >
               {!resetingBloxHotspot ? (
@@ -122,6 +126,14 @@ export const BloxInfoBottomSheet = React.forwardRef<
               marginTop="16"
             >
               {!rebootingBlox ? 'Reboot blox' : <ActivityIndicator />}
+            </FxButton>
+            <FxButton
+              size="large"
+              variant="inverted"
+              onPress={() => onResetChainPress(bloxInfo?.peerId)}
+              marginTop="16"
+            >
+              {!resettingChain ? 'Reset Chain Data' : <ActivityIndicator />}
             </FxButton>
             <FxButton
               onPress={() => onBloxRemovePress(bloxInfo?.peerId)}

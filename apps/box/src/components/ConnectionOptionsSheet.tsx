@@ -21,7 +21,7 @@ import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { AccountCard } from './Cards/AccountCard';
 import AddAccountModal, { AddAccountForm } from './Modals/AddAccountModal';
 
-export type ConnectionOptionsType = 'RETRY' | 'CONNECT-TO-WIFI'
+export type ConnectionOptionsType = 'RETRY' | 'CONNECT-TO-WIFI' | 'RESET-CHAIN'
 type ConnectionOptionsSheetProps = {
   closeBottomSheet: VoidFunction;
   onSelected?: (item: ConnectionOptionsType) => void

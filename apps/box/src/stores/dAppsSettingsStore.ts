@@ -44,7 +44,7 @@ const createDAppsSlice: StateCreator<
     },
     setAuth: async ({ peerId, allow, accountId = '' }) => {
       try {
-        // if (!await fula.isReady())
+        // if (!await fula.isReady(false))
         //   throw 'Fula is not ready!'
         if (accountId && accountId != '') {
           await blockchain.accountFund(accountId);
