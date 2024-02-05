@@ -7,6 +7,7 @@ import {
   FxBottomSheetModalMethods,
   useToast,
 } from '@functionland/component-library';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import {
@@ -246,6 +247,39 @@ export const BloxScreen = () => {
       ]
     );
   };
+  const handleOnClearCachePress = () => {
+    Alert.alert(
+      'Clear Cahce!',
+      `Are you sure want to reset Application cache ?`,
+      [
+        {
+          text: 'Yes',
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              bloxInfoBottomSheetRef.current.close();
+              queueToast({
+                type: 'success',
+                title: 'Cache Cleared',
+                message: 'The cache has been successfully cleared.',
+              });
+            } catch (error) {
+              queueToast({
+                type: 'error',
+                title: 'Error Clearing Cache',
+                message: error.message || 'Failed to clear cache.', // Correctly extracting the error message
+              });
+            }
+          },
+          style: 'destructive',
+        },
+        {
+          text: 'No',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
   const handleOnResetToHotspotPress = (peerId: string) => {
     Alert.alert(
       'Hotspot mode!',
@@ -465,6 +499,7 @@ export const BloxScreen = () => {
         onRestToHotspotPress={handleOnResetToHotspotPress}
         onRebootBloxPress={handleOnRebootBloxPress}
         onResetChainPress={handleOnResetChainPress}
+        onClearCachePress={handleOnClearCachePress}
         resetingBloxHotspot={resetingBloxHotspot}
         rebootingBlox={rebootingBlox}
         resettingChain={resettingChain}
