@@ -126,19 +126,26 @@ export const App = () => {
   }, [loadAllCredentials]);
   return (
     <GestureHandlerRootView style={styles.flex1}>
-      <ThemeProvider theme={theme}>
-        <ToastProvider>
-          <StatusBar
-            backgroundColor={theme.colors.backgroundApp}
-            barStyle={barStyles[mode]}
-          />
-          <SafeAreaProvider>
-            <BottomSheetModalProvider>
-              <AppContent />
-            </BottomSheetModalProvider>
-          </SafeAreaProvider>
-        </ToastProvider>
-      </ThemeProvider>
+      <SDKConfigProvider
+        initialSocketServer={COMM_SERVER_URL}
+        initialInfuraKey={INFURA_API_KEY}
+      >
+        <WithSDKConfig>
+          <ThemeProvider theme={theme}>
+            <ToastProvider>
+              <StatusBar
+                backgroundColor={theme.colors.backgroundApp}
+                barStyle={barStyles[mode]}
+              />
+              <SafeAreaProvider>
+                <BottomSheetModalProvider>
+                  <AppContent />
+                </BottomSheetModalProvider>
+              </SafeAreaProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </WithSDKConfig>
+      </SDKConfigProvider>
     </GestureHandlerRootView>
   );
 };
@@ -218,14 +225,7 @@ const AppContent = () => {
           </FxText>
         </FxPressableOpacity>
       )}
-      <SDKConfigProvider
-        initialSocketServer={COMM_SERVER_URL}
-        initialInfuraKey={INFURA_API_KEY}
-      >
-        <WithSDKConfig>
-          <RootNavigator />
-        </WithSDKConfig>
-      </SDKConfigProvider>
+      <RootNavigator />
     </NavContainer>
   );
 };
