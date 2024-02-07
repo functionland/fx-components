@@ -1,4 +1,4 @@
-import create, { StateCreator } from 'zustand';
+import { create, StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { blockchain, fula } from '@functionland/react-native-fula';
@@ -20,8 +20,12 @@ interface UserProfileActions {
   getBloxSpace: () => Promise<TBloxFreeSpace>;
   logout: () => boolean;
   setFulaIsReady: (value: boolean) => void;
-  checkBloxConnection: () => Promise<boolean>;
+  checkBloxConnection: (
+    maxTries?: number,
+    waitBetweenRetries?: number
+  ) => Promise<boolean>;
   reset: () => void;
+  checkFulaReadiness: () => Promise<void>; // New method to update fulaReady
 }
 export interface UserProfileSlice {
   _hasHydrated: boolean;
@@ -71,6 +75,25 @@ const createUserProfileSlice: StateCreator<
 > = persist(
   (set, get) => ({
     ...initialState,
+    checkFulaReadiness: async () => {
+      let attempts = 0;
+      const maxAttempts = 20; // or whatever your logic requires
+      const checkInterval = 3000; // milliseconds between checks
+
+      const check = async () => {
+        const ready = await fula.isReady(false);
+        console.log('ready is : ' + ready);
+        if (ready || attempts >= maxAttempts) {
+          set({ fulaIsReady: ready });
+          return;
+        } else {
+          console.log('Fula is not ready yet, retrying...');
+          attempts++;
+          setTimeout(check, checkInterval);
+        }
+      };
+      check();
+    },
     setHasHydrated: (isHydrated) => {
       set({
         _hasHydrated: isHydrated,
@@ -172,7 +195,7 @@ const createUserProfileSlice: StateCreator<
       // eslint-disable-next-line no-useless-catch
       try {
         const accounts = get().accounts;
-        await fula.isReady();
+        await fula.isReady(false);
         const account = await blockchain.createAccount(`/${seed}`);
         set({
           accounts: [account, ...accounts],
@@ -184,7 +207,7 @@ const createUserProfileSlice: StateCreator<
     },
     getEarnings: async () => {
       try {
-        await fula.isReady();
+        await fula.isReady(false);
         const account = await blockchain.getAccount();
         const earnings = await blockchain.assetsBalance(
           account.account,
@@ -212,9 +235,9 @@ const createUserProfileSlice: StateCreator<
     getBloxSpace: async () => {
       // eslint-disable-next-line no-useless-catch
       try {
-        // if (!await fula.isReady())
+        // if (!await fula.isReady(false))
         //   throw 'Fula is not ready!'
-        await fula.isReady();
+        await fula.isReady(false);
         const bloxSpace = await blockchain.bloxFreeSpace();
         console.log('bloxSpace', bloxSpace);
         set({
@@ -232,26 +255,47 @@ const createUserProfileSlice: StateCreator<
         fulaIsReady: value,
       });
     },
-    checkBloxConnection: async () => {
-      try {
-        // if (!await fula.isReady())
-        //   throw 'Fula is not ready!'
-        set({
-          bloxConnectionStatus: 'PENDING',
-        });
-        const connected = await fula.checkConnection();
-        console.log('checkBloxConnection', connected);
-        set({
-          bloxConnectionStatus: connected ? 'CONNECTED' : 'DISCONNECTED',
-        });
-        return connected;
-      } catch (error) {
-        set({
-          bloxConnectionStatus: 'DISCONNECTED',
-        });
-        throw error;
-      }
+    checkBloxConnection: async (maxTries = 1, waitBetweenRetries = 5) => {
+      const delay = (seconds: number) =>
+        new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+
+      const attemptConnection = async (attempt = 1) => {
+        console.log('checkBloxConnection attempt ' + attempt);
+        // attempt is now a parameter of attemptConnection
+        set({ bloxConnectionStatus: 'PENDING' });
+        try {
+          const connected = await fula.checkConnection();
+          console.log(
+            'checkBloxConnection attempt:',
+            attempt,
+            'connected:',
+            connected
+          );
+
+          if (connected) {
+            set({ bloxConnectionStatus: 'CONNECTED' });
+            return true; // Connection successful
+          } else if (attempt < maxTries) {
+            console.log(
+              `Attempt ${attempt} failed, retrying after ${waitBetweenRetries} seconds...`
+            );
+            await delay(waitBetweenRetries);
+            return attemptConnection(attempt + 1); // Increment attempt and retry
+          } else {
+            throw new Error('Max retries reached without success.');
+          }
+        } catch (error) {
+          console.log(
+            `Failed to connect after ${attempt} attempts. Error: ${error.message}`
+          );
+          set({ bloxConnectionStatus: 'DISCONNECTED' });
+          return false; // Connection was not successful after max attempts
+        }
+      };
+
+      return attemptConnection(); // Start the attempt process without specifying the attempt, defaults to 1
     },
+
     reset: () => {
       set(initialState);
     },

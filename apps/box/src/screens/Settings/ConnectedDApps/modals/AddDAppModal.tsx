@@ -11,7 +11,6 @@ import {
 
 import { SubHeaderText } from './../../../../components/Text';
 import { useBloxsStore } from 'apps/box/src/stores';
-import { shallow } from 'zustand/shallow';
 import { useUserProfileStore } from 'apps/box/src/stores/useUserProfileStore';
 
 export type AddAppForm = {
@@ -30,7 +29,7 @@ const AddDAppModal = React.forwardRef<
   AddDAppModalProps
 >((props, ref) => {
   const { form, onSubmit } = props;
-  const queueToast = useToast()
+  const queueToast = useToast();
 
   const [addForm, setAddForm] = useState<AddAppForm>({
     appName: form?.appName,
@@ -43,12 +42,10 @@ const AddDAppModal = React.forwardRef<
   const [bloxs, currentBloxPeerId, updateBloxStore] = useBloxsStore((state) => [
     state.bloxs,
     state.currentBloxPeerId,
-    state.update
-  ], shallow)
+    state.update,
+  ]);
 
-  const [fulaIsReady] = useUserProfileStore((state) => [
-    state.fulaIsReady,
-  ], shallow)
+  const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
 
   //Update the form
   useEffect(() => {
@@ -62,30 +59,28 @@ const AddDAppModal = React.forwardRef<
     setAddForm((prev) => ({
       ...prev,
       bloxPeerId: currentBloxPeerId,
-    }))
-  }, [currentBloxPeerId])
+    }));
+  }, [currentBloxPeerId]);
 
   const addAndAuthorize = async () => {
     onSubmit?.(addForm);
   };
 
-  const bloxArray = useMemo(() => Object.values(bloxs), [bloxs])
+  const bloxArray = useMemo(() => Object.values(bloxs), [bloxs]);
 
   const handleOnBloxChange = (peerId: string) => {
-    if (peerId === currentBloxPeerId)
-      return
+    if (peerId === currentBloxPeerId) return;
     if (bloxs[peerId]) {
       updateBloxStore({
-        currentBloxPeerId: peerId
-      })
+        currentBloxPeerId: peerId,
+      });
     } else {
       queueToast.showToast({
         type: 'error',
-        message: "Selected Blox's peerId is invalid!"
-      })
+        message: "Selected Blox's peerId is invalid!",
+      });
     }
-
-  }
+  };
   return (
     <FxBottomSheetModal ref={ref}>
       <FxBox>
@@ -95,7 +90,10 @@ const AddDAppModal = React.forwardRef<
         <FxDropdown
           selectedValue={currentBloxPeerId}
           onValueChange={handleOnBloxChange}
-          options={bloxArray?.map(blox => ({ label: blox.name, value: blox.peerId }))}
+          options={bloxArray?.map((blox) => ({
+            label: blox.name,
+            value: blox.peerId,
+          }))}
           title="Select blox"
           caption="Select blox"
         />
@@ -143,7 +141,12 @@ const AddDAppModal = React.forwardRef<
         </FxBox>
         <FxButton
           size="large"
-          disabled={!addForm.peerId || !addForm.appName || !addForm.bundleId || !addForm?.bloxPeerId}
+          disabled={
+            !addForm.peerId ||
+            !addForm.appName ||
+            !addForm.bundleId ||
+            !addForm?.bloxPeerId
+          }
           onPress={fulaIsReady ? addAndAuthorize : null}
         >
           {fulaIsReady ? 'Add and Authorize' : 'Initialing fula..'}

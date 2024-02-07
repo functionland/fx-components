@@ -13,7 +13,6 @@ import {
 } from '@functionland/component-library';
 import { PoolCard } from '../../components/Cards/PoolCard';
 import { usePoolsStore } from '../../stores/usePoolsStore';
-import { shallow } from 'zustand/shallow';
 import MyLoader from '../../components/ContentLoader';
 import { useLogger } from '../../hooks';
 
@@ -33,18 +32,15 @@ export const PoolsScreen = () => {
     getPools,
     leavePool,
     dirty,
-  ] = usePoolsStore(
-    (state) => [
-      state.pools,
-      state.enableInteraction,
-      state.joinPool,
-      state.cancelPoolJoin,
-      state.getPools,
-      state.leavePool,
-      state.dirty,
-    ],
-    shallow
-  );
+  ] = usePoolsStore((state) => [
+    state.pools,
+    state.enableInteraction,
+    state.joinPool,
+    state.cancelPoolJoin,
+    state.getPools,
+    state.leavePool,
+    state.dirty,
+  ]);
 
   const onChangeSearch = (query) => setSearch(query ? query : '');
 

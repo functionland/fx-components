@@ -1,4 +1,4 @@
-import create, { StateCreator } from 'zustand';
+import { create, StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -119,7 +119,7 @@ const createModeSlice: StateCreator<
      */
     getBloxSpace: async (updateStore = true) => {
       try {
-        await fula.isReady();
+        await fula.isReady(false);
         const { bloxsSpaceInfo, currentBloxPeerId } = get();
         let bloxSpace = await blockchain.bloxFreeSpace();
         const emptyBloxSpace: BloxFreeSpaceResponse = {

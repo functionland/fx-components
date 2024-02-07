@@ -25,7 +25,6 @@ import NetInfo, {
 import { ActivityIndicator } from 'react-native';
 import { useFetch, useLogger } from '../../hooks';
 import { CommonActions } from '@react-navigation/native';
-import { shallow } from 'zustand/shallow';
 import { useBloxsStore } from '../../stores';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 // import SetupCompleteSvg2 from '../../app/icons/setup-complete-2.svg';
@@ -50,25 +49,19 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   const [setupStatus, setSetupStatus] = useState<SetupStatus>('CHECKING');
   const [bloxReachOutTryCount, setBloxReachOutTryCount] = useState(0);
   const [password, signiture, fulaIsReady, setFulaIsReady] =
-    useUserProfileStore(
-      (state) => [
-        state.password,
-        state.signiture,
-        state.fulaIsReady,
-        state.setFulaIsReady,
-      ],
-      shallow
-    );
+    useUserProfileStore((state) => [
+      state.password,
+      state.signiture,
+      state.fulaIsReady,
+      state.setFulaIsReady,
+    ]);
 
   const [currentBloxPeerId, bloxsConnectionStatus, checkBloxConnection] =
-    useBloxsStore(
-      (state) => [
-        state.currentBloxPeerId, // currentBloxPeerId could be undefined when user skip setAuthorizer step with any reason
-        state.bloxsConnectionStatus,
-        state.checkBloxConnection,
-      ],
-      shallow
-    );
+    useBloxsStore((state) => [
+      state.currentBloxPeerId, // currentBloxPeerId could be undefined when user skip setAuthorizer step with any reason
+      state.bloxsConnectionStatus,
+      state.checkBloxConnection,
+    ]);
   const { queueToast } = useToast();
   const logger = useLogger();
   const inetInfo = useNetInfo();

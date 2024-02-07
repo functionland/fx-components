@@ -27,7 +27,6 @@ import {
   exchangeConfig,
   getBloxProperties,
 } from '../../api/bloxHardware';
-import { shallow } from 'zustand/shallow';
 import { useBloxsStore } from '../../stores';
 import { DeviceCard } from '../../components';
 import { EDeviceStatus } from '../../api/hub';
@@ -45,10 +44,11 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   const logger = useLogger();
   const { isManualSetup = false } = route.params || {};
 
-  const [setAppPeerId, signiture, password] = useUserProfileStore(
-    (state) => [state.setAppPeerId, state.signiture, state.password],
-    shallow
-  );
+  const [setAppPeerId, signiture, password] = useUserProfileStore((state) => [
+    state.setAppPeerId,
+    state.signiture,
+    state.password,
+  ]);
 
   const [
     bloxs = {},
@@ -67,8 +67,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       state.removeBlox,
       state.updateBloxPropertyInfo,
       state.updateBloxSpaceInfo,
-    ],
-    shallow
+    ]
   );
 
   const bloxsArray = Object.values(bloxs);

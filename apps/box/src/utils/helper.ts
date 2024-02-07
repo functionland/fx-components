@@ -46,7 +46,7 @@ export const initFula = async ({
     const keyPair = getMyDIDKeyPair(password, signiture);
     try {
       console.log('initFula helper.ts', { bloxAddress, bloxPeerId, keyPair });
-      //if (await fula.isReady())
+      //if (await fula.isReady(false))
       try {
         await fula.shutdown();
       } catch (error) {

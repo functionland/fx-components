@@ -7,9 +7,9 @@ import {
   FxBottomSheetModalMethods,
   useToast,
 } from '@functionland/component-library';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, ScrollView } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
-import { shallow } from 'zustand/shallow';
 import {
   BloxInfoBottomSheet,
   ColorSettingsCard,
@@ -49,6 +49,7 @@ export const BloxScreen = () => {
   const [screenIsLoaded, setScreenIsLoaded] = useState(false);
   const [resetingBloxHotspot, setResetingBloxHotspot] = useState(false);
   const [rebootingBlox, setRebootingBlox] = useState(false);
+  const [resettingChain, setResettingChain] = useState(false);
   const [loadingBloxSpace, setLoadingBloxSpace] = useState(false);
   const [loadingFulaEarnings, setLoadingFulaEarnings] = useState(false);
 
@@ -57,10 +58,11 @@ export const BloxScreen = () => {
   );
   const navigation = useNavigation();
   const logger = useLogger();
-  const [earnings, getEarnings, fulaIsReady] = useUserProfileStore(
-    (state) => [state.earnings, state.getEarnings, state.fulaIsReady],
-    shallow
-  );
+  const [earnings, getEarnings, fulaIsReady] = useUserProfileStore((state) => [
+    state.earnings,
+    state.getEarnings,
+    state.fulaIsReady,
+  ]);
 
   const [
     bloxs,
@@ -71,19 +73,16 @@ export const BloxScreen = () => {
     getBloxSpace,
     removeBlox,
     updateBloxsStore,
-  ] = useBloxsStore(
-    (state) => [
-      state.bloxs,
-      state.bloxsSpaceInfo,
-      state.currentBloxPeerId,
-      state.bloxsConnectionStatus,
-      state.checkBloxConnection,
-      state.getBloxSpace,
-      state.removeBlox,
-      state.update,
-    ],
-    shallow
-  );
+  ] = useBloxsStore((state) => [
+    state.bloxs,
+    state.bloxsSpaceInfo,
+    state.currentBloxPeerId,
+    state.bloxsConnectionStatus,
+    state.checkBloxConnection,
+    state.getBloxSpace,
+    state.removeBlox,
+    state.update,
+  ]);
   const bloxInteractions = Object.values(bloxs || {}).map<TBloxInteraction>(
     (blox) => ({
       peerId: blox.peerId,
@@ -117,7 +116,6 @@ export const BloxScreen = () => {
       if (fulaIsReady) {
         const space = await getBloxSpace();
         logger.log('updateBloxSpace', space);
-        
       }
     } catch (error) {
       logger.logError('GetBloxSpace Error', error);
@@ -162,12 +160,15 @@ export const BloxScreen = () => {
       logger.logError('handleOnBloxChanged', error);
     }
   };
-  const handleOnConnectionOptionSelect = (type: ConnectionOptionsType) => {
-    connectionOptionsSheetRef.current.close();
+  const handleOnConnectionOptionSelect = async (
+    type: ConnectionOptionsType
+  ) => {
+    connectionOptionsSheetRef?.current?.close();
     switch (type) {
       case 'RETRY':
         if (fulaIsReady) {
           try {
+            console.log('checking blox connection');
             checkBloxConnection();
           } catch (error) {
             logger.logError(
@@ -175,6 +176,33 @@ export const BloxScreen = () => {
               error
             );
           }
+        } else {
+          console.log('fula is not ready');
+        }
+        break;
+      case 'RESET-CHAIN':
+        if (fulaIsReady) {
+          try {
+            console.log('checking blox connection');
+            const connection = await checkBloxConnection();
+            if (connection) {
+              const eraseRes = await fxblox.eraseBlData();
+              console.log(eraseRes.msg);
+              queueToast({
+                type: 'info',
+                title: 'Reset chain Data',
+                message:
+                  eraseRes.msg || 'Your Blox does not support this command!',
+              });
+            }
+          } catch (error) {
+            logger.logError(
+              'handleOnConnectionOptionSelect:checkBloxConnection',
+              error
+            );
+          }
+        } else {
+          console.log('fula is not ready');
         }
         break;
       case 'CONNECT-TO-WIFI':
@@ -209,6 +237,39 @@ export const BloxScreen = () => {
           onPress: () => {
             bloxInfoBottomSheetRef.current.close();
             removeBlox(peerId);
+          },
+          style: 'destructive',
+        },
+        {
+          text: 'No',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+  const handleOnClearCachePress = () => {
+    Alert.alert(
+      'Clear Cahce!',
+      `Are you sure want to reset Application cache ?`,
+      [
+        {
+          text: 'Yes',
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              bloxInfoBottomSheetRef.current.close();
+              queueToast({
+                type: 'success',
+                title: 'Cache Cleared',
+                message: 'The cache has been successfully cleared.',
+              });
+            } catch (error) {
+              queueToast({
+                type: 'error',
+                title: 'Error Clearing Cache',
+                message: error.message || 'Failed to clear cache.', // Correctly extracting the error message
+              });
+            }
           },
           style: 'destructive',
         },
@@ -305,6 +366,65 @@ export const BloxScreen = () => {
       ]
     );
   };
+  const handleOnResetChainPress = (peerId: string) => {
+    Alert.alert(
+      'Reset Chain Data!',
+      `Are you sure want to erase chain data from '${bloxs[peerId]?.name}'? This operation is safe but takes time.`,
+      [
+        {
+          text: 'Yes',
+          onPress: async () => {
+            try {
+              setResettingChain(true);
+              const result = await fxblox.eraseBlData();
+              if (result.status) {
+                bloxInfoBottomSheetRef.current.close();
+                queueToast({
+                  type: 'success',
+                  title: 'Chain Data erased successfully! Rebooting now...',
+                });
+                const result = await fxblox.reboot();
+                if (result.status) {
+                  queueToast({
+                    type: 'success',
+                    title: 'The Blox will reboot in 10 seconds!',
+                  });
+                } else {
+                  queueToast({
+                    type: 'error',
+                    title: 'Failed',
+                    message:
+                      result.msg ||
+                      'Your Blox does not support this command! Please reboot manually',
+                  });
+                }
+              } else {
+                queueToast({
+                  type: 'error',
+                  title: 'Failed',
+                  message:
+                    (result.msg || 'Your Blox does not support this command!') +
+                    '; Format Manually.',
+                });
+              }
+            } catch (error) {
+              queueToast({
+                type: 'error',
+                title: error,
+              });
+            } finally {
+              setResettingChain(false);
+            }
+          },
+          style: 'destructive',
+        },
+        {
+          text: 'No',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
       <BloxHeader
@@ -378,8 +498,11 @@ export const BloxScreen = () => {
         onBloxRemovePress={handleOnBloxRemovePress}
         onRestToHotspotPress={handleOnResetToHotspotPress}
         onRebootBloxPress={handleOnRebootBloxPress}
+        onResetChainPress={handleOnResetChainPress}
+        onClearCachePress={handleOnClearCachePress}
         resetingBloxHotspot={resetingBloxHotspot}
         rebootingBlox={rebootingBlox}
+        resettingChain={resettingChain}
       />
       <ProfileBottomSheet
         ref={profileBottomSheetRef}

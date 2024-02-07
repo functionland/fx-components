@@ -68,7 +68,7 @@ const openDeeplink = (link: string, _target?: string) => {
       link
     );
   }
-}
+};
 
 const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
   const {
@@ -107,7 +107,8 @@ const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
         i18nOptions: {
           enabled: true,
         },
-      }}>
+      }}
+    >
       {children}
     </MetaMaskProvider>
   );
@@ -125,26 +126,19 @@ export const App = () => {
   }, [loadAllCredentials]);
   return (
     <GestureHandlerRootView style={styles.flex1}>
-      <SDKConfigProvider
-        initialSocketServer={COMM_SERVER_URL}
-        initialInfuraKey={INFURA_API_KEY}
-      >
-        <WithSDKConfig>
-          <ThemeProvider theme={theme}>
-            <ToastProvider>
-              <StatusBar
-                backgroundColor={theme.colors.backgroundApp}
-                barStyle={barStyles[mode]}
-              />
-              <SafeAreaProvider>
-                <BottomSheetModalProvider>
-                  <AppContent />
-                </BottomSheetModalProvider>
-              </SafeAreaProvider>
-            </ToastProvider>
-          </ThemeProvider>
-        </WithSDKConfig>
-      </SDKConfigProvider>
+      <ThemeProvider theme={theme}>
+        <ToastProvider>
+          <StatusBar
+            backgroundColor={theme.colors.backgroundApp}
+            barStyle={barStyles[mode]}
+          />
+          <SafeAreaProvider>
+            <BottomSheetModalProvider>
+              <AppContent />
+            </BottomSheetModalProvider>
+          </SafeAreaProvider>
+        </ToastProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 };
@@ -224,7 +218,14 @@ const AppContent = () => {
           </FxText>
         </FxPressableOpacity>
       )}
-      <RootNavigator />
+      <SDKConfigProvider
+        initialSocketServer={COMM_SERVER_URL}
+        initialInfuraKey={INFURA_API_KEY}
+      >
+        <WithSDKConfig>
+          <RootNavigator />
+        </WithSDKConfig>
+      </SDKConfigProvider>
     </NavContainer>
   );
 };

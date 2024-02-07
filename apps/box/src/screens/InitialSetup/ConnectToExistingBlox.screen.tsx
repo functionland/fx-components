@@ -18,20 +18,19 @@ import {
 } from '@functionland/component-library';
 import { ActivityIndicator, FlatList, ListRenderItem } from 'react-native';
 import { SmallHeaderText, SubHeaderText } from '../../components/Text';
+import Zeroconf from 'react-native-zeroconf';
+import { MDNSBloxService, TBloxProperty } from '../../models';
+import { useUserProfileStore } from '../../stores/useUserProfileStore';
+import { Helper } from '../../utils';
+import { useLogger, useRootNavigation } from '../../hooks';
+import { useBloxsStore } from '../../stores';
+import { Routes } from '../../navigation/navigationConfig';
 type DicoveryDeviceType = {
   ipAddress: string;
   peerId: string;
   authorizer: string;
   hardwareId: string;
 };
-import Zeroconf from 'react-native-zeroconf';
-import { MDNSBloxService, TBloxProperty } from '../../models';
-import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { shallow } from 'zustand/shallow';
-import { Helper } from '../../utils';
-import { useLogger, useRootNavigation } from '../../hooks';
-import { useBloxsStore } from '../../stores';
-import { Routes } from '../../navigation/navigationConfig';
 
 const zeroconf = new Zeroconf();
 export const ConnectToExistingBloxScreen = () => {
@@ -49,8 +48,7 @@ export const ConnectToExistingBloxScreen = () => {
       state.setAppPeerId,
       state.signiture,
       state.password,
-    ],
-    shallow
+    ]
   );
   const [
     bloxs = {},
@@ -58,39 +56,54 @@ export const ConnectToExistingBloxScreen = () => {
     addBlox,
     removeBlox,
     updateBloxStore,
-  ] = useBloxsStore(
-    (state) => [
-      state.bloxs,
-      state.bloxsPropertyInfo,
-      state.addBlox,
-      state.removeBlox,
-      state.update,
-    ],
-    shallow
-  );
+  ] = useBloxsStore((state) => [
+    state.bloxs,
+    state.bloxsPropertyInfo,
+    state.addBlox,
+    state.removeBlox,
+    state.update,
+  ]);
   const [checkboxState, setCheckboxState] = React.useState<
     Record<string, boolean>
   >({});
 
+  let uniqueDevices = new Map();
   useEffect(() => {
     zeroconf.on('start', () => {
       setScanning(true);
       setData([]);
+      uniqueDevices = new Map();
       clearTimeout(mDnsTimer.current);
       mDnsTimer.current = setTimeout(() => {
         zeroconf.stop();
         setScanning(false);
-      }, 5000);
+      }, 6000);
       console.log('The scan has started.\n\r');
     });
     zeroconf.on('resolved', (resolved: MDNSBloxService) => {
-      setData((prev) => [resolved, ...prev]);
+      // Check if the hardwareId has already been seen
+      if (!uniqueDevices.has(resolved.txt?.hardwareID)) {
+        // If it's a new hardwareId, add to the Map and update state
+        uniqueDevices.set(resolved.txt?.hardwareID, true);
+        setData((prev) => [
+          resolved,
+          ...prev.filter(
+            (device) => device.txt?.hardwareID !== resolved.txt?.hardwareID
+          ),
+        ]); // This also ensures to remove any previously added duplicate
+      }
       console.log('The scan has resolved.\n\r', resolved);
     });
     if (!appPeerId) {
       generateAppPeerId();
     }
     scanMDNS();
+
+    // Cleanup function to remove event listeners
+    return () => {
+      zeroconf.removeAllListeners('start');
+      zeroconf.removeAllListeners('resolved');
+  };
   }, []);
 
   const generateAppPeerId = async () => {
@@ -181,7 +194,10 @@ export const ConnectToExistingBloxScreen = () => {
         >
           <FxCard.Row>
             <FxBox flexDirection="row" alignItems="center">
-              <FxRadioButton value={item.txt?.bloxPeerIdString} disabled={!authorized || !appPeerId || alreadyExist} />
+              <FxRadioButton
+                value={item.txt?.bloxPeerIdString}
+                disabled={!authorized || !appPeerId || alreadyExist}
+              />
               <FxText variant="bodyMediumRegular" paddingStart="16">
                 {item.host}
               </FxText>
@@ -215,15 +231,15 @@ export const ConnectToExistingBloxScreen = () => {
                 appPeerId && authorized
                   ? 'successBase'
                   : appPeerId
-                  ? 'errorBase'
-                  : 'warningBase'
+                    ? 'errorBase'
+                    : 'warningBase'
               }
             >
               {appPeerId && authorized
                 ? 'Autorized'
                 : appPeerId
-                ? 'Not Authorized'
-                : 'Checking...'}
+                  ? 'Not Authorized'
+                  : 'Checking...'}
             </FxTag>
             {alreadyExist && (
               <FxTag alignSelf="flex-start" marginStart="0">

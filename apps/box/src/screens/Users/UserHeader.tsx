@@ -32,7 +32,6 @@ export const UserHeader = ({ userData }: UserHeaderProps) => {
         <WalletDetails
           showDID={true}
           showNetwork={false}
-          showBloxAccount={true}
           showPeerId={true}
           showBloxPeerIds={false}
         />
