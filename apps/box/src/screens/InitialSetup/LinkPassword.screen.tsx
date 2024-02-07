@@ -212,7 +212,7 @@ export const LinkPasswordScreen = () => {
               marginTop="16"
               onPress={handleSkipToManulaSetup}
             >
-              Skip to manula setup
+              Skip to manual setup
             </FxButton>
           </FxBox>
         ) : (
