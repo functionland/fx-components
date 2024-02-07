@@ -66,12 +66,13 @@ export const ConnectToExistingBloxScreen = () => {
   const [checkboxState, setCheckboxState] = React.useState<
     Record<string, boolean>
   >({});
-  const uniqueDevices = new Map();
 
+  let uniqueDevices = new Map();
   useEffect(() => {
     zeroconf.on('start', () => {
       setScanning(true);
       setData([]);
+      uniqueDevices = new Map();
       clearTimeout(mDnsTimer.current);
       mDnsTimer.current = setTimeout(() => {
         zeroconf.stop();
