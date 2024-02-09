@@ -249,7 +249,7 @@ workflows:
         - build_type: aab
         - project_location: "$BITRISE_SOURCE_DIR/apps/box/android"
     - sign-apk@1: {}
-    - deploy-to-bitrise-io@2.6: {}
+    - deploy-to-bitrise-io@2: {}
     - google-play-deploy@3.7:
         inputs:
         - package_name: land.fx.blox
