@@ -77,7 +77,8 @@ export const LinkPasswordScreen = () => {
     return signature;
   };
 
-  const disconnectWallet = () => {
+  const disconnectWallet = () => {    
+    notifee.stopForegroundService();
     setLinking(false);
     sdk?.terminate();
   };
