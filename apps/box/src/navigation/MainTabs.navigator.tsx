@@ -25,6 +25,7 @@ import {
 import {
   SettingsScreen,
   AboutScreen,
+  BloxLogsScreen,
   PoolsScreen,
   ModeScreen,
   ConnectedDAppsScreen,
@@ -199,6 +200,7 @@ const SettingsNavigator = () => {
       <SettingsStack.Screen name={Routes.Mode} component={ModeScreen} />
       <SettingsStack.Screen name={Routes.Pools} component={PoolsScreen} />
       <SettingsStack.Screen name={Routes.About} component={AboutScreen} />
+      <SettingsStack.Screen name={Routes.BloxLogs} component={BloxLogsScreen} />
       <SettingsStack.Screen
         name={Routes.BluetoothCommands}
         component={BluetoothCommandsScreen}
