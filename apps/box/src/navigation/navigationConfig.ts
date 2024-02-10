@@ -36,6 +36,7 @@ export enum Routes {
   Pools = 'Pools',
   About = 'About',
   ComponentGallery = 'Component Gallery',
+  BloxLogs = 'BloxLogs',
   BluetoothCommands = 'BluetoothCommands',
 
   // Component Gallery
@@ -80,6 +81,7 @@ export type SettingsStackParamList = {
   [Routes.Mode]: undefined;
   [Routes.Pools]: undefined;
   [Routes.About]: undefined;
+  [Routes.BloxLogs]: undefined;
   [Routes.BluetoothCommands]: undefined;
   [Routes.ComponentGallery]: NavigatorScreenParams<ComponentGalleryStackParamList>;
 };

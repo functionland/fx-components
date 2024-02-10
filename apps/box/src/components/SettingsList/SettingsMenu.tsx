@@ -59,11 +59,16 @@ export const SettingsMenu = () => {
         }),
     },
     {
+      name: 'Blox logs',
+      detail: null,
+      onPress: () => navigation.navigate(Routes.BloxLogs),
+    },
+    {
       name: 'About',
       detail: null,
       onPress: () => navigation.navigate(Routes.About),
     },
-    ...appGallery,
+    //...appGallery,
   ];
 
   return (
