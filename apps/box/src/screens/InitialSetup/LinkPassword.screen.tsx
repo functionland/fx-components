@@ -20,6 +20,8 @@ import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
 import { useSDK } from '@metamask/sdk-react';
+import notifee from '@notifee/react-native';
+
 export const LinkPasswordScreen = () => {
   const navigation = useInitialSetupNavigation();
   const { account, sdk, provider, connected, error, status, rpcHistory } =
@@ -45,9 +47,34 @@ export const LinkPasswordScreen = () => {
   }, [signiture, password]);
 
   const personalSign = async (msg: string) => {
-    return await sdk?.connectAndSign({
-      msg: msg,
+    let signature = '';
+    let resolveSigned = () => {};
+    const signed = new Promise<void>(resolve => {
+      resolveSigned = resolve;
+    })
+
+    notifee.registerForegroundService(() => signed);
+    await notifee.displayNotification({
+    id: 'wallet',
+      title: 'Connecting Wallet...',
+      body: 'Wallet connection in progress, click to move back to the app',
+      android: {
+        progress: {
+          indeterminate: true
+        },
+        pressAction: {
+          id: 'default'
+        },
+        ongoing: true,
+        asForegroundService: true,
+        channelId: 'sticky'
+      }
     });
+    signature = await sdk?.connectAndSign({ msg }) as string;
+    resolveSigned();
+    notifee.stopForegroundService();
+
+    return signature;
   };
 
   const disconnectWallet = () => {

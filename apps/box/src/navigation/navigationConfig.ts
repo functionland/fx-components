@@ -89,7 +89,7 @@ export type SettingsStackParamList = {
 export type InitialSetupStackParamList = {
   [Routes.Welcome]: undefined;
   [Routes.LinkPassword]: undefined;
-  [Routes.ConnectToWallet]: { password: string };
+  [Routes.ConnectToWallet]: undefined;
   [Routes.ConnectToBlox]: undefined;
   [Routes.ConnectToExistingBlox]: undefined;
   [Routes.ConnectToWifi]: undefined;
