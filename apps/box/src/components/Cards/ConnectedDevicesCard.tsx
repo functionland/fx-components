@@ -10,13 +10,15 @@ import {
   FxLoadingSpinner,
   FxRefreshIcon,
   FxTag,
-  FxText,
+  FxPoolIcon,
+  useToast,
 } from '@functionland/component-library';
 import { CardCarousel } from './fields/CardCarousel';
 import { EmptyCard } from './EmptyCard';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 import { TDevice, EDeviceStatus, mockHub } from '../../api/hub';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Alert } from 'react-native';
+import { fxblox } from '@functionland/react-native-fula';
 
 const DEVICE_CARD_HEIGHT = 264;
 
@@ -36,6 +38,7 @@ export const DeviceCard = ({
 }: DeviceCardProps) => {
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
   const { name, capacity, status, associatedDevices, used, free } = data;
+  const { queueToast } = useToast();
 
   return (
     <FxCard
@@ -97,14 +100,47 @@ export const DeviceCard = ({
         </FxButton>
       )}
       {children}
-      <FxBottomSheetModal ref={bottomSheetRef} title="Device Bottom Sheet">
+      <FxBottomSheetModal ref={bottomSheetRef} title="Device Actions">
         <FxBox
           height={200}
           justifyContent="center"
           alignItems="center"
           paddingHorizontal="20"
         >
-          <FxText>This bottom sheet needs to be completed</FxText>
+          <FxButton
+            onPress={() => {
+              Alert.alert(
+                'Format Blox Partition!',
+                `Are you sure want to format external blox partitions?`,
+                [
+                  {
+                    text: 'Yes',
+                    onPress: () => {
+                      fxblox.partition().then(() => {
+                        console.log('partition sent');
+                        queueToast({
+                          type: 'success',
+                          title: 'Request Sent',
+                          message:
+                            'The parition request is sent. Please wait 5 minutes as your blox restarts after partitioning',
+                        });
+                      });
+                    },
+                    style: 'destructive',
+                  },
+                  {
+                    text: 'No',
+                    style: 'cancel',
+                  },
+                ]
+              );
+            }}
+            flexWrap="wrap"
+            paddingHorizontal="16"
+            iconLeft={<FxPoolIcon />}
+          >
+            Format
+          </FxButton>
         </FxBox>
       </FxBottomSheetModal>
     </FxCard>
