@@ -107,6 +107,7 @@ export const BloxLogsScreen = () => {
             { label: 'Go-Fula', value: 'fula_go' },
             { label: 'Node', value: 'fula_node' },
             { label: 'Fx', value: 'fula_fxsupport' },
+            { label: 'Service Logs', value: 'MainService' },
           ]}
           title="Container Name"
         />
