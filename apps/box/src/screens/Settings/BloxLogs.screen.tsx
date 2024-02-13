@@ -25,6 +25,7 @@ export const BloxLogsScreen = () => {
   const [tailCount, setTailCount] = React.useState<string>('30');
   const [loadingLogs, setLoadingLogs] = React.useState<boolean>(false);
   const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
+  const [showOtherInput, setShowOtherInput] = React.useState<boolean>(false);
   const { queueToast } = useToast();
   const sanitizeLogData = (logString: string) => {
     // Regular expression to match non-printable characters except newlines
@@ -38,16 +39,21 @@ export const BloxLogsScreen = () => {
   };
   const fetchContainerLogs = async (
     containerName: string,
-    tailCount: string
+    tailCountInput: string
   ) => {
     try {
       setLog('');
-      if (containerName && containerName !== '') {
+      if (containerName === 'Other') {
+        setShowOtherInput(true);
+      } else {
+        setShowOtherInput(false);
+      }
+      if (containerName && containerName !== '' && containerName !== 'Other') {
         setSelectedValue(containerName);
         if (fulaIsReady) {
           const logs = await fxblox.fetchContainerLogs(
             containerName,
-            tailCount
+            tailCountInput
           );
           logger.log('fetchContainerLogs', logs);
           if (logs.status) {
@@ -108,6 +114,7 @@ export const BloxLogsScreen = () => {
             { label: 'Node', value: 'fula_node' },
             { label: 'Fx', value: 'fula_fxsupport' },
             { label: 'Service Logs', value: 'MainService' },
+            { label: 'Other', value: 'Other' },
           ]}
           title="Container Name"
         />
@@ -115,6 +122,20 @@ export const BloxLogsScreen = () => {
           placeholder="Number of rows in log"
           value={tailCount}
           onChangeText={(txt) => setTailCount(txt)}
+        />
+      </FxBox>
+      <FxBox
+        marginHorizontal="0"
+        flexDirection="row"
+        justifyContent="space-between"
+      >
+        <FxTextInput
+          placeholder="Name of log"
+          visible={showOtherInput}
+          value={selectedValue}
+          onChangeText={(txt) => {
+            setSelectedValue(txt);
+          }}
         />
       </FxBox>
       <FxSpacer marginTop="24" />
