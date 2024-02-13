@@ -5,7 +5,10 @@ import {
   FxSpacer,
   FxCard,
   FxRefreshIcon,
+  FxCopyIcon,
   FxTextInput,
+  FxKeyboardAwareScrollView,
+  FxText,
 } from '@functionland/component-library';
 import React from 'react';
 import { SubHeaderText } from '../../components/Text';
@@ -13,6 +16,7 @@ import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { fxblox } from '@functionland/react-native-fula';
 import { useLogger } from '../../hooks';
 import { ActivityIndicator } from 'react-native';
+import { copyToClipboard } from '../../utils/clipboard';
 
 export const BloxLogsScreen = () => {
   const logger = useLogger();
@@ -22,6 +26,16 @@ export const BloxLogsScreen = () => {
   const [loadingLogs, setLoadingLogs] = React.useState<boolean>(false);
   const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
   const { queueToast } = useToast();
+  const sanitizeLogData = (logString: string) => {
+    // Regular expression to match non-printable characters except newlines
+    // This regex matches characters in the control characters range (0x00-0x1F and 0x7F-0x9F) except for newline (0x0A)
+    const regex = /[\u0000-\u0009\u000B-\u000C\u000E-\u001F\u007F-\u009F]/g;
+
+    // Replace matched characters with empty string, effectively removing them
+    const sanitizedLog = logString.replace(regex, ' ');
+
+    return sanitizedLog;
+  };
   const fetchContainerLogs = async (
     containerName: string,
     tailCount: string
@@ -37,7 +51,9 @@ export const BloxLogsScreen = () => {
           );
           logger.log('fetchContainerLogs', logs);
           if (logs.status) {
-            setLog(logs.msg);
+            const sanitizedLog = sanitizeLogData(logs.msg);
+            console.log(sanitizedLog);
+            setLog(sanitizedLog);
           } else {
             queueToast({
               title: 'Error in fetch log',
@@ -109,15 +125,20 @@ export const BloxLogsScreen = () => {
           <ActivityIndicator />
         ) : (
           fetchContainerLogs && (
-            <FxRefreshIcon
-              color="white"
-              onPress={() => fetchContainerLogs(selectedValue, tailCount)}
-            />
+            <>
+              <FxCopyIcon color="white" onPress={() => copyToClipboard(log)} />
+              <FxRefreshIcon
+                color="white"
+                onPress={() => fetchContainerLogs(selectedValue, tailCount)}
+              />
+            </>
           )
         )}
       </FxCard.Row>
       <FxCard.Row>
-        <FxCard.Row.Data>{log}</FxCard.Row.Data>
+        <FxKeyboardAwareScrollView>
+          <FxText>{log}</FxText>
+        </FxKeyboardAwareScrollView>
       </FxCard.Row>
     </FxBox>
   );

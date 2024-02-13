@@ -366,7 +366,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
                 handleTryReachBlox();
               }}
             >
-              Try again
+              Check Connection Again
             </FxButton>
           )}
         {setupStatus === 'ERROR' && (
