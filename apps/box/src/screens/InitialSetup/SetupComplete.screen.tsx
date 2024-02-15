@@ -103,7 +103,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
         internetStatus === 'CONNECTED' &&
         !fulaIsReady
       ) {
-        await sleep(10000);
+        await sleep(20000);
         logger.log('SetupCompleteScreen:intiFula', {
           password: password ? 'Has password' : undefined,
           signiture: signiture ? 'Has signiture' : undefined,

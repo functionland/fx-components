@@ -10,7 +10,7 @@ import {
   FxLoadingSpinner,
   FxRefreshIcon,
   FxTag,
-  FxPoolIcon,
+  FxTrashIcon,
   useToast,
 } from '@functionland/component-library';
 import { CardCarousel } from './fields/CardCarousel';
@@ -110,8 +110,8 @@ export const DeviceCard = ({
           <FxButton
             onPress={() => {
               Alert.alert(
-                'Format Blox Partition!',
-                `Are you sure want to format external blox partitions?`,
+                'Format All Blox Partitions!',
+                `Are you sure want to format all connected external blox partitions?`,
                 [
                   {
                     text: 'Yes',
@@ -122,7 +122,7 @@ export const DeviceCard = ({
                           type: 'success',
                           title: 'Request Sent',
                           message:
-                            'The parition request is sent. Please wait 5 minutes as your blox restarts after partitioning',
+                            'The partition request is sent and blox LED turns purple. Please wait 5 minutes as your blox restarts after partitioning',
                         });
                       });
                     },
@@ -137,7 +137,7 @@ export const DeviceCard = ({
             }}
             flexWrap="wrap"
             paddingHorizontal="16"
-            iconLeft={<FxPoolIcon />}
+            iconLeft={<FxTrashIcon />}
           >
             Format
           </FxButton>

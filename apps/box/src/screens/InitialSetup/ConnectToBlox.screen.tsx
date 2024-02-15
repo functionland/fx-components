@@ -69,8 +69,21 @@ export const ConnectToBloxScreen = () => {
         network.details.ssid === DEFAULT_NETWORK_NAME &&
         network.isConnected
       ) {
-        setConnectionStatus(EConnectionStatus.connected);
-        handleNext();
+        // Check if GET request to the specific URL is successful (HTTP status code 200)
+        const response = await fetch('http://127.0.0.1:3500/properties');
+        if (response.status === 200) {
+          setConnectionStatus(EConnectionStatus.connected);
+          handleNext();
+        } else {
+          setConnectionStatus(EConnectionStatus.failed);
+          queueToast({
+            title: 'Connection Error',
+            message:
+              'You may have tried to connect to FxBlox but it seems your phone needs approval to connect. Check Wifi status again.',
+            type: 'error',
+            autoHideDuration: 5000,
+          });
+        }
         return;
       } else {
         setConnectionStatus(EConnectionStatus.notConnected);
