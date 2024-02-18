@@ -4,12 +4,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   TBlox,
   TBloxFreeSpace,
+  TBloxFolderSize,
   TBloxConectionStatus,
   TBloxProperty,
 } from '../models';
-import { blockchain, fula } from '@functionland/react-native-fula';
+import { blockchain, fula, fxblox } from '@functionland/react-native-fula';
 import { firebase } from '@react-native-firebase/crashlytics';
 import { BloxFreeSpaceResponse } from '@functionland/react-native-fula/lib/typescript/types/blockchain';
+
+import { GetFolderPathResponse } from '@functionland/react-native-fula/lib/typescript/types/fxblox';
 
 interface BloxsActionSlice {
   /**
@@ -22,18 +25,21 @@ interface BloxsActionSlice {
   removeBlox: (peerId: string) => void;
   updateBloxPropertyInfo: (peerId: string, info: TBloxProperty) => void;
   updateBloxSpaceInfo: (peerId: string, info: TBloxFreeSpace) => void;
+  updateFolderSizeInfo: (peerId: string, info: TBloxFolderSize) => void;
   reset: () => void;
 
   /**
    * Remote actions
    */
   getBloxSpace: (updateStore?: boolean) => Promise<TBloxFreeSpace>;
+  getFolderSize: (updateStore?: boolean) => Promise<TBloxFolderSize>;
   checkBloxConnection: () => Promise<boolean>;
 }
 interface BloxsModel {
   _hasHydrated: boolean;
   bloxs: Record<string, TBlox>;
   bloxsSpaceInfo?: Record<string, TBloxFreeSpace>;
+  folderSizeInfo?: Record<string, TBloxFolderSize>;
   bloxsPropertyInfo?: Record<string, TBloxProperty>;
   bloxsConnectionStatus: Record<string, TBloxConectionStatus>;
   currentBloxPeerId?: string;
@@ -122,6 +128,7 @@ const createModeSlice: StateCreator<
         await fula.isReady(false);
         const { bloxsSpaceInfo, currentBloxPeerId } = get();
         let bloxSpace = await blockchain.bloxFreeSpace();
+        console.log('bloxSpace', bloxSpace);
         const emptyBloxSpace: BloxFreeSpaceResponse = {
           size: 0,
           avail: 0,
@@ -131,7 +138,7 @@ const createModeSlice: StateCreator<
         console.log(bloxSpace);
         if (updateStore) {
           if (!bloxSpace?.size) {
-            bloxSpace = emptyBloxSpace
+            bloxSpace = emptyBloxSpace;
           }
           set({
             bloxsSpaceInfo: {
@@ -148,11 +155,71 @@ const createModeSlice: StateCreator<
         throw error;
       }
     },
+    getFolderSize: async (updateStore = true) => {
+      try {
+        console.log('getFolderSize');
+        await fula.isReady(false);
+        const { folderSizeInfo, currentBloxPeerId } = get();
+        let folderSizeInfo_tmp: TBloxFolderSize = {
+          fula: '-1',
+          chain: '-1',
+        };
+        let chainFolderInfo: GetFolderPathResponse = {
+          size: '-1',
+          folder_path: '/uniondrive/chain',
+        };
+        const chainFolderSize = await fxblox.getFolderSize('/uniondrive/chain');
+        console.log('chainFolderSize', chainFolderSize);
+        let fulaFolderInfo: GetFolderPathResponse = {
+          size: '-1',
+          folder_path: '/uniondrive/.fula',
+        };
+        const fulaFolderSize = await fxblox.getFolderSize('/uniondrive/.fula');
+
+        console.log(chainFolderSize);
+        console.log(fulaFolderSize);
+        if (updateStore) {
+          if (chainFolderSize?.size) {
+            chainFolderInfo = chainFolderSize;
+          }
+          if (fulaFolderSize?.size) {
+            fulaFolderInfo = fulaFolderSize;
+          }
+          folderSizeInfo_tmp = {
+            fula: fulaFolderInfo.size,
+            chain: chainFolderInfo.size,
+          };
+          set({
+            folderSizeInfo: {
+              ...folderSizeInfo,
+              [currentBloxPeerId]: {
+                ...folderSizeInfo_tmp,
+              } as TBloxFolderSize,
+            },
+          });
+        }
+        return folderSizeInfo_tmp as TBloxFolderSize;
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
+    },
     updateBloxPropertyInfo: (peerId, info) => {
       const { bloxsPropertyInfo } = get();
       set({
         bloxsPropertyInfo: {
           ...bloxsPropertyInfo,
+          [peerId]: {
+            ...info,
+          },
+        },
+      });
+    },
+    updateFolderSizeInfo: (peerId, info) => {
+      const { folderSizeInfo } = get();
+      set({
+        folderSizeInfo: {
+          ...folderSizeInfo,
           [peerId]: {
             ...info,
           },
@@ -179,7 +246,7 @@ const createModeSlice: StateCreator<
         set({
           bloxsConnectionStatus: {
             ...currentBloxsConnectionStatus,
-            [currentBloxPeerId]: 'PENDING',
+            [currentBloxPeerId]: 'CHECKING',
           },
         });
         const connected = await fula.checkConnection();

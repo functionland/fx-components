@@ -48,9 +48,10 @@ export const BloxInteraction = ({
   const { colors } = useFxTheme();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const [bloxsConnectionStatus] = useBloxsStore(
-    (state) => [state.bloxsConnectionStatus]
-  );
+  const [bloxsConnectionStatus] = useBloxsStore((state) => [
+    state.bloxsConnectionStatus,
+  ]);
+
 
   // useEffect(() => {
   //   if (fulaIsReady && currentBloxPeerId) {
@@ -114,9 +115,9 @@ export const BloxInteraction = ({
                   color={
                     bloxsConnectionStatus[item.peerId] === 'CONNECTED'
                       ? 'successBase'
-                      : bloxsConnectionStatus[item.peerId] === 'PENDING'
-                      ? 'warningBase'
-                      : 'errorBase'
+                      : bloxsConnectionStatus[item.peerId] === 'CHECKING'
+                        ? 'warningBase'
+                        : 'errorBase'
                   }
                 />
                 <FxText
@@ -124,13 +125,12 @@ export const BloxInteraction = ({
                   color={
                     bloxsConnectionStatus[item.peerId] === 'CONNECTED'
                       ? 'successBase'
-                      : bloxsConnectionStatus[item.peerId] === 'PENDING'
-                      ? 'warningBase'
-                      : 'errorBase'
+                      : bloxsConnectionStatus[item.peerId] === 'CHECKING'
+                        ? 'warningBase'
+                        : 'errorBase'
                   }
                 >
-                  {bloxsConnectionStatus[item.peerId]?.toString() ||
-                    'CHECKING'}
+                  {bloxsConnectionStatus[item.peerId]?.toString() || 'CHECKING'}
                 </FxText>
                 <FxChevronDownIcon
                   width={16}

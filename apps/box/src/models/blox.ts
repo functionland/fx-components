@@ -9,7 +9,11 @@ export interface TBloxFreeSpace {
   used: number;
   used_percentage: number;
 }
-export type TBloxConectionStatus = 'CONNECTED' | 'PENDING' | 'DISCONNECTED';
+export interface TBloxFolderSize {
+  fula: string;
+  chain: string;
+}
+export type TBloxConectionStatus = 'CONNECTED' | 'CHECKING' | 'DISCONNECTED';
 export type DockerContainerInfo = {
   image: string; //"index.docker.io/functionland/go-fula:test38",
   version: string; // "sha256:542af831d97a930ca8f1715e43f08e220617568e8aebdfd6c8c160d0c7072c27",

@@ -6,8 +6,9 @@ import { TAccount, TBloxFreeSpace } from '../models';
 import { KeyChain } from '../utils';
 import { useBloxsStore } from './useBloxsStore';
 import { firebase } from '@react-native-firebase/crashlytics';
+import NetInfo from '@react-native-community/netinfo';
 
-type BloxConectionStatus = 'CONNECTED' | 'PENDING' | 'DISCONNECTED';
+type BloxConectionStatus = 'CONNECTED' | 'CHECKING' | 'DISCONNECTED';
 interface UserProfileActions {
   setHasHydrated: (isHydrated: boolean) => void;
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
@@ -58,7 +59,7 @@ const initialState: UserProfileSlice = {
   earnings: '0.0',
   bloxSpace: undefined,
   fulaIsReady: false,
-  bloxConnectionStatus: 'PENDING',
+  bloxConnectionStatus: 'CHECKING',
   appPeerId: undefined,
   fulaRoodCID: undefined,
   fulaPeerId: undefined,
@@ -75,16 +76,26 @@ const createUserProfileSlice: StateCreator<
 > = persist(
   (set, get) => ({
     ...initialState,
-    checkFulaReadiness: async () => {
+    checkFulaReadiness: async (maxAttempts = 5) => {
       let attempts = 0;
-      const maxAttempts = 20; // or whatever your logic requires
       const checkInterval = 3000; // milliseconds between checks
 
       const check = async () => {
+        const state = await NetInfo.fetch();
+        if (!state.isConnected || !state.isInternetReachable) {
+          console.log('Internet is not connected, waiting for connection...');
+          // Optionally, you might want to handle the lack of internet connectivity accordingly
+          set({ fulaIsReady: false });
+          return;
+        }
         const ready = await fula.isReady(false);
         console.log('ready is : ' + ready);
         if (ready || attempts >= maxAttempts) {
           set({ fulaIsReady: ready });
+          if (attempts >= maxAttempts && !ready) {
+            await fula.shutdown();
+            set({ fulaIsReady: undefined });
+          }
           return;
         } else {
           console.log('Fula is not ready yet, retrying...');
@@ -194,6 +205,11 @@ const createUserProfileSlice: StateCreator<
     createAccount: async ({ seed }) => {
       // eslint-disable-next-line no-useless-catch
       try {
+        const { fulaIsReady } = get();
+        if (!fulaIsReady) {
+          console.log('Fula is not ready. Please wait...');
+          Promise.reject('internet is not connected');
+        }
         const accounts = get().accounts;
         await fula.isReady(false);
         const account = await blockchain.createAccount(`/${seed}`);
@@ -207,6 +223,11 @@ const createUserProfileSlice: StateCreator<
     },
     getEarnings: async () => {
       try {
+        const { fulaIsReady } = get();
+        if (!fulaIsReady) {
+          console.log('Fula is not ready. Please wait...');
+          Promise.reject('internet is not connected');
+        }
         await fula.isReady(false);
         const account = await blockchain.getAccount();
         const earnings = await blockchain.assetsBalance(
@@ -235,6 +256,11 @@ const createUserProfileSlice: StateCreator<
     getBloxSpace: async () => {
       // eslint-disable-next-line no-useless-catch
       try {
+        const { fulaIsReady } = get();
+        if (!fulaIsReady) {
+          console.log('Fula is not ready. Please wait...');
+          Promise.reject('internet is not connected');
+        }
         // if (!await fula.isReady(false))
         //   throw 'Fula is not ready!'
         await fula.isReady(false);
@@ -262,8 +288,13 @@ const createUserProfileSlice: StateCreator<
       const attemptConnection = async (attempt = 1) => {
         console.log('checkBloxConnection attempt ' + attempt);
         // attempt is now a parameter of attemptConnection
-        set({ bloxConnectionStatus: 'PENDING' });
+        set({ bloxConnectionStatus: 'CHECKING' });
         try {
+          const { fulaIsReady } = get();
+          if (!fulaIsReady) {
+            console.log('Fula is not ready. Please wait...');
+            Promise.reject('internet is not connected');
+          }
           const connected = await fula.checkConnection();
           console.log(
             'checkBloxConnection attempt:',
@@ -271,6 +302,13 @@ const createUserProfileSlice: StateCreator<
             'connected:',
             connected
           );
+          const state = await NetInfo.fetch();
+          if (!state.isConnected || !state.isInternetReachable) {
+            console.log('Internet is not connected, waiting for connection...');
+            // Optionally, you might want to handle the lack of internet connectivity accordingly
+            Promise.reject('internet is not connected');
+            return;
+          }
 
           if (connected) {
             set({ bloxConnectionStatus: 'CONNECTED' });

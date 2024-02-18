@@ -6,6 +6,7 @@ import {
   FxSafeAreaBox,
   FxText,
   useToast,
+  FxSpacer,
 } from '@functionland/component-library';
 import {
   useInitialSetupNavigation,
@@ -27,8 +28,10 @@ import { useFetch, useLogger } from '../../hooks';
 import { CommonActions } from '@react-navigation/native';
 import { useBloxsStore } from '../../stores';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-// import SetupCompleteSvg2 from '../../app/icons/setup-complete-2.svg';
-// import SetupCompleteSvg3 from '../../app/icons/setup-complete-3.svg';
+import axios from 'axios';
+import { API_URL } from '../../api/index';
+import { FlashingCircle, FlashingTower } from '../../components';
+
 type SetupStatus =
   | 'COMPLETED'
   | 'CHECKING'
@@ -48,6 +51,9 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   const [initialWaitForInternet, setInitialWaitForInternet] = useState(true);
   const [setupStatus, setSetupStatus] = useState<SetupStatus>('CHECKING');
   const [bloxReachOutTryCount, setBloxReachOutTryCount] = useState(0);
+  const [offInterval, setOffInterval] = useState(500);
+  const [towerColor, setTowerColor] = useState('lightblue');
+  const [isHeaderStatus200, setIsHeaderStatus200] = useState(false);
   const [password, signiture, fulaIsReady, setFulaIsReady] =
     useUserProfileStore((state) => [
       state.password,
@@ -65,6 +71,19 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   const { queueToast } = useToast();
   const logger = useLogger();
   const inetInfo = useNetInfo();
+  const checkHttpHeaderStatus = async () => {
+    try {
+      const response = await axios.head(API_URL + '/properties');
+      if (response.status === 200) {
+        setIsHeaderStatus200(true);
+      } else {
+        setIsHeaderStatus200(false);
+      }
+    } catch (error) {
+      console.error('Failed to fetch properties', error);
+      setIsHeaderStatus200(false);
+    }
+  };
 
   useEffect(() => {
     setTimeout(() => {
@@ -153,10 +172,27 @@ export const SetupCompleteScreen = ({ route }: Props) => {
         } else {
           setSetupStatus('NOTCOMPLETED');
         }
-      } else if (bloxsConnectionStatus[currentBloxPeerId] === 'CONNECTED')
+      } else if (bloxsConnectionStatus[currentBloxPeerId] === 'CONNECTED') {
         setSetupStatus('COMPLETED');
+      }
     }
   }, [bloxsConnectionStatus, currentBloxPeerId, fulaIsReady]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (internetStatus === 'NOTCONNECTED' && setupStatus === 'NOTCOMPLETED') {
+        checkHttpHeaderStatus();
+      }
+    }, 10000); // Check every 10 seconds
+    if (setupStatus === 'COMPLETED') {
+      setOffInterval(0);
+      setTowerColor('green');
+    }
+
+    // Cleanup function to clear the interval when the component unmounts or conditions change
+    return () => clearInterval(interval);
+  }, [internetStatus, setupStatus]);
+  
 
   const checkInternetStatus = async () => {
     try {
@@ -199,8 +235,13 @@ export const SetupCompleteScreen = ({ route }: Props) => {
         if (fulaIsReady && internetStatus === 'CONNECTED') {
           const result = await checkBloxConnection();
           logger.log('handleTryReachBlox:checkBloxConnection', result);
-        } else setSetupStatus('NOTCOMPLETED');
+          console.log('blox connection: true');
+        } else {
+          console.log('blox connection: false');
+          setSetupStatus('NOTCOMPLETED');
+        }
       } catch (error) {
+        console.log('blox connection: error');
         logger.logError('handleTryReachBlox', error);
       }
     }, 1000);
@@ -229,8 +270,13 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={100} />
-      <FxBox flex={2} justifyContent="center">
-        <SetupCompleteSvg1 width="100%" />
+      <FxBox flex={2} justifyContent="center" marginTop="16">
+        <FlashingTower
+          onInterval={2000}
+          offColor="gray"
+          offInterval={offInterval}
+          onColor={towerColor}
+        />
       </FxBox>
       <FxBox flex={1} alignItems="center" marginTop="8">
         {currentBloxPeerId &&
@@ -245,11 +291,11 @@ export const SetupCompleteScreen = ({ route }: Props) => {
         {(internetStatus === 'CHECKING' || initialWaitForInternet) &&
           currentBloxPeerId && (
             <FxText variant="bodyMediumRegular">
-              Waiting for internet ...
+              Connect your phone to internet (wifi) to proceed now...
             </FxText>
           )}
         {internetStatus === 'CONNECTED' &&
-          bloxsConnectionStatus[currentBloxPeerId] === 'PENDING' && (
+          bloxsConnectionStatus[currentBloxPeerId] === 'CHECKING' && (
             <FxText variant="bodyMediumRegular">
               Reaching Blox #{bloxReachOutTryCount}...
             </FxText>
@@ -257,16 +303,44 @@ export const SetupCompleteScreen = ({ route }: Props) => {
         {currentBloxPeerId &&
           internetStatus === 'NOTCONNECTED' &&
           setupStatus === 'NOTCOMPLETED' && (
-            <FxText
-              variant="bodyMediumRegular"
-              color="warningBase"
-              textAlign="center"
-              paddingHorizontal="16"
-              lineHeight={20}
-            >
-              Make sure your phone is connected to the internet and then try
-              again
-            </FxText>
+            <>
+              <FlashingCircle color="green" offInterval={0} />
+              <FxText
+                variant="bodyMediumRegular"
+                color="warningBase"
+                textAlign="center"
+                paddingHorizontal="16"
+                lineHeight={20}
+              >
+                Is you blox LED 'green' but you see this message?
+              </FxText>
+              <FxText
+                variant="bodyMediumRegular"
+                color="warningBase"
+                textAlign="center"
+                paddingHorizontal="16"
+                lineHeight={20}
+              >
+                Make sure your phone is connected to the internet and then try
+                again
+              </FxText>
+              <FxSpacer marginBottom="8" />
+              <FlashingCircle
+                color="lightblue"
+                offInterval={500}
+                onInterval={2000}
+              />
+              <FxText
+                variant="bodyMediumRegular"
+                color="warningBase"
+                textAlign="center"
+                paddingHorizontal="16"
+                lineHeight={20}
+              >
+                Is you blox flashing 'light-blue'? You probably entered wrong
+                wifi password
+              </FxText>
+            </>
           )}
         {bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED' &&
           internetStatus === 'CONNECTED' &&
@@ -345,14 +419,28 @@ export const SetupCompleteScreen = ({ route }: Props) => {
         {currentBloxPeerId &&
           internetStatus === 'NOTCONNECTED' &&
           setupStatus === 'NOTCOMPLETED' && (
-            <FxButton
-              variant="inverted"
-              marginBottom="16"
-              size="large"
-              onPress={handleTryCheckInternet}
-            >
-              Check internet connectivty
-            </FxButton>
+            <>
+              <FxButton
+                variant="inverted"
+                marginBottom="16"
+                size="large"
+                onPress={handleTryCheckInternet}
+              >
+                Check internet connectivity
+              </FxButton>
+              {isHeaderStatus200 && (
+                <FxButton
+                  variant="inverted"
+                  marginBottom="16"
+                  size="large"
+                  onPress={() => {
+                    navigation.goBack();
+                  }}
+                >
+                  Entered Wrong Password? Go Back
+                </FxButton>
+              )}
+            </>
           )}
         {currentBloxPeerId &&
           internetStatus === 'CONNECTED' &&
@@ -370,16 +458,31 @@ export const SetupCompleteScreen = ({ route }: Props) => {
             </FxButton>
           )}
         {setupStatus === 'ERROR' && (
-          <FxButton
-            variant="inverted"
-            marginBottom="16"
-            size="large"
-            onPress={() => {
-              navigation.pop();
-            }}
-          >
-            Back
-          </FxButton>
+          <>
+            <FlashingCircle color="red" interval={2} />
+            <FxText
+              variant="bodyMediumLight"
+              color="warningBase"
+              textAlign="center"
+              paddingHorizontal="16"
+              paddingVertical="16"
+              lineHeight={20}
+            >
+              If Blox is flashing 'Cyan', it probably means you have entered the
+              wrong apssword for your wifi. Connect to 'FxBlox' Wifi again and
+              retry.
+            </FxText>
+            <FxButton
+              variant="inverted"
+              marginBottom="16"
+              size="large"
+              onPress={() => {
+                navigation.pop();
+              }}
+            >
+              Back
+            </FxButton>
+          </>
         )}
         {bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED' &&
           internetStatus === 'CONNECTED' &&

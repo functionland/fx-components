@@ -14,6 +14,9 @@ import { EConnectionStatus } from '../../models';
 import BloxWifiDevice from '../../app/icons/blox-wifi-device.svg';
 import { ActivityIndicator, PermissionsAndroid, Platform } from 'react-native';
 import { NetInfoStateType, fetch } from '@react-native-community/netinfo';
+import axios from 'axios';
+import { API_URL } from '../../api/index';
+import { FlashingCircle, FlashingTower } from '../../components';
 
 const connectionStatusStrings = {
   [EConnectionStatus.connecting]: 'Checking...',
@@ -70,7 +73,8 @@ export const ConnectToBloxScreen = () => {
         network.isConnected
       ) {
         // Check if GET request to the specific URL is successful (HTTP status code 200)
-        const response = await fetch('http://127.0.0.1:3500/properties');
+        const response = await axios.head(API_URL + '/properties');
+        console.log(response);
         if (response.status === 200) {
           setConnectionStatus(EConnectionStatus.connected);
           handleNext();
@@ -118,12 +122,12 @@ export const ConnectToBloxScreen = () => {
       <FxProgressBar progress={60} />
 
       <FxBox
-        flex={3}
+        flex={6}
         justifyContent="center"
         alignItems="center"
         marginVertical="0"
       >
-        <FxBox flex={3} justifyContent="center" alignItems="center">
+        <FxBox flex={5} justifyContent="center" alignItems="center">
           <FxText
             variant="h300"
             marginTop="0"
@@ -132,7 +136,11 @@ export const ConnectToBloxScreen = () => {
           >
             Connect to Blox's Hotspot
           </FxText>
-          <BloxWifiDevice />
+          <FlashingTower
+            onColor="lightblue"
+            onInterval={3000}
+            offInterval={500}
+          />
         </FxBox>
 
         <FxBox flex={4}>
@@ -153,24 +161,37 @@ export const ConnectToBloxScreen = () => {
                 Please turn your Blox on and connect your phone to the Blox's
                 hotspot manually, and turn off mobile data.
               </FxText>
-              <FxText
-                variant="bodyMediumRegular"
-                textAlign="center"
-                color="warningBase"
-                paddingTop="8"
+              <FxBox
+                flexDirection="column"
+                justifyContent="flex-end"
+                alignItems="center"
+                marginTop="16"
               >
-                If you don't see FxBlox Wifi or cannot connect to it, please
-                restart (plug/unplug) your Blox
-              </FxText>
-              <FxText
-                variant="bodySmallRegular"
-                textAlign="center"
-                color="warningBase"
-                paddingTop="8"
-              >
-                In the first setup, you need to restart (plug/unplug) it 3 times
-                with 1 min interval between each.
-              </FxText>
+                <FxBox flexDirection="row">
+                  <FlashingCircle offInterval={0} color="lightgreen" />
+                  <FxText> {'> '}</FxText>
+                  <FlashingCircle offInterval={0} color="red" />
+                  <FxText> {'> '}</FxText>
+                  <FlashingCircle offInterval={0} color="black" />
+                  <FxText> {'> '}</FxText>
+                  <FlashingCircle offInterval={0} color="green" />
+                  <FxText> {'> '}</FxText>
+                  <FlashingCircle
+                    color="lightblue"
+                    onInterval={3000}
+                    offInterval={700}
+                  />
+                </FxBox>
+                <FxText
+                  variant="bodySmallRegular"
+                  textAlign="center"
+                  color="warningBase"
+                  paddingTop="8"
+                >
+                  After first boot please wait for 10 minutes until Blox flashes
+                  'light-blue'
+                </FxText>
+              </FxBox>
             </>
           ) : (
             <FxText
