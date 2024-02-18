@@ -1,3 +1,5 @@
+import { TBloxFolderSize } from '../models';
+
 export enum EDeviceStatus {
   InUse = 0,
   BackingUp = 1,
@@ -8,12 +10,13 @@ export enum EDeviceStatus {
 export type TDevice = {
   name: string;
   capacity: number; // megabytes
+  folderInfo: TBloxFolderSize;
   used?: number; // megabytes
   free?: number; // megabytes
   status: EDeviceStatus;
   associatedDevices: string[];
 };
-
+/*
 export const mockHub: TDevice[] = [
   {
     name: 'Expansion Card 1',
@@ -28,3 +31,4 @@ export const mockHub: TDevice[] = [
     associatedDevices: ['Home Blox Set Up', 'Tower #1', 'Slot #2'],
   },
 ];
+*/

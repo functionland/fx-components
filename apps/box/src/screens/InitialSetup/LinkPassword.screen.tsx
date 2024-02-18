@@ -41,6 +41,33 @@ export const LinkPasswordScreen = () => {
     console.log(
       JSON.stringify({ error: error, status: status, rpcHistory: rpcHistory })
     );
+    const response = {
+      status: status,
+      rpcHistory: rpcHistory,
+    };
+    // Check if the connectionStatus is 'linked'
+    if (
+      response?.status?.connectionStatus === 'linked' &&
+      response?.rpcHistory
+    ) {
+      // Get the rpcHistory object's keys and reverse them to start from the end
+      const rpcHistoryKeys = Object.keys(response.rpcHistory).reverse();
+
+      // Iterate over the rpcHistory keys from the end
+      for (const key of rpcHistoryKeys) {
+        const rpcCall = response.rpcHistory[key];
+
+        // Check if result exists, is a string, and starts with '0x'
+        if (
+          rpcCall.result &&
+          typeof rpcCall.result === 'string' &&
+          rpcCall.result.startsWith('0x')
+        ) {
+          setSignatureData(rpcCall.result);
+          break; // Exit the loop after finding the first matching result
+        }
+      }
+    }
   }, [error, status, rpcHistory]);
   useEffect(() => {
     console.log('signiture is: ' + signiture + '; password:' + password);
@@ -49,35 +76,35 @@ export const LinkPasswordScreen = () => {
   const personalSign = async (msg: string) => {
     let signature = '';
     let resolveSigned = () => {};
-    const signed = new Promise<void>(resolve => {
+    const signed = new Promise<void>((resolve) => {
       resolveSigned = resolve;
-    })
+    });
 
     notifee.registerForegroundService(() => signed);
     await notifee.displayNotification({
-    id: 'wallet',
+      id: 'wallet',
       title: 'Connecting Wallet...',
       body: 'Wallet connection in progress, click to move back to the app',
       android: {
         progress: {
-          indeterminate: true
+          indeterminate: true,
         },
         pressAction: {
-          id: 'default'
+          id: 'default',
         },
         ongoing: true,
         asForegroundService: true,
-        channelId: 'sticky'
-      }
+        channelId: 'sticky',
+      },
     });
-    signature = await sdk?.connectAndSign({ msg }) as string;
+    signature = (await sdk?.connectAndSign({ msg })) as string;
     resolveSigned();
     notifee.stopForegroundService();
 
     return signature;
   };
 
-  const disconnectWallet = () => {    
+  const disconnectWallet = () => {
     notifee.stopForegroundService();
     setLinking(false);
     sdk?.terminate();

@@ -43,6 +43,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   const { queueToast } = useToast();
   const logger = useLogger();
   const { isManualSetup = false } = route.params || {};
+  const [showSkipButton, setShowSkipButton] = useState(false);
 
   const [setAppPeerId, signiture, password] = useUserProfileStore((state) => [
     state.setAppPeerId,
@@ -58,17 +59,15 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     removeBlox,
     updateBloxPropertyInfo,
     updateBloxSpaceInfo,
-  ] = useBloxsStore(
-    (state) => [
-      state.bloxs,
-      state.currentBloxPeerId,
-      state.update,
-      state.addBlox,
-      state.removeBlox,
-      state.updateBloxPropertyInfo,
-      state.updateBloxSpaceInfo,
-    ]
-  );
+  ] = useBloxsStore((state) => [
+    state.bloxs,
+    state.currentBloxPeerId,
+    state.update,
+    state.addBlox,
+    state.removeBlox,
+    state.updateBloxPropertyInfo,
+    state.updateBloxSpaceInfo,
+  ]);
 
   const bloxsArray = Object.values(bloxs);
   const [newBloxName, setNewBloxName] = useState(
@@ -113,6 +112,12 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     if (!isManualSetup) {
       refetch_bloxProperties({ withLoading: true });
     }
+    const timer = setTimeout(() => {
+      setShowSkipButton(true);
+    }, 10000); // 5000 milliseconds delay
+
+    // Cleanup function to clear the timer if the component unmounts before the timeout finishes
+    return () => clearTimeout(timer);
   }, []);
   useEffect(() => {
     let interval = setInterval(() => {
@@ -162,6 +167,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       data_bloxProperties,
       error_bloxProperties,
     });
+    console.log(error_bloxProperties?.message);
   }, [data_bloxProperties, error_bloxProperties]);
 
   useEffect(() => {
@@ -437,18 +443,34 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
         justifyContent="space-between"
         alignItems="center"
       >
-        {data_bloxProperties?.data &&
-          (!data_bloxProperties?.data?.restartNeeded ||
-            data_bloxProperties?.data?.restartNeeded === 'true') && (
-            <FxButton
-              variant="inverted"
-              paddingHorizontal="20"
-              marginRight="12"
-              onPress={skipConnectToInternet}
-            >
-              Skip
-            </FxButton>
-          )}
+        {showSkipButton && (
+          <FxButton
+            variant="inverted"
+            paddingHorizontal="20"
+            marginRight="12"
+            onPress={() => {
+              Alert.alert(
+                'Skip Authorization!',
+                `Are you sure want to skp authorization? You will not be able to connect to your blox if you skip this.`,
+                [
+                  {
+                    text: 'Yes',
+                    onPress: () => {
+                      skipConnectToInternet();
+                    },
+                    style: 'destructive',
+                  },
+                  {
+                    text: 'No',
+                    style: 'cancel',
+                  },
+                ]
+              );
+            }}
+          >
+            Skip
+          </FxButton>
+        )}
         <FxBox
           flexDirection="row"
           justifyContent="flex-end"

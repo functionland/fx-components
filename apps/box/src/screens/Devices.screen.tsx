@@ -16,26 +16,37 @@ export const DevicesScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
   const [loadingBloxSpace, setLoadingBloxSpace] = useState(false);
   const logger = useLogger();
-  const [bloxsSpaceInfo, currentBloxPeerId, getBloxSpace] = useBloxsStore(
-    (state) => [
-      state.bloxsSpaceInfo,
-      state.currentBloxPeerId,
-      state.getBloxSpace,
-    ]
-  );
-  const [fulaIsReady] = useUserProfileStore(
-    (state) => [state.fulaIsReady]
-  );
+  const [
+    bloxsSpaceInfo,
+    folderSizeInfo,
+    currentBloxPeerId,
+    getBloxSpace,
+    getFolderSize,
+  ] = useBloxsStore((state) => [
+    state.bloxsSpaceInfo,
+    state.folderSizeInfo,
+    state.currentBloxPeerId,
+    state.getBloxSpace,
+    state.getFolderSize,
+  ]);
+  const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
   const currentBloxSpaceInfo = useMemo(
     () => bloxsSpaceInfo?.[currentBloxPeerId],
     [bloxsSpaceInfo, currentBloxPeerId]
   );
+  const currentFolderSizeInfo = useMemo(
+    () => folderSizeInfo?.[currentBloxPeerId],
+    [folderSizeInfo, currentBloxPeerId]
+  );
   const updateBloxSpace = async () => {
+    console.log('updateBloxSpace');
     try {
       setLoadingBloxSpace(true);
       if (fulaIsReady) {
         const space = await getBloxSpace();
         logger.log('updateBloxSpace', space);
+        const folderSize = await getFolderSize();
+        
       }
     } catch (error) {
       logger.logError('GetBloxSpace Error', error);
@@ -56,6 +67,7 @@ export const DevicesScreen = () => {
         loading={loadingBloxSpace}
         data={{
           capacity: currentBloxSpaceInfo?.size || 0,
+          folderInfo: currentFolderSizeInfo || {},
           name: 'Hard Disk',
           status: currentBloxSpaceInfo
             ? EDeviceStatus.InUse

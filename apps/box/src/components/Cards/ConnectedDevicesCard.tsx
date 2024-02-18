@@ -12,6 +12,7 @@ import {
   FxTag,
   FxTrashIcon,
   useToast,
+  FxText,
 } from '@functionland/component-library';
 import { CardCarousel } from './fields/CardCarousel';
 import { EmptyCard } from './EmptyCard';
@@ -19,6 +20,7 @@ import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/typ
 import { TDevice, EDeviceStatus, mockHub } from '../../api/hub';
 import { ActivityIndicator, Alert } from 'react-native';
 import { fxblox } from '@functionland/react-native-fula';
+import { FlashingCircle } from '../../components';
 
 const DEVICE_CARD_HEIGHT = 264;
 
@@ -37,7 +39,8 @@ export const DeviceCard = ({
   ...rest
 }: DeviceCardProps) => {
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
-  const { name, capacity, status, associatedDevices, used, free } = data;
+  const { name, capacity, folderInfo, status, associatedDevices, used, free } =
+    data;
   const { queueToast } = useToast();
 
   return (
@@ -66,6 +69,18 @@ export const DeviceCard = ({
       <FxCard.Row>
         <FxCard.Row.Title>Capacity</FxCard.Row.Title>
         <FxCard.Row.Data>{convertByteToCapacityUnit(capacity)}</FxCard.Row.Data>
+      </FxCard.Row>
+      <FxCard.Row>
+        <FxCard.Row.Title>Fula Size</FxCard.Row.Title>
+        <FxCard.Row.Data>
+          {convertByteToCapacityUnit(parseInt(folderInfo?.fula, 10))}
+        </FxCard.Row.Data>
+      </FxCard.Row>
+      <FxCard.Row>
+        <FxCard.Row.Title>Chain Size</FxCard.Row.Title>
+        <FxCard.Row.Data>
+          {convertByteToCapacityUnit(parseInt(folderInfo?.chain, 10))}
+        </FxCard.Row.Data>
       </FxCard.Row>
       {used != undefined && (
         <FxCard.Row>
@@ -107,6 +122,21 @@ export const DeviceCard = ({
           alignItems="center"
           paddingHorizontal="20"
         >
+          <FxBox flexDirection="row">
+            <FlashingCircle offInterval={0} color="purple" />
+            <FxText> {'> '}</FxText>
+            <FlashingCircle offInterval={0} color="lightgreen" />
+            <FxText> {'> '}</FxText>
+            <FlashingCircle offInterval={0} color="black" />
+            <FxText> {'> '}</FxText>
+            <FlashingCircle offInterval={0} color="lightblue" />
+            <FxText> {'> '}</FxText>
+            <FlashingCircle offInterval={0} color="green" />
+          </FxBox>
+          <FxText>
+            Your blox turns purple for 2 minutes and then reboots automatically.
+            Please do not disturb the format process
+          </FxText>
           <FxButton
             onPress={() => {
               Alert.alert(

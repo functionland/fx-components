@@ -67,22 +67,29 @@ export const BloxScreen = () => {
   const [
     bloxs,
     bloxsSpaceInfo,
+    folderSizeInfo,
     currentBloxPeerId,
     bloxsConnectionStatus,
     checkBloxConnection,
     getBloxSpace,
+    getFolderSize,
     removeBlox,
     updateBloxsStore,
   ] = useBloxsStore((state) => [
     state.bloxs,
     state.bloxsSpaceInfo,
+    state.folderSizeInfo,
     state.currentBloxPeerId,
     state.bloxsConnectionStatus,
     state.checkBloxConnection,
     state.getBloxSpace,
+    state.getFolderSize,
     state.removeBlox,
     state.update,
   ]);
+  useEffect(() => {
+    console.log('here');
+  }, [fulaIsReady]);
   const bloxInteractions = Object.values(bloxs || {}).map<TBloxInteraction>(
     (blox) => ({
       peerId: blox.peerId,
@@ -96,6 +103,10 @@ export const BloxScreen = () => {
   const currentBloxSpaceInfo = useMemo(
     () => bloxsSpaceInfo?.[currentBloxPeerId],
     [bloxsSpaceInfo, currentBloxPeerId]
+  );
+  const currentFolderSizeInfo = useMemo(
+    () => folderSizeInfo?.[currentBloxPeerId],
+    [folderSizeInfo, currentBloxPeerId]
   );
   divisionSplit.value =
     bloxsSpaceInfo?.[currentBloxPeerId]?.used_percentage || 0;
@@ -115,6 +126,7 @@ export const BloxScreen = () => {
       setLoadingBloxSpace(true);
       if (fulaIsReady) {
         const space = await getBloxSpace();
+        const folderSize = await getFolderSize();
         logger.log('updateBloxSpace', space);
       }
     } catch (error) {
@@ -456,6 +468,7 @@ export const BloxScreen = () => {
             loading={loadingBloxSpace}
             data={{
               capacity: currentBloxSpaceInfo?.size || 0,
+              folderInfo: currentFolderSizeInfo || {},
               name: 'Hard Disks',
               status: currentBloxSpaceInfo
                 ? EDeviceStatus.InUse

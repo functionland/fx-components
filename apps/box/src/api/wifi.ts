@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from './index'
+import { API_URL } from './index';
 
 export const getProperties = async () => {
   return axios.get(`${API_URL}/properties`, {
@@ -28,13 +28,17 @@ export const postWifiConnect = async (data: {
   formData.append('ssid', data?.ssid);
   formData.append('password', data?.password);
   formData.append('countryCode', data?.countryCode || 'CA');
-  
-  return axios.post(`${API_URL}/wifi/connect?${formData.toString()}`, undefined, {
-    timeout: 1000 * 15,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+
+  return axios.post(
+    `${API_URL}/wifi/connect?${formData.toString()}`,
+    undefined,
+    {
+      timeout: 1000 * 15,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     }
-  });
+  );
 };
 
 export const putApDisable = async () => {
