@@ -448,7 +448,25 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
             variant="inverted"
             paddingHorizontal="20"
             marginRight="12"
-            onPress={skipConnectToInternet}
+            onPress={() => {
+              Alert.alert(
+                'Skip Authorization!',
+                `Are you sure want to skp authorization? You will not be able to connect to your blox if you skip this.`,
+                [
+                  {
+                    text: 'Yes',
+                    onPress: () => {
+                      skipConnectToInternet();
+                    },
+                    style: 'destructive',
+                  },
+                  {
+                    text: 'No',
+                    style: 'cancel',
+                  },
+                ]
+              );
+            }}
           >
             Skip
           </FxButton>
