@@ -46,7 +46,6 @@ export const DevicesScreen = () => {
         const space = await getBloxSpace();
         logger.log('updateBloxSpace', space);
         const folderSize = await getFolderSize();
-        
       }
     } catch (error) {
       logger.logError('GetBloxSpace Error', error);

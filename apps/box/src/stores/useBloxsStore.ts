@@ -12,7 +12,10 @@ import { blockchain, fula, fxblox } from '@functionland/react-native-fula';
 import { firebase } from '@react-native-firebase/crashlytics';
 import { BloxFreeSpaceResponse } from '@functionland/react-native-fula/lib/typescript/types/blockchain';
 
-import { GetFolderPathResponse } from '@functionland/react-native-fula/lib/typescript/types/fxblox';
+import {
+  GetFolderPathResponse,
+  GetDatastoreSizeResponse,
+} from '@functionland/react-native-fula/lib/typescript/types/fxblox';
 
 interface BloxsActionSlice {
   /**
@@ -163,6 +166,7 @@ const createModeSlice: StateCreator<
         let folderSizeInfo_tmp: TBloxFolderSize = {
           fula: '-1',
           chain: '-1',
+          fulaCount: '-1',
         };
         let chainFolderInfo: GetFolderPathResponse = {
           size: '-1',
@@ -170,11 +174,14 @@ const createModeSlice: StateCreator<
         };
         const chainFolderSize = await fxblox.getFolderSize('/uniondrive/chain');
         console.log('chainFolderSize', chainFolderSize);
-        let fulaFolderInfo: GetFolderPathResponse = {
+        let fulaFolderInfo: GetDatastoreSizeResponse = {
           size: '-1',
-          folder_path: '/uniondrive/.fula',
+          folder_path: '',
+          count: '-1',
+          storage_max: '',
+          version: '',
         };
-        const fulaFolderSize = await fxblox.getFolderSize('/uniondrive/.fula');
+        const fulaFolderSize = await fxblox.getDatastoreSize();
 
         console.log(chainFolderSize);
         console.log(fulaFolderSize);
@@ -187,6 +194,7 @@ const createModeSlice: StateCreator<
           }
           folderSizeInfo_tmp = {
             fula: fulaFolderInfo.size,
+            fulaCount: fulaFolderInfo.count,
             chain: chainFolderInfo.size,
           };
           set({
@@ -198,7 +206,7 @@ const createModeSlice: StateCreator<
             },
           });
         }
-        return folderSizeInfo_tmp as TBloxFolderSize;
+        return folderSizeInfo_tmp;
       } catch (error) {
         console.log(error);
         throw error;

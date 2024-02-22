@@ -12,6 +12,7 @@ export interface TBloxFreeSpace {
 export interface TBloxFolderSize {
   fula: string;
   chain: string;
+  fulaCount: string;
 }
 export type TBloxConectionStatus = 'CONNECTED' | 'CHECKING' | 'DISCONNECTED';
 export type DockerContainerInfo = {

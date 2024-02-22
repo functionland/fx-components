@@ -73,7 +73,10 @@ export const DeviceCard = ({
       <FxCard.Row>
         <FxCard.Row.Title>Fula Size</FxCard.Row.Title>
         <FxCard.Row.Data>
-          {convertByteToCapacityUnit(parseInt(folderInfo?.fula, 10))}
+          {convertByteToCapacityUnit(parseInt(folderInfo?.fula, 10)) +
+            ' (' +
+            parseInt(folderInfo?.fulaCount, 10) +
+            ')'}
         </FxCard.Row.Data>
       </FxCard.Row>
       <FxCard.Row>
