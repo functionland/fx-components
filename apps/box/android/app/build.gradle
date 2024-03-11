@@ -98,6 +98,10 @@ android {
             keyPassword 'android'
         }
     }
+    packagingOptions {
+        pickFirst 'lib/arm64-v8a/liblog.so'
+        // Add other libraries here if necessary
+    }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
