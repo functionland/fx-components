@@ -93,7 +93,7 @@ const createPoolsModelSlice: StateCreator<
               joined = false;
             } else if (
               userPool.poolId !== undefined &&
-              userPool.poolId.length > 0 &&
+              userPool.poolId?.length > 0 &&
               parseInt(userPool.poolId, 10) >= 0
             ) {
               requested = true;
