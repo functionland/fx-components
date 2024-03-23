@@ -232,7 +232,7 @@ const createUserProfileSlice: StateCreator<
         const account = await blockchain.getAccount();
         const earnings = await blockchain.assetsBalance(
           account.account,
-          '120',
+          '100',
           '100'
         );
         set({
