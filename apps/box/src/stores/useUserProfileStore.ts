@@ -230,11 +230,13 @@ const createUserProfileSlice: StateCreator<
         }
         await fula.isReady(false);
         const account = await blockchain.getAccount();
+        console.log({ account: account });
         const earnings = await blockchain.assetsBalance(
           account.account,
           '100',
           '100'
         );
+        console.log({ earnings: earnings });
         set({
           earnings: earnings.amount,
         });
@@ -242,11 +244,12 @@ const createUserProfileSlice: StateCreator<
         if (!error.toString().includes('response: 400')) {
           console.log('Bad request: ', error.toString());
         }
-        throw error;
-      } finally {
         set({
           earnings: 'NaN',
         });
+        throw error;
+      } finally {
+        
       }
     },
     logout: () => {

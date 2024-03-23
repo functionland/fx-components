@@ -1,7 +1,7 @@
 import React from 'react';
 import { FxBox, FxCard, FxRefreshIcon } from '@functionland/component-library';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
-import { ActivityIndicator, Text } from 'react-native';
+import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
 
 type EarningCardProps = React.ComponentProps<typeof FxBox> & {
   data: { totalFula: string };
@@ -37,10 +37,26 @@ export const EarningCard = ({
         <FxCard.Row>
           <FxCard.Row.Title>Total fula</FxCard.Row.Title>
           <FxCard.Row.Data>
-            {totalFula === 'NaN' ? <Text>0</Text> : <Text>{totalFula}</Text>}
+          <View style={styles.totalFulaContainer}>
+            {totalFula === 'NaN' ? <Text>0</Text> : <Text style={styles.totalFula}>{totalFula}</Text>}
+            <Text style={styles.superscript}> (x10⁻¹⁸)</Text>
+            </View>
           </FxCard.Row.Data>
         </FxCard.Row>
       )}
     </FxCard>
   );
 };
+
+const styles = StyleSheet.create({
+  totalFulaContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  totalFula: {
+   
+  },
+  superscript: {
+    fontSize: 10, // Smaller font size for superscript notation
+  },
+});
