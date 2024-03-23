@@ -1,5 +1,11 @@
 import React from 'react';
-import { FxBox, FxCard, FxRefreshIcon } from '@functionland/component-library';
+import {
+  FxBox,
+  FxCard,
+  FxRefreshIcon,
+  FxText,
+  useFxTheme,
+} from '@functionland/component-library';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
 
@@ -16,7 +22,7 @@ export const EarningCard = ({
 }: EarningCardProps) => {
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
   const { totalFula } = data;
-
+  const { colors } = useFxTheme();
   return (
     <FxCard
       {...rest}
@@ -29,7 +35,7 @@ export const EarningCard = ({
           <ActivityIndicator />
         ) : (
           onRefreshPress && (
-            <FxRefreshIcon color="white" onPress={onRefreshPress} />
+            <FxRefreshIcon fill={colors.content3} onPress={onRefreshPress} />
           )
         )}
       </FxBox>
@@ -37,14 +43,14 @@ export const EarningCard = ({
         <FxCard.Row>
           <FxCard.Row.Title>Total fula</FxCard.Row.Title>
           <FxCard.Row.Data>
-            <View style={styles.totalFulaContainer}>
+            <FxBox style={styles.totalFulaContainer}>
               {totalFula === 'NaN' ? (
-                <Text>0</Text>
+                <FxText>0</FxText>
               ) : (
-                <Text style={styles.totalFula}>{totalFula}</Text>
+                <FxText style={styles.totalFula}>{totalFula}</FxText>
               )}
-              <Text style={styles.superscript}> (x10⁻¹⁸)</Text>
-            </View>
+              <FxText style={styles.superscript}> (x10⁻¹⁸)</FxText>
+            </FxBox>
           </FxCard.Row.Data>
         </FxCard.Row>
       )}

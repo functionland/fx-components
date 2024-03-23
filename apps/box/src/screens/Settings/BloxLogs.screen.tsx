@@ -9,6 +9,7 @@ import {
   FxTextInput,
   FxKeyboardAwareScrollView,
   FxText,
+  useFxTheme,
 } from '@functionland/component-library';
 import React from 'react';
 import { SubHeaderText } from '../../components/Text';
@@ -27,6 +28,7 @@ export const BloxLogsScreen = () => {
   const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
   const [showOtherInput, setShowOtherInput] = React.useState<boolean>(false);
   const { queueToast } = useToast();
+  const { colors } = useFxTheme();
   const sanitizeLogData = (logString: string) => {
     // Regular expression to match non-printable characters except newlines
     // This regex matches characters in the control characters range (0x00-0x1F and 0x7F-0x9F) except for newline (0x0A)
@@ -141,16 +143,19 @@ export const BloxLogsScreen = () => {
       <FxSpacer marginTop="24" />
       <FxCard.Row>
         <FxCard.Title marginBottom="8">
-          Last {tailCount} lines of Log for {selectedValue}
+          Last {tailCount} lines of log for {selectedValue}
         </FxCard.Title>
         {loadingLogs ? (
           <ActivityIndicator />
         ) : (
           fetchContainerLogs && (
             <>
-              <FxCopyIcon color="white" onPress={() => copyToClipboard(log)} />
+              <FxCopyIcon
+                fill={colors.content3}
+                onPress={() => copyToClipboard(log)}
+              />
               <FxRefreshIcon
-                color="white"
+                fill={colors.content3}
                 onPress={() => fetchContainerLogs(selectedValue, tailCount)}
               />
             </>

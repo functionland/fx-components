@@ -13,6 +13,7 @@ import {
   FxTrashIcon,
   useToast,
   FxText,
+  useFxTheme,
 } from '@functionland/component-library';
 import { CardCarousel } from './fields/CardCarousel';
 import { EmptyCard } from './EmptyCard';
@@ -42,7 +43,7 @@ export const DeviceCard = ({
   const { name, capacity, folderInfo, status, associatedDevices, used, free } =
     data;
   const { queueToast } = useToast();
-
+  const { colors } = useFxTheme();
   return (
     <FxCard
       {...rest}
@@ -55,7 +56,7 @@ export const DeviceCard = ({
           <ActivityIndicator />
         ) : (
           onRefreshPress && (
-            <FxRefreshIcon color="white" onPress={onRefreshPress} />
+            <FxRefreshIcon fill={colors.content3} onPress={onRefreshPress} />
           )
         )}
       </FxBox>
