@@ -37,9 +37,13 @@ export const EarningCard = ({
         <FxCard.Row>
           <FxCard.Row.Title>Total fula</FxCard.Row.Title>
           <FxCard.Row.Data>
-          <View style={styles.totalFulaContainer}>
-            {totalFula === 'NaN' ? <Text>0</Text> : <Text style={styles.totalFula}>{totalFula}</Text>}
-            <Text style={styles.superscript}> (x10⁻¹⁸)</Text>
+            <View style={styles.totalFulaContainer}>
+              {totalFula === 'NaN' ? (
+                <Text>0</Text>
+              ) : (
+                <Text style={styles.totalFula}>{totalFula}</Text>
+              )}
+              <Text style={styles.superscript}> (x10⁻¹⁸)</Text>
             </View>
           </FxCard.Row.Data>
         </FxCard.Row>
@@ -53,9 +57,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
   },
-  totalFula: {
-   
-  },
+  totalFula: {},
   superscript: {
     fontSize: 10, // Smaller font size for superscript notation
   },
