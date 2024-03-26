@@ -1,13 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   FxBox,
   FxCard,
   FxRefreshIcon,
   FxText,
   useFxTheme,
+  FxBottomSheetModal,
+  FxButton,
+  useToast,
+  FxMoveIcon,
+  FxTextInput,
+  FxCopyIcon,
+  FxPressableOpacity,
 } from '@functionland/component-library';
+import { blockchain } from '@functionland/react-native-fula';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
-import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { copyFromClipboard } from '../../utils/clipboard';
+import { FxBoxProps } from '../../../../../dist/libs/component-library/src/lib/box/box';
 
 type EarningCardProps = React.ComponentProps<typeof FxBox> & {
   data: { totalFula: string };
@@ -23,6 +33,13 @@ export const EarningCard = ({
   const bottomSheetRef = React.useRef<BottomSheetModalMethods>(null);
   const { totalFula } = data;
   const { colors } = useFxTheme();
+  const { queueToast } = useToast();
+  const [wallet, setWallet] = useState<string>('');
+  const chain = 'mumbai';
+  const handlePaste = async () => {
+    const text = await copyFromClipboard();
+    setWallet(text);
+  };
   return (
     <FxCard
       {...rest}
@@ -54,6 +71,69 @@ export const EarningCard = ({
           </FxCard.Row.Data>
         </FxCard.Row>
       )}
+      <FxBottomSheetModal ref={bottomSheetRef} title="Token Transfer">
+        <FxBox
+          height={200}
+          justifyContent="center"
+          alignItems="center"
+          paddingHorizontal="20"
+        >
+          <FxBox flexDirection="row" alignItems="center" paddingHorizontal="20">
+            <FxBox borderWidth={1} flex={1} borderColor="content3">
+              <FxText>
+                {wallet && wallet !== ''
+                  ? wallet
+                  : 'Copy the wallet address and paste it here using the icon ->'}
+              </FxText>
+            </FxBox>
+            <FxCopyIcon fill={colors.content3} onPress={handlePaste} />
+          </FxBox>
+
+          <FxText>
+            Make sure all details are correct, Any wrong transfers cannot be
+            retrieved
+          </FxText>
+          <FxButton
+            onPress={() => {
+              console.log({ totalFula, wallet, chain });
+              if (wallet && totalFula && totalFula !== '0') {
+                Alert.alert(
+                  'Transfer to Mumbai wallet',
+                  `Do you confirm that the destination wallet is a Mumbai wallet and totally owned by you?`,
+                  [
+                    {
+                      text: 'Yes',
+                      onPress: () => {
+                        blockchain
+                          .transferToFula(totalFula, wallet, chain)
+                          .then(() => {
+                            console.log('transfer sent');
+                            queueToast({
+                              type: 'success',
+                              title: 'Request Sent',
+                              message:
+                                'You should see the tokens in your wallet in a few seconds. The amount shown in x(10 to -18)',
+                            });
+                          });
+                      },
+                      style: 'destructive',
+                    },
+                    {
+                      text: 'No',
+                      style: 'cancel',
+                    },
+                  ]
+                );
+              }
+            }}
+            flexWrap="wrap"
+            paddingHorizontal="16"
+            iconLeft={<FxMoveIcon />}
+          >
+            Transfer
+          </FxButton>
+        </FxBox>
+      </FxBottomSheetModal>
     </FxCard>
   );
 };
