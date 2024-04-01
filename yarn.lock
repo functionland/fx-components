@@ -1408,13 +1408,6 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
-"@babel/runtime@~7.17.2":
-  version "7.17.9"
-  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.17.9.tgz#d19fbf802d01a8cb6cf053a64e472d42c434ba72"
-  integrity sha512-lSiBBvodq29uShpWGNbgFdKYNiFDo5/HIYsaCEY9ff4sb10x9jizo2+pRrSyF4jKZCXqgzuqBOQKbUm90gQwJg==
-  dependencies:
-    regenerator-runtime "^0.13.4"
-
 "@babel/template@^7.0.0", "@babel/template@^7.22.15", "@babel/template@^7.3.3":
   version "7.22.15"
   resolved "https://registry.yarnpkg.com/@babel/template/-/template-7.22.15.tgz#09576efc3830f0430f4548ef971dde1350ef2f38"
@@ -2383,15 +2376,6 @@
     find-up "^5.0.0"
     js-yaml "^4.1.0"
 
-"@functionland/file-protocol@^0.3.6":
-  version "0.3.6"
-  resolved "https://registry.yarnpkg.com/@functionland/file-protocol/-/file-protocol-0.3.6.tgz#655254599b248182052ad53e3840dece8eb84435"
-  integrity sha512-dt36pB4igjX0wD8VAYPvOhGB7kj8mVQAPfPNxNr6CDB4URRXLbrvzja0UpbOG5+gdzhFrDuG25S9tH3F7GhoWA==
-  dependencies:
-    "@babel/runtime" "~7.17.2"
-    "@protobuf-ts/runtime" "~2.2.2"
-    aes-js "^3.1.2"
-
 "@functionland/fula-sec@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@functionland/fula-sec/-/fula-sec-2.0.0.tgz#84ed2d056fcf936c6cc41e7960a4b82fd583eb16"
@@ -2404,18 +2388,10 @@
     tslib "^2.4.0"
     uint8arrays "^3.0.0"
 
-"@functionland/graph-protocol@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@functionland/graph-protocol/-/graph-protocol-0.2.2.tgz#6620fb389aa030d5f23bdf4747e14965527a1538"
-  integrity sha512-ege7ou9RoU6YfEfrDe304eCjHCD5dVoItJEdkKMTqbyqA4kYPwt6rVZCpUNWLCnPnlIhJjPRzhRPjwxwPnortA==
-  dependencies:
-    "@babel/runtime" "~7.17.2"
-    "@protobuf-ts/runtime" "~2.2.2"
-
-"@functionland/react-native-fula@1.54.8":
-  version "1.54.8"
-  resolved "https://registry.yarnpkg.com/@functionland/react-native-fula/-/react-native-fula-1.54.8.tgz#77c37db5aa7340c7a07fa6bbf83ee6e243ca4121"
-  integrity sha512-y/m0Kr6LLlVbDJGMwPptzAN+pG4iG+9AKG2ol4gQ79FiTkR96a6yAIqwDTOuFz3knod/JpVlH8xlLJgxRHxM6g==
+"@functionland/react-native-fula@1.54.11":
+  version "1.54.11"
+  resolved "https://registry.yarnpkg.com/@functionland/react-native-fula/-/react-native-fula-1.54.11.tgz#bc00c1bc462006de324a3e6797df542800e2f965"
+  integrity sha512-QGPvetxj9QyUbzZiZwZm6yfs4iQzQj+CnAPxahsAuuV1rFsMmqOmncGEqWhxHnDdUdSoLqfnulHCz1dLXMFR/g==
   dependencies:
     "@polkadot/api" "^9.11.3"
     "@polkadot/keyring" "^10.2.6"
@@ -4193,11 +4169,6 @@
     "@polkadot/x-global" "12.6.2"
     tslib "^2.6.2"
     ws "^8.15.1"
-
-"@protobuf-ts/runtime@~2.2.2":
-  version "2.2.4"
-  resolved "https://registry.yarnpkg.com/@protobuf-ts/runtime/-/runtime-2.2.4.tgz#820b2f4db8c98f31517a9404be9569999fcc1d9c"
-  integrity sha512-v6A67t27p56qG2j3Dtag7Lkj6F8VotXtlwCUs9YiL/Sv+Vxp0uGOwSNuBI798YnEozt5NTbmkWszp84j5cSNdQ==
 
 "@react-native-async-storage/async-storage@^1.17.11", "@react-native-async-storage/async-storage@^1.19.6", "@react-native-async-storage/async-storage@^1.21.0":
   version "1.21.0"
@@ -10083,11 +10054,6 @@ fast-xml-parser@^4.0.12, fast-xml-parser@^4.2.4:
   dependencies:
     strnum "^1.0.5"
 
-fastestsmallesttextencoderdecoder@^1.0.22:
-  version "1.0.22"
-  resolved "https://registry.yarnpkg.com/fastestsmallesttextencoderdecoder/-/fastestsmallesttextencoderdecoder-1.0.22.tgz#59b47e7b965f45258629cc6c127bf783281c5e93"
-  integrity sha512-Pb8d48e+oIuY4MaM64Cd7OW1gt4nxCHs7/ddPPZ/Ic3sg8yVGM7O9wDvZ7us6ScaUupzM+pfBolwtYhN1IxBIw==
-
 fastq@^1.6.0:
   version "1.16.0"
   resolved "https://registry.yarnpkg.com/fastq/-/fastq-1.16.0.tgz#83b9a9375692db77a822df081edb6a9cf6839320"
@@ -15209,16 +15175,6 @@ react-native-elevation@^1.0.0:
   resolved "https://registry.yarnpkg.com/react-native-elevation/-/react-native-elevation-1.0.0.tgz#2a091c688290ac9b08b5842d1a8e8a00fc84233e"
   integrity sha512-BWIKcEYtzjRV6GpkX0Km5/w2E7fgIcywiQOT7JZTc5NSbv/YI9kpFinB9lRFsOoRVGmiqq/O3VfP/oH2clIiBA==
 
-react-native-fula@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/react-native-fula/-/react-native-fula-0.3.1.tgz#693e1e4ecd6e31fc9485b609fd8ffa3d264b4653"
-  integrity sha512-la6l7yehXadkSVdSxujlL1wa5sy/bHiOLv/GpbEzM+LF4C/cRJUqzeu1Wfw1Sm639/KrVuzNZXjly2f599dWGw==
-  dependencies:
-    "@functionland/file-protocol" "^0.3.6"
-    "@functionland/graph-protocol" "^0.2.2"
-    buffer "^6.0.3"
-    fastestsmallesttextencoderdecoder "^1.0.22"
-
 react-native-gesture-handler@^2.14.0:
   version "2.14.0"
   resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.14.0.tgz#d6aec0d8b2e55c67557fd6107e828c0a1a248be8"
@@ -15660,7 +15616,7 @@ regenerate@^1.4.2:
   resolved "https://registry.yarnpkg.com/regenerate/-/regenerate-1.4.2.tgz#b9346d8827e8f5a32f7ba29637d398b69014848a"
   integrity sha512-zrceR/XhGYU/d/opr2EKO7aRHUeiBI8qjtfHqADTwZd6Szfy16la6kqD0MIUs5z5hx6AaKa+PixpPrR289+I0A==
 
-regenerator-runtime@^0.13.2, regenerator-runtime@^0.13.4:
+regenerator-runtime@^0.13.2:
   version "0.13.11"
   resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.13.11.tgz#f6dca3e7ceec20590d07ada785636a90cdca17f9"
   integrity sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==
