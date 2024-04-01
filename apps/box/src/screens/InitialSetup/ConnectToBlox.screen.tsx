@@ -158,8 +158,12 @@ export const ConnectToBloxScreen = () => {
           {connectionStatus !== EConnectionStatus.connected ? (
             <>
               <FxText variant="h200" textAlign="center">
-                Please turn your Blox on and connect your phone to the Blox's
+                1. Please turn your Blox on and connect your phone to the Blox's
                 hotspot manually, and turn off mobile data.
+              </FxText>
+              <FxText variant="h200" textAlign="center">
+                2. Make sure you have internal or external storage attached and
+                format is either 'ext4' or 'vFat'.
               </FxText>
               <FxBox
                 flexDirection="column"

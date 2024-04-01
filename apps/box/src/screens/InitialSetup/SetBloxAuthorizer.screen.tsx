@@ -419,14 +419,15 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
             onRefreshPress={refetch_bloxProperties}
             loading={loading_bloxProperties}
           >
-            {data_bloxProperties?.data?.bloxFreeSpace?.size === 0 && (
-              <FxButton
-                onPress={loading_bloxFormatDisk ? null : handleFormatDisk}
-              >
-                {loading_bloxFormatDisk ? <ActivityIndicator /> : null}
-                Format Disk
-              </FxButton>
-            )}
+            {true ||
+              (data_bloxProperties?.data?.bloxFreeSpace?.size === 0 && (
+                <FxButton
+                  onPress={loading_bloxFormatDisk ? null : handleFormatDisk}
+                >
+                  {loading_bloxFormatDisk ? <ActivityIndicator /> : null}
+                  Format Disk
+                </FxButton>
+              ))}
           </DeviceCard>
         )}
       </FxKeyboardAwareScrollView>

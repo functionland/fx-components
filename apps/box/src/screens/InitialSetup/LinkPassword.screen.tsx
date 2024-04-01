@@ -28,6 +28,7 @@ export const LinkPasswordScreen = () => {
     useSDK();
 
   const [iKnow, setIKnow] = useState(false);
+  const [metamaskOpen, setMetamaskOpen] = useState(false);
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
   const [signatureData, setSignatureData] = useState<string>('');
@@ -188,7 +189,7 @@ export const LinkPasswordScreen = () => {
         {password && signiture ? (
           <FxBox>
             <FxText variant="h300" textAlign="center">
-              Your DID
+              Your Identity
             </FxText>
             <FxText textAlign="center" marginTop="8">
               {helper.getMyDID(password, signiture)}
@@ -197,7 +198,7 @@ export const LinkPasswordScreen = () => {
         ) : (
           <>
             <FxText variant="h300" textAlign="center">
-              Link DID
+              Set Identity
             </FxText>
             {!linking ? (
               <FxTextInput
@@ -229,6 +230,18 @@ export const LinkPasswordScreen = () => {
                 <FxRadioButtonWithLabel
                   paddingVertical="8"
                   label="I understand the risk of losing my password"
+                  value={1}
+                />
+              </FxRadioButton.Group>
+              <FxRadioButton.Group
+                value={metamaskOpen ? [1] : []}
+                onValueChange={(val) =>
+                  setMetamaskOpen(val && val[0] === 1 ? true : false)
+                }
+              >
+                <FxRadioButtonWithLabel
+                  paddingVertical="8"
+                  label="I already opened Metamask app before clicking Sign"
                   value={1}
                 />
               </FxRadioButton.Group>
@@ -273,7 +286,7 @@ export const LinkPasswordScreen = () => {
         ) : (
           <FxButton
             size="large"
-            disabled={!passwordInput || !iKnow}
+            disabled={!passwordInput || !iKnow || !metamaskOpen}
             onPress={
               provider
                 ? linking
