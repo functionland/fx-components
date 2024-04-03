@@ -19,7 +19,7 @@ import {
   Routes,
 } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { ActivityIndicator, Share } from 'react-native';
+import { ActivityIndicator, Share, Alert } from 'react-native';
 import { Helper } from '../../utils';
 import {
   bloxDeleteFulaConfig,
