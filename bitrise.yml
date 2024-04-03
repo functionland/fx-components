@@ -48,6 +48,10 @@ workflows:
         - module: app
         - project_location: "$BITRISE_SOURCE_DIR/apps/box/android"
     - deploy-to-bitrise-io@2: {}
+    envs:
+    - opts:
+        is_expand: false
+      PLATFORM: android
   FxBlox iOS:
     description: |
       Installs dependencies.
@@ -255,6 +259,10 @@ workflows:
         - package_name: land.fx.blox
         - track: production
         - service_account_json_key_path: "$BITRISEIO_GooglePlay_API_JSON_URL"
+    envs:
+    - opts:
+        is_expand: false
+      PLATFORM: android
   FxBlox_IOS_Deploy:
     description: |
       Installs dependencies.
@@ -276,10 +284,10 @@ workflows:
                         asdf install ruby $RUBY_VERSION
                         asdf global ruby $RUBY_VERSION
     - activate-ssh-key@4: {}
-    - git-clone@6: {}
+    - git-clone@8.2: {}
     - nvm@1:
         inputs:
-        - node_version: '16'
+        - node_version: '20'
     - yarn@0:
         inputs:
         - command: install
@@ -294,11 +302,11 @@ workflows:
     - get-npm-package-version@1:
         inputs:
         - package_json_path: "$BITRISE_SOURCE_DIR/apps/box/package.json"
-    - set-xcode-build-number@1:
+    - set-xcode-build-number@2.0:
         inputs:
         - build_short_version_string: "$NPM_PACKAGE_VERSION"
         - plist_path: "$BITRISE_SOURCE_DIR/apps/box/ios/Box/info.plist"
-    - xcode-archive@5.0:
+    - xcode-archive@5:
         inputs:
         - scheme: Box
         - project_path: "$BITRISE_SOURCE_DIR/apps/box/ios/Box.xcworkspace"
@@ -314,12 +322,10 @@ workflows:
         - app_id: '6444862171'
         - team_name: 656TD8GM9B
         - bundle_id: land.fx.blox
+    envs:
+    - BITRISE_PROJECT_PATH: "./apps/box/ios/Box.xcworkspace"
+    - BITRISE_SCHEME: Box
 meta:
   bitrise.io:
     stack: osx-xcode-14.3.x-ventura
     machine_type_id: g2-m1.4core
-app:
-  envs:
-  - opts:
-      is_expand: false
-    PLATFORM: android

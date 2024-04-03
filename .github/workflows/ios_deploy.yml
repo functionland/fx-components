@@ -1,0 +1,51 @@
+name: FxBlox IOS Deploy
+
+on: 
+    workflow_dispatch:
+    release:
+      types: [published]
+
+jobs:
+  deploy-ios:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Activate correct Ruby version
+      run: |
+        echo "##[group]Activate correct Ruby version"
+        RUBY_VERSION=3.1.4
+        asdf install ruby $RUBY_VERSION
+        asdf global ruby $RUBY_VERSION
+        echo "##[endgroup]"
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+    - name: Yarn Install
+      run: yarn install
+    - name: Ensure Symlink
+      run: npm run ensure:symlink
+    - name: Cocoapods Install
+      run: |
+        cd ${{ github.workspace }}/apps/box/ios
+        pod install
+    - name: Get NPM Package Version
+      run: echo "NPM_PACKAGE_VERSION=$(node -p "require('${{ github.workspace }}/apps/box/package.json').version")" >> $GITHUB_ENV
+    - name: Set Xcode Build Number
+      run: /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $NPM_PACKAGE_VERSION" "${{ github.workspace }}/apps/box/ios/Box/info.plist"
+    - name: Xcode Archive & Export
+      run: |
+        xcodebuild -workspace ${{ github.workspace }}/apps/box/ios/Box.xcworkspace -scheme Box -configuration Release clean archive -archivePath ${{ github.workspace }}/build/Box.xcarchive
+        xcodebuild -exportArchive -archivePath ${{ github.workspace }}/build/Box.xcarchive -exportOptionsPlist exportOptions.plist -exportPath ${{ github.workspace }}/build
+      env:
+        DEVELOPER_TEAM: 656TD8GM9B
+        DISTRIBUTION_METHOD: app-store
+    - name: Deploy to Appstore
+      uses: yukiarrr/ios-build-action@v1.11.2
+      with:
+        project-path: ${{ github.workspace }}/apps/box/ios/Box.xcworkspace
+        p12-base64: ${{ secrets.P12_BASE64 }}
+        mobileprovision-base64: ${{ secrets.MOBILEPROVISION_BASE64 }}
+        team-id: 656TD8GM9B
+        certificate-password: ${{ secrets.CERTIFICATE_PASSWORD }}
+        code-signing-identity: "iOS Distribution"
