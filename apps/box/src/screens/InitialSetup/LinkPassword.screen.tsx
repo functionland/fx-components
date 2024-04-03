@@ -9,6 +9,7 @@ import {
   FxRadioButton,
   FxRadioButtonWithLabel,
   FxSafeAreaBox,
+  FxSpacer,
   FxText,
   FxTextInput,
   useToast,
@@ -33,6 +34,8 @@ export const LinkPasswordScreen = () => {
   const [linking, setLinking] = useState(false);
   const [signatureData, setSignatureData] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [manualSignature, setManualSignature] = useState(false);
+  const [mSig, setMSig] = useState('');
   const [setKeyChainValue, signiture, password] = useUserProfileStore(
     (state) => [state.setKeyChainValue, state.signiture, state.password]
   );
@@ -211,6 +214,17 @@ export const LinkPasswordScreen = () => {
             ) : (
               <ActivityIndicator />
             )}
+            {!linking && manualSignature ? (
+              <FxTextInput
+                caption="Signature"
+                autoFocus
+                secureTextEntry
+                value={mSig}
+                onChangeText={setMSig}
+              />
+            ) : (
+              <></>
+            )}
             <FxBox>
               <FxText
                 variant="bodyMediumRegular"
@@ -284,19 +298,48 @@ export const LinkPasswordScreen = () => {
             </FxButton>
           </FxBox>
         ) : (
-          <FxButton
-            size="large"
-            disabled={!passwordInput || !iKnow || !metamaskOpen}
-            onPress={
-              provider
-                ? linking
-                  ? disconnectWallet
-                  : handleLinkPassword
-                : () => {}
-            }
-          >
-            {provider ? linking ? 'Cancel' : 'Sign' : <ActivityIndicator />}
-          </FxButton>
+          <FxBox>
+            <FxButton
+              size="large"
+              disabled={!passwordInput || !iKnow || !metamaskOpen}
+              onPress={
+                provider
+                  ? linking
+                    ? disconnectWallet
+                    : handleLinkPassword
+                  : () => {}
+              }
+            >
+              {provider ? (
+                linking ? (
+                  'Cancel'
+                ) : (
+                  'Sign with MetaMask'
+                )
+              ) : (
+                <ActivityIndicator />
+              )}
+            </FxButton>
+            <FxSpacer height={10} />
+            <FxButton
+              size="large"
+              disabled={!passwordInput || !iKnow}
+              onPress={() => {
+                if (manualSignature && mSig) {
+                  setSignatureData(mSig);
+                } else {
+                  setManualSignature(true);
+                }
+              }}
+              variant="inverted"
+            >
+              {manualSignature
+                ? mSig !== ''
+                  ? 'Submit'
+                  : 'Sign Manually'
+                : 'Sign Manually'}
+            </FxButton>
+          </FxBox>
         )}
       </FxBox>
     </FxSafeAreaBox>

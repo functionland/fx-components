@@ -192,7 +192,22 @@ export const SetupCompleteScreen = ({ route }: Props) => {
     // Cleanup function to clear the interval when the component unmounts or conditions change
     return () => clearInterval(interval);
   }, [internetStatus, setupStatus]);
-  
+
+  const checkHotspotConnection = async () => {
+    try {
+      // Attempt to reach the specified URL
+      await axios.get('http://10.42.0.1:3500/properties');
+      // If successful, navigate back
+      navigation.pop();
+    } catch (error) {
+      // If the request fails, show a toast or a modal with the message
+      queueToast({
+        type: 'error',
+        message:
+          'It seems you are no longer connected to Hotspot, check if FxBlox hotspot is still available, if not, blox is already connected to internet and you can go to Home',
+      });
+    }
+  };
 
   const checkInternetStatus = async () => {
     try {
@@ -469,22 +484,28 @@ export const SetupCompleteScreen = ({ route }: Props) => {
               lineHeight={20}
             >
               If Blox is flashing 'Cyan', it probably means you have entered the
-              wrong apssword for your wifi. Connect to 'FxBlox' Wifi again and
+              wrong password for your wifi. Connect to 'FxBlox' Wifi again and
               retry.
             </FxText>
+            <FxButton
+              marginBottom="16"
+              size="large"
+              onPress={checkHotspotConnection} // Updated to use the new function
+            >
+              Back
+            </FxButton>
+            <FxSpacer height={15} />
             <FxButton
               variant="inverted"
               marginBottom="16"
               size="large"
-              onPress={() => {
-                navigation.pop();
-              }}
+              onPress={handleHome}
             >
-              Back
+              Home
             </FxButton>
           </>
         )}
-        {bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED' &&
+        {currentBloxPeerId && bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED' &&
           internetStatus === 'CONNECTED' &&
           setupStatus === 'NOTCOMPLETED' && (
             <FxButton size="large" onPress={handleReconnectBlox}>

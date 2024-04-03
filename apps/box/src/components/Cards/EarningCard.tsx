@@ -47,7 +47,7 @@ export const EarningCard = ({
       delayLongPress={200}
     >
       <FxBox flexDirection="row" justifyContent="space-between">
-        <FxCard.Title marginBottom="8">Earning</FxCard.Title>
+        <FxCard.Title marginBottom="8">Rewards</FxCard.Title>
         {loading ? (
           <ActivityIndicator />
         ) : (
