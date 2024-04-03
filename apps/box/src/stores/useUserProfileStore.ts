@@ -5,7 +5,6 @@ import { blockchain, fula } from '@functionland/react-native-fula';
 import { TAccount, TBloxFreeSpace } from '../models';
 import { KeyChain } from '../utils';
 import { useBloxsStore } from './useBloxsStore';
-import { firebase } from '@react-native-firebase/crashlytics';
 import NetInfo from '@react-native-community/netinfo';
 
 type BloxConectionStatus = 'CONNECTED' | 'CHECKING' | 'DISCONNECTED';
@@ -381,9 +380,6 @@ const createUserProfileSlice: StateCreator<
         }
       } catch (error) {
         console.log(error);
-        firebase
-          .crashlytics()
-          .recordError(error, `UserProfileStore migrate:version(${version})`);
       }
       return persistedState;
     },

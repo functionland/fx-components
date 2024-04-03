@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
-import { firebase } from '@react-native-firebase/crashlytics';
 import moment from 'moment';
 import { generateUniqueId } from '../utils/helper';
 import { useSettingsStore } from '../stores';
@@ -14,7 +13,7 @@ export function useLogger() {
 
     useEffect(() => {
         if (debugMode)
-            firebase.crashlytics().setUserId(debugMode.uniqueId)
+            
         if (debugMode && new Date(debugMode.endDate) >= new Date()) {
             setIsDebugModeEnable(true)
         }
@@ -26,21 +25,16 @@ export function useLogger() {
     const log = useCallback((...data: any[]) => {
         if (!__DEV__) {
             if (debugMode && new Date(debugMode.endDate) >= new Date()) {
-                // Send the log message to the Firebase Crashlytics service.
-                firebase.crashlytics().log(JSON.stringify(data, null, 4));
+                
             }
         }
-    }, [debugMode, firebase])
+    }, [debugMode])
     const error = useCallback((...data: any[]) => {
         if (!__DEV__) {
             if (debugMode && new Date(debugMode.endDate) >= new Date()) {
-                // Send the error message to the Firebase Crashlytics service.
-                //firebase.crashlytics().log(JSON.stringify(data, null, 4));
-                // Record the error in the Firebase Crashlytics service.
-                firebase.crashlytics().recordError(new Error(JSON.stringify(data, null, 4)));
             }
         }
-    }, [debugMode, firebase])
+    }, [debugMode])
     const toggleDebugMode = () => {
         if (debugMode && new Date(debugMode.endDate.toString()) > new Date()) {
             //Disable debug mode

@@ -9,7 +9,6 @@ import {
   TBloxProperty,
 } from '../models';
 import { blockchain, fula, fxblox } from '@functionland/react-native-fula';
-import { firebase } from '@react-native-firebase/crashlytics';
 import { BloxFreeSpaceResponse } from '@functionland/react-native-fula/lib/typescript/types/blockchain';
 
 import {
@@ -322,9 +321,7 @@ const createModeSlice: StateCreator<
         }
       } catch (error) {
         console.log(error);
-        firebase
-          .crashlytics()
-          .recordError(error, `BloxsModelSlice migrate:version(${version})`);
+        
       }
       return bloxsModel;
     },

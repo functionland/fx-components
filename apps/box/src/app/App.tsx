@@ -29,7 +29,6 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSettingsStore } from '../stores';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
-import { firebase } from '@react-native-firebase/crashlytics';
 import { useLogger } from '../hooks';
 import { COMM_SERVER_URL, INFURA_API_KEY } from '../utils/walletConnectConifg';
 import { copyToClipboard } from '../utils/clipboard';
@@ -176,15 +175,6 @@ const AppContent = () => {
       );
       if (!nextAppState.match(/active/)) {
         console.log('App has come to the inactive/background!', debugMode);
-        if (!__DEV__ && isDebugModeEnable) {
-          firebase.crashlytics().setUserId(debugMode.uniqueId);
-          firebase
-            .crashlytics()
-            .recordError(
-              new Error('On App Close Error Log'),
-              'Self Generated Error'
-            );
-        }
       }
       appState.current = nextAppState;
     });
@@ -195,7 +185,6 @@ const AppContent = () => {
     };
     // return () => {
     //   if (!__DEV__ && isDebugModeEnable) {
-    //     firebase.crashlytics().recordError(new Error('On App Close Error Log'))
     //   }
     // }
   }, [isDebugModeEnable]);
