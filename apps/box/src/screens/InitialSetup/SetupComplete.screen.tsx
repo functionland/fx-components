@@ -436,13 +436,17 @@ export const SetupCompleteScreen = ({ route }: Props) => {
           setupStatus === 'NOTCOMPLETED' && (
             <>
               <FxButton
-                variant="inverted"
                 marginBottom="16"
                 size="large"
                 onPress={handleTryCheckInternet}
               >
                 Check internet connectivity
               </FxButton>
+              <FxSpacer height={10} />
+              <FxButton marginBottom="16" variant="inverted" size="large" onPress={handleHome}>
+                Home
+              </FxButton>
+              <FxSpacer height={10} />
               {isHeaderStatus200 && (
                 <FxButton
                   variant="inverted"

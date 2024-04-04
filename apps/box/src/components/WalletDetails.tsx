@@ -9,6 +9,7 @@ import {
   useToast,
   FxRefreshIcon,
   FxSafeAreaBox,
+  useFxTheme,
 } from '@functionland/component-library';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { copyToClipboard } from '../utils/clipboard';
@@ -63,6 +64,7 @@ export const WalletDetails = ({
   const { account, chainId } = useSDK();
   const accountOptionsSheetRef = useRef<FxBottomSheetModalMethods>(null);
   const { queueToast } = useToast();
+  const { colors } = useFxTheme();
 
   const checkFulaReadiness = useUserProfileStore(
     (state) => state.checkFulaReadiness
@@ -198,7 +200,7 @@ export const WalletDetails = ({
           ) : (
             onRefreshPress && (
               <FxRefreshIcon
-                color="white"
+                fill={colors.content3}
                 onPress={onRefreshPress}
                 style={{ position: 'absolute', right: 0 }}
               />
