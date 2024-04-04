@@ -292,6 +292,15 @@ const createUserProfileSlice: StateCreator<
         // attempt is now a parameter of attemptConnection
         set({ bloxConnectionStatus: 'CHECKING' });
         try {
+          console.log("NetInfo check");
+          const state = await NetInfo?.fetch();
+          if (NetInfo && (!state.isConnected || !state.isInternetReachable)) {
+            console.log('Internet is not connected, waiting for connection...');
+            // Optionally, you might want to handle the lack of internet connectivity accordingly
+            Promise.reject('internet is not connected');
+            return;
+          }
+          console.log("NetInfo check done");
           const { fulaIsReady } = get();
           if (!fulaIsReady) {
             console.log('Fula is not ready. Please wait...');
@@ -304,13 +313,6 @@ const createUserProfileSlice: StateCreator<
             'connected:',
             connected
           );
-          const state = await NetInfo.fetch();
-          if (!state.isConnected || !state.isInternetReachable) {
-            console.log('Internet is not connected, waiting for connection...');
-            // Optionally, you might want to handle the lack of internet connectivity accordingly
-            Promise.reject('internet is not connected');
-            return;
-          }
 
           if (connected) {
             set({ bloxConnectionStatus: 'CONNECTED' });

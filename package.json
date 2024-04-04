@@ -102,6 +102,7 @@
     "tslib": "^2.6.2",
     "viem": "1.21.4",
     "wagmi": "1.4.13",
+    "whatwg-fetch": "^3.6.20",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
