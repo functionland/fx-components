@@ -10,9 +10,11 @@ import {
   FxText,
   FxTextInput,
   useToast,
+  FxProgressBar,
 } from '@functionland/component-library';
 import { PoolCard } from '../../components/Cards/PoolCard';
 import { usePoolsStore } from '../../stores/usePoolsStore';
+import { useBloxsStore } from '../../stores/useBloxsStore';
 import MyLoader from '../../components/ContentLoader';
 import { useLogger } from '../../hooks';
 
@@ -42,12 +44,28 @@ export const PoolsScreen = () => {
     state.dirty,
   ]);
 
+  const [
+    checkChainSyncStatus,
+    isChainSynced,
+    syncProgress,
+  ] = useBloxsStore((state) => [
+    state.checkChainSyncStatus,
+    state.isChainSynced,
+    state.syncProgress,
+  ]);
+
   const onChangeSearch = (query) => setSearch(query ? query : '');
+
+  useEffect(() => {
+    checkChainSyncStatus(); // Start the synchronization check
+  }, []);
+  
 
   useEffect(() => {
     setIsError(false);
     reloading();
   }, [dirty, refreshing]);
+
 
   useEffect(() => {}, [enableInteraction]);
 
@@ -99,7 +117,7 @@ export const PoolsScreen = () => {
       await getPools();
       console.log('enableInteraction: ', enableInteraction);
       setAllowJoin(
-        pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
+        pools.filter((pool) => pool.joined || pool.requested).length === 0 && isChainSynced &&
           enableInteraction
       );
     } catch (e) {
@@ -152,12 +170,28 @@ export const PoolsScreen = () => {
       contentContainerStyle={styles.list}
       ListHeaderComponent={
         <FxBox>
-          <FxHeader
-            title="Pools"
-            marginBottom="16"
-            isList={isList}
-            setIsList={setIsList}
-          />
+          <FxBox flex={1}>
+            { syncProgress > 0 && syncProgress < 99  &&
+              <FxBox
+                flexDirection="row"
+                alignItems='center'
+              >
+                <FxText>Chain is Syncing: {syncProgress}% </FxText>
+                <FxProgressBar
+                  height={5}
+                  progress={syncProgress > 0 ? syncProgress : 0}
+                  flex={1}
+                  total={100}
+                ></FxProgressBar>
+              </FxBox>
+            }
+            <FxHeader
+              title="Pools"
+              marginBottom="16"
+              isList={isList}
+              setIsList={setIsList}
+            />
+          </FxBox>
           <FxBox
             flexDirection="row"
             alignItems="center"

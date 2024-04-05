@@ -45,7 +45,7 @@ PODS:
     - nanopb (< 2.30911.0, >= 2.30908.0)
     - PromisesSwift (~> 2.1)
   - fmt (6.2.1)
-  - Fula (1.54.8)
+  - Fula (1.54.9)
   - glog (0.3.5)
   - GoogleDataTransport (9.4.1):
     - GoogleUtilities/Environment (~> 7.7)
@@ -386,7 +386,7 @@ PODS:
     - react-native-config/App (= 1.5.1)
   - react-native-config/App (1.5.1):
     - React-Core
-  - react-native-fula (1.54.15):
+  - react-native-fula (1.54.17):
     - CryptoSwift (~> 1.7.1)
     - Fula (~> 1.54.8)
     - RCT-Folly (= 2021.07.22.00)
@@ -816,7 +816,7 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 42d6ead4605d6eafb3b6683674e80e18eb6f2c35
   FirebaseSessions: f06853e30f99fe42aa511014d7ee6c8c319f08a3
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  Fula: 41a6d27a53ec7d6ee989ae94d5a7e7db3e4d760b
+  Fula: dfc7d1f91525d5d6801d5cf2ca9b874594b1a6e1
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   GoogleDataTransport: 6c09b596d841063d76d4288cc2d2f42cc36e1e2a
   GoogleUtilities: d053d902a8edaa9904e1bd00c37535385b8ed152
@@ -844,7 +844,7 @@ SPEC CHECKSUMS:
   react-native-ble-manager: 09724bad4d06b86a85e0cd7bd97196fecca15e9a
   react-native-compat: d411b454141009ceca781cd1ca44132cace77c45
   react-native-config: 86038147314e2e6d10ea9972022aa171e6b1d4d8
-  react-native-fula: a4b75ef20b4f831bd0228314fbe919a620e3560f
+  react-native-fula: 45dfbf312f29a19cd6f7069434df21bc41539238
   react-native-get-random-values: 384787fd76976f5aec9465aff6fa9e9129af1e74
   react-native-netinfo: 8a7fd3f7130ef4ad2fb4276d5c9f8d3f28d2df3d
   react-native-pager-view: e26d35e382d86950c936f8917e3beb9188115ccc
