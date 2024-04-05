@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { RefreshControl, StyleSheet } from 'react-native';
+import { RefreshControl, StyleSheet, Alert } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import {
   FxBox,
@@ -81,8 +81,15 @@ export const PoolsScreen = () => {
 
   const wrappedJoinPool = async (poolID: number) => {
     try {
-      setRefreshing(true);
-      await joinPool(poolID);
+      if (syncProgress==0 || syncProgress > 90){
+        setRefreshing(true);
+        await joinPool(poolID);
+      } else {
+        Alert.alert(
+          "Please wait",
+          "chain needs to complete the sync before you can join a pool"
+          )
+      }
     } catch (e) {
       handlePoolActionErrors('Error joining pool', e.toString());
     } finally {
@@ -176,7 +183,7 @@ export const PoolsScreen = () => {
                 flexDirection="row"
                 alignItems='center'
               >
-                <FxText>Chain is Syncing: {syncProgress}% </FxText>
+                <FxText>Chain is Syncing: {Math.floor(syncProgress)}%</FxText>
                 <FxProgressBar
                   height={5}
                   progress={syncProgress > 0 ? syncProgress : 0}
