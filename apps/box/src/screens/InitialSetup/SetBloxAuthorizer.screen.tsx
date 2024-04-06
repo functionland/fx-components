@@ -44,6 +44,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   const logger = useLogger();
   const { isManualSetup = false } = route.params || {};
   const [showSkipButton, setShowSkipButton] = useState(false);
+  const [showFormatDiskButton, setShowFormatDiskButton] = useState(false);
 
   const [setAppPeerId, signiture, password] = useUserProfileStore((state) => [
     state.setAppPeerId,
@@ -140,6 +141,15 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       interval = null;
     };
   }, [data_bloxProperties, error_bloxProperties]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowFormatDiskButton(true);
+    }, 10000); // 10000 milliseconds = 10 seconds
+
+    // Cleanup function to clear the timer
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array means this effect runs only once on mount
 
   //echange config with blox when peerId is ready
   useEffect(() => {
@@ -295,6 +305,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   };
   const handleFormatDisk = () => {
     refetch_bloxFormatDisk({ withLoading: true });
+    goBack();
   };
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
@@ -419,15 +430,15 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
             onRefreshPress={refetch_bloxProperties}
             loading={loading_bloxProperties}
           >
-            {true ||
-              (data_bloxProperties?.data?.bloxFreeSpace?.size === 0 && (
-                <FxButton
-                  onPress={loading_bloxFormatDisk ? null : handleFormatDisk}
-                >
-                  {loading_bloxFormatDisk ? <ActivityIndicator /> : null}
-                  Format Disk
-                </FxButton>
-              ))}
+            {(data_bloxProperties?.data?.bloxFreeSpace?.size === 0 ||
+              showFormatDiskButton) && (
+              <FxButton
+                onPress={loading_bloxFormatDisk ? null : handleFormatDisk}
+              >
+                {loading_bloxFormatDisk ? <ActivityIndicator /> : null}
+                Format Disk
+              </FxButton>
+            )}
           </DeviceCard>
         )}
       </FxKeyboardAwareScrollView>
