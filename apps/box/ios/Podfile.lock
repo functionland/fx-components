@@ -386,9 +386,9 @@ PODS:
     - react-native-config/App (= 1.5.1)
   - react-native-config/App (1.5.1):
     - React-Core
-  - react-native-fula (1.54.17):
+  - react-native-fula (1.54.20):
     - CryptoSwift (~> 1.7.1)
-    - Fula (~> 1.54.8)
+    - Fula (~> 1.54.10)
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
     - Wnfs (= 1.1.1)
