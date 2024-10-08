@@ -18,17 +18,37 @@ import { fxblox } from '@functionland/react-native-fula';
 import { useLogger } from '../../hooks';
 import { ActivityIndicator } from 'react-native';
 import { copyToClipboard } from '../../utils/clipboard';
+import { usePluginsStore } from '../../stores/usePluginsStore';
 
 export const BloxLogsScreen = () => {
   const logger = useLogger();
   const [selectedValue, setSelectedValue] = React.useState<string>('');
   const [log, setLog] = React.useState<string>('');
-  const [tailCount, setTailCount] = React.useState<string>('30');
+  const [tailCount, setTailCount] = React.useState<string>('50');
   const [loadingLogs, setLoadingLogs] = React.useState<boolean>(false);
   const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
   const [showOtherInput, setShowOtherInput] = React.useState<boolean>(false);
   const { queueToast } = useToast();
   const { colors } = useFxTheme();
+  const [activePlugins, setActivePlugins] = React.useState<string[]>([]);
+  const { listActivePlugins } = usePluginsStore();
+  const fetchActivePlugins = React.useCallback(async () => {
+    try {
+      const result = await listActivePlugins();
+      if (result.success) {
+        setActivePlugins(result.msg);
+      } else {
+        console.error('Failed to fetch active plugins:', result.message);
+      }
+    } catch (error) {
+      console.error('Error fetching active plugins:', error);
+    }
+  }, [listActivePlugins]);
+
+  React.useEffect(() => {
+    fetchActivePlugins();
+  }, [fetchActivePlugins]);
+
   const sanitizeLogData = (logString: string) => {
     // Regular expression to match non-printable characters except newlines
     // This regex matches characters in the control characters range (0x00-0x1F and 0x7F-0x9F) except for newline (0x0A)
@@ -114,8 +134,14 @@ export const BloxLogsScreen = () => {
             { label: 'Select container name', value: '' },
             { label: 'Go-Fula', value: 'fula_go' },
             { label: 'Node', value: 'fula_node' },
+            { label: 'IPFS', value: 'ipfs_host' },
+            { label: 'IPFS Cluster', value: 'ipfs_cluster' },
             { label: 'Fx', value: 'fula_fxsupport' },
             { label: 'Service Logs', value: 'MainService' },
+            ...activePlugins.map((plugin) => ({
+              label: plugin,
+              value: plugin,
+            })),
             { label: 'Other', value: 'Other' },
           ]}
           title="Container Name"

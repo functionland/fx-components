@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, TextInput, Linking } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  Linking,
+  Alert,
+} from 'react-native';
 import {
   FxBox,
   FxCard,
@@ -65,6 +71,42 @@ export const PluginScreen = () => {
     usePluginsStore();
   const isInstalled = activePlugins.includes(name);
   const { queueToast } = useToast();
+
+  const handleReboot = async () => {
+    try {
+      // Call the reboot method here
+      // For example: await fxblox.reboot();
+      queueToast({
+        type: 'success',
+        title: 'Reboot Initiated',
+        message: 'Your Blox is rebooting. Please wait...',
+      });
+    } catch (error) {
+      queueToast({
+        type: 'error',
+        title: 'Reboot Failed',
+        message: error.message || 'Failed to reboot Blox.',
+      });
+    }
+  };
+
+  const showRebootDialog = () => {
+    Alert.alert(
+      'Reboot Required',
+      'To complete the installation, your Blox needs to be rebooted. Would you like to reboot now?',
+      [
+        {
+          text: 'Reboot Now',
+          onPress: handleReboot,
+          style: 'destructive',
+        },
+        {
+          text: 'Reboot Later',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
 
   useEffect(() => {
     const fetchPluginInfo = async () => {
@@ -143,6 +185,7 @@ export const PluginScreen = () => {
           title: 'Success',
           message: 'Plugin installed successfully',
         });
+        showRebootDialog();
       } else {
         queueToast({
           type: 'error',
