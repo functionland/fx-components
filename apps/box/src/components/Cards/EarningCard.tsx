@@ -17,7 +17,6 @@ import { blockchain } from '@functionland/react-native-fula';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { copyFromClipboard } from '../../utils/clipboard';
-import { FxBoxProps } from '../../../../../dist/libs/component-library/src/lib/box/box';
 
 type EarningCardProps = React.ComponentProps<typeof FxBox> & {
   data: { totalFula: string };

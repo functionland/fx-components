@@ -83,3 +83,12 @@ export const CircleFilledIcon = (props: FxSvgProps) => (
     <Circle cx="10" cy="9.99996" r="8.33333" />
   </FxSvg>
 );
+
+export const DynamicIcon = ({
+  iconPath,
+  ...props
+}: FxSvgProps & { iconPath: string }) => (
+  <FxSvg width={24} height={24} viewBox="0 0 20 20" {...props}>
+    <Path d={iconPath} fillRule="evenodd" clipRule="evenodd" />
+  </FxSvg>
+);

@@ -10,6 +10,7 @@ export enum Routes {
   InitialSetup = 'InitialSetup',
   MainTabs = 'MainTabs',
   Hub = 'Hub',
+  Plugin = 'Plugin',
 
   // Initial Setup
   Welcome = 'Welcome',
@@ -26,6 +27,7 @@ export enum Routes {
   BloxTab = 'BloxTab',
   UsersTab = 'UsersTab',
   HubTab = 'HubTab',
+  PluginTab = 'PluginTab',
   DevicesTab = 'DevicesTab',
   SettingsTab = 'SettingsTab',
 
@@ -58,12 +60,14 @@ export type RootStackParamList = {
   [Routes.InitialSetup]: undefined;
   [Routes.MainTabs]: NavigatorScreenParams<MainTabsParamList>;
   [Routes.Hub]: undefined;
+  [Routes.Plugin]: undefined;
 };
 
 export type MainTabsParamList = {
   [Routes.BloxTab]: undefined;
   [Routes.UsersTab]: undefined;
   [Routes.HubTab]: undefined;
+  [Routes.PluginTab]: { name: string };
   [Routes.DevicesTab]: undefined;
   [Routes.SettingsTab]: NavigatorScreenParams<SettingsStackParamList>;
   [Routes.InitialSetup]: undefined;

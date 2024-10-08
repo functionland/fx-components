@@ -7,7 +7,7 @@ import {
 } from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BloxScreen } from '../screens/Blox/Blox.screen';
-import { HubScreen } from '../screens/Hub.screen';
+import { PluginScreen } from '../screens/Plugin.screen';
 import { DevicesScreen } from '../screens/Devices.screen';
 import { UsersScreen } from '../screens/Users/Users.screen';
 import {
@@ -142,7 +142,21 @@ export const MainTabsNavigator = () => {
             tabBarLabel: 'Users',
           }}
         />
-
+        <MainTabs.Screen
+          name={Routes.PluginTab}
+          component={PluginScreen}
+          options={{
+            // eslint-disable-next-line react/no-unstable-nested-components
+            tabBarIcon: ({ color }) => <FxArrowUpIcon fill={color} />,
+            tabBarLabel: '',
+          }}
+          listeners={() => ({
+            tabPress: (e) => {
+              e.preventDefault();
+              openGlobalBottomSheet();
+            },
+          })}
+        />
         <MainTabs.Screen
           name={Routes.DevicesTab}
           component={DevicesScreen}
