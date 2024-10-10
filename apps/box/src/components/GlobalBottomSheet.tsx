@@ -71,11 +71,7 @@ export const GlobalBottomSheet = React.forwardRef<
               />
               <FxText marginTop="4">{plugin.name}</FxText>
               {activePlugins.includes(plugin.name) && (
-                <FxText
-                  variant="bodyXSLight"
-                  color={theme.colors.greenBase}
-                  marginTop="0"
-                >
+                <FxText variant="bodyXSLight" color="greenBase" marginTop="0">
                   Installed
                 </FxText>
               )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -17,11 +17,18 @@ import {
   FxTrashIcon,
   FxPlusIcon,
   useToast,
+  FxRefreshIcon,
 } from '@functionland/component-library';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { usePluginsStore } from '../stores/usePluginsStore';
+import { copyToClipboard } from '../utils/clipboard';
+import { CopyIcon } from '../components/Icons';
 
-type PluginInfo = {
+type RouteParams = {
+  Plugin: { name: string };
+};
+
+interface PluginInfo {
   name: string;
   description: string;
   version: string;
@@ -38,16 +45,13 @@ type PluginInfo = {
     link: string;
   }>;
   socials: Array<{
-    telegram?: string;
-    twitter?: string;
-    email?: string;
-    website?: string;
-    discord?: string;
+    [key: string]: string;
   }>;
   instructions: Array<{
     order: number;
     description: string;
     url?: string;
+    paramId?: number;
   }>;
   requiredInputs: Array<{
     name: string;
@@ -55,103 +59,163 @@ type PluginInfo = {
     type: string;
     default: string;
   }>;
+  outputs: Array<{
+    name: string;
+    id: number;
+  }>;
   approved: boolean;
-};
+}
 
-type RouteParams = {
-  Plugin: { name?: string };
-};
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    padding: 8,
+    marginTop: 8,
+  },
+});
 
 export const PluginScreen = () => {
   const route = useRoute<RouteProp<RouteParams, 'Plugin'>>();
   const name = route.params?.name || '';
   const [pluginInfo, setPluginInfo] = useState<PluginInfo | null>(null);
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
-  const { activePlugins, installPlugin, uninstallPlugin, listActivePlugins } =
-    usePluginsStore();
+  const [outputValues, setOutputValues] = useState<Record<string, string>>({});
+  const {
+    activePlugins,
+    installPlugin,
+    uninstallPlugin,
+    listActivePlugins,
+    updatePlugin,
+    getInstallOutput,
+    getInstallStatus,
+  } = usePluginsStore();
   const isInstalled = activePlugins.includes(name);
   const { queueToast } = useToast();
+  const [isInstalling, setIsInstalling] = useState(false);
+  const [isUninstalling, setIsUninstalling] = useState(false);
+  const [installStatus, setInstallStatus] = useState('');
 
-  const handleReboot = async () => {
+  const fetchPluginInfo = useCallback(async () => {
+    if (!name) {
+      setPluginInfo(null);
+      return;
+    }
     try {
-      // Call the reboot method here
-      // For example: await fxblox.reboot();
-      queueToast({
-        type: 'success',
-        title: 'Reboot Initiated',
-        message: 'Your Blox is rebooting. Please wait...',
+      const response = await fetch(
+        `https://raw.githubusercontent.com/functionland/fula-ota/refs/heads/main/docker/fxsupport/linux/plugins/${name}/info.json`
+      );
+      const data = await response.json();
+      setPluginInfo(data);
+      // Initialize input values with default values
+      const initialInputs: Record<string, string> = {};
+      data.requiredInputs.forEach((input) => {
+        initialInputs[input.name] = input.default || '';
       });
+      setInputValues(initialInputs);
     } catch (error) {
+      console.error('Error fetching plugin info:', error);
+      setPluginInfo(null);
       queueToast({
         type: 'error',
-        title: 'Reboot Failed',
-        message: error.message || 'Failed to reboot Blox.',
+        title: 'Error',
+        message: 'Failed to fetch plugin information',
       });
     }
-  };
-
-  const showRebootDialog = () => {
-    Alert.alert(
-      'Reboot Required',
-      'To complete the installation, your Blox needs to be rebooted. Would you like to reboot now?',
-      [
-        {
-          text: 'Reboot Now',
-          onPress: handleReboot,
-          style: 'destructive',
-        },
-        {
-          text: 'Reboot Later',
-          style: 'cancel',
-        },
-      ]
-    );
-  };
+  }, [name, queueToast]);
 
   useEffect(() => {
-    const fetchPluginInfo = async () => {
-      if (!name) {
-        setPluginInfo(null);
-        return;
-      }
-      try {
-        const response = await fetch(
-          `https://raw.githubusercontent.com/functionland/fula-ota/refs/heads/main/docker/fxsupport/linux/plugins/${name}/info.json`
-        );
-        const data = await response.json();
-        setPluginInfo(data);
-        // Initialize input values with default values
-        const initialInputs: Record<string, string> = {};
-        data.requiredInputs.forEach((input) => {
-          initialInputs[input.name] = input.default || '';
-        });
-        setInputValues(initialInputs);
-      } catch (error) {
-        console.error('Error fetching plugin info:', error);
-        setPluginInfo(null);
-        queueToast({
-          type: 'error',
-          title: 'Error',
-          message: 'Failed to fetch plugin information',
-        });
-      }
-    };
-
     fetchPluginInfo();
     listActivePlugins();
-  }, [name, listActivePlugins, queueToast]);
+  }, [fetchPluginInfo, listActivePlugins]);
+
+  const fetchInstallOutput = useCallback(async () => {
+    if (!pluginInfo) return;
+    const outputParams = pluginInfo.outputs
+      .map((output) => output.name)
+      .join(',,,,');
+    const result = await getInstallOutput(name, outputParams);
+    if (result.success) {
+      try {
+        const parsedOutput = JSON.parse(result.message);
+        if (typeof parsedOutput === 'object' && parsedOutput !== null) {
+          setOutputValues(parsedOutput);
+        } else {
+          console.error('Unexpected output format:', parsedOutput);
+        }
+      } catch (error) {
+        console.error('Failed to parse install output:', error);
+      }
+    } else {
+      console.error('Failed to fetch install output:', result.message);
+    }
+  }, [getInstallOutput, name, pluginInfo]);
+
+  const fetchInstallStatus = useCallback(async () => {
+    if (!name) return;
+    const result = await getInstallStatus(name);
+    if (result.success) {
+      setInstallStatus(result.message);
+      if (result.message === 'Installed' || result.message === 'Uninstalled') {
+        setIsInstalling(false);
+        setIsUninstalling(false);
+        await listActivePlugins();
+      } else if (result.message === '') {
+        setIsInstalling(false);
+        setIsUninstalling(false);
+        setInstallStatus('');
+        queueToast({
+          type: 'error',
+          title: 'Installation Failed',
+          message: 'The installation process has failed.',
+        });
+      } else {
+        setIsInstalling(true);
+      }
+    } else {
+      console.error('Failed to fetch install status:', result.message);
+    }
+  }, [getInstallStatus, name, listActivePlugins, queueToast]);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    if (isInstalling || isUninstalling) {
+      intervalId = setInterval(() => {
+        fetchInstallStatus();
+        if (isInstalling) {
+          fetchInstallOutput();
+        }
+      }, 5000); // Check every 5 seconds
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isInstalling, isUninstalling, fetchInstallStatus, fetchInstallOutput]);
 
   const handleInstallUninstall = async () => {
     if (isInstalled) {
+      setIsUninstalling(true);
+      setInstallStatus('Uninstalling');
       const result = await uninstallPlugin(name);
       if (result.success) {
-        await listActivePlugins();
+        setInstallStatus('Uninstalled');
+        setTimeout(() => {
+          setIsUninstalling(false);
+          listActivePlugins();
+          setInstallStatus('');
+        }, 300000); // 5 minutes timeout
         queueToast({
           type: 'success',
           title: 'Success',
-          message: 'Plugin uninstalled successfully',
+          message: 'Plugin uninstallation initiated',
         });
       } else {
+        setIsUninstalling(false);
+        setInstallStatus('');
         queueToast({
           type: 'error',
           title: 'Uninstall Error',
@@ -174,19 +238,21 @@ export const PluginScreen = () => {
         return;
       }
 
+      setIsInstalling(true);
+      setInstallStatus('Installing');
       const params = Object.entries(inputValues)
         .map(([key, value]) => `${key}====${value}`)
         .join(',,,,');
       const result = await installPlugin(name, params);
       if (result.success) {
-        await listActivePlugins();
         queueToast({
           type: 'success',
           title: 'Success',
-          message: 'Plugin installed successfully',
+          message: 'Plugin installation initiated',
         });
-        showRebootDialog();
       } else {
+        setIsInstalling(false);
+        setInstallStatus('');
         queueToast({
           type: 'error',
           title: 'Install Error',
@@ -194,6 +260,51 @@ export const PluginScreen = () => {
         });
       }
     }
+  };
+
+  const handleUpdate = async () => {
+    Alert.alert(
+      'Update Plugin',
+      `Are you sure you want to update the ${name} plugin?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Update',
+          onPress: async () => {
+            try {
+              const result = await updatePlugin(name);
+              if (result.success) {
+                setInstallStatus('Updating');
+                queueToast({
+                  type: 'success',
+                  title: 'Success',
+                  message: 'Plugin update initiated',
+                });
+              } else {
+                queueToast({
+                  type: 'error',
+                  title: 'Update Error',
+                  message: result.message,
+                });
+              }
+            } catch (error) {
+              queueToast({
+                type: 'error',
+                title: 'Update Error',
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : 'An unknown error occurred',
+              });
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const openLink = (url: string) => {
@@ -295,17 +406,49 @@ export const PluginScreen = () => {
           <FxText variant="h400">Instructions</FxText>
           {pluginInfo.instructions
             .sort((a, b) => a.order - b.order)
-            .map((instruction, index) => (
-              <FxBox key={index} marginBottom="16">
+            .map((instruction) => (
+              <FxBox key={`instruction-${instruction.order}`} marginBottom="16">
                 <FxText variant="bodyMediumRegular">{`${instruction.order}. ${instruction.description}`}</FxText>
-                {instruction.url && (
+                {instruction?.url && (
                   <FxButton
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     onPress={() => openLink(instruction.url!)}
                     variant="inverted"
                     marginTop="4"
                   >
                     Open
+                  </FxButton>
+                )}
+                {Boolean(
+                  instruction.paramId &&
+                    outputValues[
+                      pluginInfo.outputs.find(
+                        (o) => o.id === instruction.paramId
+                      )?.name ?? ''
+                    ]
+                ) && (
+                  <FxButton
+                    onPress={() =>
+                      copyToClipboard(
+                        outputValues[
+                          pluginInfo.outputs.find(
+                            (o) => o.id === instruction.paramId
+                          )?.name ?? ''
+                        ] || ''
+                      )
+                    }
+                    iconLeft={<CopyIcon />}
+                    variant="inverted"
+                    marginTop="4"
+                  >
+                    {`${pluginInfo.outputs.find(
+                      (o) => o.id === instruction.paramId
+                    )?.name}: ${
+                      outputValues[
+                        pluginInfo.outputs.find(
+                          (o) => o.id === instruction.paramId
+                        )?.name ?? ''
+                      ] || ''
+                    }`}
                   </FxButton>
                 )}
               </FxBox>
@@ -335,29 +478,48 @@ export const PluginScreen = () => {
           )}
 
           <FxSpacer marginTop="24" />
-          <FxButton
-            onPress={handleInstallUninstall}
-            flexWrap="wrap"
-            paddingHorizontal="16"
-            iconLeft={isInstalled ? <FxTrashIcon /> : <FxPlusIcon />}
-          >
-            {isInstalled ? 'Uninstall' : 'Install'}
-          </FxButton>
+          {installStatus && (
+            <FxBox marginTop="16">
+              <FxText variant="bodySmallRegular">
+                Status: {installStatus}
+              </FxText>
+            </FxBox>
+          )}
+          <FxBox flexDirection="row" justifyContent="space-between">
+            <FxButton
+              onPress={handleInstallUninstall}
+              flexWrap="wrap"
+              paddingHorizontal="16"
+              iconLeft={isInstalled ? <FxTrashIcon /> : <FxPlusIcon />}
+              disabled={
+                isInstalling ||
+                isUninstalling ||
+                installStatus === 'Installing' ||
+                installStatus === 'Uninstalling'
+              }
+            >
+              {isInstalled ? 'Uninstall' : 'Install'}
+              {installStatus && ` (${installStatus})`}
+            </FxButton>
+            {isInstalled && (
+              <FxButton
+                onPress={handleUpdate}
+                flexWrap="wrap"
+                paddingHorizontal="16"
+                iconLeft={<FxRefreshIcon />}
+                disabled={
+                  isInstalling ||
+                  isUninstalling ||
+                  installStatus === 'Installing' ||
+                  installStatus === 'Uninstalling'
+                }
+              >
+                Update
+              </FxButton>
+            )}
+          </FxBox>
         </FxCard>
       </ScrollView>
     </FxSafeAreaBox>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    padding: 8,
-    marginTop: 8,
-  },
-});

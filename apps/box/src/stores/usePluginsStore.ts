@@ -23,6 +23,12 @@ interface PluginsActionSlice {
     params: string
   ) => Promise<OperationResult>;
   uninstallPlugin: (pluginName: string) => Promise<OperationResult>;
+  getInstallStatus: (pluginName: string) => Promise<OperationResult>;
+  getInstallOutput: (
+    pluginName: string,
+    params: string
+  ) => Promise<OperationResult>;
+  updatePlugin: (pluginName: string) => Promise<OperationResult>;
   reset: () => void;
 }
 
@@ -142,6 +148,64 @@ const createPluginsModelSlice: StateCreator<
         return {
           success: false,
           message: `Error uninstalling plugin: ${errorMessage}`,
+        };
+      }
+    },
+    getInstallStatus: async (pluginName: string): Promise<OperationResult> => {
+      try {
+        const result = await fxblox.getInstallStatus(pluginName);
+        if (result.status) {
+          return { success: true, message: result.msg };
+        } else {
+          return { success: false, message: result.msg };
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        return {
+          success: false,
+          message: `Error getting install status: ${errorMessage}`,
+        };
+      }
+    },
+
+    getInstallOutput: async (
+      pluginName: string,
+      params: string
+    ): Promise<OperationResult> => {
+      try {
+        const result = await fxblox.getInstallOutput(pluginName, params);
+        if (result.status) {
+          return { success: true, message: JSON.stringify(result.msg) };
+        } else {
+          return { success: false, message: JSON.stringify(result.msg) };
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        return {
+          success: false,
+          message: `Error getting install output: ${errorMessage}`,
+        };
+      }
+    },
+    updatePlugin: async (pluginName: string): Promise<OperationResult> => {
+      try {
+        const result = await fxblox.updatePlugin(pluginName);
+        if (result.status) {
+          // Optionally, you can update the store's state here if needed
+          // For example, you might want to refresh the list of active plugins
+          await get().listActivePlugins();
+          return { success: true, message: result.msg };
+        } else {
+          return { success: false, message: result.msg };
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        return {
+          success: false,
+          message: `Error updating plugin: ${errorMessage}`,
         };
       }
     },
