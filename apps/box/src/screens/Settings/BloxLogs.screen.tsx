@@ -30,24 +30,11 @@ export const BloxLogsScreen = () => {
   const [showOtherInput, setShowOtherInput] = React.useState<boolean>(false);
   const { queueToast } = useToast();
   const { colors } = useFxTheme();
-  const [activePlugins, setActivePlugins] = React.useState<string[]>([]);
-  const { listActivePlugins } = usePluginsStore();
-  const fetchActivePlugins = React.useCallback(async () => {
-    try {
-      const result = await listActivePlugins();
-      if (result.success) {
-        setActivePlugins(result.msg);
-      } else {
-        console.error('Failed to fetch active plugins:', result.message);
-      }
-    } catch (error) {
-      console.error('Error fetching active plugins:', error);
-    }
-  }, [listActivePlugins]);
+  const { listActivePlugins, activePlugins } = usePluginsStore();
 
   React.useEffect(() => {
-    fetchActivePlugins();
-  }, [fetchActivePlugins]);
+    listActivePlugins();
+  }, [listActivePlugins]);
 
   const sanitizeLogData = (logString: string) => {
     // Regular expression to match non-printable characters except newlines
@@ -138,10 +125,12 @@ export const BloxLogsScreen = () => {
             { label: 'IPFS Cluster', value: 'ipfs_cluster' },
             { label: 'Fx', value: 'fula_fxsupport' },
             { label: 'Service Logs', value: 'MainService' },
-            ...activePlugins.map((plugin) => ({
-              label: plugin,
-              value: plugin,
-            })),
+            ...(Array.isArray(activePlugins)
+              ? activePlugins.map((plugin) => ({
+                  label: plugin,
+                  value: plugin,
+                }))
+              : []),
             { label: 'Other', value: 'Other' },
           ]}
           title="Container Name"

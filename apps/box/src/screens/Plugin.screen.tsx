@@ -100,6 +100,56 @@ export const PluginScreen = () => {
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [installStatus, setInstallStatus] = useState('');
 
+  const fetchInstallOutput = useCallback(async () => {
+    console.debug('fetchInstallOutput started', { pluginInfo, name });
+    if (!pluginInfo) return;
+    const outputParams = pluginInfo.outputs
+      .map((output) => output.name)
+      .join(',,,,');
+    const result = await getInstallOutput(name, outputParams);
+    console.debug(result);
+    if (result.success) {
+      try {
+        const parsedOutput = JSON.parse(result.message);
+        console.debug(parsedOutput);
+        if (typeof parsedOutput === 'object' && parsedOutput !== null) {
+          setOutputValues((prevOutputs) => {
+            console.debug('Setting output values:', parsedOutput);
+            return parsedOutput;
+          });
+        } else {
+          console.error('Unexpected output format:', parsedOutput);
+        }
+      } catch (error) {
+        console.error('Failed to parse install output:', error);
+      }
+    } else {
+      console.error('Failed to fetch install output:', result.message);
+    }
+  }, [getInstallOutput, name, pluginInfo]);
+
+  const fetchInstallStatus = useCallback(async () => {
+    console.log('fetchInstallStatus called');
+    if (!name) return;
+    const result = await getInstallStatus(name);
+    if (result.success) {
+      if (result.message !== installStatus) {
+        setInstallStatus(result.message);
+        if (result.message === 'Installed' || result.message === '') {
+          setIsInstalling(false);
+          setIsUninstalling(false);
+          await listActivePlugins();
+        } else if (result.message === 'No Status') {
+          // Do nothing for 'No Status'
+        } else {
+          setIsInstalling(true);
+        }
+      }
+    } else {
+      console.error('Failed to fetch install status:', result.message);
+    }
+  }, [getInstallStatus, name, listActivePlugins, installStatus]);
+
   const fetchPluginInfo = useCallback(async () => {
     if (!name) {
       setPluginInfo(null);
@@ -117,6 +167,17 @@ export const PluginScreen = () => {
         initialInputs[input.name] = input.default || '';
       });
       setInputValues(initialInputs);
+      // Check if the plugin is installed and has instructions with parameters
+      if (
+        isInstalled &&
+        data.instructions.some((instruction) => instruction.paramId)
+      ) {
+        console.debug('fetchInstallOutput called 3');
+        await fetchInstallOutput();
+      }
+
+      // Fetch install status
+      await fetchInstallStatus();
     } catch (error) {
       console.error('Error fetching plugin info:', error);
       setPluginInfo(null);
@@ -126,67 +187,21 @@ export const PluginScreen = () => {
         message: 'Failed to fetch plugin information',
       });
     }
-  }, [name, queueToast]);
+  }, [name, queueToast, isInstalled, fetchInstallStatus]);
 
   useEffect(() => {
     fetchPluginInfo();
     listActivePlugins();
-  }, [fetchPluginInfo, listActivePlugins]);
-
-  const fetchInstallOutput = useCallback(async () => {
-    if (!pluginInfo) return;
-    const outputParams = pluginInfo.outputs
-      .map((output) => output.name)
-      .join(',,,,');
-    const result = await getInstallOutput(name, outputParams);
-    if (result.success) {
-      try {
-        const parsedOutput = JSON.parse(result.message);
-        if (typeof parsedOutput === 'object' && parsedOutput !== null) {
-          setOutputValues(parsedOutput);
-        } else {
-          console.error('Unexpected output format:', parsedOutput);
-        }
-      } catch (error) {
-        console.error('Failed to parse install output:', error);
-      }
-    } else {
-      console.error('Failed to fetch install output:', result.message);
-    }
-  }, [getInstallOutput, name, pluginInfo]);
-
-  const fetchInstallStatus = useCallback(async () => {
-    if (!name) return;
-    const result = await getInstallStatus(name);
-    if (result.success) {
-      setInstallStatus(result.message);
-      if (result.message === 'Installed' || result.message === 'Uninstalled') {
-        setIsInstalling(false);
-        setIsUninstalling(false);
-        await listActivePlugins();
-      } else if (result.message === '') {
-        setIsInstalling(false);
-        setIsUninstalling(false);
-        setInstallStatus('');
-        queueToast({
-          type: 'error',
-          title: 'Installation Failed',
-          message: 'The installation process has failed.',
-        });
-      } else {
-        setIsInstalling(true);
-      }
-    } else {
-      console.error('Failed to fetch install status:', result.message);
-    }
-  }, [getInstallStatus, name, listActivePlugins, queueToast]);
+  }, [name, listActivePlugins]);
 
   useEffect(() => {
+    console.log('useEffect called');
     let intervalId: NodeJS.Timeout;
     if (isInstalling || isUninstalling) {
       intervalId = setInterval(() => {
         fetchInstallStatus();
         if (isInstalling) {
+          console.debug('fetchInstallOutput called 2');
           fetchInstallOutput();
         }
       }, 5000); // Check every 5 seconds
@@ -194,7 +209,19 @@ export const PluginScreen = () => {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [isInstalling, isUninstalling, fetchInstallStatus, fetchInstallOutput]);
+  }, [isInstalling, isUninstalling]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (fetchInstallOutput) {
+        console.debug('fetchInstallOutput called 1');
+        fetchInstallOutput();
+      }
+    }, 1000);
+
+    // Cleanup function to clear the timeout if the component unmounts
+    return () => clearTimeout(timer);
+  }, [name, pluginInfo]);
 
   const handleInstallUninstall = async () => {
     if (isInstalled) {
@@ -426,30 +453,41 @@ export const PluginScreen = () => {
                       )?.name ?? ''
                     ]
                 ) && (
-                  <FxButton
-                    onPress={() =>
-                      copyToClipboard(
+                  <>
+                    {console.log(
+                      'Rendering output value:',
+                      outputValues[
+                        pluginInfo.outputs.find(
+                          (o) => o.id === instruction.paramId
+                        )?.name ?? ''
+                      ]
+                    )}
+
+                    <FxButton
+                      onPress={() =>
+                        copyToClipboard(
+                          outputValues[
+                            pluginInfo.outputs.find(
+                              (o) => o.id === instruction.paramId
+                            )?.name ?? ''
+                          ] || ''
+                        )
+                      }
+                      iconLeft={<CopyIcon />}
+                      variant="inverted"
+                      marginTop="4"
+                    >
+                      {`${pluginInfo.outputs.find(
+                        (o) => o.id === instruction.paramId
+                      )?.name}: ${
                         outputValues[
                           pluginInfo.outputs.find(
                             (o) => o.id === instruction.paramId
                           )?.name ?? ''
                         ] || ''
-                      )
-                    }
-                    iconLeft={<CopyIcon />}
-                    variant="inverted"
-                    marginTop="4"
-                  >
-                    {`${pluginInfo.outputs.find(
-                      (o) => o.id === instruction.paramId
-                    )?.name}: ${
-                      outputValues[
-                        pluginInfo.outputs.find(
-                          (o) => o.id === instruction.paramId
-                        )?.name ?? ''
-                      ] || ''
-                    }`}
-                  </FxButton>
+                      }`}
+                    </FxButton>
+                  </>
                 )}
               </FxBox>
             ))}

@@ -155,6 +155,9 @@ const createPluginsModelSlice: StateCreator<
       try {
         const result = await fxblox.getInstallStatus(pluginName);
         if (result.status) {
+          if (result.msg == 'No Status' || result.msg == null) {
+            return { success: true, message: '' };
+          }
           return { success: true, message: result.msg };
         } else {
           return { success: false, message: result.msg };
