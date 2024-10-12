@@ -54,6 +54,8 @@ target 'Box' do
 
   post_install do |installer|
     PLIST_BUDDY_PATH = '/usr/libexec/PlistBuddy'
+    # https://github.com/facebook/react-native/issues/34997
+    `sed -i -e  $'s/__IPHONE_10_0/__IPHONE_13_0/' #{installer.sandbox.root}/RCT-Folly/folly/portability/Time.h`
     # https://github.com/facebook/react-native/issues/43335
     installer.pods_project.targets.each do |target|
       # https://stackoverflow.com/questions/74517344/when-compiling-with-xcode14-i-get-error-unsupported-swift-architecture-how-to-s
@@ -91,6 +93,5 @@ target 'Box' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
-    __apply_Xcode_12_5_M1_post_install_workaround(installer)
   end
 end
