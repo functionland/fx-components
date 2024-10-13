@@ -13,8 +13,12 @@ nvm use $NODE_VERSION
 # Install CocoaPods
 brew install cocoapods
 
-# Navigate to the fx-components directory
-cd $CI_WORKSPACE/fx-components
+# Navigate to the project root
+cd /Volumes/workspace/repository
+
+# Print current directory for debugging
+pwd
+ls -la
 
 # Install yarn dependencies
 yarn install
@@ -26,7 +30,7 @@ cd apps/box/ios
 pod install
 
 # Return to the project root
-cd $CI_WORKSPACE
+cd /Volumes/workspace/repository
 
 # Print Node.js and npm versions for debugging
 node --version
