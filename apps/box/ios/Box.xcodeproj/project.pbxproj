@@ -659,14 +659,14 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.6.17;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 					"-fprofile-instr-generate",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "fx.land.--PRODUCT-NAME-rfc1034identifier-";
+				PRODUCT_BUNDLE_IDENTIFIER = "fx.land.--blox-rfc1034identifier-";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = land.fx.blox;
 				PRODUCT_NAME = Box;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -694,14 +694,14 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.6.17;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 					"-fprofile-instr-generate",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "fx.land.--PRODUCT-NAME-rfc1034identifier-";
+				PRODUCT_BUNDLE_IDENTIFIER = "fx.land.--blox-rfc1034identifier-";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = land.fx.blox;
 				PRODUCT_NAME = Box;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
