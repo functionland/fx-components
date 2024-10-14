@@ -2,7 +2,7 @@
 
 set -e
 brew update
-brew update plugin ruby
+brew upgrade plugin ruby
 # Install and activate Ruby
 RUBY_VERSION=3.3.5
 brew install ruby@$RUBY_VERSION
