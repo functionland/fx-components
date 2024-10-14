@@ -13,6 +13,8 @@ brew install ruby
 export PATH="/usr/local/opt/ruby/bin:$PATH"
 export LDFLAGS="-L/usr/local/opt/ruby/lib"
 export CPPFLAGS="-I/usr/local/opt/ruby/include"
+export GEM_HOME="$HOME/.gem"
+export PATH="$GEM_HOME/bin:$PATH"
 
 # Verify Ruby installation
 which ruby
@@ -35,6 +37,15 @@ npm install -g yarn
 
 # Install CocoaPods
 gem install cocoapods
+
+# Verify CocoaPods installation
+which pod
+pod --version
+
+# Print environment variables
+echo "PATH: $PATH"
+echo "GEM_HOME: $GEM_HOME"
+echo "RUBY_HOME: $(which ruby)"
 
 # Navigate to the project root
 cd $CI_WORKSPACE
