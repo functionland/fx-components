@@ -7,8 +7,17 @@ brew update
 
 # Install Ruby
 brew install ruby
-echo 'export PATH="/usr/local/opt/ruby@$RUBY_VERSION/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
+
+# Set up Ruby environment
+export PATH="/usr/local/opt/ruby/bin:$PATH"
+export LDFLAGS="-L/usr/local/opt/ruby/lib"
+export CPPFLAGS="-I/usr/local/opt/ruby/include"
+
+# Verify Ruby installation
+which ruby
+ruby --version
+
+# Install bundler
 gem install bundler
 
 # Install Node.js
@@ -24,7 +33,7 @@ echo "export NODE_BINARY=$(command -v node)" > .xcode.env
 npm install -g yarn
 
 # Install CocoaPods
-brew install cocoapods
+gem install cocoapods
 
 # Navigate to the project root
 cd $CI_WORKSPACE
@@ -55,8 +64,9 @@ NPM_PACKAGE_VERSION=$(node -p "require('./apps/box/package.json').version")
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $NPM_PACKAGE_VERSION" "./apps/box/ios/Box/Info.plist"
 
 # Print versions for debugging
+ruby --version
+gem --version
 node --version
 npm --version
 yarn --version
-ruby --version
 pod --version
