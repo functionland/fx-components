@@ -1,11 +1,12 @@
 #!/bin/bash
 
 set -e
+
+# Update Homebrew
 brew update
-brew upgrade plugin ruby
-# Install and activate Ruby
-RUBY_VERSION=3.3.5
-brew install ruby@$RUBY_VERSION
+
+# Install Ruby
+brew install ruby
 echo 'export PATH="/usr/local/opt/ruby@$RUBY_VERSION/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 gem install bundler
