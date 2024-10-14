@@ -134,6 +134,30 @@ See [Getting started](#getting-started-with-development)
 6- Run `yarn android box`
 
 
+## Submit to Appstore
+
+```
+yarn install
+
+cd apps/box/ios
+
+pod install --repo-update
+```
+
+Push the changes to repo and then go to [Appstore Connect](https://appstoreconnect.apple.com/apps) and go to XCode Cloud and start a build. Then  submit the build for review
+
+## Submit to Google Play
+```
+yarn install
+
+cd apps/box/android
+
+./gradlew assembleRelease
+```
+
+It gives you the apk which you can submit to Google Play
+
+
 ## Submitting a PR
 
 - For every PR there should be an accompanying [issue](https://github.com/functionland/apps-monorepo/issues) which the PR solves. If there isn't one please create it.
