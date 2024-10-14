@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+CI_WORKSPACE="/Volumes/workspace/repository"
 
 # Update Homebrew
 brew update
