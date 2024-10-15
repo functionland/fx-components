@@ -52,9 +52,6 @@ target 'Box' do
     # Pods for testing
   end
 
-  permissions_path = '../node_modules/react-native-permissions/ios'
-  pod 'Permission-BluetoothPeripheral', :path => "#{permissions_path}/BluetoothPeripheral"
-
   post_install do |installer|
     PLIST_BUDDY_PATH = '/usr/libexec/PlistBuddy'
     # https://github.com/facebook/react-native/issues/34997

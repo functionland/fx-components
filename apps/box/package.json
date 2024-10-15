@@ -77,7 +77,8 @@
     "zustand": "*",
     "@types/react-native-background-timer": "*",
     "ethers": "*",
-    "whatwg-fetch": "*"
+    "whatwg-fetch": "*",
+    "react-native-permissions": "*"
   },
   "devDependencies": {
     "@types/react-native-background-timer": "^2.0.2"
