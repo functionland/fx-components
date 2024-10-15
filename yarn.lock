@@ -15586,6 +15586,11 @@ react-native-paper@*:
     color "^3.1.2"
     use-latest-callback "^0.1.5"
 
+react-native-permissions@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/react-native-permissions/-/react-native-permissions-5.0.0.tgz#fd7271ff6163341976882a5f331b710c97e84df1"
+  integrity sha512-H+njXissetO7DpWDqJ4J6AQBnmn4a9WQGGcn0Znm2wtb2IHEJkQooZH7yjYKqrgO6N4FkhuPiI7ZCuEDGLsPxQ==
+
 react-native-qrcode-svg@^6.2.0:
   version "6.3.2"
   resolved "https://registry.yarnpkg.com/react-native-qrcode-svg/-/react-native-qrcode-svg-6.3.2.tgz#84b2bb37201589cff1ab58e7f7c884c5133fe47f"

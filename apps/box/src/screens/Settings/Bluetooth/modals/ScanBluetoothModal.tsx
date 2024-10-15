@@ -14,6 +14,7 @@ import {
   NativeEventEmitter,
   NativeModules,
   PermissionsAndroid,
+  Permission,
   Platform,
   StyleSheet,
 } from 'react-native';
@@ -24,11 +25,20 @@ import BleManager, {
   BleScanMode,
   Peripheral,
 } from 'react-native-ble-manager';
+import { request, PERMISSIONS } from 'react-native-permissions';
 
 const SECONDS_TO_SCAN_FOR = 5;
 const ALLOW_DUPLICATES = false;
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+
+const requestIOSBluetoothPermission = async () => {
+  if (Platform.OS === 'ios') {
+    const result = await request(PERMISSIONS.IOS.BLUETOOTH);
+    return result === 'granted';
+  }
+  return true;
+};
 
 type ScanBluetoothModalProps = {
   onSelect?: (item: Peripheral) => void;
@@ -85,7 +95,7 @@ const ScanBluetoothModal = React.forwardRef<
   const scan = async () => {
     try {
       if (Platform.OS === 'android') {
-        const permissions = [];
+        const permissions: Permission[] = [];
         if (Platform.Version >= 31) {
           permissions.push(
             ...[
@@ -107,6 +117,9 @@ const ScanBluetoothModal = React.forwardRef<
           )
         )
           return;
+      } else if (Platform.OS === 'ios') {
+        const granted = await requestIOSBluetoothPermission();
+        if (!granted) return;
       }
       setPeripherals(new Map());
       setConnectedPeripherals(new Map());

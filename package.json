@@ -82,6 +82,7 @@
     "react-native-modal": "^13.0.1",
     "react-native-pager-view": "6.2.0",
     "react-native-paper": "*",
+    "react-native-permissions": "^5.0.0",
     "react-native-qrcode-svg": "^6.2.0",
     "react-native-randombytes": "^3.6.1",
     "react-native-reanimated": "~3.3.0",
