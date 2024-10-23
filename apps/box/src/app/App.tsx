@@ -102,6 +102,10 @@ const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
         },
         dappMetadata: {
           name: 'fxblox',
+          url: 'https://fx.land',
+          scheme: 'fxblox',
+          iconUrl:
+            'https://ipfs.cloud.fx.land/gateway/bafkreigl4s3qehoblwqglo5zjjjwtzkomxg4i6gygfeqk5s5h33m5iuyra',
         },
         i18nOptions: {
           enabled: true,
