@@ -23,6 +23,8 @@ import { RouteProp, useRoute } from '@react-navigation/native';
 import { usePluginsStore } from '../stores/usePluginsStore';
 import { copyToClipboard } from '../utils/clipboard';
 import { CopyIcon } from '../components/Icons';
+import { useUserProfileStore } from '../stores/useUserProfileStore';
+import { useBloxsStore } from '../stores';
 
 type RouteParams = {
   Plugin: { name: string };
@@ -99,6 +101,44 @@ export const PluginScreen = () => {
   const [isInstalling, setIsInstalling] = useState(false);
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [installStatus, setInstallStatus] = useState('');
+  const [connectionReady, setConnectionReady] = useState(false);
+  const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
+  const [checkBloxConnection] = useBloxsStore((state) => [
+    state.checkBloxConnection,
+  ]);
+  const [revealedValues, setRevealedValues] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  useEffect(() => {
+    const POLLING_INTERVAL = 5000; // 5 seconds
+    let intervalId: string | number | NodeJS.Timeout | undefined;
+
+    const updateConnectionStatus = async () => {
+      try {
+        const connection = await checkBloxConnection();
+        if (connection) {
+          setConnectionReady(connection);
+          clearInterval(intervalId); // Stop polling when connection is successful
+        }
+      } catch (error) {
+        console.error('Connection check failed:', error);
+      }
+    };
+
+    if (fulaIsReady) {
+      intervalId = setInterval(updateConnectionStatus, POLLING_INTERVAL);
+      // Initial check immediately when fulaIsReady becomes true
+      updateConnectionStatus();
+    }
+
+    // Cleanup function to clear interval when component unmounts or fulaIsReady changes
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [fulaIsReady]);
 
   const fetchInstallOutput = useCallback(async () => {
     console.debug('fetchInstallOutput started', { pluginInfo, name });
@@ -192,7 +232,7 @@ export const PluginScreen = () => {
   useEffect(() => {
     fetchPluginInfo();
     listActivePlugins();
-  }, [name, listActivePlugins]);
+  }, [name, listActivePlugins, installStatus, connectionReady]);
 
   useEffect(() => {
     console.log('useEffect called');
@@ -217,7 +257,7 @@ export const PluginScreen = () => {
         console.debug('fetchInstallOutput called 1');
         fetchInstallOutput();
       }
-    }, 1000);
+    }, 5000);
 
     // Cleanup function to clear the timeout if the component unmounts
     return () => clearTimeout(timer);
@@ -464,28 +504,34 @@ export const PluginScreen = () => {
                     )}
 
                     <FxButton
-                      onPress={() =>
-                        copyToClipboard(
-                          outputValues[
-                            pluginInfo.outputs.find(
-                              (o) => o.id === instruction.paramId
-                            )?.name ?? ''
-                          ] || ''
-                        )
-                      }
+                      onPress={() => {
+                        const outputName =
+                          pluginInfo.outputs.find(
+                            (o) => o.id === instruction.paramId
+                          )?.name ?? '';
+                        const value = outputValues[outputName] || '';
+                        copyToClipboard(value);
+                        setRevealedValues((prev) => ({
+                          ...prev,
+                          [outputName]: true,
+                        }));
+                      }}
                       iconLeft={<CopyIcon />}
                       variant="inverted"
                       marginTop="4"
                     >
                       {`${pluginInfo.outputs.find(
                         (o) => o.id === instruction.paramId
-                      )?.name}: ${
-                        outputValues[
+                      )?.name}: ${(() => {
+                        const outputName =
                           pluginInfo.outputs.find(
                             (o) => o.id === instruction.paramId
-                          )?.name ?? ''
-                        ] || ''
-                      }`}
+                          )?.name ?? '';
+                        const value = outputValues[outputName] || '';
+                        return revealedValues[outputName]
+                          ? value
+                          : value.replace(/./g, '•');
+                      })()}`}
                     </FxButton>
                   </>
                 )}
