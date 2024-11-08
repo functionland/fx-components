@@ -27,7 +27,7 @@
     "@babel/preset-env": "^7.1.6",
     "@ethersproject/shims": "^5.7.0",
     "@functionland/fula-sec": "^2.0.0",
-    "@functionland/react-native-fula": "1.54.27",
+    "@functionland/react-native-fula": "1.54.29",
     "@gorhom/bottom-sheet": "^4.5.1",
     "@metamask/sdk": "^0.30.0",
     "@metamask/sdk-react": "^0.30.0",
