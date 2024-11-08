@@ -10,7 +10,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '14' # Use the same Node.js version as your project requirements
+        node-version: '20' # Use the same Node.js version as your project requirements
     - name: Yarn Install
       run: yarn install
     - name: Ensure Symlink
