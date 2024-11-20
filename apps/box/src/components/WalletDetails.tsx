@@ -289,7 +289,7 @@ export const WalletDetails = ({
               paddingHorizontal="32"
               size="large"
             >
-              {`PeerId:${appPeerId}`}
+              {`App PeerId:${appPeerId}`}
             </FxButton>
           </FxBox>
         )}

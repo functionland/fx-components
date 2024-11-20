@@ -33,7 +33,7 @@ export const UserHeader = ({ userData }: UserHeaderProps) => {
           showDID={true}
           showNetwork={false}
           showPeerId={true}
-          showBloxPeerIds={false}
+          showBloxPeerIds={true}
         />
       </FxBox>
       {/* <FxBox width="100%">

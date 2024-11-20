@@ -81,7 +81,7 @@ export const PoolsScreen = () => {
 
   const wrappedJoinPool = async (poolID: number) => {
     try {
-      if (syncProgress==0 || syncProgress > 90){
+      if (syncProgress==0 || syncProgress > 10){
         setRefreshing(true);
         await joinPool(poolID);
       } else {
@@ -124,7 +124,8 @@ export const PoolsScreen = () => {
       await getPools();
       console.log('enableInteraction: ', enableInteraction);
       setAllowJoin(
-        pools.filter((pool) => pool.joined || pool.requested).length === 0 && isChainSynced &&
+        pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
+          syncProgress > 0 &&
           enableInteraction
       );
     } catch (e) {
@@ -178,7 +179,7 @@ export const PoolsScreen = () => {
       ListHeaderComponent={
         <FxBox>
           <FxBox flex={1}>
-            { syncProgress > 0 && syncProgress < 99  &&
+            { syncProgress > 0 && syncProgress < 10  &&
               <FxBox
                 flexDirection="row"
                 alignItems='center'

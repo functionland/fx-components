@@ -17,7 +17,7 @@ import {
   DeviceCard,
   UsageBar,
 } from '../../components';
-import { UsersCard } from '../../components/Cards/UsersCard';
+import { TasksCard } from '../../components/Cards/TasksCard';
 import { EarningCard } from '../../components/Cards/EarningCard';
 import { BloxHeader } from './components/BloxHeader';
 import { BloxInteraction } from './components/BloxInteraction';
@@ -25,7 +25,6 @@ import { BloxInteractionModal } from './modals/BloxInteractionModal';
 import { EDeviceStatus } from '../../api/hub';
 import { EBloxInteractionType, TBloxInteraction } from '../../models';
 import { ProfileBottomSheet } from '../../components/ProfileBottomSheet';
-import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import {
   ConnectionOptionsSheet,
   ConnectionOptionsType,
@@ -33,9 +32,14 @@ import {
 import { useLogger } from '../../hooks';
 import { Routes } from '../../navigation/navigationConfig';
 import { useNavigation } from '@react-navigation/native';
-import { useBloxsStore } from '../../stores';
+import {
+  useBloxsStore,
+  usePoolsStore,
+  useUserProfileStore,
+} from '../../stores';
 import { blockchain, fxblox } from '@functionland/react-native-fula';
 import { Helper } from '../../utils';
+
 const DEFAULT_DIVISION = 30;
 
 export const BloxScreen = () => {
@@ -52,6 +56,7 @@ export const BloxScreen = () => {
   const [resettingChain, setResettingChain] = useState(false);
   const [loadingBloxSpace, setLoadingBloxSpace] = useState(false);
   const [loadingFulaEarnings, setLoadingFulaEarnings] = useState(false);
+  const [bloxAccountId, setBloxAccountId] = useState('');
 
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
     EBloxInteractionType.OfficeBloxUnit
@@ -87,9 +92,38 @@ export const BloxScreen = () => {
     state.removeBlox,
     state.update,
   ]);
-  useEffect(() => {
-    console.log('here');
-  }, [fulaIsReady]);
+
+  const [pools, getPools] = usePoolsStore((state) => [
+    state.pools,
+    state.getPools,
+  ]);
+
+  const updateBloxAccount = async () => {
+    try {
+      if (fulaIsReady) {
+        const connectionStatus = await checkBloxConnection();
+        if (connectionStatus) {
+          const bloxAccount = await blockchain.getAccount();
+          setBloxAccountId(bloxAccount.account);
+        } else {
+          setBloxAccountId('Not Connected to blox');
+        }
+      } else {
+        setBloxAccountId('Fula is not ready');
+      }
+    } catch (e) {
+      console.error('Error updating blox account:', e);
+      const err = e.message || e.toString();
+      if (err.includes('failed to dial')) {
+        setBloxAccountId('Connection to Blox not established');
+      } else if (err.includes('blockchain call error')) {
+        setBloxAccountId('Error with blockchain.');
+      } else {
+        setBloxAccountId(e.message || e.toString());
+      }
+    }
+  };
+
   const bloxInteractions = Object.values(bloxs || {}).map<TBloxInteraction>(
     (blox) => ({
       peerId: blox.peerId,
@@ -116,6 +150,7 @@ export const BloxScreen = () => {
       updateBloxSpace();
       updateFulaEarnings();
       checkBloxConnection();
+      updateBloxAccount();
     } else if (fulaIsReady && !bloxsConnectionStatus[currentBloxPeerId]) {
       checkBloxConnection();
     }
@@ -463,6 +498,16 @@ export const BloxScreen = () => {
               totalCapacity={currentBloxSpaceInfo?.size || 1000}
             />
           )}
+          {bloxAccountId && bloxAccountId.startsWith('5') && (
+            <TasksCard
+              pools={pools}
+              getPools={getPools}
+              currentBloxPeerId={currentBloxPeerId}
+              accountId={bloxAccountId} // Replace with actual account ID
+              routes={Routes}
+            />
+          )}
+          <FxSpacer height={24} />
           <DeviceCard
             onRefreshPress={updateBloxSpace}
             loading={loadingBloxSpace}
