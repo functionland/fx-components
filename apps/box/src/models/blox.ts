@@ -14,7 +14,12 @@ export interface TBloxFolderSize {
   chain: string;
   fulaCount: string;
 }
-export type TBloxConectionStatus = 'CONNECTED' | 'CHECKING' | 'DISCONNECTED';
+export type TBloxConectionStatus =
+  | 'CONNECTED'
+  | 'CHECKING'
+  | 'DISCONNECTED'
+  | 'NO INTERNET'
+  | 'NO CLIENT';
 export type DockerContainerInfo = {
   image: string; //"index.docker.io/functionland/go-fula:test38",
   version: string; // "sha256:542af831d97a930ca8f1715e43f08e220617568e8aebdfd6c8c160d0c7072c27",

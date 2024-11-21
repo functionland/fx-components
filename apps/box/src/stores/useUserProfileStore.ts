@@ -6,8 +6,14 @@ import { TAccount, TBloxFreeSpace } from '../models';
 import { KeyChain } from '../utils';
 import { useBloxsStore } from './useBloxsStore';
 import NetInfo from '@react-native-community/netinfo';
+import axios from 'axios';
 
-type BloxConectionStatus = 'CONNECTED' | 'CHECKING' | 'DISCONNECTED';
+type BloxConectionStatus =
+  | 'CONNECTED'
+  | 'CHECKING'
+  | 'DISCONNECTED'
+  | 'NO INTERNET'
+  | 'NO CLIENT';
 interface UserProfileActions {
   setHasHydrated: (isHydrated: boolean) => void;
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
@@ -248,7 +254,6 @@ const createUserProfileSlice: StateCreator<
         });
         throw error;
       } finally {
-        
       }
     },
     logout: () => {
@@ -292,19 +297,29 @@ const createUserProfileSlice: StateCreator<
         // attempt is now a parameter of attemptConnection
         set({ bloxConnectionStatus: 'CHECKING' });
         try {
-          console.log("NetInfo check");
+          console.log('NetInfo check');
+          const pingResponse = await axios.head('https://google.com', {
+            timeout: 5000, // 5 seconds timeout
+          });
           const state = await NetInfo?.fetch();
-          if (NetInfo && (!state.isConnected || !state.isInternetReachable)) {
+          if (
+            NetInfo &&
+            (!state.isConnected || !state.isInternetReachable) &&
+            pingResponse.status !== 200
+          ) {
             console.log('Internet is not connected, waiting for connection...');
             // Optionally, you might want to handle the lack of internet connectivity accordingly
+            set({ bloxConnectionStatus: 'NO INTERNET' });
             Promise.reject('internet is not connected');
-            return;
+            return false;
           }
-          console.log("NetInfo check done");
+          console.log('NetInfo check done');
           const { fulaIsReady } = get();
           if (!fulaIsReady) {
             console.log('Fula is not ready. Please wait...');
-            Promise.reject('internet is not connected');
+            set({ bloxConnectionStatus: 'NO CLIENT' });
+            Promise.reject('Fula is not ready. Please wait...');
+            return false;
           }
           const connected = await fula.checkConnection();
           console.log(

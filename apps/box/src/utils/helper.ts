@@ -12,7 +12,6 @@ export const getMyDID = (password: string, signiture: string): string => {
   return did.did();
 };
 
-
 export const getMyDIDKeyPair = (
   password: string,
   signiture: string
@@ -41,17 +40,19 @@ export const initFula = async ({
     const bloxAddress = bloxAddr
       ? bloxAddr
       : bloxPeerId
-      ? `${Constants.FXRelay}/p2p/${bloxPeerId}`.trim()
-      : '';
+        ? `${Constants.FXRelay}/p2p/${bloxPeerId}`.trim()
+        : '';
     const keyPair = getMyDIDKeyPair(password, signiture);
     try {
       console.log('initFula helper.ts', { bloxAddress, bloxPeerId, keyPair });
-      //if (await fula.isReady(false))
       try {
+        //
+        await fula.logout(keyPair.secretKey.toString(), '');
         await fula.shutdown();
       } catch (error) {
         console.log('fula shutdown failed', error);
       }
+      console.log('fula shutdown');
       const peerId = await fula.newClient(
         keyPair.secretKey.toString(), //bytes of the privateKey of did identity in string format
         ``, // leave empty to use the default temp one
@@ -64,7 +65,7 @@ export const initFula = async ({
       console.log('peerId: ', peerId);
       return peerId;
     } catch (error) {
-      console.log('initFula failed for bloxAddress='+bloxAddress, error);
+      console.log('initFula failed for bloxAddress=' + bloxAddress, error);
       throw error;
     }
   }

@@ -130,7 +130,7 @@ export const BloxInteraction = ({
                         : 'errorBase'
                   }
                 >
-                  {bloxsConnectionStatus[item.peerId]?.toString() || 'CHECKING'}
+                  {bloxsConnectionStatus[item.peerId]?.toString() || 'UNKNOWN'}
                 </FxText>
                 <FxChevronDownIcon
                   width={16}

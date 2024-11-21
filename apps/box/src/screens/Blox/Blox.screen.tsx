@@ -39,6 +39,7 @@ import {
 } from '../../stores';
 import { blockchain, fxblox } from '@functionland/react-native-fula';
 import { Helper } from '../../utils';
+import axios from 'axios';
 
 const DEFAULT_DIVISION = 30;
 
@@ -224,6 +225,7 @@ export const BloxScreen = () => {
             );
           }
         } else {
+          checkBloxConnection();
           console.log('fula is not ready');
         }
         break;
@@ -252,11 +254,36 @@ export const BloxScreen = () => {
           console.log('fula is not ready');
         }
         break;
-      case 'CONNECT-TO-WIFI':
-        navigation.navigate(Routes.InitialSetup, {
-          screen: Routes.ConnectToBlox,
-        });
+      case 'CONNECT-TO-WIFI': {
+        try {
+          const localResponse = await axios.head(
+            'http://10.42.0.1:3500/properties',
+            {
+              timeout: 5000, // 5 seconds timeout
+            }
+          );
+          if (localResponse.status === 200) {
+            navigation.navigate(Routes.InitialSetup, {
+              screen: Routes.ConnectToBlox,
+            });
+          } else {
+            console.log('not connected to FxBlox hotspot');
+            queueToast({
+              type: 'info',
+              title: 'Connect Blox to Wifi',
+              message: 'You should be connected to FxBlox hotspot!',
+            });
+          }
+        } catch (error) {
+          console.log('Failed to connect to FxBlox hotspot:', error);
+          queueToast({
+            type: 'error',
+            title: 'Connection Failed',
+            message: 'Not connected to FxBlox hotspot',
+          });
+        }
         break;
+      }
       default:
         break;
     }

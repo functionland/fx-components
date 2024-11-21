@@ -10,6 +10,7 @@ import {
 } from '../models';
 import { blockchain, fula, fxblox } from '@functionland/react-native-fula';
 import { BloxFreeSpaceResponse } from '@functionland/react-native-fula/lib/typescript/types/blockchain';
+import { useUserProfileStore } from './useUserProfileStore';
 
 import {
   GetFolderPathResponse,
@@ -46,8 +47,8 @@ interface BloxsModel {
   bloxsPropertyInfo?: Record<string, TBloxProperty>;
   bloxsConnectionStatus: Record<string, TBloxConectionStatus>;
   currentBloxPeerId?: string;
-  isChainSynced: boolean,
-  syncProgress: number,
+  isChainSynced: boolean;
+  syncProgress: number;
 }
 export interface BloxsModelSlice extends BloxsModel, BloxsActionSlice {}
 const inittalState: BloxsModel = {
@@ -254,6 +255,7 @@ const createModeSlice: StateCreator<
         bloxsConnectionStatus: currentBloxsConnectionStatus,
         currentBloxPeerId,
       } = get();
+
       try {
         set({
           bloxsConnectionStatus: {
@@ -261,7 +263,11 @@ const createModeSlice: StateCreator<
             [currentBloxPeerId]: 'CHECKING',
           },
         });
-        const connected = await fula.checkConnection();
+        console.log('Geting blox connection status');
+        const connected = await useUserProfileStore
+          .getState()
+          .checkBloxConnection();
+
         set({
           bloxsConnectionStatus: {
             ...currentBloxsConnectionStatus,
@@ -276,14 +282,17 @@ const createModeSlice: StateCreator<
             [currentBloxPeerId]: 'DISCONNECTED',
           },
         });
-        throw error;
+        return false;
       }
     },
     checkChainSyncStatus: async () => {
       try {
         // Assuming fxblox.findBestAndTargetInLogs() is an existing function
         // that returns { best: string, target: string }
-        const { best, target } = await fxblox.findBestAndTargetInLogs("fula_node", "20");
+        const { best, target } = await fxblox.findBestAndTargetInLogs(
+          'fula_node',
+          '20'
+        );
         const bestInt = parseInt(best, 10);
         const targetInt = parseInt(target, 10);
         const isSynced = Math.abs(targetInt - bestInt) < 10;
@@ -350,7 +359,6 @@ const createModeSlice: StateCreator<
         }
       } catch (error) {
         console.log(error);
-        
       }
       return bloxsModel;
     },
