@@ -50,6 +50,33 @@ export const ConnectToBloxScreen = () => {
       return false;
     }
   };
+
+  const isDefaultNetwork = async () => {
+    try {
+      const network = await fetch('wifi');
+      return (
+        network.type === NetInfoStateType.wifi &&
+        network.details.ssid === DEFAULT_NETWORK_NAME &&
+        network.isConnected
+      );
+    } catch (error) {
+      console.log('checking network failed:', error);
+      return false;
+    }
+  };
+
+  const checkApiAvailability = async () => {
+    try {
+      const response = await axios.head(API_URL + '/properties', {
+        timeout: 5000, // 5 seconds timeout
+      });
+      return response.status === 200;
+    } catch (error) {
+      console.log('API availability check failed:', error);
+      return false;
+    }
+  };
+
   const connectToBox = async () => {
     try {
       if (Platform.OS === 'android' && !(await checkAndroidPermission())) {
@@ -66,12 +93,8 @@ export const ConnectToBloxScreen = () => {
         return;
       }
       setConnectionStatus(EConnectionStatus.connecting);
-      const network = await fetch('wifi');
-      if (
-        network.type === NetInfoStateType.wifi &&
-        network.details.ssid === DEFAULT_NETWORK_NAME &&
-        network.isConnected
-      ) {
+
+      if ((await isDefaultNetwork()) || (await checkApiAvailability())) {
         // Check if GET request to the specific URL is successful (HTTP status code 200)
         const response = await axios.head(API_URL + '/properties');
         console.log(response);
