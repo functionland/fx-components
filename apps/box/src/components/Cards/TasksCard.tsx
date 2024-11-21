@@ -38,8 +38,8 @@ export const TasksCard = ({
 }: TaskListProps) => {
   const navigation = useNavigation();
   const tasks: Task[] = [
-    { id: 1, title: 'Join Testnet', route: routes.UsersTab },
-    { id: 2, title: 'Join Closest Pool', route: routes.Pools },
+    { id: 1, title: 'Join Testnet >', route: routes.UsersTab },
+    { id: 2, title: 'Join Closest Pool >', route: routes.Pools },
   ];
 
   const [completedTasks, setCompletedTasks] = useState<ValueType[]>([]);
