@@ -24,51 +24,89 @@ export const getMyDIDKeyPair = (
   return keyPair;
 };
 
+let initFulaPromise: Promise<string | undefined> | null = null; // Shared promise to track execution
+
 export const initFula = async ({
   password,
   signiture,
   bloxAddr = undefined,
   bloxPeerId,
+  conAddr = Constants.FXRelay,
 }: {
   password: string;
   signiture: string;
   bloxAddr?: string;
   bloxPeerId?: string;
-}) => {
-  if (password && signiture) {
-    // Use FxRelay if bloxAddr is null or empty if bloxPeerId is null
-    const bloxAddress = bloxAddr
-      ? bloxAddr
-      : bloxPeerId
-        ? `${Constants.FXRelay}/p2p/${bloxPeerId}`.trim()
-        : '';
-    const keyPair = getMyDIDKeyPair(password, signiture);
-    try {
-      console.log('initFula helper.ts', { bloxAddress, bloxPeerId, keyPair });
-      try {
-        //
-        await fula.logout(keyPair.secretKey.toString(), '');
-        await fula.shutdown();
-      } catch (error) {
-        console.log('fula shutdown failed', error);
-      }
-      console.log('fula shutdown');
-      const peerId = await fula.newClient(
-        keyPair.secretKey.toString(), //bytes of the privateKey of did identity in string format
-        ``, // leave empty to use the default temp one
-        bloxAddress,
-        bloxAddress ? '' : 'noop', //leave empty for testing without a backend node
-        true,
-        true,
-        true
-      );
-      console.log('peerId: ', peerId);
-      return peerId;
-    } catch (error) {
-      console.log('initFula failed for bloxAddress=' + bloxAddress, error);
-      throw error;
-    }
+  conAddr?: string;
+}): Promise<string | undefined> => {
+  // If a previous call is in progress, wait for it to finish
+  if (initFulaPromise) {
+    console.log(
+      'initFula is already running. Waiting for the previous call...'
+    );
+    return initFulaPromise;
   }
+
+  // Create a new promise for this execution
+  initFulaPromise = new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        if (!password || !signiture) {
+          throw new Error(
+            'Password and signature are required to initialize Fula.'
+          );
+        }
+
+        // Determine the Blox address
+        const bloxAddress = bloxAddr
+          ? bloxAddr
+          : bloxPeerId
+            ? `${conAddr}/p2p/${bloxPeerId}`.trim()
+            : '';
+
+        if (!bloxAddress) {
+          throw new Error('Blox address or peer ID must be provided.');
+        }
+
+        const keyPair = getMyDIDKeyPair(password, signiture);
+
+        console.log('initFula helper.ts', { bloxAddress, bloxPeerId, keyPair });
+
+        try {
+          // Attempt to logout and shutdown any previous Fula client
+          await fula.logout(keyPair.secretKey.toString(), '');
+          await fula.shutdown();
+          console.log('Previous Fula client shutdown successfully.');
+        } catch (shutdownError) {
+          console.warn(
+            'Failed to shutdown previous Fula client:',
+            shutdownError
+          );
+        }
+
+        // Initialize a new Fula client
+        const peerId = await fula.newClient(
+          keyPair.secretKey.toString(), // Private key of DID identity in string format
+          '', // Leave empty to use the default temp one
+          bloxAddress,
+          bloxAddress ? '' : 'noop', // Leave empty for testing without a backend node
+          true, // Enable IPFS storage
+          true, // Enable IPFS networking
+          true // Enable IPFS pubsub
+        );
+
+        console.log('Fula initialized successfully with peerId:', peerId);
+        resolve(peerId); // Resolve with the peer ID on success
+      } catch (error) {
+        console.error('initFula failed:', error);
+        reject(error); // Reject with the error on failure
+      } finally {
+        initFulaPromise = null; // Reset the shared promise after execution
+      }
+    })(); // Immediately invoke the async function inside the executor
+  });
+
+  return initFulaPromise;
 };
 
 export const generateUniqueId = () => {

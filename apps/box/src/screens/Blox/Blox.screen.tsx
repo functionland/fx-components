@@ -64,11 +64,13 @@ export const BloxScreen = () => {
   );
   const navigation = useNavigation();
   const logger = useLogger();
-  const [earnings, getEarnings, fulaIsReady] = useUserProfileStore((state) => [
-    state.earnings,
-    state.getEarnings,
-    state.fulaIsReady,
-  ]);
+  const [earnings, getEarnings, fulaIsReady, checkFulaReadiness] =
+    useUserProfileStore((state) => [
+      state.earnings,
+      state.getEarnings,
+      state.fulaIsReady,
+      state.checkFulaReadiness,
+    ]);
 
   const [
     bloxs,
@@ -99,7 +101,7 @@ export const BloxScreen = () => {
     state.getPools,
   ]);
 
-  const updateBloxAccount = async () => {
+  const updateBloxAccount = async (retried = false) => {
     try {
       if (fulaIsReady) {
         const connectionStatus = await checkBloxConnection();
@@ -110,7 +112,12 @@ export const BloxScreen = () => {
           setBloxAccountId('Not Connected to blox');
         }
       } else {
-        setBloxAccountId('Fula is not ready');
+        if (retried === false) {
+          await checkFulaReadiness();
+          updateBloxAccount(true);
+        } else {
+          setBloxAccountId('Fula is not ready');
+        }
       }
     } catch (e) {
       console.error('Error updating blox account:', e);

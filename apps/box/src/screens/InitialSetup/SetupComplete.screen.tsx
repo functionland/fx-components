@@ -98,14 +98,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   }, [initialWaitForInternet]);
 
   useEffect(() => {
-    if (
-      internetStatus !== 'CONNECTED' &&
-      inetInfo.isInternetReachable &&
-      inetInfo?.type === NetInfoStateType.wifi
-    ) {
-      setInternetStatus('CONNECTED');
-      setInitialWaitForInternet(false);
-    }
+    checkInternetStatus();
   }, [inetInfo]);
 
   // Initiate fula
@@ -196,7 +189,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   const checkHotspotConnection = async () => {
     try {
       // Attempt to reach the specified URL
-      await axios.get('http://10.42.0.1:3500/properties');
+      await axios?.get('http://10.42.0.1:3500/properties');
       // If successful, navigate back
       navigation.pop();
     } catch (error) {
@@ -211,10 +204,14 @@ export const SetupCompleteScreen = ({ route }: Props) => {
 
   const checkInternetStatus = async () => {
     try {
-      const network = await NetInfo.fetch();
+      const pingResponse = await axios?.head('https://google.com', {
+        timeout: 5000, // 5 seconds timeout
+      });
+      const network = await NetInfo?.fetch();
       if (
-        network.isInternetReachable // &&
+        network?.isInternetReachable || // &&
         //network?.type === NetInfoStateType.wifi
+        pingResponse?.status === 200
       ) {
         setInternetStatus('CONNECTED');
         setInitialWaitForInternet(false);
@@ -443,7 +440,12 @@ export const SetupCompleteScreen = ({ route }: Props) => {
                 Check internet connectivity
               </FxButton>
               <FxSpacer height={10} />
-              <FxButton marginBottom="16" variant="inverted" size="large" onPress={handleHome}>
+              <FxButton
+                marginBottom="16"
+                variant="inverted"
+                size="large"
+                onPress={handleHome}
+              >
                 Home
               </FxButton>
               <FxSpacer height={10} />
@@ -509,7 +511,8 @@ export const SetupCompleteScreen = ({ route }: Props) => {
             </FxButton>
           </>
         )}
-        {currentBloxPeerId && bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED' &&
+        {currentBloxPeerId &&
+          bloxsConnectionStatus[currentBloxPeerId] === 'DISCONNECTED' &&
           internetStatus === 'CONNECTED' &&
           setupStatus === 'NOTCOMPLETED' && (
             <FxButton size="large" onPress={handleReconnectBlox}>
