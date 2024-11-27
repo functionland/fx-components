@@ -64,10 +64,6 @@ export const initFula = async ({
             ? `${conAddr}/p2p/${bloxPeerId}`.trim()
             : '';
 
-        if (!bloxAddress) {
-          throw new Error('Blox address or peer ID must be provided.');
-        }
-
         const keyPair = getMyDIDKeyPair(password, signiture);
 
         console.log('initFula helper.ts', { bloxAddress, bloxPeerId, keyPair });
