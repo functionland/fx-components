@@ -31,6 +31,7 @@ interface BloxsActionSlice {
   updateFolderSizeInfo: (peerId: string, info: TBloxFolderSize) => void;
   checkChainSyncStatus: () => void;
   reset: () => void;
+  setCurrentBloxPeerId: (peerId: string) => void;
 
   /**
    * Remote actions
@@ -76,6 +77,11 @@ const createModeSlice: StateCreator<
     setHasHydrated: (isHydrated) => {
       set({
         _hasHydrated: isHydrated,
+      });
+    },
+    setCurrentBloxPeerId: (peerId: string) => {
+      set({
+        currentBloxPeerId: peerId,
       });
     },
     update: (model) => {

@@ -40,12 +40,13 @@ import { BluetoothCommandsScreen } from '../screens/Settings/Bluetooth/Bluetooth
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
-  const [password, signiture, setFulaIsReady, fulaIsReady] =
+  const [password, signiture, setFulaIsReady, fulaIsReady, fulaReinitCount] =
     useUserProfileStore((state) => [
       state.password,
       state.signiture,
       state.setFulaIsReady,
       state.fulaIsReady,
+      state.fulaReinitCount,
     ]);
   const [bloxs, currentBloxPeerId, updateBloxsStore] = useBloxsStore(
     (state) => [state.bloxs, state.currentBloxPeerId, state.update]
@@ -94,7 +95,7 @@ export const MainTabsNavigator = () => {
         logger.logError('MainTabsNavigator:intiFula', error);
       }
     }
-  }, [password, signiture, currentBloxPeerId]);
+  }, [password, signiture, currentBloxPeerId, fulaReinitCount]);
   return (
     <>
       <MainTabs.Navigator

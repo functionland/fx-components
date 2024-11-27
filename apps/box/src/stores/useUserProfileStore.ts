@@ -55,6 +55,7 @@ export interface UserProfileSlice {
   bloxSpace: TBloxFreeSpace | undefined;
   fulaIsReady: boolean;
   bloxConnectionStatus: BloxConectionStatus;
+  fulaReinitCount: number;
 }
 // define the initial state
 const initialState: UserProfileSlice = {
@@ -72,6 +73,7 @@ const initialState: UserProfileSlice = {
   password: undefined,
   address: undefined,
   walletId: undefined,
+  fulaReinitCount: 0,
 };
 const createUserProfileSlice: StateCreator<
   UserProfileSlice & UserProfileActions,
@@ -83,7 +85,7 @@ const createUserProfileSlice: StateCreator<
     let readinessPromise: Promise<void> | null = null; // Shared promise for tracking execution
     return {
       ...initialState,
-      checkFulaReadiness: async (maxAttempts = 5): Promise<void> => {
+      checkFulaReadiness: async (maxAttempts = 3): Promise<void> => {
         // If a readiness check is already running, wait for it to finish
         if (readinessPromise) {
           console.log('checkFulaReadiness is already running. Waiting...');
@@ -134,8 +136,10 @@ const createUserProfileSlice: StateCreator<
                   set({ fulaIsReady: ready });
 
                   if (attempts >= maxAttempts && !ready) {
-                    await fula.shutdown();
-                    set({ fulaIsReady: undefined });
+                    // Increment fulaReinitCount instead of shutting down Fula
+                    set((state) => ({
+                      fulaReinitCount: state.fulaReinitCount + 1,
+                    }));
                   }
                   resolve(); // Resolve the promise after updating state
                 } else {
@@ -335,7 +339,7 @@ const createUserProfileSlice: StateCreator<
           fulaIsReady: value,
         });
       },
-      checkBloxConnection: async (maxTries = 1, waitBetweenRetries = 3) => {
+      checkBloxConnection: async (maxTries = 1, waitBetweenRetries = 5) => {
         const delay = (seconds: number) =>
           new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
@@ -426,6 +430,7 @@ const createUserProfileSlice: StateCreator<
       appPeerId: state.appPeerId,
       accounts: state.accounts,
       activeAccount: state.activeAccount,
+      fulaReinitCount: state.fulaReinitCount,
     }),
     migrate: async (persistedState, version) => {
       const { setState } = useBloxsStore;

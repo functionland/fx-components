@@ -22,7 +22,8 @@ import OfficeBloxUnitLight from '../../../app/icons/office-blox-unit-light.svg';
 
 import { useBloxsStore, useSettingsStore } from '../../../stores';
 import { EBloxInteractionType, TBloxInteraction } from '../../../models';
-import { CircleFilledIcon } from 'apps/box/src/components';
+//import { CircleFilledIcon } from 'apps/box/src/components';
+import { CircleFilledIcon } from '../../../components/Icons';
 
 type TBloxInteractionProps = {
   bloxs: TBloxInteraction[];
@@ -48,10 +49,12 @@ export const BloxInteraction = ({
   const { colors } = useFxTheme();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const [bloxsConnectionStatus] = useBloxsStore((state) => [
-    state.bloxsConnectionStatus,
-  ]);
-
+  const [bloxsConnectionStatus, currentBloxPeerId, setCurrentBloxPeerId] =
+    useBloxsStore((state) => [
+      state.bloxsConnectionStatus,
+      state.currentBloxPeerId,
+      state.setCurrentBloxPeerId,
+    ]);
 
   // useEffect(() => {
   //   if (fulaIsReady && currentBloxPeerId) {
@@ -67,15 +70,35 @@ export const BloxInteraction = ({
   //   }
   // }
   const swipePrevious = () => {
-    carouselRef?.current?.prev();
+    if (selectedIndex > 0) {
+      const previousIndex = selectedIndex - 1; // Calculate the previous index
+      const previousPeerId = bloxs[previousIndex]?.peerId; // Get the peerId of the previous item
+      if (previousPeerId) {
+        setCurrentBloxPeerId(previousPeerId); // Update the currentBloxPeerId in the store
+      }
+      carouselRef?.current?.prev(); // Move to the previous item in the carousel
+    }
   };
 
   const swipeNext = () => {
-    carouselRef?.current?.next();
+    if (selectedIndex < bloxs.length - 1) {
+      const nextIndex = selectedIndex + 1; // Calculate the next index
+      const nextPeerId = bloxs[nextIndex]?.peerId; // Get the peerId of the next item
+      if (nextPeerId) {
+        setCurrentBloxPeerId(nextPeerId); // Update the currentBloxPeerId in the store
+      }
+      carouselRef?.current?.next(); // Move to the next item in the carousel
+    }
   };
+
   const onSnapToItem = (index: number) => {
-    setSelectedIndex(index);
-    onBloxChange?.(index);
+    setSelectedIndex(index); // Update local state with selected index
+    onBloxChange?.(index); // Trigger external callback if provided
+
+    const currentPeerId = bloxs[index]?.peerId; // Get peerId of snapped-to item
+    if (currentPeerId) {
+      setCurrentBloxPeerId(currentPeerId); // Update currentBloxPeerId in the store
+    }
   };
   return (
     <FxBox position="relative">
@@ -142,7 +165,6 @@ export const BloxInteraction = ({
             </FxPressableOpacity>
           );
         }}
-        //onSnapToItem={(index) => setSelectedMode?.(bloxInteractions[index]?.mode)}
         onSnapToItem={onSnapToItem}
       />
       <FxPressableOpacity position="absolute" top={48} onPress={swipePrevious}>
