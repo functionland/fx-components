@@ -35,6 +35,8 @@ jobs:
         echo "##[endgroup]"
     - name: Get NPM Package Version
       run: echo "NPM_PACKAGE_VERSION=$(node -p "require('${{ github.workspace }}/apps/box/package.json').version")" >> $GITHUB_ENV
+    - name: Show GITHUB_ENV
+      run: echo $GITHUB_ENV
     - name: Build Android Release
       run: |
         cd ${{ github.workspace }}/apps/box/android
@@ -42,7 +44,7 @@ jobs:
     - name: Sign APK
       uses: r0adkll/sign-android-release@v1
       with:
-        releaseDirectory: app/build/outputs/apk/release
+        releaseDirectory: ${{ github.workspace }}/app/build/outputs/apk/release
         signingKeyBase64: ${{ secrets.SIGNING_KEY_BASE64 }}
         alias: ${{ secrets.KEY_ALIAS }}
         keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -52,5 +54,5 @@ jobs:
       with:
         serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
         packageName: land.fx.blox
-        releaseFiles: app/build/outputs/apk/release/app-release.apk
+        releaseFiles: ${{ github.workspace }}/app/build/outputs/apk/release/app-release.apk
         track: production
