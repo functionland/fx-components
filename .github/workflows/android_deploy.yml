@@ -39,7 +39,7 @@ jobs:
       run: echo $GITHUB_ENV
     - name: Build Android Release
       run: |
-        cd ${{ github.workspace }}/apps/box/android/apps/box/android
+        cd ${{ github.workspace }}/apps/box/android
         ./gradlew assembleRelease
     - name: List Directory
       run: ls -la ${{ github.workspace }}/apps/box/android/app/build/outputs/apk/release
