@@ -32,6 +32,8 @@ interface UserProfileActions {
   ) => Promise<boolean>;
   reset: () => void;
   checkFulaReadiness: () => Promise<void>; // New method to update fulaReady
+  setFulaReinitCount: (count: number) => void;
+  setUseLocalIp: (localIp: string) => void;
 }
 export interface UserProfileSlice {
   _hasHydrated: boolean;
@@ -56,6 +58,7 @@ export interface UserProfileSlice {
   fulaIsReady: boolean;
   bloxConnectionStatus: BloxConectionStatus;
   fulaReinitCount: number;
+  useLocalIp: string | undefined;
 }
 // define the initial state
 const initialState: UserProfileSlice = {
@@ -74,6 +77,7 @@ const initialState: UserProfileSlice = {
   address: undefined,
   walletId: undefined,
   fulaReinitCount: 0,
+  useLocalIp: '',
 };
 const createUserProfileSlice: StateCreator<
   UserProfileSlice & UserProfileActions,
@@ -136,10 +140,29 @@ const createUserProfileSlice: StateCreator<
                   set({ fulaIsReady: ready });
 
                   if (attempts >= maxAttempts && !ready) {
-                    // Increment fulaReinitCount instead of shutting down Fula
-                    set((state) => ({
-                      fulaReinitCount: state.fulaReinitCount + 1,
-                    }));
+                    // Read the current value of useLocalIp
+                    const currentLocalIp = get().useLocalIp;
+
+                    // Check if useLocalIp is set and not equal to "scan" or "delete"
+                    if (
+                      currentLocalIp &&
+                      currentLocalIp !== 'scan' &&
+                      currentLocalIp !== 'delete'
+                    ) {
+                      // Set useLocalIp to "delete"
+                      set({ useLocalIp: 'delete' });
+                      console.log(
+                        `useLocalIp was updated to "delete" from "${currentLocalIp}"`
+                      );
+                    } else if (!currentLocalIp || currentLocalIp === '') {
+                      set({ useLocalIp: 'scan' });
+                    } else {
+                      // Increment fulaReinitCount instead of shutting down Fula
+                      set((state) => ({
+                        fulaReinitCount: state.fulaReinitCount + 1,
+                      }));
+                    }
+                    reject('could not initialize fula');
                   }
                   resolve(); // Resolve the promise after updating state
                 } else {
@@ -164,6 +187,11 @@ const createUserProfileSlice: StateCreator<
       setHasHydrated: (isHydrated) => {
         set({
           _hasHydrated: isHydrated,
+        });
+      },
+      setUseLocalIp: (localIp: string) => {
+        set({
+          useLocalIp: localIp,
         });
       },
       loadAllCredentials: async () => {
@@ -258,6 +286,11 @@ const createUserProfileSlice: StateCreator<
           bloxPeerIds: peerIds,
         });
       },
+      setFulaReinitCount: (count: number) => {
+        set({
+          fulaReinitCount: count,
+        });
+      },
       createAccount: async ({ seed }) => {
         // eslint-disable-next-line no-useless-catch
         try {
@@ -339,72 +372,108 @@ const createUserProfileSlice: StateCreator<
           fulaIsReady: value,
         });
       },
-      checkBloxConnection: async (maxTries = 1, waitBetweenRetries = 5) => {
+      checkBloxConnection: async (
+        maxTries = 1,
+        waitBetweenRetries = 5
+      ): Promise<boolean> => {
         const delay = (seconds: number) =>
           new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
-        const attemptConnection = async (attempt = 1) => {
+        const attemptConnection = async (attempt = 1): Promise<boolean> => {
           console.log('checkBloxConnection attempt ' + attempt);
-          // attempt is now a parameter of attemptConnection
-          set({ bloxConnectionStatus: 'CHECKING' });
+
           try {
+            // Set initial status to CHECKING
+            set({ bloxConnectionStatus: 'CHECKING' });
+
+            // Check network connectivity
             console.log('NetInfo check');
             const state = await NetInfo?.fetch();
-            if (
-              NetInfo &&
-              (!state?.isConnected || !state?.isInternetReachable)
-            ) {
-              const pingResponse = await axios?.head('https://google.com', {
-                timeout: 5000, // 5 seconds timeout
-              });
-              if (pingResponse?.status !== 200) {
-                console.log(
-                  'Internet is not connected, waiting for connection...'
-                );
-                // Optionally, you might want to handle the lack of internet connectivity accordingly
+            if (!state?.isConnected || !state?.isInternetReachable) {
+              try {
+                const pingResponse = await axios?.head('https://google.com', {
+                  timeout: 5000,
+                });
+                if (pingResponse?.status !== 200) {
+                  throw new Error('Internet is not connected.');
+                }
+              } catch (error) {
+                console.error('Network check failed:', error.message);
                 set({ bloxConnectionStatus: 'NO INTERNET' });
-                Promise.reject('internet is not connected');
                 return false;
               }
             }
             console.log('NetInfo check done');
+
+            // Check Fula readiness
             const { fulaIsReady } = get();
             if (!fulaIsReady) {
-              console.log('Fula is not ready. Please wait...');
+              console.warn('Fula is not ready.');
               set({ bloxConnectionStatus: 'NO CLIENT' });
-              Promise.reject('Fula is not ready. Please wait...');
               return false;
             }
+
+            // Check Blox connection
             const connected = await fula.checkConnection();
             console.log(
-              'checkBloxConnection attempt:',
-              attempt,
-              'connected:',
-              connected
+              `checkBloxConnection attempt ${attempt}, connected: ${connected}`
             );
-
             if (connected) {
               set({ bloxConnectionStatus: 'CONNECTED' });
               return true; // Connection successful
-            } else if (attempt < maxTries) {
+            }
+
+            // Retry logic
+            if (attempt < maxTries) {
               console.log(
                 `Attempt ${attempt} failed, retrying after ${waitBetweenRetries} seconds...`
               );
               await delay(waitBetweenRetries);
               return attemptConnection(attempt + 1); // Increment attempt and retry
             } else {
+              const currentLocalIp = get().useLocalIp;
+
+              // Check if useLocalIp is set and not equal to "scan" or "delete"
+              if (
+                currentLocalIp &&
+                currentLocalIp !== 'scan' &&
+                currentLocalIp !== 'delete'
+              ) {
+                // Set useLocalIp to "delete"
+                set({ useLocalIp: 'delete' });
+                console.log(
+                  `useLocalIp was updated to "delete" from "${currentLocalIp}"`
+                );
+              } else if (!currentLocalIp || currentLocalIp === '') {
+                set({ useLocalIp: 'scan' });
+              } else {
+                // Increment fulaReinitCount instead of shutting down Fula
+                set((state) => ({
+                  fulaReinitCount: state.fulaReinitCount + 1,
+                }));
+              }
               throw new Error('Max retries reached without success.');
             }
           } catch (error) {
-            console.log(
-              `Failed to connect after ${attempt} attempts. Error: ${error.message}`
+            console.error(
+              `Error during connection attempt ${attempt}:`,
+              error.message
             );
+
+            // Update status to DISCONNECTED on failure
             set({ bloxConnectionStatus: 'DISCONNECTED' });
-            return false; // Connection was not successful after max attempts
+            return false; // Connection failed
           }
         };
 
-        return attemptConnection(); // Start the attempt process without specifying the attempt, defaults to 1
+        // Start connection attempts and ensure final status update
+        try {
+          return await attemptConnection(); // Start with first attempt
+        } catch (error) {
+          console.error('checkBloxConnection failed:', error.message);
+          set({ bloxConnectionStatus: 'DISCONNECTED' }); // Ensure final status update on failure
+          return false;
+        }
       },
 
       reset: () => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import {
   FxBottomSheetModalMethods,
@@ -37,22 +37,38 @@ import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useLogger } from '../hooks';
 import { useBloxsStore } from '../stores';
 import { BluetoothCommandsScreen } from '../screens/Settings/Bluetooth/BluetoothCommands.screen';
+import Zeroconf from 'react-native-zeroconf';
+import { MDNSBloxService } from '../models';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
-  const [password, signiture, setFulaIsReady, fulaIsReady, fulaReinitCount] =
-    useUserProfileStore((state) => [
-      state.password,
-      state.signiture,
-      state.setFulaIsReady,
-      state.fulaIsReady,
-      state.fulaReinitCount,
-    ]);
+  const [
+    password,
+    signiture,
+    setFulaIsReady,
+    fulaIsReady,
+    fulaReinitCount,
+    setFulaReinitCount,
+    useLocalIp,
+    setUseLocalIp,
+  ] = useUserProfileStore((state) => [
+    state.password,
+    state.signiture,
+    state.setFulaIsReady,
+    state.fulaIsReady,
+    state.fulaReinitCount,
+    state.setFulaReinitCount,
+    state.useLocalIp,
+    state.setUseLocalIp,
+  ]);
   const [bloxs, currentBloxPeerId, updateBloxsStore] = useBloxsStore(
     (state) => [state.bloxs, state.currentBloxPeerId, state.update]
   );
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
   const logger = useLogger();
+  const zeroconf = new Zeroconf();
+  const mDnsTimer = useRef<NodeJS.Timeout>();
+  const [scanning, setScanning] = useState(false);
 
   const openGlobalBottomSheet = () => {
     globalBottomSheetRef.current.present();
@@ -61,6 +77,60 @@ export const MainTabsNavigator = () => {
   const closeGlobalBottomSheet = () => {
     globalBottomSheetRef.current.close();
   };
+
+  const isValidIp = (ip: string): boolean => {
+    const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+    return ipRegex.test(ip);
+  };
+
+  const scanMDNS = () => {
+    zeroconf.stop();
+    zeroconf.scan('fulatower', 'tcp', 'local.');
+  };
+
+  useEffect(() => {
+    if (useLocalIp === 'scan' && currentBloxPeerId) {
+      zeroconf.on('start', () => {
+        setScanning(true);
+        clearTimeout(mDnsTimer.current);
+        mDnsTimer.current = setTimeout(() => {
+          zeroconf.stop();
+          setScanning(false);
+        }, 6000);
+        console.log('The scan has started.\n\r');
+      });
+
+      zeroconf.on('resolved', (resolved: MDNSBloxService) => {
+        // Check if the resolved device matches the currentBloxPeerId
+        if (resolved && resolved.txt?.bloxPeerIdString === currentBloxPeerId) {
+          // Fetch the first IP address from the resolved data
+          const firstIp = resolved.addresses?.[0];
+          if (firstIp) {
+            console.log(`Matching Blox found. Setting local IP: ${firstIp}`);
+            setUseLocalIp(firstIp); // Set the local IP
+            zeroconf.stop(); // Stop scanning once a match is found
+            setScanning(false); // Update scanning state
+            if (firstIp !== 'scan' && firstIp !== '' && isValidIp(firstIp)) {
+              setFulaReinitCount(fulaReinitCount + 1);
+            }
+          }
+        }
+        console.log('Resolved device:', resolved);
+      });
+
+      scanMDNS();
+
+      // Cleanup function to remove event listeners
+      return () => {
+        zeroconf.removeAllListeners('start');
+        zeroconf.removeAllListeners('resolved');
+        zeroconf.stop(); // Ensure scanning is stopped on cleanup
+      };
+    } else if (useLocalIp === 'delete') {
+      setFulaReinitCount(fulaReinitCount + 1);
+    }
+  }, [currentBloxPeerId, useLocalIp]);
+
   useEffect(() => {
     const bloxsArray = Object.values(bloxs || {});
     if (!currentBloxPeerId && bloxsArray.length) {
@@ -69,8 +139,10 @@ export const MainTabsNavigator = () => {
       });
     }
   }, [currentBloxPeerId]);
+
   useEffect(() => {
     if (password && signiture && currentBloxPeerId) {
+      let bloxAddr = '';
       setFulaIsReady(false);
       logger.log('MainTabsNavigator:intiFula', {
         bloxPeerId: currentBloxPeerId,
@@ -78,11 +150,19 @@ export const MainTabsNavigator = () => {
         signiture: signiture ? 'Has signiture' : undefined,
         bloxs,
       });
+      if (
+        useLocalIp &&
+        useLocalIp !== 'scan' &&
+        useLocalIp !== '' &&
+        isValidIp(useLocalIp)
+      ) {
+        bloxAddr = '/ip4/' + useLocalIp + '/tcp/40001/p2p/' + currentBloxPeerId;
+      }
       try {
         Helper.initFula({
           password,
           signiture,
-          // bloxAddr: '/ip4/172.20.10.5/tcp/40001/p2p/12D3KooWDwaDDECmQq3mHHwWumWh6o4ThQ2JQDdTYcWjm5nUf7ga',
+          bloxAddr: bloxAddr,
           bloxPeerId: currentBloxPeerId,
         })
           .then(() => {

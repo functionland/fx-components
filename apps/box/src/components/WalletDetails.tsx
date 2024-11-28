@@ -40,7 +40,10 @@ export const WalletDetails = ({
   showDID = true,
   showBloxPeerIds = false,
 }: WalletDetailsProps) => {
-  const [bloxs = {}] = useBloxsStore((state) => [state.bloxs]);
+  const [bloxs = {}, currentBloxPeerId] = useBloxsStore((state) => [
+    state.bloxs,
+    state.currentBloxPeerId,
+  ]);
   const bloxsArray = Object.values(bloxs);
   const [loading, setLoading] = useState(false);
   const [bloxAccountId, setBloxAccountId] = useState('');
@@ -50,7 +53,7 @@ export const WalletDetails = ({
     signiture,
     password,
     address,
-    isFulaReady,
+    fulaIsReady,
     appPeerId,
     checkBloxConnection,
   ] = useUserProfileStore((state) => [
@@ -86,13 +89,12 @@ export const WalletDetails = ({
 
     updateData();
   }, [address]);
-  const updateAccountId = async () => {
+  const updateAccountId = async (retried = false) => {
     try {
       setLoading(true);
       setBloxAccountId('Waiting for connection');
-      await fula.isReady(false);
-      if (isFulaReady) {
-        const connectionStatus = await checkBloxConnection(6, 10);
+      if (fulaIsReady) {
+        const connectionStatus = await checkBloxConnection(3, 5);
         if (connectionStatus) {
           setBloxAccountId('Connected to blox');
           await updateBloxAccount();
@@ -100,7 +102,16 @@ export const WalletDetails = ({
           setBloxAccountId('Not Connected to blox');
         }
       } else {
-        setBloxAccountId('Fula is not ready');
+        if (password && signiture && currentBloxPeerId && !retried) {
+          await Helper.initFula({
+            password: password,
+            signiture: signiture,
+            bloxPeerId: currentBloxPeerId,
+          });
+          await updateAccountId(true);
+        } else {
+          setBloxAccountId('Fula is not ready');
+        }
       }
     } catch (error) {
       setBloxAccountId('Couldnot Connect to blox');
@@ -112,13 +123,13 @@ export const WalletDetails = ({
   useEffect(() => {
     console.log('inside account useEffect');
     updateAccountId();
-  }, [isFulaReady]);
+  }, [fulaIsReady]);
 
   const handleAccountOptionSelect = async (type: AccountOptionsType) => {
     accountOptionsSheetRef?.current?.close();
     switch (type) {
       case 'RESET-CHAIN':
-        if (isFulaReady) {
+        if (fulaIsReady) {
           console.log('resetting chain request');
           try {
             console.log('checking blox connection');

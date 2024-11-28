@@ -64,13 +64,21 @@ export const BloxScreen = () => {
   );
   const navigation = useNavigation();
   const logger = useLogger();
-  const [earnings, getEarnings, fulaIsReady, checkFulaReadiness] =
-    useUserProfileStore((state) => [
-      state.earnings,
-      state.getEarnings,
-      state.fulaIsReady,
-      state.checkFulaReadiness,
-    ]);
+  const [
+    earnings,
+    getEarnings,
+    fulaIsReady,
+    checkFulaReadiness,
+    password,
+    signiture,
+  ] = useUserProfileStore((state) => [
+    state.earnings,
+    state.getEarnings,
+    state.fulaIsReady,
+    state.checkFulaReadiness,
+    state.password,
+    state.signiture,
+  ]);
 
   const [
     bloxs,
@@ -232,7 +240,14 @@ export const BloxScreen = () => {
             );
           }
         } else {
-          checkBloxConnection();
+          if (password && signiture && currentBloxPeerId) {
+            await Helper.initFula({
+              password: password,
+              signiture: signiture,
+              bloxPeerId: currentBloxPeerId,
+            });
+            checkBloxConnection();
+          }
           console.log('fula is not ready');
         }
         break;

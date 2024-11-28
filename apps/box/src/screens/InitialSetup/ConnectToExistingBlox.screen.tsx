@@ -25,6 +25,7 @@ import { Helper } from '../../utils';
 import { useLogger, useRootNavigation } from '../../hooks';
 import { useBloxsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
+
 type DicoveryDeviceType = {
   ipAddress: string;
   peerId: string;
@@ -103,9 +104,23 @@ export const ConnectToExistingBloxScreen = () => {
     return () => {
       zeroconf.removeAllListeners('start');
       zeroconf.removeAllListeners('resolved');
-  };
+    };
   }, []);
 
+  const errorToString = (error: unknown): string => {
+    if (error instanceof Error) {
+      // If it's an instance of the Error class, use its message
+      return error.message;
+    } else if (typeof error === 'string') {
+      // If it's already a string, return it as-is
+      return error;
+    } else {
+      // For other types (e.g., objects), stringify it
+      return JSON.stringify(error);
+    }
+  };
+
+  const queueToast = useToast();
   const generateAppPeerId = async () => {
     try {
       const peerId = await Helper.initFula({
@@ -114,6 +129,12 @@ export const ConnectToExistingBloxScreen = () => {
       });
       setAppPeerId(peerId);
     } catch (error) {
+      const errorMessage = errorToString(error);
+      queueToast.showToast({
+        type: 'error',
+        message:
+          'ConnectToExistingBloxScreen:generateAppPeerId: ' + errorMessage,
+      });
       logger.logError('ConnectToExistingBloxScreen:generateAppPeerId', error);
     }
   };
