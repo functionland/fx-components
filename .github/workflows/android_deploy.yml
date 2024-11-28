@@ -33,6 +33,12 @@ jobs:
         sdkmanager --install "cmake;3.10.2.4988404"
         yes | sdkmanager --licenses
         echo "##[endgroup]"
+    - name: Install Android Build Tools
+      run: sdkmanager "build-tools;29.0.3"
+    - name: List Build Tools Directory
+      run: ls -la /usr/local/lib/android/sdk/build-tools/29.0.3
+    - name: Add Build Tools to PATH
+      run: echo "/usr/local/lib/android/sdk/build-tools/29.0.3" >> $GITHUB_PATH
     - name: Get NPM Package Version
       run: echo "NPM_PACKAGE_VERSION=$(node -p "require('${{ github.workspace }}/apps/box/package.json').version")" >> $GITHUB_ENV
     - name: Show GITHUB_ENV
