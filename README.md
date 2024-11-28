@@ -193,3 +193,12 @@ All files are released with the MIT License license.
 ### Unresolved branches
 
 [Rewards Screen](https://github.com/functionland/apps-monorepo/tree/feat/rewards-screen) branch relating to the rewards screen is unresolved and in a [draft PR](https://github.com/functionland/apps-monorepo/pull/229).
+
+
+### Github Actions
+
+change the versionCode nad number
+```
+BUILD_GRADLE_PATH=${{ github.workspace }}/apps/box/android/app/build.gradle
+sed -i "s/versionName \".*\"/versionName \"$NEW_VERSION_NAME\"/" $BUILD_GRADLE_PATH
+```

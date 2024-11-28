@@ -35,11 +35,6 @@ jobs:
         echo "##[endgroup]"
     - name: Get NPM Package Version
       run: echo "NPM_PACKAGE_VERSION=$(node -p "require('${{ github.workspace }}/apps/box/package.json').version")" >> $GITHUB_ENV
-    - name: Change Android VersionCode and VersionName
-      run: |
-        NEW_VERSION_NAME=$NPM_PACKAGE_VERSION
-        BUILD_GRADLE_PATH=${{ github.workspace }}/apps/box/android/app/build.gradle
-        sed -i "s/versionName \".*\"/versionName \"$NEW_VERSION_NAME\"/" $BUILD_GRADLE_PATH
     - name: Build Android Release
       run: |
         cd ${{ github.workspace }}/apps/box/android
