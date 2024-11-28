@@ -39,7 +39,7 @@ jobs:
       run: |
         NEW_VERSION_NAME=$NPM_PACKAGE_VERSION
         BUILD_GRADLE_PATH=${{ github.workspace }}/apps/box/android/app/build.gradle
-        sed -i '' "s/versionName \".*\"/versionName \"$NEW_VERSION_NAME\"/" $BUILD_GRADLE_PATH
+        sed -i "s/versionName \".*\"/versionName \"$NEW_VERSION_NAME\"/" $BUILD_GRADLE_PATH
     - name: Build Android Release
       run: |
         cd ${{ github.workspace }}/apps/box/android
