@@ -114,7 +114,7 @@ export const WalletDetails = ({
             signiture: signiture,
             bloxPeerId: currentBloxPeerId,
           });
-          //await updateAccountId(true);
+          await updateAccountId(true);
         } else {
           setBloxAccountId('Fula is not ready');
         }
