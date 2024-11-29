@@ -4,6 +4,7 @@ import { HDKEY, DID } from '@functionland/fula-sec';
 import { fula } from '@functionland/react-native-fula';
 import { numberToHex, sanitizeHex, utf8ToHex } from '@walletconnect/encoding';
 import { Constants } from '.';
+import { time } from 'console';
 
 export const getMyDID = (password: string, signiture: string): string => {
   const ed = new HDKEY(password);
@@ -78,6 +79,11 @@ export const initFula = async ({
             'Failed to shutdown previous Fula client:',
             shutdownError
           );
+          try {
+            await fula.deleteDsLock();
+          } catch (lockError) {
+            console.warn('Failed to delete lock file:', lockError);
+          }
         }
 
         // Initialize a new Fula client
@@ -97,6 +103,7 @@ export const initFula = async ({
         console.error('initFula failed:', error);
         reject(error); // Reject with the error on failure
       } finally {
+        console.log('Resetting initFulaPromise');
         initFulaPromise = null; // Reset the shared promise after execution
       }
     })(); // Immediately invoke the async function inside the executor

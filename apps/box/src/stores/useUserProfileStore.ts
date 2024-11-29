@@ -77,7 +77,7 @@ const initialState: UserProfileSlice = {
   address: undefined,
   walletId: undefined,
   fulaReinitCount: 0,
-  useLocalIp: '',
+  useLocalIp: 'scan',
 };
 const createUserProfileSlice: StateCreator<
   UserProfileSlice & UserProfileActions,
@@ -379,7 +379,7 @@ const createUserProfileSlice: StateCreator<
         const delay = (seconds: number) =>
           new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
-        const attemptConnection = async (attempt = 1): Promise<boolean> => {
+        const attemptConnection = async (attempt: number): Promise<boolean> => {
           console.log('checkBloxConnection attempt ' + attempt);
 
           try {
@@ -431,28 +431,8 @@ const createUserProfileSlice: StateCreator<
               await delay(waitBetweenRetries);
               return attemptConnection(attempt + 1); // Increment attempt and retry
             } else {
-              const currentLocalIp = get().useLocalIp;
-
-              // Check if useLocalIp is set and not equal to "scan" or "delete"
-              if (
-                currentLocalIp &&
-                currentLocalIp !== 'scan' &&
-                currentLocalIp !== 'delete'
-              ) {
-                // Set useLocalIp to "delete"
-                set({ useLocalIp: 'delete' });
-                console.log(
-                  `useLocalIp was updated to "delete" from "${currentLocalIp}"`
-                );
-              } else if (!currentLocalIp || currentLocalIp === '') {
-                set({ useLocalIp: 'scan' });
-              } else {
-                // Increment fulaReinitCount instead of shutting down Fula
-                set((state) => ({
-                  fulaReinitCount: state.fulaReinitCount + 1,
-                }));
-              }
-              throw new Error('Max retries reached without success.');
+              handleMaxRetriesReached();
+              return false;
             }
           } catch (error) {
             console.error(
@@ -466,9 +446,34 @@ const createUserProfileSlice: StateCreator<
           }
         };
 
+        const handleMaxRetriesReached = () => {
+          const currentLocalIp = get().useLocalIp;
+
+          if (
+            currentLocalIp &&
+            currentLocalIp !== 'scan' &&
+            currentLocalIp !== 'delete'
+          ) {
+            console.log('inside first if');
+            set({ useLocalIp: 'delete' });
+            console.log(
+              `useLocalIp was updated to "delete" from "${currentLocalIp}"`
+            );
+          } else if (!currentLocalIp || currentLocalIp === '') {
+            console.log('inside second if');
+            set({ useLocalIp: 'scan' });
+          } else {
+            console.log('inside third if: currentLocalIp=' + currentLocalIp);
+            set((state) => ({
+              fulaReinitCount: state.fulaReinitCount + 1,
+            }));
+          }
+          console.error('Max retries reached without success.');
+        };
+
         // Start connection attempts and ensure final status update
         try {
-          return await attemptConnection(); // Start with first attempt
+          return await attemptConnection(1); // Start with first attempt
         } catch (error) {
           console.error('checkBloxConnection failed:', error.message);
           set({ bloxConnectionStatus: 'DISCONNECTED' }); // Ensure final status update on failure

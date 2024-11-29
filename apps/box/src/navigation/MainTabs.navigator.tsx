@@ -154,6 +154,7 @@ export const MainTabsNavigator = () => {
         useLocalIp &&
         useLocalIp !== 'scan' &&
         useLocalIp !== '' &&
+        useLocalIp !== 'delete' &&
         isValidIp(useLocalIp)
       ) {
         bloxAddr = '/ip4/' + useLocalIp + '/tcp/40001/p2p/' + currentBloxPeerId;

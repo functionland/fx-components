@@ -127,9 +127,9 @@ export const PluginScreen = () => {
     };
 
     if (fulaIsReady) {
-      intervalId = setInterval(updateConnectionStatus, POLLING_INTERVAL);
+      ////////intervalId = setInterval(updateConnectionStatus, POLLING_INTERVAL);
       // Initial check immediately when fulaIsReady becomes true
-      updateConnectionStatus();
+      ////////updateConnectionStatus();
     }
 
     // Cleanup function to clear interval when component unmounts or fulaIsReady changes

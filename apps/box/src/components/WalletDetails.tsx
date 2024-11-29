@@ -78,7 +78,7 @@ export const WalletDetails = ({
   }, [checkFulaReadiness]);
 
   useEffect(() => {
-    console.log('inside account useEffect');
+    console.log('inside account useEffect1');
     const updateData = async () => {
       if (address) {
         setWalletAddress(address);
@@ -93,8 +93,8 @@ export const WalletDetails = ({
     try {
       setLoading(true);
       setBloxAccountId('Waiting for connection');
-      if (fulaIsReady) {
-        const connectionStatus = await checkBloxConnection(3, 5);
+      if (fulaIsReady && !loading) {
+        const connectionStatus = await checkBloxConnection();
         if (connectionStatus) {
           setBloxAccountId('Connected to blox');
           await updateBloxAccount();
@@ -102,13 +102,19 @@ export const WalletDetails = ({
           setBloxAccountId('Not Connected to blox');
         }
       } else {
-        if (password && signiture && currentBloxPeerId && !retried) {
+        if (
+          password &&
+          signiture &&
+          currentBloxPeerId &&
+          !retried &&
+          !loading
+        ) {
           await Helper.initFula({
             password: password,
             signiture: signiture,
             bloxPeerId: currentBloxPeerId,
           });
-          await updateAccountId(true);
+          //await updateAccountId(true);
         } else {
           setBloxAccountId('Fula is not ready');
         }
@@ -121,9 +127,9 @@ export const WalletDetails = ({
   };
 
   useEffect(() => {
-    console.log('inside account useEffect');
+    console.log('inside account useEffect fulaIsReady=' + fulaIsReady);
     updateAccountId();
-  }, [fulaIsReady]);
+  }, [checkBloxConnection]);
 
   const handleAccountOptionSelect = async (type: AccountOptionsType) => {
     accountOptionsSheetRef?.current?.close();
