@@ -2081,10 +2081,10 @@
     tslib "^2.4.0"
     uint8arrays "^3.0.0"
 
-"@functionland/react-native-fula@1.54.32":
-  version "1.54.32"
-  resolved "https://registry.yarnpkg.com/@functionland/react-native-fula/-/react-native-fula-1.54.32.tgz#9b6b7d1fe539bc09c165a90eacc9062da1dc0596"
-  integrity sha512-F8Dy/JNuge7WJylei8C26jqttfjp5d30Uz1Nyhd3btntvLX/nXXcgKkN1evFsmlkBThfpthLV5nfw3710DcA5w==
+"@functionland/react-native-fula@1.54.33":
+  version "1.54.33"
+  resolved "https://registry.yarnpkg.com/@functionland/react-native-fula/-/react-native-fula-1.54.33.tgz#9e7b19b83bb9bd9e9743527f44427cadc73bfdf6"
+  integrity sha512-87k3nxqX3PEaTPkRGgF9oIOni2SO4OwOkgcN6BFIUxBx2j/jrBqZFxoXB+hR5Q28ZvTyzCLkVBNglC+hi76k2w==
   dependencies:
     "@polkadot/api" "^9.11.3"
     "@polkadot/keyring" "^10.2.6"
