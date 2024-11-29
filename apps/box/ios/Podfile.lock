@@ -875,7 +875,7 @@ SPEC CHECKSUMS:
   react-native-ble-manager: 09724bad4d06b86a85e0cd7bd97196fecca15e9a
   react-native-compat: 2dca63ad5d9c3ca5e001795a5789f688ad9fae6f
   react-native-config: 86038147314e2e6d10ea9972022aa171e6b1d4d8
-  react-native-fula: 7583fe6670d1e6a8c9e31dd7ace1f99200802073
+  react-native-fula: 552a315c2d39dcc6aaafdb6f27dcc359826cc8a2
   react-native-get-random-values: dee677497c6a740b71e5612e8dbd83e7539ed5bb
   react-native-netinfo: ccbe1085dffd16592791d550189772e13bf479e2
   react-native-pager-view: 0ccb8bf60e2ebd38b1f3669fa3650ecce81db2df
