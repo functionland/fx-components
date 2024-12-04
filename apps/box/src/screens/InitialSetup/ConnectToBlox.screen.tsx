@@ -7,46 +7,170 @@ import {
   FxSafeAreaBox,
   useToast,
 } from '@functionland/component-library';
+import BleManager from 'react-native-ble-manager';
 import { DEFAULT_NETWORK_NAME } from '../../hooks/useIsConnectedToBox';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { EConnectionStatus } from '../../models';
 import BloxWifiDevice from '../../app/icons/blox-wifi-device.svg';
-import { ActivityIndicator, PermissionsAndroid, Platform } from 'react-native';
+import { ActivityIndicator, PermissionsAndroid, Platform, NativeEventEmitter, NativeModules } from 'react-native';
 import { NetInfoStateType, fetch } from '@react-native-community/netinfo';
 import axios from 'axios';
 import { API_URL } from '../../api/index';
 import { FlashingCircle, FlashingTower } from '../../components';
 
 const connectionStatusStrings = {
-  [EConnectionStatus.connecting]: 'Checking...',
+  [EConnectionStatus.connecting]: 'Checking WiFi connection...',
   [EConnectionStatus.connected]: 'Connected',
   [EConnectionStatus.failed]: 'Unable to connect to Hotspot',
   [EConnectionStatus.notConnected]: 'Not Connected',
+  [EConnectionStatus.bleConnecting]: 'Searching for Blox device...',
+  [EConnectionStatus.bleConnected]: 'Connected to Blox via Bluetooth',
+  [EConnectionStatus.bleFailed]:
+    'Unable to connect via Bluetooth, trying WiFi...',
 };
+const initializeBLE = () => {
+  BleManager.start({ showAlert: false }).then(() => {
+    console.log('BLE Manager initialized');
+  });
+};
+const BleManagerModule = NativeModules.BleManager;
+const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+
+const DEVICE_NAME = 'fulatower';
+const DEVICE_MAC = '2C:05:47:85:39:3F';
 
 export const ConnectToBloxScreen = () => {
   const navigation = useInitialSetupNavigation();
   const { queueToast } = useToast();
+  const [showHotspotInstructions, setShowHotspotInstructions] = useState(false);
 
   const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
     EConnectionStatus.notConnected
   );
-  const checkAndroidPermission = async (): Promise<boolean> => {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      {
-        title: 'Location permission is required for WiFi connections',
-        message:
-          'This app needs location permission as this is required  ' +
-          'to scan for wifi networks.',
-        buttonNegative: 'DENY',
-        buttonPositive: 'ALLOW',
-      }
-    );
-    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+
+  const requestPermissions = async () => {
+    if (Platform.OS === 'ios') {
       return true;
-    } else {
+    }
+
+    if (Platform.OS === 'android' && Platform.Version >= 31) {
+      const permissions = [
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      ];
+
+      const results = await Promise.all(
+        permissions.map((permission) => PermissionsAndroid.request(permission))
+      );
+
+      return results.every((result) => result === 'granted');
+    }
+
+    return true;
+  };
+
+  const checkAndEnableBluetooth = async (): Promise<boolean> => {
+    try {
+      const state = await BleManager.checkState();
+      
+      if (state === 'on') {
+        return true;
+      }
+  
+      if (Platform.OS === 'android') {
+        try {
+          await BleManager.enableBluetooth();
+          return true;
+        } catch (error) {
+          queueToast({
+            title: 'Bluetooth Error',
+            message: 'Failed to enable Bluetooth automatically. Please enable it manually.',
+            type: 'warning',
+          });
+          return false;
+        }
+      } else {
+        queueToast({
+          title: 'Bluetooth Required',
+          message: 'Please enable Bluetooth in your device settings to connect to Blox',
+          type: 'warning',
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Bluetooth state check failed:', error);
+      return false;
+    }
+  };
+
+  const connectViaBLE = async (): Promise<boolean> => {
+    try {
+      setConnectionStatus(EConnectionStatus.connecting);
+  
+      const bluetoothReady = await checkAndEnableBluetooth();
+      if (!bluetoothReady) {
+        return false;
+      }
+  
+      return new Promise((resolve) => {
+        const discoveredDevices: Array<{
+          peripheral: string;
+          rssi: number;
+          timestamp: number;
+        }> = [];
+  
+        const SCAN_DURATION = 5000;
+  
+        // Set up event listener
+        const discoveryListener = bleManagerEmitter.addListener(
+          'BleManagerDiscoverPeripheral',
+          (peripheral) => {
+            if (peripheral.name === DEVICE_NAME || peripheral.id === DEVICE_MAC) {
+              discoveredDevices.push({
+                peripheral: peripheral.id,
+                rssi: peripheral.rssi,
+                timestamp: Date.now(),
+              });
+            }
+          }
+        );
+  
+        BleManager.scan([], SCAN_DURATION, true)
+          .then(() => {
+            console.log('Scanning...');
+          })
+          .catch((err) => {
+            console.error('Scan failed', err);
+            discoveryListener.remove();
+            resolve(false);
+          });
+  
+        setTimeout(async () => {
+          // Clean up listener
+          discoveryListener.remove();
+  
+          if (discoveredDevices.length === 0) {
+            resolve(false);
+            return;
+          }
+  
+          const sortedDevices = discoveredDevices.sort((a, b) => b.rssi - a.rssi);
+          const strongestDevice = sortedDevices[0];
+  
+          try {
+            await BleManager.connect(strongestDevice.peripheral);
+            await BleManager.retrieveServices(strongestDevice.peripheral);
+            resolve(true);
+          } catch (error) {
+            console.error('Connection error:', error);
+            resolve(false);
+          }
+        }, SCAN_DURATION + 1000);
+      });
+    } catch (error) {
+      console.error('Scan error:', error);
       return false;
     }
   };
@@ -79,25 +203,26 @@ export const ConnectToBloxScreen = () => {
 
   const connectToBox = async () => {
     try {
-      if (Platform.OS === 'android' && !(await checkAndroidPermission())) {
-        queueToast({
-          title: 'Permission denied!',
-          message:
-            'The Blox app needs location permission to connect to the WIFI, set it manually!',
-          type: 'warning',
-          autoHideDuration: 5000,
-        });
-        return;
-      } else if (Platform.OS === 'ios') {
+      setConnectionStatus(EConnectionStatus.bleConnecting);
+
+      // Try BLE connection first
+      const bleResult = await connectViaBLE();
+      if (bleResult) {
+        setConnectionStatus(EConnectionStatus.bleConnected);
         handleNext();
         return;
       }
-      setConnectionStatus(EConnectionStatus.connecting);
 
+      // If BLE fails, show message and try WiFi
+      setConnectionStatus(EConnectionStatus.bleFailed);
+      setShowHotspotInstructions(true);
+
+      // Wait a moment to show the BLE failed message
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      setConnectionStatus(EConnectionStatus.connecting);
       if ((await isDefaultNetwork()) || (await checkApiAvailability())) {
-        // Check if GET request to the specific URL is successful (HTTP status code 200)
         const response = await axios.head(API_URL + '/properties');
-        console.log(response);
         if (response.status === 200) {
           setConnectionStatus(EConnectionStatus.connected);
           handleNext();
@@ -105,29 +230,20 @@ export const ConnectToBloxScreen = () => {
           setConnectionStatus(EConnectionStatus.failed);
           queueToast({
             title: 'Connection Error',
-            message:
-              'You may have tried to connect to FxBlox but it seems your phone needs approval to connect. Check Wifi status again.',
+            message: 'Unable to connect to Blox. Please check your connection.',
             type: 'error',
             autoHideDuration: 5000,
           });
         }
-        return;
       } else {
         setConnectionStatus(EConnectionStatus.notConnected);
         queueToast({
           title: 'Not connected!',
-          message:
-            "Unable to reach the blox!, please make sure your phone is connected to Blox's hotspot",
+          message: "Please connect to Blox's hotspot manually",
           type: 'warning',
           autoHideDuration: 5000,
         });
       }
-      // WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false).then(
-      //   () => {
-      //     setConnectionStatus(EConnectionStatus.connected);
-      //   },
-      //   () => setConnectionStatus(EConnectionStatus.failed)
-      // );
     } catch (error) {
       console.log('connectToBox', error);
       setConnectionStatus(EConnectionStatus.notConnected);
@@ -167,25 +283,35 @@ export const ConnectToBloxScreen = () => {
         </FxBox>
 
         <FxBox flex={4}>
-          {connectionStatus !== EConnectionStatus.connected && (
+          {![
+            EConnectionStatus.connected,
+            EConnectionStatus.bleConnected,
+          ].includes(connectionStatus) && (
             <FxText
               variant="h200"
               marginBottom="40"
               textAlign="center"
-              color="warningBase"
-              //style={{ bottom: 0 }}
+              color={
+                connectionStatus === EConnectionStatus.bleFailed
+                  ? 'warningBase'
+                  : 'primary'
+              }
             >
               {connectionStatusStrings[connectionStatus]}
             </FxText>
           )}
-          {connectionStatus !== EConnectionStatus.connected ? (
+          {connectionStatus !== EConnectionStatus.connected &&
+          connectionStatus !== EConnectionStatus.bleConnected ? (
             <>
+              {showHotspotInstructions &&
+              connectionStatus !== EConnectionStatus.bleConnected ? (
+                <FxText variant="h200" textAlign="center">
+                  - Please turn your Blox on and connect your phone to the
+                  Blox's hotspot manually, and turn off mobile data.
+                </FxText>
+              ) : null}
               <FxText variant="h200" textAlign="center">
-                1. Please turn your Blox on and connect your phone to the Blox's
-                hotspot manually, and turn off mobile data.
-              </FxText>
-              <FxText variant="h200" textAlign="center">
-                2. Make sure you have internal or external storage attached and
+                - Make sure you have internal or external storage attached and
                 format is either 'ext4' or 'vFat'.
               </FxText>
               <FxBox
@@ -251,31 +377,20 @@ export const ConnectToBloxScreen = () => {
           <FxButton
             width={150}
             onPress={connectToBox}
-            disabled={connectionStatus === EConnectionStatus.connecting}
+            disabled={[
+              EConnectionStatus.connecting,
+              EConnectionStatus.bleConnecting,
+            ].includes(connectionStatus)}
           >
-            {connectionStatus !== EConnectionStatus.connecting ? (
-              'Continue'
-            ) : (
+            {[
+              EConnectionStatus.connecting,
+              EConnectionStatus.bleConnecting,
+            ].includes(connectionStatus) ? (
               <ActivityIndicator />
+            ) : (
+              'Continue'
             )}
           </FxButton>
-          {/* {connectionStatus !== EConnectionStatus.connected ? (
-            <FxButton
-              width={150}
-              onPress={connectToBox}
-              disabled={connectionStatus === EConnectionStatus.connecting}
-            >
-              {connectionStatus != EConnectionStatus.connecting ? (
-                'Continue'
-              ) : (
-                <ActivityIndicator />
-              )}
-            </FxButton>
-          ) : (
-            <FxButton width={150} onPress={handleNext}>
-              Next
-            </FxButton>
-          )} */}
         </FxBox>
       </FxBox>
     </FxSafeAreaBox>
