@@ -18,8 +18,11 @@ export type TBloxInteraction = {
 };
 
 export enum EConnectionStatus {
-  connected = 'connected',
-  connecting = 'connecting',
-  failed = 'failed',
   notConnected = 'notConnected',
+  connecting = 'connecting',
+  connected = 'connected',
+  failed = 'failed',
+  bleConnecting = 'bleConnecting',
+  bleConnected = 'bleConnected',
+  bleFailed = 'bleFailed'
 }

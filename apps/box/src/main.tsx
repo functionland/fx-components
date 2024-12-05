@@ -14,6 +14,6 @@ if (typeof fetch === 'undefined') {
   global.fetch = fetchPolyfill
 }
 
-AppRegistry.registerComponent('Box', () => App);
+AppRegistry.registerComponent('box', () => App);
 
 LogBox.ignoreLogs(['Require cycle: ../../node_modules/']);

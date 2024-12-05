@@ -23,14 +23,21 @@ const customConfig = {
     babelTransformerPath: require.resolve('react-native-svg-transformer'),
   },
   resolver: {
-    extraNodeModules: require('node-libs-react-native'),
+    extraNodeModules: {
+      ...require('node-libs-react-native'),
+      'crypto': require.resolve('react-native-crypto'),
+      'node-crypto': require.resolve('react-native-crypto'),
+      'node:crypto': require.resolve('react-native-crypto'),
+      'stream': require.resolve('readable-stream'),
+      'buffer': require.resolve('buffer'),
+      'randombytes': require.resolve('react-native-randombytes'),
+      'fs': require.resolve('react-native-fs')
+    },
     assetExts: assetExts.filter((ext) => ext !== 'svg'),
     sourceExts: [...sourceExts, 'svg'],
     resolverMainFields: ['sbmodern', 'react-native', 'browser', 'main'],
     blockList: exclusionList([/^(?!.*node_modules).*\/dist\/.*/]),
-    // unstable_enableSymlinks: true,
-    // unstable_enablePackageExports: true,
-  },
+  }
 };
 
 module.exports = withNxMetro(mergeConfig(defaultConfig, customConfig), {

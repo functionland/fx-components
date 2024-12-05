@@ -314,3 +314,14 @@ Pods
 .nx/cache
 
 .history
+**/.xcode.env.local
+**/Pods/
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+/apps/box/android/app/.cxx
