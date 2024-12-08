@@ -3,7 +3,7 @@
   "affected": {
     "defaultBase": "main"
   },
-  "defaultProject": "box",
+  "defaultProject": "blox",
   "targetDefaults": {
     "@nx/jest:jest": {
       "cache": true,

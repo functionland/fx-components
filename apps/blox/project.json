@@ -1,0 +1,95 @@
+{
+  "name": "blox",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/blox/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "start": {
+      "executor": "@nx/react-native:start",
+      "options": {
+        "port": 8081
+      },
+      "dependsOn": ["ensure-symlink", "sync-deps", "pod-install"]
+    },
+    "serve": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "nx start box"
+      }
+    },
+    "run-ios": {
+      "executor": "@nx/react-native:run-ios",
+      "options": {},
+      "dependsOn": ["ensure-symlink", "sync-deps", "pod-install"]
+    },
+    "bundle-ios": {
+      "executor": "@nx/react-native:bundle",
+      "outputs": ["{projectRoot}/build"],
+      "options": {
+        "entryFile": "src/main.tsx",
+        "platform": "ios",
+        "bundleOutput": "apps/blox/ios/main.jsbundle"
+      },
+      "dependsOn": ["ensure-symlink"]
+    },
+    "run-android": {
+      "executor": "@nx/react-native:run-android",
+      "options": {},
+      "dependsOn": ["ensure-symlink", "sync-deps"]
+    },
+    "build-android": {
+      "executor": "@nx/react-native:build-android",
+      "outputs": [
+        "{projectRoot}/android/app/build/outputs/bundle",
+        "{projectRoot}/android/app/build/outputs/apk"
+      ],
+      "options": {},
+      "dependsOn": ["ensure-symlink", "sync-deps"]
+    },
+    "bundle-android": {
+      "executor": "@nx/react-native:bundle",
+      "options": {
+        "entryFile": "src/main.tsx",
+        "platform": "android",
+        "bundleOutput": "dist/apps/blox/android/main.jsbundle"
+      },
+      "dependsOn": ["ensure-symlink"]
+    },
+    "sync-deps": {
+      "executor": "@nx/react-native:sync-deps",
+      "options": {
+        "include": [
+          "@web3modal/wagmi-react-native",
+          "react-native-randombytes",
+          "react-native-reanimated"
+        ]
+      }
+    },
+    "ensure-symlink": {
+      "executor": "@nx/react-native:ensure-symlink",
+      "options": {}
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/blox"],
+      "options": {
+        "jestConfig": "apps/blox/jest.config.ts"
+      }
+    },
+    "build-ios": {
+      "executor": "@nx/react-native:build-ios",
+      "outputs": ["{projectRoot}/ios/build/Build"],
+      "options": {},
+      "dependsOn": ["ensure-symlink", "sync-deps", "pod-install"]
+    },
+    "pod-install": {
+      "executor": "@nx/react-native:pod-install",
+      "options": {}
+    }
+  }
+}

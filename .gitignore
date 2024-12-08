@@ -324,4 +324,4 @@ Pods
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-/apps/box/android/app/.cxx
+/apps/blox/android/app/.cxx
