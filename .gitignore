@@ -314,3 +314,4 @@ Pods
 .nx/cache
 
 .history
+/.yarn
