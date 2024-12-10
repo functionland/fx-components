@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { API_URL } from './index';
 import { TBloxProperty } from '../models';
+import BleManager from 'react-native-ble-manager';
+import { ResponseAssembler } from '../utils/ble';
 
 export type TBlox = {
   id: string; // peerId?
@@ -66,10 +68,39 @@ export const exchangeConfig = async (data: {
 };
 
 export const getBloxProperties = async (): Promise<any> => {
-  console.log(`${API_URL}/properties`);
-  const res = await axios.get(`${API_URL}/properties`);
-  console.log('res: ', res);
-  return res;
+  try {
+    // Check for BLE connection first
+    const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+
+    if (connectedPeripherals.length > 0) {
+      // Try BLE first
+      const responseAssembler = new ResponseAssembler();
+      try {
+        const response = await responseAssembler.writeToBLEAndWaitForResponse(
+          'properties',
+          connectedPeripherals[0].id
+        );
+
+        if (response) {
+          return { data: response };
+        }
+      } catch (bleError) {
+        console.log('BLE properties fetch failed:', bleError);
+        // Continue to HTTP fallback
+      } finally {
+        responseAssembler.cleanup();
+      }
+    }
+
+    // Fallback to HTTP if BLE is not connected or failed
+    console.log(`Fetching properties via HTTP: ${API_URL}/properties`);
+    const res = await axios.get(`${API_URL}/properties`);
+    console.log('HTTP response:', res);
+    return res;
+  } catch (error) {
+    console.error('Properties fetch failed:', error);
+    throw error;
+  }
 };
 /**
  * Erase partition

@@ -12,6 +12,8 @@ import {
   FxWarning,
   useToast,
 } from '@functionland/component-library';
+import BleManager from 'react-native-ble-manager';
+import { ResponseAssembler } from '../../utils/ble';
 
 import { useFetch, useInitialSetupNavigation, useLogger } from '../../hooks';
 import {
@@ -19,7 +21,7 @@ import {
   Routes,
 } from '../../navigation/navigationConfig';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
-import { ActivityIndicator, Share, Alert } from 'react-native';
+import { Modal, ActivityIndicator, Share, Alert } from 'react-native';
 import { Helper } from '../../utils';
 import {
   bloxDeleteFulaConfig,
@@ -45,6 +47,8 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   const { isManualSetup = false } = route.params || {};
   const [showSkipButton, setShowSkipButton] = useState(false);
   const [showFormatDiskButton, setShowFormatDiskButton] = useState(false);
+  const [showSkipModal, setShowSkipModal] = useState(false);
+  const [skipCode, setSkipCode] = useState('');
 
   const [setAppPeerId, signiture, password] = useUserProfileStore((state) => [
     state.setAppPeerId,
@@ -115,32 +119,10 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     }
     const timer = setTimeout(() => {
       setShowSkipButton(true);
-    }, 10000); // 5000 milliseconds delay
+    }, 10000);
 
-    // Cleanup function to clear the timer if the component unmounts before the timeout finishes
     return () => clearTimeout(timer);
   }, []);
-  useEffect(() => {
-    let interval = setInterval(() => {
-      if (interval === null) {
-        // if the component has unmounted, don't run this function.
-        return;
-      }
-      const bloxSize = data_bloxProperties?.data?.bloxFreeSpace?.size || 0;
-      if (bloxSize > 0) {
-        return;
-      }
-      if (!isManualSetup && bloxSize === 0) {
-        console.log('refetching');
-        refetch_bloxProperties({ withLoading: true });
-      }
-    }, 5000);
-    return () => {
-      // clear interval on unmount to prevent memory leaks
-      clearInterval(interval);
-      interval = null;
-    };
-  }, [data_bloxProperties, error_bloxProperties]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -167,6 +149,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     if (data_bloxProperties?.data?.bloxFreeSpace) {
       //setNewBloxPeerId(data_exchange?.data?.peer_id)
     } else if (error_bloxProperties) {
+      console.log({ error_bloxProperties });
       queueToast({
         type: 'warning',
         title: 'Unable to get the blox properties!',
@@ -224,13 +207,45 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     }
   }, [data_bloxFormatDisk, error_bloxFormatDisk]);
 
-  const handleExchangeConfig = () => {
+  const handleExchangeConfig = async () => {
     try {
       const { secretKey } = Helper.getMyDIDKeyPair(password, signiture);
+      const peer_id = newPeerId;
+      const seed = secretKey.toString();
+      console.log({ seed });
+
+      // Check for BLE connection
+      const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+
+      if (connectedPeripherals.length > 0) {
+        // Try BLE first
+        const responseAssembler = new ResponseAssembler();
+        try {
+          // Format command as expected by server: "peer/exchange <peer_id> <seed>"
+          const command = `peer/exchange ${peer_id} ${seed}`;
+          const response = await responseAssembler.writeToBLEAndWaitForResponse(
+            command,
+            connectedPeripherals[0].id
+          );
+
+          if (response) {
+            // If BLE succeeded, update state as useFetch would
+            console.log(response);
+            return;
+          }
+        } catch (bleError) {
+          console.log('BLE exchange config failed:', bleError);
+          // Continue to useFetch fallback
+        } finally {
+          responseAssembler.cleanup();
+        }
+      }
+
+      // Fallback to useFetch if BLE failed or not connected
       refetch_exchangeConfig({
         params: {
-          peer_id: newPeerId,
-          seed: secretKey.toString(),
+          peer_id,
+          seed,
         },
         withLoading: true,
       });
@@ -303,9 +318,40 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       handleExchangeConfig();
     }
   };
-  const handleFormatDisk = () => {
-    refetch_bloxFormatDisk({ withLoading: true });
-    goBack();
+  const handleFormatDisk = async () => {
+    try {
+      // Check for BLE connection
+      const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+
+      if (connectedPeripherals.length > 0) {
+        // Try BLE first
+        const responseAssembler = new ResponseAssembler();
+        try {
+          const response = await responseAssembler.writeToBLEAndWaitForResponse(
+            'partition',
+            connectedPeripherals[0].id
+          );
+
+          if (response) {
+            // If BLE succeeded, update state as useFetch would
+            console.log(response);
+            goBack();
+            return;
+          }
+        } catch (bleError) {
+          console.log('BLE format disk failed:', bleError);
+          // Continue to useFetch fallback
+        } finally {
+          responseAssembler.cleanup();
+        }
+      }
+
+      // Fallback to useFetch if BLE failed or not connected
+      refetch_bloxFormatDisk({ withLoading: true });
+      goBack();
+    } catch (error) {
+      console.error('Format disk failed:', error);
+    }
   };
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
@@ -430,15 +476,15 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
             onRefreshPress={refetch_bloxProperties}
             loading={loading_bloxProperties}
           >
-            {(data_bloxProperties?.data?.bloxFreeSpace?.size === 0 ||
-              showFormatDiskButton) && (
-              <FxButton
-                onPress={loading_bloxFormatDisk ? null : handleFormatDisk}
-              >
-                {loading_bloxFormatDisk ? <ActivityIndicator /> : null}
-                Format Disk
-              </FxButton>
-            )}
+            {data_bloxProperties?.data?.bloxFreeSpace?.size !== 0 &&
+              showFormatDiskButton && (
+                <FxButton
+                  onPress={loading_bloxFormatDisk ? null : handleFormatDisk}
+                >
+                  {loading_bloxFormatDisk ? <ActivityIndicator /> : null}
+                  Format Disk
+                </FxButton>
+              )}
           </DeviceCard>
         )}
       </FxKeyboardAwareScrollView>
@@ -456,32 +502,86 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
         alignItems="center"
       >
         {showSkipButton && (
-          <FxButton
-            variant="inverted"
-            paddingHorizontal="20"
-            marginRight="12"
-            onPress={() => {
-              Alert.alert(
-                'Skip Authorization!',
-                `Are you sure want to skp authorization? You will not be able to connect to your blox if you skip this.`,
-                [
-                  {
-                    text: 'Yes',
-                    onPress: () => {
-                      skipConnectToInternet();
-                    },
-                    style: 'destructive',
-                  },
-                  {
-                    text: 'No',
-                    style: 'cancel',
-                  },
-                ]
-              );
-            }}
-          >
-            Skip
-          </FxButton>
+          <>
+            <FxButton
+              variant="inverted"
+              paddingHorizontal="20"
+              marginRight="12"
+              onPress={() => setShowSkipModal(true)}
+            >
+              Skip
+            </FxButton>
+
+            <Modal
+              visible={showSkipModal}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setShowSkipModal(false)}
+            >
+              <FxBox
+                flex={1}
+                justifyContent="center"
+                alignItems="center"
+                padding="24"
+              >
+                <FxBox
+                  backgroundColor="backgroundSecondary"
+                  padding="24"
+                  width="100%"
+                >
+                  <FxText variant="h300" marginBottom="16">
+                    Skip Authorization
+                  </FxText>
+                  <FxText variant="body" marginBottom="24">
+                    The Skip is only intended when you are instructed to do so
+                    by the support team. Please enter the code given to you:
+                  </FxText>
+                  <FxTextInput
+                    value={skipCode}
+                    onChangeText={setSkipCode}
+                    keyboardType="number-pad"
+                    secureTextEntry
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#ccc',
+                      borderRadius: 4,
+                      padding: 8,
+                      marginBottom: 16,
+                    }}
+                    maxLength={4}
+                  />
+                  <FxBox flexDirection="row" justifyContent="flex-end">
+                    <FxButton
+                      variant="inverted"
+                      onPress={() => {
+                        setShowSkipModal(false);
+                        setSkipCode('');
+                      }}
+                      marginRight="12"
+                    >
+                      Cancel
+                    </FxButton>
+                    <FxButton
+                      onPress={() => {
+                        if (skipCode === '1234') {
+                          setShowSkipModal(false);
+                          setSkipCode('');
+                          skipConnectToInternet();
+                        } else {
+                          Alert.alert(
+                            'Invalid Code',
+                            'The code you entered is incorrect. Please contact support if you need assistance.'
+                          );
+                        }
+                      }}
+                    >
+                      Confirm
+                    </FxButton>
+                  </FxBox>
+                </FxBox>
+              </FxBox>
+            </Modal>
+          </>
         )}
         <FxBox
           flexDirection="row"
