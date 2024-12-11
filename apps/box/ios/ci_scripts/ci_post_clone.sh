@@ -50,6 +50,8 @@ echo "RUBY_HOME: $(which ruby)"
 # Navigate to the project root
 cd $CI_WORKSPACE
 
+corepack enable
+
 # Print current directory for debugging
 pwd
 ls -la
