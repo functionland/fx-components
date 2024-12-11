@@ -81,37 +81,58 @@ export const LinkPasswordScreen = () => {
     let signature = '';
     let resolveSigned = () => {};
     const signed = new Promise<void>((resolve) => {
+      console.log({signature});
       resolveSigned = resolve;
     });
 
-    notifee.registerForegroundService(() => signed);
-    await notifee.displayNotification({
-      id: 'wallet',
-      title: 'Connecting Wallet...',
-      body: 'Wallet connection in progress, click to move back to the app',
-      android: {
-        progress: {
-          indeterminate: true,
-        },
-        pressAction: {
-          id: 'default',
-        },
-        ongoing: true,
-        asForegroundService: true,
-        channelId: 'sticky',
-      },
-    });
-    signature = (await sdk?.connectAndSign({ msg })) as string;
-    resolveSigned();
-    notifee.stopForegroundService();
+    // Create an AbortController for cleanup
+    const abortController = new AbortController();
 
-    return signature;
-  };
+    try {
+        notifee.registerForegroundService(() => signed);
+        await notifee.displayNotification({
+            id: 'wallet',
+            title: 'Connecting Wallet...',
+            body: 'Wallet connection in progress, click to move back to the app',
+            android: {
+                progress: {
+                    indeterminate: true,
+                },
+                pressAction: {
+                    id: 'default',
+                },
+                ongoing: true,
+                asForegroundService: true,
+                channelId: 'sticky',
+            },
+        });
+
+        // Get provider and remove any existing listeners
+        const provider = await sdk?.getProvider();
+        provider?.removeAllListeners();
+
+        signature = (await sdk?.connectAndSign({ msg })) as string;
+        resolveSigned();
+        return signature;
+    } catch (error) {
+        throw error;
+    } finally {
+        notifee.stopForegroundService();
+        abortController.abort();
+        // Clean up any remaining listeners
+        const provider = await sdk?.getProvider();
+        provider?.removeAllListeners();
+    }
+};
+
 
   const disconnectWallet = () => {
     notifee.stopForegroundService();
     setLinking(false);
+    sdk?.disconnect();
     sdk?.terminate();
+
+    console.log('sdk terminated');
   };
 
   const logger = useLogger();

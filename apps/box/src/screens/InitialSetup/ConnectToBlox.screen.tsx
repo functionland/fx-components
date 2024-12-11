@@ -65,6 +65,7 @@ export const ConnectToBloxScreen = () => {
   const checkApiAvailability = async () => {
     try {
       const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+      console.log({connectedPeripherals});
       const isConnectedBLE = connectedPeripherals.length > 0;
 
       // Try BLE first if connected
@@ -110,7 +111,7 @@ export const ConnectToBloxScreen = () => {
         setShowHotspotInstructions(true);
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
-
+      console.log('checking API availability');
       // Check API availability regardless of BLE connection result
       const apiAvailable = await checkApiAvailability();
       if (apiAvailable) {

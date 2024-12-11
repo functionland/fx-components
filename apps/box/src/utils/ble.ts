@@ -235,22 +235,40 @@ export class BleManagerWrapper extends ResponseAssembler {
     }
 
     private async requestPermissions(): Promise<boolean> {
-        if (Platform.OS === 'ios') return true;
-
-        if (Platform.OS === 'android' && Platform.Version >= 31) {
-            const permissions = [
-                PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-                PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-            ];
-
-            const results = await Promise.all(
-                permissions.map((permission) => PermissionsAndroid.request(permission))
-            );
-            return results.every((result) => result === 'granted');
+        if (Platform.OS === 'android') {
+            try {
+                // First request ACCESS_FINE_LOCATION
+                const locationPermission = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                    {
+                        title: 'Location Permission',
+                        message: 'This app requires access to your location for Bluetooth functionality',
+                        buttonPositive: 'OK',
+                    }
+                );
+    
+                if (locationPermission !== PermissionsAndroid.RESULTS.GRANTED) {
+                    return false;
+                }
+    
+                // Then request Bluetooth permissions
+                const bluetoothPermissions = await PermissionsAndroid.requestMultiple([
+                    PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+                    PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT
+                ]);
+    
+                return Object.values(bluetoothPermissions).every(
+                    result => result === PermissionsAndroid.RESULTS.GRANTED
+                );
+    
+            } catch (error) {
+                console.error('Permission request error:', error);
+                return false;
+            }
         }
         return true;
     }
+    
 
     private async checkAndEnableBluetooth(): Promise<boolean> {
         try {
