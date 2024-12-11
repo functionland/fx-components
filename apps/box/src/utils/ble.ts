@@ -71,20 +71,47 @@ export class ResponseAssembler {
         peripheral: string,
         serviceUUID: string = "00000001-710e-4a5b-8d75-3e5b444bc3cf",
         characteristicUUID: string = "00000003-710e-4a5b-8d75-3e5b444bc3cf",
-        timeout: number = 30000  // Increase timeout to 30 seconds
+        timeout: number = 30000
     ): Promise<any> {
         try {
             if (this.currentCommand) {
                 throw new Error('Another command is in progress');
             }
-
+    
             this.currentCommand = command;
             this.reset();
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // First retrieve the CCCD descriptor
-            const descriptors = await BleManager.retrieveServices(peripheral);
-
+            
+            // Add delay after connection before retrieving services
+            await new Promise(resolve => setTimeout(resolve, 2000));
+    
+            // Try retrieveServices multiple times with increasing delays
+            let services = null;
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    services = await Promise.race([
+                        BleManager.retrieveServices(peripheral),
+                        new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('retrieveServices timeout')), 7000)
+                        )
+                    ]);
+                    if (services) break;
+                } catch (e) {
+                    console.log(`Attempt ${attempt} failed:`, e);
+                    if (attempt < 3) {
+                        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+                        // Optionally refresh connection
+                        if (attempt === 2) {
+                            await BleManager.disconnect(peripheral);
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            await BleManager.connect(peripheral);
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                        }
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+    
             // Enable notifications before writing
             await BleManager.startNotification(
                 peripheral,
@@ -92,11 +119,9 @@ export class ResponseAssembler {
                 characteristicUUID
             ).catch(error => {
                 console.log('Notification error:', error);
-                // Continue even if notification fails
             });
             console.log('Notifications enabled');
     
-            // Set up listener before writing
             this.responsePromise = new Promise((resolve, reject) => {
                 this.commandResolve = resolve;
                 this.commandTimeout = setTimeout(() => {
@@ -106,7 +131,6 @@ export class ResponseAssembler {
                 }, timeout);
             });
     
-            // Write command
             const data = Buffer.from(command);
             console.log('Writing command:', command);
             await BleManager.write(
@@ -114,11 +138,10 @@ export class ResponseAssembler {
                 serviceUUID,
                 characteristicUUID,
                 Array.from(data),
-                data.length  // Add length parameter
+                data.length
             );
             console.log('Write completed, waiting for response');
     
-            // Wait for response
             const response = await this.responsePromise;
             return response;
         } catch (error) {
@@ -137,6 +160,7 @@ export class ResponseAssembler {
             this.cleanupCommand();
         }
     }
+    
 
     async handleResponse(value: string): Promise<any> {
         try {
