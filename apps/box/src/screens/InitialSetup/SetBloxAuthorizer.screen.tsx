@@ -15,7 +15,7 @@ import {
 import BleManager from 'react-native-ble-manager';
 import { ResponseAssembler } from '../../utils/ble';
 
-import { useFetch, useInitialSetupNavigation, useLogger } from '../../hooks';
+import { useFetch, useInitialSetupNavigation, useLogger, useFetchWithBLE } from '../../hooks';
 import {
   InitialSetupStackParamList,
   Routes,
@@ -78,15 +78,38 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   const [newBloxName, setNewBloxName] = useState(
     `Blox Unit #${bloxsArray.length + 1}`
   );
+
+  const blePeerExchange = async (params: { peer_id: string, seed: string }) => {
+    const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+    if (connectedPeripherals.length === 0) {
+      throw new Error('No BLE devices connected');
+    }
+  
+    const responseAssembler = new ResponseAssembler();
+    try {
+      const command = `peer/exchange ${params.peer_id} ${params.seed}`;
+      const response = await responseAssembler.writeToBLEAndWaitForResponse(
+        command,
+        connectedPeripherals[0].id
+      );
+      return response;
+    } finally {
+      responseAssembler.cleanup();
+    }
+  };
+
   const {
     loading: loading_exchange,
     data: data_exchange,
     error: error_exchange,
     refetch: refetch_exchangeConfig,
-  } = useFetch({
+  } = useFetchWithBLE({
     initialLoading: false,
     apiMethod: exchangeConfig,
+    bleMethod: blePeerExchange,
   });
+
+
   const {
     loading: loading_bloxFormatDisk,
     data: data_bloxFormatDisk,
@@ -164,8 +187,10 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   }, [data_bloxProperties, error_bloxProperties]);
 
   useEffect(() => {
+    console.log('inside data_exchange useEffect', {data_exchange});
     if (data_exchange?.data?.peer_id) {
       const peer_id = data_exchange?.data?.peer_id?.trim()?.split(/\r?\n/)?.[0];
+      console.log({data_exchange, peer_id});
       if (!peer_id || peer_id?.length !== 52) {
         queueToast({
           type: 'error',
@@ -177,6 +202,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
         setNewBloxPeerId(peer_id);
       }
     } else if (error_exchange) {
+      console.log('data exchange error' , {data_exchange, error_exchange});
       queueToast({
         type: 'error',
         title: 'Set authotizer',
@@ -212,47 +238,20 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       const { secretKey } = Helper.getMyDIDKeyPair(password, signiture);
       const peer_id = newPeerId;
       const seed = secretKey.toString();
-      console.log({ seed });
-
-      // Check for BLE connection
-      const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
-
-      if (connectedPeripherals.length > 0) {
-        // Try BLE first
-        const responseAssembler = new ResponseAssembler();
-        try {
-          // Format command as expected by server: "peer/exchange <peer_id> <seed>"
-          const command = `peer/exchange ${peer_id} ${seed}`;
-          const response = await responseAssembler.writeToBLEAndWaitForResponse(
-            command,
-            connectedPeripherals[0].id
-          );
-
-          if (response) {
-            // If BLE succeeded, update state as useFetch would
-            console.log(response);
-            return;
-          }
-        } catch (bleError) {
-          console.log('BLE exchange config failed:', bleError);
-          // Continue to useFetch fallback
-        } finally {
-          responseAssembler.cleanup();
-        }
-      }
-
-      // Fallback to useFetch if BLE failed or not connected
+      
       refetch_exchangeConfig({
         params: {
           peer_id,
           seed,
         },
         withLoading: true,
+        tryBLE: true, // Will try BLE first, then fall back to HTTP
       });
     } catch (error) {
       logger.logError('exchangeConfig', error);
     }
   };
+
   const generateAppPeerId = async () => {
     try {
       const peerId = await Helper.initFula({
@@ -314,6 +313,8 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   };
 
   const handleSetOwnerPeerId = async () => {
+    console.log('handleSetOwnerPeerId called');
+    console.log({ newPeerId });
     if (newPeerId) {
       handleExchangeConfig();
     }
@@ -322,7 +323,6 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     try {
       // Check for BLE connection
       const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
-
       if (connectedPeripherals.length > 0) {
         // Try BLE first
         const responseAssembler = new ResponseAssembler();
@@ -334,7 +334,8 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
 
           if (response) {
             // If BLE succeeded, update state as useFetch would
-            console.log(response);
+            console.log('response received');
+            console.log({ response });
             goBack();
             return;
           }
