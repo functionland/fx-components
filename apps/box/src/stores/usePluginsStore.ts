@@ -1,7 +1,7 @@
 import { create, StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fxblox } from '@functionland/react-native-fula';
+import { fxblox, fula } from '@functionland/react-native-fula';
 
 interface PluginInfo {
   name: string;
@@ -71,6 +71,13 @@ const createPluginsModelSlice: StateCreator<
     },
     listActivePlugins: async (): Promise<OperationResult> => {
       try {
+        const ready = await fula.isReady(false);
+        if (!ready) {
+          return {
+            success: false,
+            message: 'Failed to list active plugins: Fula is not ready yet',
+          };
+        }
         const result = await fxblox.listActivePlugins();
         if (result.status) {
           if (result.msg && Array.isArray(result.msg)) {

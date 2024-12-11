@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   FxBox,
   FxButton,
@@ -13,7 +13,7 @@ import {
   FxTextInput,
   FxKeyboardAwareScrollView,
 } from '@functionland/component-library';
-import { FlatList } from 'react-native';
+import { FlatList, PermissionsAndroid } from 'react-native';
 import { WifiDeviceItem } from './components/WifiDeviceItem';
 import { InputWifiPasswordModal } from './modals/InputWifiPasswordModal';
 import {
@@ -21,10 +21,10 @@ import {
   useFetch,
   useRootNavigation,
 } from '../../../hooks';
-import { getWifiList } from '../../../api/wifi';
 import { Routes } from '../../../navigation/navigationConfig';
 import BloxWifiDevice from '../../../app/icons/blox-wifi-device.svg';
 import { useUserProfileStore } from '../../../stores/useUserProfileStore';
+import WifiManager from 'react-native-wifi-reborn';
 
 const ItemSeparatorComponent = () => {
   return <FxBox height={1} backgroundColor="backgroundSecondary" />;
@@ -39,22 +39,62 @@ export const ConnectToWifiScreen = () => {
   const [enabledHiddenNetwork, setEnableHiddenNetwork] =
     React.useState<boolean>(false);
   const [appPeerId] = useUserProfileStore((state) => [state.appPeerId]);
-  const {
-    loading,
-    error,
-    data: networks,
-    refetch,
-  } = useFetch({ apiMethod: getWifiList });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [networks, setNetworks] = useState({data:[]});
 
-  const ssids = networks?.data
-    ? Array.isArray(networks.data)
-      ? networks.data
-          .map(({ essid: network }) => network.replaceAll('"', ''))
-          .filter((ssid) => ssid)
-          .sort()
-      : []
-    : [];
-  const uniqueSsids = [...new Set(ssids)];
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'ios') return true;
+    
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: 'Location permission is required for WiFi connections',
+          message: 'This app needs location permission to scan for wifi networks.',
+          buttonNegative: 'DENY',
+          buttonPositive: 'ALLOW',
+        },
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  };
+
+  const scanWifiNetworks = async () => {
+    try {
+      console.log('scan wifi called');
+      setLoading(true);
+      const permissionGranted = await requestLocationPermission();
+      if (!permissionGranted) {
+        throw new Error('Location permission denied');
+      }
+      console.log(permissionGranted);
+
+      const wifiList = await WifiManager.loadWifiList();
+      console.log({wifiList});
+      const ssids = wifiList.map(network => network.SSID.replaceAll('"', ''))
+                          .filter(ssid => ssid)
+                          .sort();
+      const uniqueSsids = [...new Set(ssids)];
+      console.log({uniqueSsids});
+      setNetworks({ data: uniqueSsids });
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    scanWifiNetworks();
+  }, []);
+
+  // Replace refetch with scanWifiNetworks
+  const refetch = async ({ withLoading = true } = {}) => {
+    await scanWifiNetworks();
+  };
   const handleBack = () => {
     navigation.goBack();
   };
@@ -153,7 +193,7 @@ export const ConnectToWifiScreen = () => {
                 paddingHorizontal="16"
               >
                 <FlatList
-                  data={uniqueSsids}
+                  data={networks?.data}
                   keyExtractor={(item) => item}
                   ItemSeparatorComponent={() => <ItemSeparatorComponent />}
                   renderItem={({ item }) => (

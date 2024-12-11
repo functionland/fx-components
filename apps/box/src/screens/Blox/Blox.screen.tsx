@@ -293,7 +293,10 @@ export const BloxScreen = () => {
             queueToast({
               type: 'info',
               title: 'Connect Blox to Wifi',
-              message: 'You should be connected to FxBlox hotspot!',
+              message: 'You are not connected to FxBlox hotspot!',
+            });
+            navigation.navigate(Routes.InitialSetup, {
+              screen: Routes.ConnectToBlox,
             });
           }
         } catch (error) {
@@ -302,6 +305,9 @@ export const BloxScreen = () => {
             type: 'error',
             title: 'Connection Failed',
             message: 'Not connected to FxBlox hotspot',
+          });
+          navigation.navigate(Routes.InitialSetup, {
+            screen: Routes.ConnectToBlox,
           });
         }
         break;

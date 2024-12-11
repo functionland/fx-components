@@ -98,7 +98,7 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-webview": "13.2.2",
     "react-native-wheel-color-picker": "^1.2.0",
-    "react-native-wifi-reborn": "^4.10.1",
+    "react-native-wifi-reborn": "^4.13.0",
     "react-native-zeroconf": "^0.13.8",
     "text-encoding-polyfill": "^0.6.7",
     "three": "^0.145.0",
