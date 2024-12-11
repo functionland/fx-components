@@ -236,7 +236,7 @@ export const ConnectToBloxScreen = () => {
               textAlign="center"
               color="primary"
             >
-              Now your are connected to Blox's Hotspot
+              Now you are connected to Blox. Please wait...
             </FxText>
           )}
         </FxBox>

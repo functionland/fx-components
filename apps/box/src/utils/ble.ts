@@ -89,7 +89,7 @@ export class ResponseAssembler {
             for (let attempt = 1; attempt <= 3; attempt++) {
                 try {
                     services = await Promise.race([
-                        BleManager.retrieveServices(peripheral),
+                        BleManager.retrieveServices(peripheral, [serviceUUID]),
                         new Promise((_, reject) => 
                             setTimeout(() => reject(new Error('retrieveServices timeout')), 7000)
                         )
