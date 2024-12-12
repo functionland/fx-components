@@ -13,7 +13,8 @@ import {
   FxTextInput,
   FxKeyboardAwareScrollView,
 } from '@functionland/component-library';
-import { FlatList, PermissionsAndroid } from 'react-native';
+import { FlatList, PermissionsAndroid, Platform } from 'react-native';
+import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { WifiDeviceItem } from './components/WifiDeviceItem';
 import { InputWifiPasswordModal } from './modals/InputWifiPasswordModal';
 import {
@@ -41,20 +42,24 @@ export const ConnectToWifiScreen = () => {
   const [appPeerId] = useUserProfileStore((state) => [state.appPeerId]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [networks, setNetworks] = useState({data:[]});
+  const [networks, setNetworks] = useState({ data: [] });
 
   const requestLocationPermission = async () => {
-    if (Platform.OS === 'ios') return true;
-    
+    if (Platform.OS === 'ios') {
+      const result = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+      return result === RESULTS.GRANTED;
+    }
+
     try {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         {
           title: 'Location permission is required for WiFi connections',
-          message: 'This app needs location permission to scan for wifi networks.',
+          message:
+            'This app needs location permission to scan for wifi networks.',
           buttonNegative: 'DENY',
           buttonPositive: 'ALLOW',
-        },
+        }
       );
       return granted === PermissionsAndroid.RESULTS.GRANTED;
     } catch (err) {
@@ -74,12 +79,13 @@ export const ConnectToWifiScreen = () => {
       console.log(permissionGranted);
 
       const wifiList = await WifiManager.loadWifiList();
-      console.log({wifiList});
-      const ssids = wifiList.map(network => network.SSID.replaceAll('"', ''))
-                          .filter(ssid => ssid)
-                          .sort();
+      console.log({ wifiList });
+      const ssids = wifiList
+        .map((network) => network.SSID.replaceAll('"', ''))
+        .filter((ssid) => ssid)
+        .sort();
       const uniqueSsids = [...new Set(ssids)];
-      console.log({uniqueSsids});
+      console.log({ uniqueSsids });
       setNetworks({ data: uniqueSsids });
     } catch (err) {
       setError(err);
@@ -134,16 +140,13 @@ export const ConnectToWifiScreen = () => {
           <FxText variant="h300" marginBottom="12">
             Connect to Wi-Fi
           </FxText>
-          <FxRadioButton.Group
-            value={enabledHiddenNetwork ? [1] : []}
-            onValueChange={(val) => setEnableHiddenNetwork(val && val[0] === 1)}
+          <FxButton
+            variant={enabledHiddenNetwork ? 'inverted' : undefined}
+            paddingVertical="8"
+            onPress={() => setEnableHiddenNetwork(!enabledHiddenNetwork)}
           >
-            <FxRadioButtonWithLabel
-              paddingVertical="8"
-              label="I want to connect to a hidden network"
-              value={1}
-            />
-          </FxRadioButton.Group>
+            {enabledHiddenNetwork ? "Show Network Names" : "Manually Enter Wifi Name"}
+          </FxButton>
           {enabledHiddenNetwork && (
             <FxBox>
               <FxTextInput
@@ -151,13 +154,14 @@ export const ConnectToWifiScreen = () => {
                 value={selectedSsid}
                 onChange={(e) => setSelectedSsid(e.nativeEvent.text)}
                 onSubmitEditing={() => handleSelectedWifiDevice(selectedSsid)}
+                placeholder='Enter Wifi Name'
               />
               <FxButton
                 onPress={() => {
                   handleSelectedWifiDevice(selectedSsid);
                 }}
               >
-                Connect
+                Enter Password {selectedSsid ? 'for': ''} {selectedSsid}
               </FxButton>
             </FxBox>
           )}

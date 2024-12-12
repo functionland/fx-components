@@ -297,27 +297,48 @@ export class BleManagerWrapper extends ResponseAssembler {
     private async checkAndEnableBluetooth(): Promise<boolean> {
         try {
             console.log('ble.checkAndEnableBluetooth called');
+            
+            // Check state first on iOS
+            if (Platform.OS === 'ios') {
+                const state = await BleManager.checkState();
+                if (state === 'unauthorized') {
+                    console.log('Bluetooth permission not granted');
+                    return false;
+                }
+            }
+    
             const permitted = await this.requestPermissions();
             if (!permitted) return false;
-
+    
+            // Recheck state after permissions
             const state = await BleManager.checkState();
+            console.log('BLE state:', state);
+    
             if (state === 'on') return true;
-
+    
             if (Platform.OS === 'android') {
                 await BleManager.enableBluetooth();
                 return true;
+            } else {
+                // On iOS, guide user to enable Bluetooth manually
+                console.log('Please enable Bluetooth manually on iOS');
+                return false;
             }
-            return false;
         } catch (error) {
             console.error('Bluetooth state check failed:', error);
             return false;
         }
     }
+    
 
     public async connect(): Promise<boolean> {
         try {
             console.log('ble.connect called');
-            await BleManager.start({ showAlert: false });
+            await BleManager.start({ 
+                showAlert: false,
+                forceLegacy: true  // Add this for iOS stability
+            });
+    
             const bluetoothReady = await this.checkAndEnableBluetooth();
             if (!bluetoothReady) return false;
             
@@ -326,77 +347,118 @@ export class BleManagerWrapper extends ResponseAssembler {
             const existingDevice = connectedPeripherals.find(
                 device => device.name === this.DEVICE_NAME || device.id === this.DEVICE_MAC
             );
-            console.log({existingDevice});
-            if (existingDevice) return true;
             
-
-            // Disconnect any other devices
+            if (existingDevice) {
+                // On iOS, verify connection is still valid
+                if (Platform.OS === 'ios') {
+                    try {
+                        await BleManager.retrieveServices(existingDevice.id);
+                        return true;
+                    } catch {
+                        await BleManager.disconnect(existingDevice.id);
+                    }
+                } else {
+                    return true;
+                }
+            }
+    
+            // Ensure clean state before scanning
             for (const peripheral of connectedPeripherals) {
                 await BleManager.disconnect(peripheral.id);
             }
-
-            
-
+    
             return new Promise((resolve) => {
-                console.log('scan promise called');
                 const discoveredDevices: Array<{
                     peripheral: string;
                     rssi: number;
                     timestamp: number;
                 }> = [];
-
-                const SCAN_DURATION = 4000;
+    
+                const SCAN_DURATION = Platform.OS === 'ios' ? 10000 : 4000; // Longer scan for iOS
+                
                 const discoveryListener = bleManagerEmitter.addListener(
                     'BleManagerDiscoverPeripheral',
                     (peripheral) => {
                         if (peripheral.name === this.DEVICE_NAME || 
                             peripheral.id === this.DEVICE_MAC) {
-                            discoveredDevices.push({
-                                peripheral: peripheral.id,
-                                rssi: peripheral.rssi,
-                                timestamp: Date.now(),
-                            });
+                            // On iOS, only add if not already discovered
+                            if (!discoveredDevices.some(d => d.peripheral === peripheral.id)) {
+                                discoveredDevices.push({
+                                    peripheral: peripheral.id,
+                                    rssi: peripheral.rssi,
+                                    timestamp: Date.now(),
+                                });
+                            }
                         }
                     }
                 );
-
-                BleManager.scan([], SCAN_DURATION, true)
+    
+                // Add connection state listener for iOS
+                const connectListener = Platform.OS === 'ios' ? 
+                    bleManagerEmitter.addListener(
+                        'BleManagerConnectPeripheral',
+                        () => console.log('Connection successful')
+                    ) : null;
+    
+                const disconnectListener = Platform.OS === 'ios' ? 
+                    bleManagerEmitter.addListener(
+                        'BleManagerDisconnectPeripheral',
+                        () => console.log('Device disconnected')
+                    ) : null;
+    
+                BleManager.scan([], SCAN_DURATION, Platform.OS === 'ios' ? false : true)
                     .then(() => {
                         console.log('Scanning...');
                     })
                     .catch((err) => {
                         console.error('Scan failed', err);
                         discoveryListener.remove();
+                        connectListener?.remove();
+                        disconnectListener?.remove();
                         resolve(false);
                     });
-
+    
                 setTimeout(async () => {
                     discoveryListener.remove();
+                    connectListener?.remove();
+                    disconnectListener?.remove();
+    
                     if (discoveredDevices.length === 0) {
                         resolve(false);
                         return;
                     }
-
+    
                     const strongestDevice = discoveredDevices
                         .sort((a, b) => b.rssi - a.rssi)[0];
-
+    
                     try {
-                        console.log('ble connection is strating');
+                        console.log('ble connection is starting');
                         console.log({strongestDevice});
+                        
+                        if (Platform.OS === 'ios') {
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                        
                         await BleManager.connect(strongestDevice.peripheral);
-                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        
+                        // Verify connection on iOS
+                        if (Platform.OS === 'ios') {
+                            await BleManager.retrieveServices(strongestDevice.peripheral);
+                        }
+                        
                         resolve(true);
                     } catch (error) {
                         console.error('Connection error:', error);
                         resolve(false);
                     }
-                }, SCAN_DURATION + 2000);
+                }, SCAN_DURATION + (Platform.OS === 'ios' ? 3000 : 2000));
             });
         } catch (error) {
             console.error('Scan error:', error);
             return false;
         }
-    }
+    }    
 }
 
 

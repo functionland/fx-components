@@ -156,7 +156,7 @@ export const ConnectToBloxScreen = () => {
             textAlign="center"
             marginBottom="24"
           >
-            Connect to Blox's Hotspot
+            Connect to Blox
           </FxText>
           <FlashingTower
             onColor="lightblue"
@@ -260,15 +260,9 @@ export const ConnectToBloxScreen = () => {
           <FxButton
             width={150}
             onPress={connectToBox}
-            disabled={[
-              EConnectionStatus.connecting,
-              EConnectionStatus.bleConnecting,
-            ].includes(connectionStatus)}
+            disabled={ connectionStatus !== EConnectionStatus.connected && connectionStatus !== EConnectionStatus.notConnected && connectionStatus !== EConnectionStatus.failed }
           >
-            {[
-              EConnectionStatus.connecting,
-              EConnectionStatus.bleConnecting,
-            ].includes(connectionStatus) ? (
+            {(connectionStatus !== EConnectionStatus.connected && connectionStatus !== EConnectionStatus.notConnected && connectionStatus !== EConnectionStatus.failed) ? (
               <ActivityIndicator />
             ) : (
               'Continue'
