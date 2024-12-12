@@ -88,6 +88,8 @@
 		615AE18ED05D38C7DEEFED11 /* Pods-Box-BoxTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Box-BoxTests.debug.xcconfig"; path = "Target Support Files/Pods-Box-BoxTests/Pods-Box-BoxTests.debug.xcconfig"; sourceTree = "<group>"; };
 		62890D707958D85944674F9E /* libPods-Box.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Box.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		78DDC4D331E625A6C64CFF6E /* Pods-Box.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Box.debug.xcconfig"; path = "Target Support Files/Pods-Box/Pods-Box.debug.xcconfig"; sourceTree = "<group>"; };
+		8081E0DE2D0A6C150012264C /* BoxDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = BoxDebug.entitlements; path = Box/BoxDebug.entitlements; sourceTree = "<group>"; };
+		808CCD122D0A413F004223DD /* BoxRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = BoxRelease.entitlements; path = Box/BoxRelease.entitlements; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Box/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		822DC82B92E5A4D6B4A04931 /* Pods-Box-BoxTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Box-BoxTests.release.xcconfig"; path = "Target Support Files/Pods-Box-BoxTests/Pods-Box-BoxTests.release.xcconfig"; sourceTree = "<group>"; };
 		828A4A5BF086C26B3974C566 /* libPods-Box-BoxTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Box-BoxTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -164,6 +166,8 @@
 		13B07FAE1A68108700A75B9A /* Box */ = {
 			isa = PBXGroup;
 			children = (
+				8081E0DE2D0A6C150012264C /* BoxDebug.entitlements */,
+				808CCD122D0A413F004223DD /* BoxRelease.entitlements */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
 				080469C32BBCE2350045A7C0 /* AppIcon.appiconset */,
@@ -650,6 +654,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Box/BoxDebug.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 656TD8GM9B;
 				ENABLE_BITCODE = NO;
@@ -687,6 +692,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Box/BoxRelease.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 656TD8GM9B;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "arm64 i386";

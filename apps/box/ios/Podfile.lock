@@ -378,7 +378,7 @@ PODS:
     - glog
   - react-native-background-timer (2.4.1):
     - React-Core
-  - react-native-ble-manager (10.1.5):
+  - react-native-ble-manager (11.5.7):
     - React-Core
   - react-native-compat (2.17.0):
     - RCT-Folly (= 2021.07.22.00)
@@ -589,7 +589,7 @@ PODS:
   - RNScreens (3.22.1):
     - React-Core
     - React-RCTImage
-  - RNSVG (13.9.0):
+  - RNSVG (12.3.0):
     - React-Core
   - RNWifi (4.13.0):
     - React-Core
@@ -872,7 +872,7 @@ SPEC CHECKSUMS:
   React-jsinspector: de0198127395fec3058140a20c045167f761bb16
   React-logger: dc3a2b174d79c2da635059212747d8d929b54e06
   react-native-background-timer: 17ea5e06803401a379ebf1f20505b793ac44d0fe
-  react-native-ble-manager: 09724bad4d06b86a85e0cd7bd97196fecca15e9a
+  react-native-ble-manager: 59a0c7178d6fa0272a1b86f976469b800ce08eba
   react-native-compat: 2dca63ad5d9c3ca5e001795a5789f688ad9fae6f
   react-native-config: 86038147314e2e6d10ea9972022aa171e6b1d4d8
   react-native-fula: 00b6bb461496dc4bdf07dbb0184c56a01933542f
@@ -915,7 +915,7 @@ SPEC CHECKSUMS:
   RNPermissions: d6b630aeb20d688a5973c66ff64d2a38d800c12a
   RNReanimated: 11ef210bd11e80668ed3708f7a9dd846ae29e99c
   RNScreens: 50ffe2fa2342eabb2d0afbe19f7c1af286bc7fb3
-  RNSVG: 53c661b76829783cdaf9b7a57258f3d3b4c28315
+  RNSVG: 302bfc9905bd8122f08966dc2ce2d07b7b52b9f8
   RNWifi: 89e8d602c782b6e0a4e4ecca3e26b62c9c6b5dab
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Wnfs: e3020bb0c212642a605625424ed263c8ac280e44
