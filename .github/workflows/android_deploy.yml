@@ -19,6 +19,10 @@ jobs:
       with:
         java-version: '18'
         distribution: 'temurin'
+    - name: Enable Corepack
+      run: |
+        corepack enable
+        corepack prepare yarn@3.6.4 --activate
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
