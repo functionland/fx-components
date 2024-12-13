@@ -261,30 +261,28 @@ export class BleManagerWrapper extends ResponseAssembler {
     private async requestPermissions(): Promise<boolean> {
         if (Platform.OS === 'android') {
             try {
-                // First request ACCESS_FINE_LOCATION
-                const locationPermission = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-                    {
-                        title: 'Location Permission',
-                        message: 'This app requires access to your location for Bluetooth functionality',
-                        buttonPositive: 'OK',
-                    }
-                );
+                if (Platform.Version < 31) {
+                    // For Android 11 (API 30) and below
+                    const locationPermission = await PermissionsAndroid.request(
+                        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                        {
+                            title: 'Location Permission',
+                            message: 'This app requires access to your location for Bluetooth functionality',
+                            buttonPositive: 'OK',
+                        }
+                    );
+                    return locationPermission === PermissionsAndroid.RESULTS.GRANTED;
+                } else {
+                    // For Android 12 (API 31) and above
+                    const bluetoothPermissions = await PermissionsAndroid.requestMultiple([
+                        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+                        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT
+                    ]);
     
-                if (locationPermission !== PermissionsAndroid.RESULTS.GRANTED) {
-                    return false;
+                    return Object.values(bluetoothPermissions).every(
+                        result => result === PermissionsAndroid.RESULTS.GRANTED
+                    );
                 }
-    
-                // Then request Bluetooth permissions
-                const bluetoothPermissions = await PermissionsAndroid.requestMultiple([
-                    PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-                    PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT
-                ]);
-    
-                return Object.values(bluetoothPermissions).every(
-                    result => result === PermissionsAndroid.RESULTS.GRANTED
-                );
-    
             } catch (error) {
                 console.error('Permission request error:', error);
                 return false;
@@ -292,6 +290,7 @@ export class BleManagerWrapper extends ResponseAssembler {
         }
         return true;
     }
+    
     
 
     private async checkAndEnableBluetooth(): Promise<boolean> {
@@ -341,6 +340,7 @@ export class BleManagerWrapper extends ResponseAssembler {
     
             const bluetoothReady = await this.checkAndEnableBluetooth();
             if (!bluetoothReady) return false;
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
             // Check existing connections
             const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
@@ -440,13 +440,11 @@ export class BleManagerWrapper extends ResponseAssembler {
                         }
                         
                         await BleManager.connect(strongestDevice.peripheral);
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        
-                        // Verify connection on iOS
-                        if (Platform.OS === 'ios') {
-                            await BleManager.retrieveServices(strongestDevice.peripheral);
-                        }
-                        
+                        console.log('connected to ble');
+                        await new Promise(resolve => setTimeout(resolve, 4000));
+                        console.log('retrieveServices started');
+                        await BleManager.retrieveServices(strongestDevice.peripheral);
+                        console.log('retrieveServices done');
                         resolve(true);
                     } catch (error) {
                         console.error('Connection error:', error);

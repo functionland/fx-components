@@ -74,6 +74,7 @@ export const ConnectToWifiScreen = () => {
       setLoading(true);
       const permissionGranted = await requestLocationPermission();
       if (!permissionGranted) {
+        console.log('permission not granted');
         throw new Error('Location permission denied');
       }
       console.log(permissionGranted);
