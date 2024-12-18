@@ -278,10 +278,6 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       newPeerId &&
       newBloxName
     ) {
-      const bloxsCount = Object.values(bloxs).length;
-      const bloxExists = Object.values(bloxs).some(
-        (blox) => blox.peerId === newBloxPeerId
-      );
       setAppPeerId(newPeerId);
       if (currentBloxPeerId === newBloxPeerId) {
         removeBlox(currentBloxPeerId);
