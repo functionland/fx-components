@@ -15,7 +15,12 @@ import {
 import BleManager from 'react-native-ble-manager';
 import { ResponseAssembler } from '../../utils/ble';
 
-import { useFetch, useInitialSetupNavigation, useLogger, useFetchWithBLE } from '../../hooks';
+import {
+  useFetch,
+  useInitialSetupNavigation,
+  useLogger,
+  useFetchWithBLE,
+} from '../../hooks';
 import {
   InitialSetupStackParamList,
   Routes,
@@ -79,12 +84,12 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     `Blox Unit #${bloxsArray.length + 1}`
   );
 
-  const blePeerExchange = async (params: { peer_id: string, seed: string }) => {
+  const blePeerExchange = async (params: { peer_id: string; seed: string }) => {
     const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
     if (connectedPeripherals.length === 0) {
       throw new Error('No BLE devices connected');
     }
-  
+
     const responseAssembler = new ResponseAssembler();
     try {
       const command = `peer/exchange ${params.peer_id} ${params.seed}`;
@@ -108,7 +113,6 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     apiMethod: exchangeConfig,
     bleMethod: blePeerExchange,
   });
-
 
   const {
     loading: loading_bloxFormatDisk,
@@ -187,10 +191,10 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   }, [data_bloxProperties, error_bloxProperties]);
 
   useEffect(() => {
-    console.log('inside data_exchange useEffect', {data_exchange});
+    console.log('inside data_exchange useEffect', { data_exchange });
     if (data_exchange?.data?.peer_id) {
       const peer_id = data_exchange?.data?.peer_id?.trim()?.split(/\r?\n/)?.[0];
-      console.log({data_exchange, peer_id});
+      console.log({ data_exchange, peer_id });
       if (!peer_id || peer_id?.length !== 52) {
         queueToast({
           type: 'error',
@@ -202,7 +206,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
         setNewBloxPeerId(peer_id);
       }
     } else if (error_exchange) {
-      console.log('data exchange error' , {data_exchange, error_exchange});
+      console.log('data exchange error', { data_exchange, error_exchange });
       queueToast({
         type: 'error',
         title: 'Set authotizer',
@@ -238,7 +242,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       const { secretKey } = Helper.getMyDIDKeyPair(password, signiture);
       const peer_id = newPeerId;
       const seed = secretKey.toString();
-      
+
       refetch_exchangeConfig({
         params: {
           peer_id,
@@ -274,8 +278,12 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       newPeerId &&
       newBloxName
     ) {
+      const bloxsCount = Object.values(bloxs).length;
+      const bloxExists = Object.values(bloxs).some(
+        (blox) => blox.peerId === newBloxPeerId
+      );
       setAppPeerId(newPeerId);
-      if (currentBloxPeerId) {
+      if (currentBloxPeerId === newBloxPeerId) {
         removeBlox(currentBloxPeerId);
       }
       addBlox({

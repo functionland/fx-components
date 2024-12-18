@@ -250,7 +250,7 @@ export class ResponseAssembler {
 
 export class BleManagerWrapper extends ResponseAssembler {
     private DEVICE_NAME = 'fulatower';
-    private DEVICE_MAC = '2C:05:47:85:39:3F';
+    private DEVICE_NAME2 = 'fxblox-rk1';
     private onStatusChange?: (status: EConnectionStatus) => void;
 
     constructor(statusCallback?: (status: EConnectionStatus) => void) {
@@ -345,7 +345,7 @@ export class BleManagerWrapper extends ResponseAssembler {
             // Check existing connections
             const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
             const existingDevice = connectedPeripherals.find(
-                device => device.name === this.DEVICE_NAME || device.id === this.DEVICE_MAC
+                device => device.name === this.DEVICE_NAME || device.name === this.DEVICE_NAME2
             );
             
             if (existingDevice) {
@@ -374,13 +374,13 @@ export class BleManagerWrapper extends ResponseAssembler {
                     timestamp: number;
                 }> = [];
     
-                const SCAN_DURATION = Platform.OS === 'ios' ? 10000 : 4000; // Longer scan for iOS
+                const SCAN_DURATION = Platform.OS === 'ios' ? 5000 : 5000; // Longer scan for iOS
                 
                 const discoveryListener = bleManagerEmitter.addListener(
                     'BleManagerDiscoverPeripheral',
                     (peripheral) => {
                         if (peripheral.name === this.DEVICE_NAME || 
-                            peripheral.id === this.DEVICE_MAC) {
+                            peripheral.name === this.DEVICE_NAME2) {
                             // On iOS, only add if not already discovered
                             if (!discoveredDevices.some(d => d.peripheral === peripheral.id)) {
                                 discoveredDevices.push({
@@ -436,12 +436,12 @@ export class BleManagerWrapper extends ResponseAssembler {
                         console.log({strongestDevice});
                         
                         if (Platform.OS === 'ios') {
-                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            await new Promise(resolve => setTimeout(resolve, 2000));
                         }
                         
                         await BleManager.connect(strongestDevice.peripheral);
                         console.log('connected to ble');
-                        await new Promise(resolve => setTimeout(resolve, 4000));
+                        await new Promise(resolve => setTimeout(resolve, 5000));
                         console.log('retrieveServices started');
                         await BleManager.retrieveServices(strongestDevice.peripheral);
                         console.log('retrieveServices done');

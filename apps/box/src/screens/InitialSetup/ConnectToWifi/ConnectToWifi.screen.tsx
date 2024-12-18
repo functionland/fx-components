@@ -146,7 +146,9 @@ export const ConnectToWifiScreen = () => {
             paddingVertical="8"
             onPress={() => setEnableHiddenNetwork(!enabledHiddenNetwork)}
           >
-            {enabledHiddenNetwork ? "Show Network Names" : "Manually Enter Wifi Name"}
+            {enabledHiddenNetwork
+              ? 'Show Network Names'
+              : 'Manually Enter Wifi Name'}
           </FxButton>
           {enabledHiddenNetwork && (
             <FxBox>
@@ -155,14 +157,14 @@ export const ConnectToWifiScreen = () => {
                 value={selectedSsid}
                 onChange={(e) => setSelectedSsid(e.nativeEvent.text)}
                 onSubmitEditing={() => handleSelectedWifiDevice(selectedSsid)}
-                placeholder='Enter Wifi Name'
+                placeholder="Enter Wifi Name"
               />
               <FxButton
                 onPress={() => {
                   handleSelectedWifiDevice(selectedSsid);
                 }}
               >
-                Enter Password {selectedSsid ? 'for': ''} {selectedSsid}
+                Enter Password {selectedSsid ? 'for' : ''} {selectedSsid}
               </FxButton>
             </FxBox>
           )}

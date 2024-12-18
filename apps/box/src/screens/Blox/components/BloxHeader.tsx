@@ -6,18 +6,24 @@ import {
   FxPressableOpacity,
   FxChevronDownIcon,
   useFxTheme,
+  FxSvg,
+  FxSvgProps,
 } from '@functionland/component-library';
-import { EBloxInteractionType } from '../../../models';
+import { useNavigation } from '@react-navigation/native';
+import { Routes } from '../../../navigation/navigationConfig';
+import { DynamicIcon } from '../../../components/Icons';
+
+const PLUS_ICON_PATH = "M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z";
 
 type TBloxHeader = {
   selectedMode: EBloxInteractionType;
   onChangeMode: VoidFunction;
   onAvatarPress?: VoidFunction;
-
 };
 
-export const BloxHeader = ({ selectedMode, onChangeMode ,onAvatarPress}: TBloxHeader) => {
+export const BloxHeader = ({ selectedMode, onChangeMode, onAvatarPress }: TBloxHeader) => {
   const { colors } = useFxTheme();
+  const navigation = useNavigation();
 
   return (
     <FxBox
@@ -32,24 +38,28 @@ export const BloxHeader = ({ selectedMode, onChangeMode ,onAvatarPress}: TBloxHe
         alignItems="center"
         onPress={onChangeMode}
       >
-        {/* <FxText variant="h300">
-          {selectedMode === EBloxInteractionType.HomeBloxSetup
-            ? 'Home Blox Setup'
-            : 'Office Blox Unit'}
-        </FxText>
-        <FxChevronDownIcon
-          width={16}
-          height={16}
-          marginLeft="4"
-          fill={colors.content1}
-        /> */}
       </FxPressableOpacity>
 
-      <FxAvatar
-        source={require('../../../api/mockAssets/sample.png')}
-        size="small"
-        onPress={onAvatarPress}
-      />
+      <FxBox flexDirection="row" alignItems="center">
+        <FxPressableOpacity 
+          onPress={() => navigation.navigate(Routes.InitialSetup, {
+            screen: Routes.ConnectToBlox,
+          })}
+          marginRight="12"
+        >
+          <DynamicIcon 
+            iconPath={PLUS_ICON_PATH}
+            fill={colors.content1}
+            width={24}
+            height={24}
+          />
+        </FxPressableOpacity>
+        <FxAvatar
+          source={require('../../../api/mockAssets/sample.png')}
+          size="small"
+          onPress={onAvatarPress}
+        />
+      </FxBox>
     </FxBox>
   );
 };
