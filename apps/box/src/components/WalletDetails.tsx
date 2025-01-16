@@ -120,7 +120,7 @@ export const WalletDetails = ({
         }
       }
     } catch (error) {
-      setBloxAccountId('Couldnot Connect to blox');
+      setBloxAccountId(error.message);
     } finally {
       setLoading(false);
     }
