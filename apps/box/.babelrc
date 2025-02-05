@@ -12,6 +12,7 @@
         "runtime": "automatic"
       }
     ],
+    "@babel/plugin-transform-class-static-block",
     "react-native-reanimated/plugin",
     ["@babel/plugin-proposal-export-namespace-from"]
   ]

@@ -10,6 +10,7 @@ import { BloxScreen } from '../screens/Blox/Blox.screen';
 import { PluginScreen } from '../screens/Plugin.screen';
 import { DevicesScreen } from '../screens/Devices.screen';
 import { UsersScreen } from '../screens/Users/Users.screen';
+import ChatAIScreen from '../screens/ChatAI.screen';
 import {
   BloxIcon,
   UserIcon,
@@ -17,6 +18,7 @@ import {
   DevicesIcon,
   SettingsIcon,
 } from '../components';
+import { SvgUri } from 'react-native-svg';
 import {
   Routes,
   MainTabsParamList,
@@ -71,11 +73,11 @@ export const MainTabsNavigator = () => {
   const [scanning, setScanning] = useState(false);
 
   const openGlobalBottomSheet = () => {
-    globalBottomSheetRef.current.present();
+    globalBottomSheetRef.current?.present();
   };
 
   const closeGlobalBottomSheet = () => {
-    globalBottomSheetRef.current.close();
+    globalBottomSheetRef.current?.close();
   };
 
   const isValidIp = (ip: string): boolean => {
@@ -238,6 +240,22 @@ export const MainTabsNavigator = () => {
               openGlobalBottomSheet();
             },
           })}
+        />
+        <MainTabs.Screen
+          name={Routes.ChatAITab}
+          component={ChatAIScreen}
+          options={{
+            tabBarIcon: ({ color }) => (
+              <SvgUri
+                uri="https://raw.githubusercontent.com/functionland/fx-components/main/apps/box/assets/icons/chatai-icon.svg"
+                width={24}
+                height={24}
+                fill={color}
+                style={{ alignSelf: 'center', padding: 0, margin: 0 }}
+              />
+            ),
+            tabBarLabel: 'ChatAI',
+          }}
         />
         <MainTabs.Screen
           name={Routes.DevicesTab}

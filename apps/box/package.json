@@ -1,6 +1,6 @@
 {
   "name": "box",
-  "version": "1.6.30",
+  "version": "1.6.32",
   "private": true,
   "dependencies": {
     "@functionland/fula-sec": "*",
@@ -79,7 +79,9 @@
     "ethers": "*",
     "whatwg-fetch": "*",
     "react-native-permissions": "*",
-    "base-64": "*"
+    "base-64": "*",
+    "react-native-syntax-highlighter": "*",
+    "react-syntax-highlighter": "*"
   },
   "devDependencies": {
     "@types/react-native-background-timer": "^2.0.2"

@@ -14,6 +14,7 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
     dependencies {
         classpath("com.android.tools.build:gradle")
@@ -31,7 +32,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://www.jitpack.io' }
+        maven { url 'https://jitpack.io' }
     }
 }
 // @generated begin detox-import - expo prebuild (DO NOT MODIFY) sync-1c7ed0e9d1c19e4a2b5b79bb7ec877ac879fce8d
