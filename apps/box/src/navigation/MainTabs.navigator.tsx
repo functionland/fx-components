@@ -4,6 +4,7 @@ import {
   FxBottomSheetModalMethods,
   FxArrowUpIcon,
   useFxTheme,
+  FxScanCodeIcon,
 } from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BloxScreen } from '../screens/Blox/Blox.screen';
@@ -245,16 +246,9 @@ export const MainTabsNavigator = () => {
           name={Routes.ChatAITab}
           component={ChatAIScreen}
           options={{
-            tabBarIcon: ({ color }) => (
-              <SvgUri
-                uri="https://raw.githubusercontent.com/functionland/fx-components/main/apps/box/assets/icons/chatai-icon.svg"
-                width={24}
-                height={24}
-                fill={color}
-                style={{ alignSelf: 'center', padding: 0, margin: 0 }}
-              />
-            ),
-            tabBarLabel: 'ChatAI',
+            // eslint-disable-next-line react/no-unstable-nested-components
+            tabBarIcon: ({ color }) => <FxScanCodeIcon fill={color} />,
+            tabBarLabel: 'Loyal Agent',
           }}
         />
         <MainTabs.Screen
