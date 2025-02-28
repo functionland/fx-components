@@ -5,6 +5,7 @@ import {
   SDKConfigProvider,
   useSDKConfig,
 } from '@metamask/sdk-react';
+import '../i18n';
 
 import { ThemeProvider } from '@shopify/restyle';
 import {

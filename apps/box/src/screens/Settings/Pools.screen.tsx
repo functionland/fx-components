@@ -81,7 +81,7 @@ export const PoolsScreen = () => {
 
   const wrappedJoinPool = async (poolID: number) => {
     try {
-      if (syncProgress==0 || syncProgress > 10){
+      if (syncProgress==0 || syncProgress > 2){
         setRefreshing(true);
         await joinPool(poolID);
       } else {
@@ -179,7 +179,7 @@ export const PoolsScreen = () => {
       ListHeaderComponent={
         <FxBox>
           <FxBox flex={1}>
-            { syncProgress > 0 && syncProgress < 10  &&
+            { syncProgress > 0 && syncProgress < 2  &&
               <FxBox
                 flexDirection="row"
                 alignItems='center'

@@ -1,18 +1,19 @@
 import React, { useEffect } from 'react';
 import { FxBox, FxButton, FxPressableOpacity, FxText } from '@functionland/component-library';
 import { Image, ImageBackground, StyleSheet, Linking } from 'react-native';
-// import { isEmulatorSync } from 'react-native-device-info';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { useSettingsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
 import { useLogger } from '../../hooks';
 import Version from '../../components/Version';
+import { useTranslation } from 'react-i18next'; 
+import LanguageSelector from '../../components/LanguageSelector';
 
 export const WelcomeScreen = () => {
   const navigation = useInitialSetupNavigation();
+  const { t } = useTranslation();
 
   const { toggleDebugMode } = useLogger()
-  // const isConnectedToBox = useIsConnectedToBox();
   const { colorScheme } = useSettingsStore((store) => ({
     colorScheme: store.colorScheme,
   }));
@@ -23,20 +24,6 @@ export const WelcomeScreen = () => {
   }
 
   const onConnectToBox = () => {
-    // if (isEmulatorSync()) {
-    //   alert('Emulators cannot connect to the Box');
-    //   return;
-    // }
-    // if (isConnectedToBox) {
-    //   navigation.navigate(Routes.ConnectToWifi);
-    // } else {
-    //   navigation.navigate(Routes.ConnectToBlox);
-    // }
-    // if (walletConnect.connected) {
-    //   navigation.navigate(Routes.FulaPassword);
-    // } else {
-    //   navigation.navigate(Routes.ConnectToWallet);
-    // }
     navigation.navigate(Routes.ConnectToWallet);
   };
 
@@ -49,7 +36,7 @@ export const WelcomeScreen = () => {
           marginBottom="16"
           color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
         >
-          Hello Functionlander!
+          {t('welcome.title')}
         </FxText>
 
         <FxText
@@ -60,7 +47,7 @@ export const WelcomeScreen = () => {
           marginBottom="4"
           color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
         >
-          Blox App
+          {t('welcome.appTitle')}
         </FxText>
         <Version marginBottom='16'/>
 
@@ -70,8 +57,7 @@ export const WelcomeScreen = () => {
           marginBottom="16"
           color={colorScheme === 'light' ? 'backgroundPrimary' : 'content1'}
         >
-          By using this product you agree to the terms and conditions at fx.land/terms, 
-          and would not hold Functionland liable for data loss.
+          {t('welcome.disclaimer')}
         </FxText>
         <FxButton
           marginBottom="8"
@@ -80,7 +66,7 @@ export const WelcomeScreen = () => {
           width="100%"
           onPress={() => Linking.openURL('https://fx.land/terms')}
         >
-          Terms & Conditions
+          {t('welcome.termsButton')}
         </FxButton>
         <FxButton
           marginBottom="8"
@@ -89,7 +75,7 @@ export const WelcomeScreen = () => {
           width="100%"
           onPress={onConnectToBox}
         >
-          Agree & Setup my Blox
+          {t('welcome.setupButton')}
         </FxButton>
       </FxBox>
     );
@@ -97,6 +83,18 @@ export const WelcomeScreen = () => {
 
   return (
     <FxBox flex={1} justifyContent="flex-end" >
+      {/* Custom Language Selector in top right corner */}
+      <LanguageSelector 
+        style={{
+          position: 'absolute',
+          top: 20,
+          right: 20,
+          zIndex: 10, 
+          width: 100, 
+          borderRadius: 8, 
+          padding: 4,
+        }}
+      />
       <FxPressableOpacity
         delayLongPress={3000}
         onLongPress={handleToggleDebugMode}
@@ -108,7 +106,11 @@ export const WelcomeScreen = () => {
         {colorScheme === 'light' ? (
           <ImageBackground
             source={require('../../../assets/images/welcome_bg_light.png')}
-            style={styles.backgroundBlox}
+            style={{
+              width: '100%',
+              height: '100%',
+              justifyContent: 'flex-end',
+            }}
 
           >
             {renderContent()}
@@ -118,7 +120,9 @@ export const WelcomeScreen = () => {
             <FxBox flex={1} justifyContent="center" paddingTop="20">
               <Image
                 source={require('../../../assets/images/blox_dark.png')}
-                style={styles.blox}
+                style={{
+                  width: '100%',
+                }}
                 resizeMode="contain"
               />
             </FxBox>
@@ -129,14 +133,3 @@ export const WelcomeScreen = () => {
     </FxBox>
   );
 };
-
-const styles = StyleSheet.create({
-  blox: {
-    width: '100%',
-  },
-  backgroundBlox: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'flex-end',
-  },
-});

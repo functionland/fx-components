@@ -2,6 +2,7 @@ import {
   capitalizeFirstLetter,
   FxBox,
   FxRadioButton,
+  FxRadioButtonWithLabel,
   FxSwitch,
   FxText,
 } from '@functionland/component-library';
@@ -11,14 +12,39 @@ import { SubHeaderText } from '../../components/Text';
 import { scaleByWidth } from '../../constants/layout';
 import { ColorScheme, useSettingsStore } from '../../stores';
 import { useLogger } from '../../hooks';
+import { useTranslation } from 'react-i18next';
+import { changeLanguage } from '../../i18n';
 
 export const ModeScreen = () => {
+  const { t } = useTranslation();
   return (
     <FxBox marginHorizontal="20">
       <SubHeaderText marginVertical="16">Mode</SubHeaderText>
       <SelectMode />
       <AutomaticSwitch />
+      <LanguageSelector />
       <DebugModeSwitch/>
+    </FxBox>
+  );
+};
+
+const LanguageSelector = () => {
+  const { i18n } = useTranslation();
+  
+  return (
+    <FxBox marginTop="32">
+      <FxText variant="bodySmallRegular" marginBottom="16">Language</FxText>
+      <FxRadioButton.Group
+        value={i18n.language}
+        onValueChange={(language) => changeLanguage(language)}
+      >
+        <FxBox marginBottom="8">
+          <FxRadioButtonWithLabel value="en" label="English" />
+        </FxBox>
+        <FxBox>
+          <FxRadioButtonWithLabel value="zh" label="中文 (Chinese)" />
+        </FxBox>
+      </FxRadioButton.Group>
     </FxBox>
   );
 };
