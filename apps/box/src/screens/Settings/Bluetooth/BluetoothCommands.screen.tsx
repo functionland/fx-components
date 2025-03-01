@@ -244,7 +244,7 @@ export const BluetoothCommandsScreen = () => {
       >
         <SmallHeaderText>Bluetooth commands</SmallHeaderText>
         <FxPlugIcon
-          color={currentPeripheral ? 'greenBase' : 'white'}
+          color={currentPeripheral ? 'greenBase' : 'greenBase'}
           onPress={() => !runningCommand && !isConnecting && connectViaBLE()}
         />
       </FxBox>

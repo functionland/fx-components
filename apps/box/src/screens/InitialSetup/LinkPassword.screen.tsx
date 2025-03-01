@@ -22,8 +22,10 @@ import { KeyChain } from '../../utils';
 import { ActivityIndicator } from 'react-native';
 import { useSDK } from '@metamask/sdk-react';
 import notifee from '@notifee/react-native';
+import { useTranslation } from 'react-i18next'; // Import for translations
 
 export const LinkPasswordScreen = () => {
+  const { t } = useTranslation(); // Add translation hook
   const navigation = useInitialSetupNavigation();
   const { account, sdk, provider, connected, error, status, rpcHistory } =
     useSDK();
@@ -92,8 +94,8 @@ export const LinkPasswordScreen = () => {
         notifee.registerForegroundService(() => signed);
         await notifee.displayNotification({
             id: 'wallet',
-            title: 'Connecting Wallet...',
-            body: 'Wallet connection in progress, click to move back to the app',
+            title: t('linkPassword.connectingWallet'),
+            body: t('linkPassword.walletConnectionInProgress'),
             android: {
                 progress: {
                     indeterminate: true,
@@ -145,8 +147,8 @@ export const LinkPasswordScreen = () => {
         console.log(err);
         logger.logError('handleLinkPassword', err);
         queueToast({
-          title: 'Error',
-          message: 'Unable to sign the wallet address!',
+          title: t('linkPassword.error'),
+          message: t('linkPassword.unableToSignWallet'),
           type: 'error',
           autoHideDuration: 3000,
         });
@@ -183,8 +185,8 @@ export const LinkPasswordScreen = () => {
       console.log(err);
       logger.logError('handleLinkPassword', err);
       queueToast({
-        title: 'Error',
-        message: 'Unable to sign the wallet address!',
+        title: t('linkPassword.error'),
+        message: t('linkPassword.unableToSignWallet'),
         type: 'error',
         autoHideDuration: 3000,
       });
@@ -213,7 +215,7 @@ export const LinkPasswordScreen = () => {
         {password && signiture ? (
           <FxBox>
             <FxText variant="h300" textAlign="center">
-              Your Identity
+              {t('linkPassword.yourIdentity')}
             </FxText>
             <FxText textAlign="center" marginTop="8">
               {helper.getMyDID(password, signiture)}
@@ -222,11 +224,11 @@ export const LinkPasswordScreen = () => {
         ) : (
           <>
             <FxText variant="h300" textAlign="center">
-              Set Identity
+              {t('linkPassword.title')}
             </FxText>
             {!linking ? (
               <FxTextInput
-                caption="Password"
+                caption={t('linkPassword.password')}
                 autoFocus
                 secureTextEntry
                 value={passwordInput}
@@ -237,7 +239,7 @@ export const LinkPasswordScreen = () => {
             )}
             {!linking && manualSignature ? (
               <FxTextInput
-                caption="Signature"
+                caption={t('linkPassword.signature')}
                 autoFocus
                 secureTextEntry
                 value={mSig}
@@ -253,8 +255,7 @@ export const LinkPasswordScreen = () => {
                 textAlign="center"
                 paddingBottom="20"
               >
-                Make sure to safeguard this password and the chain you used,
-                it's the key to decrypt your data from new devices
+                {t('linkPassword.warning')}
               </FxText>
               <FxRadioButton.Group
                 value={iKnow ? [1] : []}
@@ -264,7 +265,7 @@ export const LinkPasswordScreen = () => {
               >
                 <FxRadioButtonWithLabel
                   paddingVertical="8"
-                  label="I understand the risk of losing my password"
+                  label={t('linkPassword.passwordRisk')}
                   value={1}
                 />
               </FxRadioButton.Group>
@@ -276,7 +277,7 @@ export const LinkPasswordScreen = () => {
               >
                 <FxRadioButtonWithLabel
                   paddingVertical="8"
-                  label="I already opened Metamask app before clicking Sign"
+                  label={t('linkPassword.metamaskOpen')}
                   value={1}
                 />
               </FxRadioButton.Group>
@@ -291,14 +292,14 @@ export const LinkPasswordScreen = () => {
               marginBottom="16"
               onPress={handleConnectToBlox}
             >
-              Connect to Blox
+              {t('linkPassword.connectToBlox')}
             </FxButton>
             <FxButton
               size="large"
               variant="inverted"
               onPress={handleConnectToExistingBlox}
             >
-              Reconnect to existing blox
+              {t('linkPassword.reconnectExisting')}
             </FxButton>
             {logger.isDebugModeEnable && (
               <FxButton
@@ -307,7 +308,7 @@ export const LinkPasswordScreen = () => {
                 marginTop="16"
                 onPress={handleOnBluetoothCommand}
               >
-                Bluetooth commands
+                {t('linkPassword.bluetoothCommands')}
               </FxButton>
             )}
             <FxButton
@@ -315,7 +316,7 @@ export const LinkPasswordScreen = () => {
               marginTop="16"
               onPress={handleSkipToManulaSetup}
             >
-              Skip to manual setup
+              {t('linkPassword.skipManualSetup')}
             </FxButton>
           </FxBox>
         ) : (
@@ -333,9 +334,9 @@ export const LinkPasswordScreen = () => {
             >
               {provider ? (
                 linking ? (
-                  'Cancel'
+                  t('linkPassword.cancel')
                 ) : (
-                  'Sign with MetaMask'
+                  t('linkPassword.signWithMetamask')
                 )
               ) : (
                 <ActivityIndicator />
@@ -356,9 +357,9 @@ export const LinkPasswordScreen = () => {
             >
               {manualSignature
                 ? mSig !== ''
-                  ? 'Submit'
-                  : 'Sign Manually'
-                : 'Sign Manually'}
+                  ? t('linkPassword.submit')
+                  : t('linkPassword.signManually')
+                : t('linkPassword.signManually')}
             </FxButton>
           </FxBox>
         )}

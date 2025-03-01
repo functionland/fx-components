@@ -16,7 +16,7 @@ import {
   FxPressableOpacity,
   FxArrowLeftIcon,
 } from '@functionland/component-library';
-import { ActivityIndicator, FlatList, ListRenderItem } from 'react-native';
+import { ActivityIndicator, FlatList, ListRenderItem, StyleSheet } from 'react-native';
 import { SmallHeaderText, SubHeaderText } from '../../components/Text';
 import Zeroconf from 'react-native-zeroconf';
 import { MDNSBloxService, TBloxProperty } from '../../models';
@@ -25,6 +25,7 @@ import { Helper } from '../../utils';
 import { useLogger, useRootNavigation } from '../../hooks';
 import { useBloxsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
+import { useTranslation } from 'react-i18next'; // Import for translations
 
 type DicoveryDeviceType = {
   ipAddress: string;
@@ -35,6 +36,7 @@ type DicoveryDeviceType = {
 
 const zeroconf = new Zeroconf();
 export const ConnectToExistingBloxScreen = () => {
+  const { t, i18n } = useTranslation(); // Add translation hook
   const [data, setData] = useState<MDNSBloxService[]>([]);
   const [scanning, setScanning] = useState(false);
   const [addingBloxs, setAddingBloxs] = useState(false);
@@ -64,9 +66,9 @@ export const ConnectToExistingBloxScreen = () => {
     state.removeBlox,
     state.update,
   ]);
-  const [checkboxState, setCheckboxState] = React.useState<
-    Record<string, boolean>
-  >({});
+  
+  // Fixed this line - the correct useState syntax with type
+  const [checkboxState, setCheckboxState] = React.useState<Record<string, boolean>>({});
 
   let uniqueDevices = new Map();
   useEffect(() => {
@@ -133,7 +135,7 @@ export const ConnectToExistingBloxScreen = () => {
       queueToast.showToast({
         type: 'error',
         message:
-          'ConnectToExistingBloxScreen:generateAppPeerId: ' + errorMessage,
+          t('connectToExistingBlox.generateAppPeerIdError') + errorMessage,
       });
       logger.logError('ConnectToExistingBloxScreen:generateAppPeerId', error);
     }
@@ -182,7 +184,7 @@ export const ConnectToExistingBloxScreen = () => {
               peerId: device?.txt?.bloxPeerIdString,
               name:
                 bloxs[device?.txt?.bloxPeerIdString]?.name ??
-                `Blox unit #${bloxsCount + index + 1}`,
+                `${t('connectToExistingBlox.bloxUnitPrefix')} #${bloxsCount + index + 1}`,
             });
             if (firstBlox) {
               firstBlox = false;
@@ -225,15 +227,15 @@ export const ConnectToExistingBloxScreen = () => {
             </FxBox>
           </FxCard.Row>
           <FxText variant="bodySmallLight">
-            <FxText variant="bodySmallSemibold">IP: </FxText>
+            <FxText variant="bodySmallSemibold">{t('connectToExistingBlox.ip')}: </FxText>
             {item?.addresses?.map(
               (ip, index) =>
                 `${ip}${item.addresses.length - 1 != index ? ',' : ''}`
             )}
           </FxText>
-          <FxText variant="bodySmallSemibold">PEER ID:</FxText>
+          <FxText variant="bodySmallSemibold">{t('connectToExistingBlox.peerId')}:</FxText>
           <FxText variant="bodySmallLight">{item.txt?.bloxPeerIdString}</FxText>
-          <FxText variant="bodySmallSemibold">HARDWARE ID:</FxText>
+          <FxText variant="bodySmallSemibold">{t('connectToExistingBlox.hardwareId')}:</FxText>
           <FxText variant="bodySmallLight">{item.txt?.hardwareID}</FxText>
           <FxBox flexDirection="row">
             {item.txt?.bloxPeerIdString === item.txt?.authorizer && (
@@ -257,22 +259,23 @@ export const ConnectToExistingBloxScreen = () => {
               }
             >
               {appPeerId && authorized
-                ? 'Autorized'
+                ? t('connectToExistingBlox.authorized')
                 : appPeerId
-                  ? 'Not Authorized'
-                  : 'Checking...'}
+                  ? t('connectToExistingBlox.notAuthorized')
+                  : t('connectToExistingBlox.checking')}
             </FxTag>
             {alreadyExist && (
               <FxTag alignSelf="flex-start" marginStart="0">
-                Already exist
+                {t('connectToExistingBlox.alreadyExist')}
               </FxTag>
             )}
           </FxBox>
         </FxCard>
       );
     },
-    [bloxs, appPeerId]
+    [bloxs, appPeerId, t]
   );
+  
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxPressableOpacity onPress={() => rootNavigation.pop()}>
@@ -284,7 +287,7 @@ export const ConnectToExistingBloxScreen = () => {
         justifyContent="space-between"
         alignItems="center"
       >
-        <SmallHeaderText>Bloxs in your network</SmallHeaderText>
+        <SmallHeaderText>{t('connectToExistingBlox.title')}</SmallHeaderText>
         {scanning ? (
           <ActivityIndicator />
         ) : (
@@ -292,7 +295,7 @@ export const ConnectToExistingBloxScreen = () => {
         )}
       </FxBox>
       <SubHeaderText marginTop="4" variant="bodySmallLight">
-        Select bloxs you want to add
+        {t('connectToExistingBlox.selectBloxs')}
       </SubHeaderText>
       <FxSpacer height={16} />
       <FxRadioButton.Group
@@ -323,7 +326,7 @@ export const ConnectToExistingBloxScreen = () => {
           disabled={!appPeerId || !(Object.values(checkboxState).length > 0)}
           onPress={!addingBloxs ? addBloxs : null}
         >
-          {addingBloxs ? <ActivityIndicator /> : 'Add selected blox(s)'}
+          {addingBloxs ? <ActivityIndicator /> : t('connectToExistingBlox.addSelectedBloxs')}
         </FxButton>
       </FxBox>
     </FxSafeAreaBox>
@@ -333,6 +336,16 @@ export const ConnectToExistingBloxScreen = () => {
 const ItemSeparatorComponent = () => {
   return <FxSpacer marginTop="4" />;
 };
+
+const styles = StyleSheet.create({
+  languageSelectorContainer: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 10,
+    width: 120,
+  }
+});
 
 const MockData: DicoveryDeviceType[] = [
   {

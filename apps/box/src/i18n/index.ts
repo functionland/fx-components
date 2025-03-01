@@ -31,35 +31,12 @@ const getDeviceLanguage = () => {
   }
 };
 
-// Create a language detection function that checks storage first
-const detectLanguage = async () => {
-  try {
-    const storedLanguage = await AsyncStorage.getItem('userLanguage');
-    if (storedLanguage) return storedLanguage;
-    return getDeviceLanguage();
-  } catch (error) {
-    return getDeviceLanguage();
-  }
-};
-
-// Create a language change function that also updates storage
-export const changeLanguage = async (language: string) => {
-  try {
-    await AsyncStorage.setItem('userLanguage', language);
-    await i18n.changeLanguage(language);
-    return true;
-  } catch (error) {
-    console.error('Failed to set language:', error);
-    return false;
-  }
-};
-
-// Initialize i18next
+// Initialize i18next with a basic configuration first
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: getDeviceLanguage(),
+    lng: FALLBACK_LANGUAGE, // Start with fallback, will be updated after storage check
     fallbackLng: FALLBACK_LANGUAGE,
     supportedLngs: ['en', 'zh'],
     interpolation: {
@@ -70,9 +47,40 @@ i18n
     },
   });
 
-// Initialize with stored language if available
-detectLanguage().then(language => {
-  i18n.changeLanguage(language);
-});
+// Create a language change function that also updates storage
+export const changeLanguage = async (language: string) => {
+  try {
+    await AsyncStorage.setItem('userLanguage', language);
+    await i18n.changeLanguage(language);
+    console.log(`Language changed and saved to storage: ${language}`);
+    return true;
+  } catch (error) {
+    console.error('Failed to set language:', error);
+    return false;
+  }
+};
+
+// Immediately invoked async function to load the stored language
+(async () => {
+  try {
+    // First check storage
+    const storedLanguage = await AsyncStorage.getItem('userLanguage');
+    
+    if (storedLanguage && ['en', 'zh'].includes(storedLanguage)) {
+      console.log(`Loaded language from storage: ${storedLanguage}`);
+      await i18n.changeLanguage(storedLanguage);
+    } else {
+      // If no stored language, use device language and save it
+      const deviceLang = getDeviceLanguage();
+      console.log(`No stored language, using device language: ${deviceLang}`);
+      await AsyncStorage.setItem('userLanguage', deviceLang);
+      await i18n.changeLanguage(deviceLang);
+    }
+  } catch (error) {
+    console.error('Error loading language:', error);
+    // Fall back to device language on error
+    i18n.changeLanguage(getDeviceLanguage());
+  }
+})();
 
 export default i18n;

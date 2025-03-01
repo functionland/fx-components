@@ -14,6 +14,7 @@ import {
 } from '@functionland/component-library';
 import BleManager from 'react-native-ble-manager';
 import { ResponseAssembler } from '../../utils/ble';
+import { useTranslation } from 'react-i18next'; // Import for translations
 
 import {
   useFetch,
@@ -39,11 +40,9 @@ import { DeviceCard } from '../../components';
 import { EDeviceStatus } from '../../api/hub';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-type Props = NativeStackScreenProps<
-  InitialSetupStackParamList,
-  Routes.SetBloxAuthorizer
->;
+type Props = NativeStackScreenProps<InitialSetupStackParamList, Routes.SetBloxAuthorizer>;
 export const SetBloxAuthorizerScreen = ({ route }: Props) => {
+  const { t } = useTranslation(); // Add translation hook
   const navigation = useInitialSetupNavigation();
   const [newPeerId, setNewPeerId] = useState(undefined);
   const [newBloxPeerId, setNewBloxPeerId] = useState(undefined);
@@ -81,13 +80,13 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
 
   const bloxsArray = Object.values(bloxs);
   const [newBloxName, setNewBloxName] = useState(
-    `Blox Unit #${bloxsArray.length + 1}`
+    `${t('setBloxAuthorizer.bloxUnitPrefix')} #${bloxsArray.length + 1}`
   );
 
   const blePeerExchange = async (params: { peer_id: string; seed: string }) => {
     const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
     if (connectedPeripherals.length === 0) {
-      throw new Error('No BLE devices connected');
+      throw new Error(t('setBloxAuthorizer.noBleDevicesConnected'));
     }
 
     const responseAssembler = new ResponseAssembler();
@@ -179,7 +178,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       console.log({ error_bloxProperties });
       queueToast({
         type: 'warning',
-        title: 'Unable to get the blox properties!',
+        title: t('setBloxAuthorizer.unableToGetProperties'),
         message: error_bloxProperties?.message,
       });
     }
@@ -198,8 +197,8 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       if (!peer_id || peer_id?.length !== 52) {
         queueToast({
           type: 'error',
-          title: 'Set authotizer',
-          message: 'Blox peerId is invalid!',
+          title: t('setBloxAuthorizer.setAuthorizer'),
+          message: t('setBloxAuthorizer.bloxPeerIdInvalid'),
         });
         refetch_bloxDeleteFulaConfig();
       } else {
@@ -209,7 +208,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       console.log('data exchange error', { data_exchange, error_exchange });
       queueToast({
         type: 'error',
-        title: 'Set authotizer',
+        title: t('setBloxAuthorizer.setAuthorizer'),
         message: error_exchange?.message,
       });
       refetch_bloxDeleteFulaConfig();
@@ -225,13 +224,13 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     if (data_bloxFormatDisk?.data && !data_bloxFormatDisk?.data?.status) {
       queueToast({
         type: 'error',
-        title: 'Format disk',
+        title: t('setBloxAuthorizer.formatDisk'),
         message: data_bloxFormatDisk?.data?.msg,
       });
     } else if (error_bloxFormatDisk?.message) {
       queueToast({
         type: 'error',
-        title: 'Format disk',
+        title: t('setBloxAuthorizer.formatDisk'),
         message: error_bloxFormatDisk?.message,
       });
     }
@@ -370,57 +369,57 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       >
         <FxBox flex={3} paddingVertical="40">
           <FxText variant="h300" textAlign="center" marginBottom="40">
-            Set Blox Owner
+            {t('setBloxAuthorizer.title')}
           </FxText>
           <FxText variant="body" textAlign="center" marginBottom="20">
-            Adding the Blox App Peer ID as an owner on the Blox
+            {t('setBloxAuthorizer.description')}
           </FxText>
           {(error_exchange?.message === 'Network Error' ||
             error_bloxProperties?.message === 'Network Error') && (
             <FxWarning
               padding="16"
               marginBottom="8"
-              error="In some cases you need to turn the mobile data off, please make sure the phone is connected to the Blox's Hotspot and mobile data/VPN is off, Then press back and try again please"
+              error={t('setBloxAuthorizer.networkError')}
             />
           )}
           {data_bloxProperties?.data &&
             (!data_bloxProperties?.data?.restartNeeded ||
               data_bloxProperties?.data?.restartNeeded === 'true') && (
-              <FxWarning
-                padding="16"
-                marginBottom="8"
-                error={
-                  data_bloxProperties?.data?.restartNeeded //It is just for backend zero, to check the update needed
-                    ? 'An update is awaiting a manual restart to be applied. You should unplug and plug back your blox to restart it and then try again.'
-                    : "You should update your blox backend, Please press 'Skip' button and connect it to your Wifi network."
-                }
-              />
-            )}
+            <FxWarning
+              padding="16"
+              marginBottom="8"
+              error={
+                data_bloxProperties?.data?.restartNeeded //It is just for backend zero, to check the update needed
+                  ? t('setBloxAuthorizer.updateNeeded')
+                  : t('setBloxAuthorizer.backendUpdate')
+              }
+            />
+          )}
           {!isManualSetup &&
             (!data_bloxProperties?.data?.bloxFreeSpace ||
               (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) === 0) &&
             !loading_bloxProperties && (
-              <FxWarning
-                padding="16"
-                marginBottom="8"
-                error="To proceed successfully you need to attach an external storage to the Blox!"
-              />
-            )}
+            <FxWarning
+              padding="16"
+              marginBottom="8"
+              error={t('setBloxAuthorizer.storageNeeded')}
+            />
+          )}
           {password && signiture ? (
             <FxBox>
               <FxText variant="h300" textAlign="center" marginBottom="8">
-                The Blox App Peer ID
+                {t('setBloxAuthorizer.appPeerId')}
               </FxText>
               <FxPressableOpacity
                 onPress={() =>
                   Share.share({
-                    title: 'The Blox App Peer ID',
+                    title: t('setBloxAuthorizer.appPeerId'),
                     message: newPeerId,
                   })
                 }
               >
                 <FxText color="content3" textAlign="center" marginTop="8">
-                  {newPeerId ?? 'Generating the app peerId...'}
+                  {newPeerId ?? t('setBloxAuthorizer.generating')}
                 </FxText>
               </FxPressableOpacity>
             </FxBox>
@@ -429,12 +428,12 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
           {newBloxPeerId && !isManualSetup && (
             <FxBox marginTop="16">
               <FxText variant="h300" textAlign="center" marginBottom="8">
-                Your Blox Peer ID
+                {t('setBloxAuthorizer.bloxPeerId')}
               </FxText>
               <FxPressableOpacity
                 onPress={() =>
                   Share.share({
-                    title: 'Your Blox Peer ID',
+                    title: t('setBloxAuthorizer.bloxPeerId'),
                     message: newBloxPeerId,
                   })
                 }
@@ -448,7 +447,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
           {isManualSetup && (
             <FxBox marginTop="16">
               <FxText variant="h300" textAlign="center" marginBottom="8">
-                Enter Your Blox Peer ID
+                {t('setBloxAuthorizer.enterBloxPeerId')}
               </FxText>
               <FxTextInput
                 defaultValue={newBloxPeerId}
@@ -459,7 +458,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
           {(newBloxPeerId || isManualSetup) && (
             <FxBox paddingTop="40">
               <FxTextInput
-                caption="Set Blox name"
+                caption={t('setBloxAuthorizer.setBloxName')}
                 value={newBloxName}
                 onChangeText={setNewBloxName}
               />
@@ -472,11 +471,11 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
               capacity: data_bloxProperties?.data?.bloxFreeSpace?.size || 0,
               free: data_bloxProperties?.data?.bloxFreeSpace?.avail,
               used: data_bloxProperties?.data?.bloxFreeSpace?.used,
-              name: 'Hard Disk',
+              name: t('setBloxAuthorizer.hardDisk'),
               status: data_bloxProperties?.data?.bloxFreeSpace
                 ? EDeviceStatus.InUse
                 : EDeviceStatus.NotAvailable,
-              associatedDevices: ['Blox Set Up'],
+              associatedDevices: [t('setBloxAuthorizer.bloxSetUp')],
             }}
             onRefreshPress={refetch_bloxProperties}
             loading={loading_bloxProperties}
@@ -487,7 +486,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                   onPress={loading_bloxFormatDisk ? null : handleFormatDisk}
                 >
                   {loading_bloxFormatDisk ? <ActivityIndicator /> : null}
-                  Format Disk
+                  {t('setBloxAuthorizer.formatDisk')}
                 </FxButton>
               )}
           </DeviceCard>
@@ -514,7 +513,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
               marginRight="12"
               onPress={() => setShowSkipModal(true)}
             >
-              Skip
+              {t('setBloxAuthorizer.skip')}
             </FxButton>
 
             <Modal
@@ -535,11 +534,10 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                   width="100%"
                 >
                   <FxText variant="h300" marginBottom="16">
-                    Skip Authorization
+                    {t('setBloxAuthorizer.skipAuthorization')}
                   </FxText>
                   <FxText variant="body" marginBottom="24">
-                    The Skip is only intended when you are instructed to do so
-                    by the support team. Please enter the code given to you:
+                    {t('setBloxAuthorizer.skipDescription')}
                   </FxText>
                   <FxTextInput
                     value={skipCode}
@@ -564,7 +562,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                       }}
                       marginRight="12"
                     >
-                      Cancel
+                      {t('setBloxAuthorizer.cancel')}
                     </FxButton>
                     <FxButton
                       onPress={() => {
@@ -574,13 +572,13 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                           skipConnectToInternet();
                         } else {
                           Alert.alert(
-                            'Invalid Code',
-                            'The code you entered is incorrect. Please contact support if you need assistance.'
+                            t('setBloxAuthorizer.invalidCode'),
+                            t('setBloxAuthorizer.invalidCodeMessage')
                           );
                         }
                       }}
                     >
-                      Confirm
+                      {t('setBloxAuthorizer.confirm')}
                     </FxButton>
                   </FxBox>
                 </FxBox>
@@ -593,7 +591,6 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
           justifyContent="flex-end"
           alignItems="center"
           flex={1}
-          //marginTop="16"
         >
           <FxButton
             variant="inverted"
@@ -601,7 +598,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
             marginRight="12"
             onPress={goBack}
           >
-            Back
+            {t('setBloxAuthorizer.back')}
           </FxButton>
           {!newBloxPeerId && !isManualSetup ? (
             <FxButton
@@ -617,7 +614,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
               onPress={handleSetOwnerPeerId}
             >
               {!loading_exchange && !loading_bloxProperties ? (
-                'Set Authorizer'
+                t('setBloxAuthorizer.setAuthorizer')
               ) : (
                 <ActivityIndicator />
               )}
@@ -634,7 +631,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
               width={150}
               onPress={handleNext}
             >
-              {loading_exchange ? <ActivityIndicator /> : 'Next'}
+              {loading_exchange ? <ActivityIndicator /> : t('setBloxAuthorizer.next')}
             </FxButton>
           )}
         </FxBox>
