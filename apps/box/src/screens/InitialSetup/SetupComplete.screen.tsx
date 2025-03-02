@@ -31,6 +31,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import axios from 'axios';
 import { API_URL } from '../../api/index';
 import { FlashingCircle, FlashingTower } from '../../components';
+import { useTranslation } from 'react-i18next'; // Import for translations
 
 type SetupStatus =
   | 'COMPLETED'
@@ -39,11 +40,9 @@ type SetupStatus =
   | 'ERROR'
   | undefined;
 type InternetStatus = 'CONNECTED' | 'CHECKING' | 'NOTCONNECTED' | undefined;
-type Props = NativeStackScreenProps<
-  InitialSetupStackParamList,
-  Routes.SetupComplete
->;
+type Props = NativeStackScreenProps<InitialSetupStackParamList, Routes.SetupComplete>;
 export const SetupCompleteScreen = ({ route }: Props) => {
+  const { t } = useTranslation(); // Add translation hook
   const navigation = useInitialSetupNavigation();
   const { isManualSetup = false } = route.params || {};
   const rootNavigation = useRootNavigation();
@@ -102,7 +101,6 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   }, [inetInfo]);
 
   // Initiate fula
-  // Initiate fula
   const sleep = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -133,11 +131,10 @@ export const SetupCompleteScreen = ({ route }: Props) => {
           setSetupStatus('ERROR');
           queueToast({
             type: 'error',
-            message:
-              'Unable to initialize the fula network! error: ' +
-              error.message +
-              ' for fulaIsReady=' +
-              fulaIsReady,
+            message: t('setupComplete.unableToInitialize', {
+              error: error.message,
+              fulaIsReady: fulaIsReady
+            })
           });
           logger.logError('SetupCompleteScreen:intiFula', error);
         }
@@ -196,8 +193,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
       // If the request fails, show a toast or a modal with the message
       queueToast({
         type: 'error',
-        message:
-          'It seems you are no longer connected to Hotspot, check if FxBlox hotspot is still available, if not, blox is already connected to internet and you can go to Home',
+        message: t('setupComplete.notConnectedToHotspot')
       });
     }
   };
@@ -209,8 +205,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
       });
       const network = await NetInfo?.fetch();
       if (
-        network?.isInternetReachable || // &&
-        //network?.type === NetInfoStateType.wifi
+        network?.isInternetReachable ||
         pingResponse?.status === 200
       ) {
         setInternetStatus('CONNECTED');
@@ -234,12 +229,14 @@ export const SetupCompleteScreen = ({ route }: Props) => {
       routes: [{ name: Routes.MainTabs }],
     });
   };
+  
   const handleTryCheckInternet = () => {
     setSetupStatus('CHECKING');
     setTimeout(() => {
       checkInternetStatus();
     }, 1000);
   };
+  
   const handleTryReachBlox = () => {
     setSetupStatus('CHECKING');
     setTimeout(async () => {
@@ -271,6 +268,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
       );
     }
   };
+  
   const handleBackToHome = () => {
     navigation.dispatch(
       CommonActions.reset({
@@ -279,6 +277,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
       })
     );
   };
+  
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={100} />
@@ -296,20 +295,20 @@ export const SetupCompleteScreen = ({ route }: Props) => {
             <>
               <ActivityIndicator size="large" />
               <FxText variant="bodyLargeRegular" paddingVertical="8">
-                Completing setup
+                {t('setupComplete.completing')}
               </FxText>
             </>
           )}
         {(internetStatus === 'CHECKING' || initialWaitForInternet) &&
           currentBloxPeerId && (
             <FxText variant="bodyMediumRegular">
-              Connect your phone to internet (wifi) to proceed now...
+              {t('setupComplete.connectPhone')}
             </FxText>
           )}
         {internetStatus === 'CONNECTED' &&
           bloxsConnectionStatus[currentBloxPeerId] === 'CHECKING' && (
             <FxText variant="bodyMediumRegular">
-              Reaching Blox #{bloxReachOutTryCount}...
+              {t('setupComplete.reachingBlox', { number: bloxReachOutTryCount })}
             </FxText>
           )}
         {currentBloxPeerId &&
@@ -324,7 +323,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
                 paddingHorizontal="16"
                 lineHeight={20}
               >
-                Is you blox LED 'green' but you see this message?
+                {t('setupComplete.greenLed')}
               </FxText>
               <FxText
                 variant="bodyMediumRegular"
@@ -333,8 +332,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
                 paddingHorizontal="16"
                 lineHeight={20}
               >
-                Make sure your phone is connected to the internet and then try
-                again
+                {t('setupComplete.internetReminder')}
               </FxText>
               <FxSpacer marginBottom="8" />
               <FlashingCircle
@@ -349,8 +347,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
                 paddingHorizontal="16"
                 lineHeight={20}
               >
-                Is you blox flashing 'light-blue'? You probably entered wrong
-                wifi password
+                {t('setupComplete.lightBlueLed')}
               </FxText>
             </>
           )}
@@ -364,10 +361,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
               paddingHorizontal="16"
               lineHeight={20}
             >
-              Your Blox is not reachable, seems it is not connected to the
-              internet! Please turn your blox off and then turn it on and make
-              sure it is on Hotspot mode, then try to reconnect the blox to the
-              Wi-Fi
+              {t('setupComplete.notReachable')}
             </FxText>
           )}
         {!currentBloxPeerId && (
@@ -379,8 +373,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
               paddingHorizontal="16"
               lineHeight={20}
             >
-              Your blox is updating. Please wait for an hour for the update to
-              complete.
+              {t('setupComplete.updating')}
             </FxText>
             <FxText
               variant="bodyMediumLight"
@@ -390,10 +383,10 @@ export const SetupCompleteScreen = ({ route }: Props) => {
               paddingVertical="16"
               lineHeight={20}
             >
-              Meanwhile, feel free to disconnect your phone from FxBlox hotspot.
+              {t('setupComplete.disconnectHotspot')}
             </FxText>
             <FxButton marginTop="24" width="80%" onPress={handleBackToHome}>
-              Home Screen
+              {t('setupComplete.homeScreen')}
             </FxButton>
           </>
         )}
@@ -408,7 +401,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
               textTransform="uppercase"
               marginBottom="16"
             >
-              Congratulations
+              {t('setupComplete.congratulations')}
             </FxText>
             <FxText
               fontFamily="Montserrat-Semibold"
@@ -417,14 +410,14 @@ export const SetupCompleteScreen = ({ route }: Props) => {
               textAlign="center"
               marginBottom="16"
             >
-              Setup Complete
+              {t('setupComplete.setupComplete')}
             </FxText>
           </>
         )}
 
         {setupStatus === 'COMPLETED' && (
           <FxButton marginBottom="16" size="large" onPress={handleHome}>
-            Home
+            {t('setupComplete.home')}
           </FxButton>
         )}
 
@@ -437,7 +430,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
                 size="large"
                 onPress={handleTryCheckInternet}
               >
-                Check internet connectivity
+                {t('setupComplete.checkInternet')}
               </FxButton>
               <FxSpacer height={10} />
               <FxButton
@@ -446,7 +439,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
                 size="large"
                 onPress={handleHome}
               >
-                Home
+                {t('setupComplete.home')}
               </FxButton>
               <FxSpacer height={10} />
               {isHeaderStatus200 && (
@@ -458,7 +451,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
                     navigation.goBack();
                   }}
                 >
-                  Entered Wrong Password? Go Back
+                  {t('setupComplete.wrongPassword')}
                 </FxButton>
               )}
             </>
@@ -475,7 +468,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
                 handleTryReachBlox();
               }}
             >
-              Check Connection Again
+              {t('setupComplete.checkConnection')}
             </FxButton>
           )}
         {setupStatus === 'ERROR' && (
@@ -489,16 +482,14 @@ export const SetupCompleteScreen = ({ route }: Props) => {
               paddingVertical="16"
               lineHeight={20}
             >
-              If Blox is flashing 'Cyan', it probably means you have entered the
-              wrong password for your wifi. Connect to 'FxBlox' Wifi again and
-              retry.
+              {t('setupComplete.cyanFlashing')}
             </FxText>
             <FxButton
               marginBottom="16"
               size="large"
-              onPress={checkHotspotConnection} // Updated to use the new function
+              onPress={checkHotspotConnection}
             >
-              Back
+              {t('setupComplete.back')}
             </FxButton>
             <FxSpacer height={15} />
             <FxButton
@@ -507,7 +498,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
               size="large"
               onPress={handleHome}
             >
-              Home
+              {t('setupComplete.home')}
             </FxButton>
           </>
         )}
@@ -516,7 +507,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
           internetStatus === 'CONNECTED' &&
           setupStatus === 'NOTCOMPLETED' && (
             <FxButton size="large" onPress={handleReconnectBlox}>
-              {isManualSetup ? 'Back' : 'Reconnect Blox to Wi-Fi'}
+              {isManualSetup ? t('setupComplete.back') : t('setupComplete.reconnectWifi')}
             </FxButton>
           )}
       </FxBox>

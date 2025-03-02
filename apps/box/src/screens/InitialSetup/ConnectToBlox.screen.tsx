@@ -6,29 +6,21 @@ import {
   FxText,
   FxSafeAreaBox,
   useToast,
+  FxDropdown, // Added for language selector
 } from '@functionland/component-library';
 import BleManager from 'react-native-ble-manager';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { EConnectionStatus } from '../../models';
 import { BleManagerWrapper, ResponseAssembler } from '../../utils/ble';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import axios from 'axios';
 import { API_URL } from '../../api/index';
 import { FlashingCircle, FlashingTower } from '../../components';
-
-const connectionStatusStrings = {
-  [EConnectionStatus.connecting]: 'Checking connection...',
-  [EConnectionStatus.connected]: 'Connected',
-  [EConnectionStatus.failed]: 'Unable to connect to Hotspot',
-  [EConnectionStatus.notConnected]: 'Not Connected',
-  [EConnectionStatus.bleConnecting]: 'Searching for Blox device...',
-  [EConnectionStatus.bleConnected]: 'Connected to Blox via Bluetooth',
-  [EConnectionStatus.bleFailed]:
-    'Unable to connect via Bluetooth, trying WiFi...',
-};
+import { useTranslation } from 'react-i18next'; // Import for translations
 
 export const ConnectToBloxScreen = () => {
+  const { t, i18n } = useTranslation(); // Add translation hook
   const navigation = useInitialSetupNavigation();
   const { queueToast } = useToast();
   const [showHotspotInstructions, setShowHotspotInstructions] = useState(false);
@@ -37,9 +29,42 @@ export const ConnectToBloxScreen = () => {
     []
   );
 
+  // Language options for dropdown
+  const languageOptions = [
+    { label: 'English', value: 'en' },
+    { label: '中文', value: 'zh' }
+  ];
+
+  // Handle language change
+  const handleLanguageChange = (language) => {
+    i18n.changeLanguage(language);
+  };
+
   const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
     EConnectionStatus.notConnected
   );
+
+  // Use translations for connection status strings
+  const getConnectionStatusText = (status: EConnectionStatus): string => {
+    switch(status) {
+      case EConnectionStatus.connecting:
+        return t('connectToBlox.checkingConnection');
+      case EConnectionStatus.connected:
+        return t('connectToBlox.connected');
+      case EConnectionStatus.failed:
+        return t('connectToBlox.failed');
+      case EConnectionStatus.notConnected:
+        return t('connectToBlox.notConnected');
+      case EConnectionStatus.bleConnecting:
+        return t('connectToBlox.bleConnecting');
+      case EConnectionStatus.bleConnected:
+        return t('connectToBlox.bleConnected');
+      case EConnectionStatus.bleFailed:
+        return t('connectToBlox.bleFailed');
+      default:
+        return '';
+    }
+  };
 
   const connectViaBLE = async (): Promise<boolean> => {
     try {
@@ -122,8 +147,8 @@ export const ConnectToBloxScreen = () => {
 
       setConnectionStatus(EConnectionStatus.failed);
       queueToast({
-        title: 'Connection Error',
-        message: 'Unable to connect to Blox. Please check your connection.',
+        title: t('connectToBlox.connectionError'),
+        message: t('connectToBlox.connectionErrorMessage'),
         type: 'error',
         autoHideDuration: 5000,
       });
@@ -141,6 +166,7 @@ export const ConnectToBloxScreen = () => {
 
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
+      
       <FxProgressBar progress={60} />
 
       <FxBox
@@ -156,7 +182,7 @@ export const ConnectToBloxScreen = () => {
             textAlign="center"
             marginBottom="24"
           >
-            Connect to Blox
+            {t('connectToBlox.title')}
           </FxText>
           <FlashingTower
             onColor="lightblue"
@@ -180,7 +206,7 @@ export const ConnectToBloxScreen = () => {
                   : 'primary'
               }
             >
-              {connectionStatusStrings[connectionStatus]}
+              {getConnectionStatusText(connectionStatus)}
             </FxText>
           )}
           {connectionStatus !== EConnectionStatus.connected &&
@@ -189,13 +215,11 @@ export const ConnectToBloxScreen = () => {
               {showHotspotInstructions &&
               connectionStatus !== EConnectionStatus.bleConnected ? (
                 <FxText variant="h200" textAlign="center">
-                  - Please turn your Blox on and connect your phone to the
-                  Blox's hotspot manually, and turn off mobile data.
+                  {t('connectToBlox.hotspotInstructions')}
                 </FxText>
               ) : null}
               <FxText variant="h200" textAlign="center">
-                - Make sure you have internal or external storage attached and
-                format is either 'ext4' or 'vFat'.
+                {t('connectToBlox.formatInstructions')}
               </FxText>
               <FxBox
                 flexDirection="column"
@@ -224,8 +248,7 @@ export const ConnectToBloxScreen = () => {
                   color="warningBase"
                   paddingTop="8"
                 >
-                  After first boot please wait for 10 minutes until Blox flashes
-                  'light-blue'
+                  {t('connectToBlox.waitForBlueLight')}
                 </FxText>
               </FxBox>
             </>
@@ -236,7 +259,7 @@ export const ConnectToBloxScreen = () => {
               textAlign="center"
               color="primary"
             >
-              Now you are connected to Blox. Please wait...
+              {t('connectToBlox.connectedMessage')}
             </FxText>
           )}
         </FxBox>
@@ -255,7 +278,7 @@ export const ConnectToBloxScreen = () => {
             marginRight="12"
             onPress={goBack}
           >
-            Back
+            {t('connectToBlox.back')}
           </FxButton>
           <FxButton
             width={150}
@@ -265,7 +288,7 @@ export const ConnectToBloxScreen = () => {
             {(connectionStatus !== EConnectionStatus.connected && connectionStatus !== EConnectionStatus.notConnected && connectionStatus !== EConnectionStatus.failed) ? (
               <ActivityIndicator />
             ) : (
-              'Continue'
+              t('connectToBlox.continue')
             )}
           </FxButton>
         </FxBox>
