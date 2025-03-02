@@ -81,7 +81,10 @@
     "react-native-permissions": "*",
     "base-64": "*",
     "react-native-syntax-highlighter": "*",
-    "react-syntax-highlighter": "*"
+    "react-syntax-highlighter": "*",
+    "i18next": "*",
+    "react-i18next": "*",
+    "i18next-resources-to-backend": "*"
   },
   "devDependencies": {
     "@types/react-native-background-timer": "^2.0.2"

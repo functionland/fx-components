@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native';
 import WifiManager from 'react-native-wifi-reborn';
 import { getWifiStatus, putApDisable } from '../../api/wifi';
 import { DEFAULT_NETWORK_NAME } from '../../hooks';
+import { useTranslation } from 'react-i18next'; // Import for translations
 
 enum NetworkStatus {
   Connected = 'connected',
@@ -14,6 +15,7 @@ enum NetworkStatus {
 }
 
 export const CheckConnectionScreen = ({ route }) => {
+  const { t } = useTranslation(); // Add translation hook
   const [status, setStatus] = useState(NetworkStatus.Connecting);
   const { ssid } = route.params;
 
@@ -25,14 +27,14 @@ export const CheckConnectionScreen = ({ route }) => {
       setStatus(wifiStatus);
       if (wifiStatus === NetworkStatus.Connected) {
         // eslint-disable-next-line no-alert
-        alert('All done\nYour device is connected with success!');
+        alert(t('checkConnection.allDone'));
         putApDisable();
       }
     } catch (error) {
       // eslint-disable-next-line no-alert
       alert(error.response ? error.response.data.message : error.message);
     }
-  }, [setStatus]);
+  }, [setStatus, t]);
 
   const connectToBox = useCallback(async (callback: () => void) => {
     await WifiManager.connectToProtectedSSID(DEFAULT_NETWORK_NAME, null, false);
@@ -59,23 +61,23 @@ export const CheckConnectionScreen = ({ route }) => {
   const statusMessage = useMemo(() => {
     switch (status) {
       case NetworkStatus.Connected:
-        return `Successfully connected to ${ssid}.`;
+        return t('checkConnection.successfullyConnected', { ssid });
       case NetworkStatus.CheckConnection:
-        return `Verifying connection...`;
+        return t('checkConnection.verifyingConnection');
       case NetworkStatus.FailedConnection:
-        return `Couldn't connect with ${ssid}.`;
+        return t('checkConnection.couldntConnect', { ssid });
       case NetworkStatus.Disconnected:
-        return `Couldn't connect with ${ssid}. Please try again.`;
+        return t('checkConnection.couldntConnectTryAgain', { ssid });
       case NetworkStatus.Connecting:
       default:
-        return `Connecting with ${ssid}...`;
+        return t('checkConnection.connectingWith', { ssid });
     }
-  }, [status, ssid]);
+  }, [status, ssid, t]);
 
   return (
     <SafeAreaView>
       <FxText variant="body" margin="16" color="primary">
-        Verifying connection with {ssid}
+        {t('checkConnection.verifyingConnectionWith', { ssid })}
       </FxText>
       <FxText variant="body" margin="16" color="secondary">
         {statusMessage}

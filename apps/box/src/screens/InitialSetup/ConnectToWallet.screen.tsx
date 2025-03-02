@@ -5,13 +5,28 @@ import {
   FxProgressBar,
   FxSafeAreaBox,
   FxText,
+  FxDropdown, // Add this for language selector
 } from '@functionland/component-library';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import notifee from '@notifee/react-native';
+import { useTranslation } from 'react-i18next'; // Import this
+import { StyleSheet, View } from 'react-native'; // Import for styling
 
 export const ConnectToWalletScreen = () => {
   const navigation = useInitialSetupNavigation();
+  const { t, i18n } = useTranslation(); // Add this hook
+
+  // Language options for dropdown
+  const languageOptions = [
+    { label: 'English', value: 'en' },
+    { label: '中文', value: 'zh' }
+  ];
+
+  // Handle language change
+  const handleLanguageChange = (language: 'en' | 'zh') => {
+    i18n.changeLanguage(language);
+  };
 
   const allowNotifications = async () => {
     await notifee.requestPermission();
@@ -42,17 +57,20 @@ export const ConnectToWalletScreen = () => {
 
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
+      
       <FxProgressBar progress={20} />
         <FxBox flex={1} justifyContent="space-between" paddingVertical="80">
           <FxText variant="h300" textAlign="center">
-            Connect To Wallet
+            {t('connectToWallet.title')}
           </FxText>          
-          <FxText>App needs notification permission to connect your wallet and perform data sync. Tap allow in the next prompt.</FxText>
+          <FxText>
+            {t('connectToWallet.description')}
+          </FxText>
           <FxButton
             size="large"
             onPress={allowNotifications}
           >
-            Allow Notifications            
+            {t('connectToWallet.allowButton')}
           </FxButton>
         </FxBox>
     </FxSafeAreaBox>
