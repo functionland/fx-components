@@ -1,6 +1,6 @@
 {
   "name": "box",
-  "version": "1.6.32",
+  "version": "1.6.33",
   "private": true,
   "dependencies": {
     "@functionland/fula-sec": "*",
