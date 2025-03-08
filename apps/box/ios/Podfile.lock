@@ -387,7 +387,7 @@ PODS:
     - react-native-config/App (= 1.5.1)
   - react-native-config/App (1.5.1):
     - React-Core
-  - react-native-fula (1.54.34):
+  - react-native-fula (1.55.11):
     - CryptoSwift (~> 1.7.1)
     - Fula (~> 1.54.16)
     - RCT-Folly (= 2021.07.22.00)
@@ -875,7 +875,7 @@ SPEC CHECKSUMS:
   react-native-ble-manager: 59a0c7178d6fa0272a1b86f976469b800ce08eba
   react-native-compat: 2dca63ad5d9c3ca5e001795a5789f688ad9fae6f
   react-native-config: 86038147314e2e6d10ea9972022aa171e6b1d4d8
-  react-native-fula: 00b6bb461496dc4bdf07dbb0184c56a01933542f
+  react-native-fula: 4079ae5793e30b76f224abda29e1d2790145ebbd
   react-native-get-random-values: dee677497c6a740b71e5612e8dbd83e7539ed5bb
   react-native-netinfo: ccbe1085dffd16592791d550189772e13bf479e2
   react-native-pager-view: 0ccb8bf60e2ebd38b1f3669fa3650ecce81db2df
