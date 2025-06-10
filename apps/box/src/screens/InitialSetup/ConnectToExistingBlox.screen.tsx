@@ -26,6 +26,7 @@ import { useLogger, useRootNavigation } from '../../hooks';
 import { useBloxsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
 import { useTranslation } from 'react-i18next'; // Import for translations
+import { generateUniqueBloxName } from '../../utils/bloxName';
 
 type DicoveryDeviceType = {
   ipAddress: string;
@@ -180,11 +181,15 @@ export const ConnectToExistingBloxScreen = () => {
             ) {
               removeBlox(bloxsProperties[device?.txt.hardwareID]);
             }
+            // Ensure unique name for each new Blox
+            const existingNames = Object.values(bloxs as Record<string, { name: string }> ).map((b) => b.name);
+            const baseName =
+              bloxs[device?.txt?.bloxPeerIdString]?.name ??
+              `${t('connectToExistingBlox.bloxUnitPrefix')} #${bloxsCount + index + 1}`;
+            const uniqueName = generateUniqueBloxName(baseName, existingNames);
             addBlox({
               peerId: device?.txt?.bloxPeerIdString,
-              name:
-                bloxs[device?.txt?.bloxPeerIdString]?.name ??
-                `${t('connectToExistingBlox.bloxUnitPrefix')} #${bloxsCount + index + 1}`,
+              name: uniqueName,
             });
             if (firstBlox) {
               firstBlox = false;

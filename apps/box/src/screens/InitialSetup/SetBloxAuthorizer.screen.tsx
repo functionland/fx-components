@@ -39,6 +39,7 @@ import { useBloxsStore } from '../../stores';
 import { DeviceCard } from '../../components';
 import { EDeviceStatus } from '../../api/hub';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { generateUniqueBloxName } from '../../utils/bloxName';
 
 type Props = NativeStackScreenProps<InitialSetupStackParamList, Routes.SetBloxAuthorizer>;
 export const SetBloxAuthorizerScreen = ({ route }: Props) => {
@@ -78,9 +79,13 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     state.updateBloxSpaceInfo,
   ]);
 
-  const bloxsArray = Object.values(bloxs);
-  const [newBloxName, setNewBloxName] = useState(
-    `${t('setBloxAuthorizer.bloxUnitPrefix')} #${bloxsArray.length + 1}`
+  const bloxsArray = Object.values(bloxs as Record<string, { name: string }>);
+  const existingNames = bloxsArray.map((b) => b.name);
+  const [newBloxName, setNewBloxName] = useState<string>(
+    generateUniqueBloxName(
+      t('setBloxAuthorizer.bloxUnitPrefix') + ` #${bloxsArray.length + 1}`,
+      existingNames
+    )
   );
 
   const blePeerExchange = async (params: { peer_id: string; seed: string }) => {
@@ -281,9 +286,11 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       if (currentBloxPeerId === newBloxPeerId) {
         removeBlox(currentBloxPeerId);
       }
+      // Ensure unique name before adding
+      const finalName = generateUniqueBloxName(newBloxName, Object.values(bloxs as Record<string, { name: string }> ).map((b) => b.name));
       addBlox({
         peerId: newBloxPeerId,
-        name: newBloxName,
+        name: finalName,
       });
       updateBloxsStore({
         currentBloxPeerId: newBloxPeerId,
