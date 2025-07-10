@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useContractIntegration } from './useContractIntegration';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { ethers } from 'ethers';
+import { getChainConfigByName } from '../contracts/config';
+import { FULA_TOKEN_ABI } from '../contracts/abis';
+import { useSDK } from '@metamask/sdk-react';
 
 export interface FulaBalanceState {
   balance: string;
@@ -24,33 +28,51 @@ export const useFulaBalance = (account?: string) => {
     error: null,
   });
 
-  const { contractService, isReady, connectedAccount } = useContractIntegration();
-  const selectedChain = useSettingsStore(state => state.selectedChain);
+  const { connectedAccount } = useContractIntegration();
+  const selectedChain = useSettingsStore((state) => state.selectedChain);
+  const { account: metamaskAccount } = useSDK();
 
   const loadBalance = useCallback(async () => {
-    if (!isReady || !contractService) {
+    const targetAccount = account || metamaskAccount || connectedAccount;
+    if (!targetAccount) {
+      setState(prev => ({ ...prev, error: 'No account available' }));
       return;
     }
 
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const targetAccount = account || connectedAccount;
-      if (!targetAccount) {
-        throw new Error('No account available');
-      }
+      // Use read-only RPC provider for balance queries
+      const chainConfig = getChainConfigByName(selectedChain);
+      const readOnlyProvider = new ethers.providers.JsonRpcProvider(chainConfig.rpcUrl);
 
-      const [balance, tokenInfo] = await Promise.all([
-        contractService.getFulaTokenBalance(targetAccount),
-        contractService.getFulaTokenInfo(),
+      // Create read-only contract instance
+      const tokenContract = new ethers.Contract(
+        chainConfig.contracts.fulaToken,
+        FULA_TOKEN_ABI,
+        readOnlyProvider
+      );
+
+      const [balance, name, symbol, decimals, totalSupply] = await Promise.all([
+        tokenContract.balanceOf(targetAccount),
+        tokenContract.name(),
+        tokenContract.symbol(),
+        tokenContract.decimals(),
+        tokenContract.totalSupply(),
       ]);
 
-      const formattedBalance = parseFloat(balance).toFixed(2);
+      const formattedBalance = parseFloat(ethers.utils.formatUnits(balance, decimals)).toFixed(2);
+      const balanceString = ethers.utils.formatUnits(balance, decimals);
 
       setState({
-        balance,
+        balance: balanceString,
         formattedBalance,
-        tokenInfo,
+        tokenInfo: {
+          name,
+          symbol,
+          decimals,
+          totalSupply: ethers.utils.formatUnits(totalSupply, decimals),
+        },
         loading: false,
         error: null,
       });
@@ -62,7 +84,7 @@ export const useFulaBalance = (account?: string) => {
         error: error instanceof Error ? error.message : 'Failed to load FULA balance',
       }));
     }
-  }, [isReady, contractService, account, connectedAccount]);
+  }, [selectedChain, account, metamaskAccount, connectedAccount]);
 
   const refreshBalance = useCallback(() => {
     loadBalance();
@@ -70,21 +92,21 @@ export const useFulaBalance = (account?: string) => {
 
   // Load balance when dependencies change
   useEffect(() => {
-    if (isReady && contractService) {
+    if (account || metamaskAccount || connectedAccount) {
       loadBalance();
     }
-  }, [isReady, contractService, selectedChain, account, connectedAccount]);
+  }, [selectedChain, account, metamaskAccount, connectedAccount, loadBalance]);
 
   // Auto-refresh balance every 30 seconds
   useEffect(() => {
-    if (!isReady) return;
+    if (!(account || metamaskAccount || connectedAccount)) return;
 
     const interval = setInterval(() => {
       loadBalance();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [isReady, loadBalance]);
+  }, [account, metamaskAccount, connectedAccount, loadBalance]);
 
   return {
     ...state,

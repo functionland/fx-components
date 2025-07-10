@@ -140,27 +140,27 @@ export const useContractIntegration = () => {
     }
   }, [state.isInitialized, state.contractService, queueToast]);
 
-  // Initialize contracts when dependencies change
-  useEffect(() => {
-    if (account && provider && selectedChain) {
-      initializeContracts(selectedChain);
-    } else {
-      setState({
-        isInitialized: false,
-        isInitializing: false,
-        error: null,
-        contractService: null,
-        connectedAccount: null,
-      });
-    }
-  }, [account, provider, selectedChain, initializeContracts]);
+  // Initialize contracts when dependencies change - DISABLED to prevent auto MetaMask calls
+  // useEffect(() => {
+  //   if (account && provider && selectedChain) {
+  //     initializeContracts(selectedChain);
+  //   } else {
+  //     setState({
+  //       isInitialized: false,
+  //       isInitializing: false,
+  //       error: null,
+  //       contractService: null,
+  //       connectedAccount: null,
+  //     });
+  //   }
+  // }, [account, provider, selectedChain, initializeContracts]);
 
-  // Handle chain changes
-  useEffect(() => {
-    if (state.isInitialized && selectedChain) {
-      switchChain(selectedChain);
-    }
-  }, [selectedChain, state.isInitialized, switchChain]);
+  // Handle chain changes - DISABLED to prevent auto MetaMask calls
+  // useEffect(() => {
+  //   if (state.isInitialized && selectedChain) {
+  //     switchChain(selectedChain);
+  //   }
+  // }, [selectedChain, state.isInitialized, switchChain]);
 
   return {
     ...state,

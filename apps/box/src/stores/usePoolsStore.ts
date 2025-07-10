@@ -2,6 +2,7 @@ import { create, StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TPool } from '../models';
+import { useUserProfileStore } from './useUserProfileStore';
 
 interface PoolsActionSlice {
   setHasHydrated: (isHydrated: boolean) => void;
@@ -71,36 +72,42 @@ const createPoolsModelSlice: StateCreator<
         let numVotes = 0;
         let poolIdOfInterest = '';
 
-        try {
-          // Get connected account from contract service
-          const accountId = await contractService.getConnectedAccount();
-          console.log('Connected account:', accountId);
+        // Attempt to use stored wallet address to fetch user pool info without triggering MetaMask
+        const accountId = useUserProfileStore.getState().address;
 
-          // Get user pool info from contract
-          const userPool = await contractService.getUserPool(accountId);
-          console.log('User pool:', userPool);
+        if (accountId) {
+          try {
+            console.log('Using stored wallet address to get user pool info:', accountId);
 
-          if (userPool && userPool.poolId !== '0') {
-            // User is in a pool
-            requested = true;
-            joined = true;
-            poolIdOfInterest = userPool.poolId;
-          } else if (userPool && userPool.requestPoolId !== '0') {
-            // User has a pending join request
-            poolIdOfInterest = userPool.requestPoolId;
-            const joinRequestInfo = await contractService.getJoinRequest(
-              userPool.requestPoolId,
-              accountId
-            );
-            console.log('Join request info:', joinRequestInfo);
-            numVotes = joinRequestInfo.positive_votes + joinRequestInfo.negative_votes;
-            requested = true;
-            joined = false;
+            // Get user pool info from contract
+            const userPool = await contractService.getUserPool(accountId);
+            console.log('User pool:', userPool);
+
+            if (userPool && userPool.poolId !== '0') {
+              // User is in a pool
+              requested = true;
+              joined = true;
+              poolIdOfInterest = userPool.poolId;
+            } else if (userPool && userPool.requestPoolId !== '0') {
+              // User has a pending join request
+              poolIdOfInterest = userPool.requestPoolId;
+              const joinRequestInfo = await contractService.getJoinRequest(
+                userPool.requestPoolId,
+                accountId
+              );
+              console.log('Join request info:', joinRequestInfo);
+              numVotes = joinRequestInfo.positive_votes + joinRequestInfo.negative_votes;
+              requested = true;
+              joined = false;
+            }
+
+            set({ enableInteraction: true });
+          } catch (error) {
+            console.log('Error getting user pool info:', error);
+            set({ enableInteraction: false });
           }
-
-          set({ enableInteraction: true });
-        } catch (error) {
-          console.log('Error getting user pool info:', error);
+        } else {
+          // Wallet address not available, disable pool interaction to avoid unwanted wallet prompts
           set({ enableInteraction: false });
         }
 

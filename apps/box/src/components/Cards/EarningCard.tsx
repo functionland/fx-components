@@ -16,7 +16,7 @@ import {
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { copyFromClipboard } from '../../utils/clipboard';
-import { useFulaBalance } from '../../hooks/useFulaBalance';
+import { useFulaBalance, useFormattedFulaBalance } from '../../hooks/useFulaBalance';
 import { useContractIntegration } from '../../hooks/useContractIntegration';
 
 type EarningCardProps = React.ComponentProps<typeof FxBox> & {
@@ -36,6 +36,21 @@ export const EarningCard = ({
   const { queueToast } = useToast();
   const [wallet, setWallet] = useState<string>('');
   const chain = 'mumbai';
+
+  // Use the formatted balance hook to get balance data
+  const {
+    formattedBalance,
+    loading: balanceLoading,
+    error: balanceError,
+    tokenSymbol
+  } = useFormattedFulaBalance();
+
+  // Get refresh function from the base hook
+  const { refreshBalance } = useFulaBalance();
+
+  // Use contract integration for blockchain operations
+  const { contractService } = useContractIntegration();
+
   const handlePaste = async () => {
     const text = await copyFromClipboard();
     setWallet(text);
@@ -104,18 +119,27 @@ export const EarningCard = ({
                   [
                     {
                       text: 'Yes',
-                      onPress: () => {
-                        blockchain
-                          .transferToFula(totalFula, wallet, chain)
-                          .then(() => {
+                      onPress: async () => {
+                        try {
+                          if (contractService) {
+                            await contractService.transferFulaToken(wallet, totalFula);
                             console.log('transfer sent');
                             queueToast({
                               type: 'success',
-                              title: 'Request Sent',
+                              title: 'Transfer Successful',
                               message:
-                                'You should see the tokens in your wallet in a few seconds. The amount shown in x(10 to -18)',
+                                'Tokens have been transferred to your wallet successfully.',
                             });
+                            bottomSheetRef.current?.dismiss();
+                          }
+                        } catch (error) {
+                          console.error('Transfer failed:', error);
+                          queueToast({
+                            type: 'error',
+                            title: 'Transfer Failed',
+                            message: 'Failed to transfer tokens. Please try again.',
                           });
+                        }
                       },
                       style: 'destructive',
                     },

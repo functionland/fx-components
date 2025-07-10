@@ -7,6 +7,9 @@ import { KeyChain } from '../utils';
 import { useBloxsStore } from './useBloxsStore';
 import { useSettingsStore } from './useSettingsStore';
 import { getContractService } from '../contracts/contractService';
+import { ethers } from 'ethers';
+import { getChainConfigByName } from '../contracts/config';
+import { FULA_TOKEN_ABI } from '../contracts/abis';
 import NetInfo from '@react-native-community/netinfo';
 import axios from 'axios';
 
@@ -314,29 +317,48 @@ const createUserProfileSlice: StateCreator<
           throw error;
         }
       },
-      getEarnings: async () => {
-        try {
-          // Use contract-based FULA token balance instead of old Fula SDK
-          const selectedChain = useSettingsStore.getState().selectedChain;
-          const contractService = getContractService(selectedChain);
+/**
+ * Fetches the FULA token balance for the specified account address.
+ * If no address is provided, attempts to get the connected account (may trigger MetaMask).
+ * Use this to avoid unnecessary MetaMask popups by passing the known wallet address.
+ * @param account Optional wallet address to fetch balance for.
+ */
+getEarnings: async (account?: string) => {
+  try {
+    if (!account) {
+      throw new Error('Account address is required for balance query');
+    }
 
-          const account = await contractService.getConnectedAccount();
-          console.log('Getting FULA token balance for account:', account);
+    const selectedChain = useSettingsStore.getState().selectedChain;
+    const chainConfig = getChainConfigByName(selectedChain);
 
-          const fulaBalance = await contractService.getFulaTokenBalance(account);
-          console.log('FULA token balance:', fulaBalance);
+    // Use read-only RPC provider for balance queries
+    const readOnlyProvider = new ethers.providers.JsonRpcProvider(chainConfig.rpcUrl);
+    const tokenContract = new ethers.Contract(
+      chainConfig.contracts.fulaToken,
+      FULA_TOKEN_ABI,
+      readOnlyProvider
+    );
 
-          set({
-            earnings: fulaBalance,
-          });
-        } catch (error) {
-          console.error('Error getting FULA token balance:', error);
-          set({
-            earnings: 'NaN',
-          });
-          throw error;
-        }
-      },
+    console.log('Getting FULA token balance for account:', account);
+    const [balance, decimals] = await Promise.all([
+      tokenContract.balanceOf(account),
+      tokenContract.decimals(),
+    ]);
+
+    const fulaBalance = ethers.utils.formatUnits(balance, decimals);
+    console.log('FULA token balance:', fulaBalance);
+    set({
+      earnings: fulaBalance,
+    });
+  } catch (error) {
+    console.error('Error getting FULA token balance:', error);
+    set({
+      earnings: 'NaN',
+    });
+    throw error;
+  }
+},
       getContractRewards: async () => {
         try {
           const selectedChain = useSettingsStore.getState().selectedChain;

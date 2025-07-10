@@ -97,7 +97,8 @@ const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
         openDeeplink: openDeeplink,
         timer: BackgroundTimer,
         useDeeplink,
-        checkInstallationImmediately,
+        checkInstallationImmediately: false, // Prevent auto-opening MetaMask
+        autoConnect: false, // Prevent automatic connection
         storage: {
           enabled: true,
         },

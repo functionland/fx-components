@@ -37,6 +37,7 @@ import {
   usePoolsStore,
   useUserProfileStore,
 } from '../../stores';
+import { useSDK } from '@metamask/sdk-react';
 import { blockchain, fxblox } from '@functionland/react-native-fula';
 import { Helper } from '../../utils';
 import axios from 'axios';
@@ -79,6 +80,9 @@ export const BloxScreen = () => {
     state.password,
     state.signiture,
   ]);
+
+  // Get wallet address from MetaMask SDK
+  const { account } = useSDK();
 
   const [
     bloxs,
@@ -190,8 +194,9 @@ export const BloxScreen = () => {
   const updateFulaEarnings = async () => {
     try {
       setLoadingFulaEarnings(true);
-      if (fulaIsReady) {
-        const space = await getEarnings();
+      if (fulaIsReady && account) {
+        // Pass MetaMask account address to getEarnings to avoid MetaMask popup
+        const space = await getEarnings(account);
         logger.log('updateFulaEarnings', space);
       }
     } catch (error) {
@@ -200,6 +205,7 @@ export const BloxScreen = () => {
       setLoadingFulaEarnings(false);
     }
   };
+
 
   const showInteractionModal = () => {
     bloxInteractionModalRef.current.present();

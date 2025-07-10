@@ -79,7 +79,7 @@ describe('Contract Integration with Local Hardhat', () => {
   describe('Chain Configuration', () => {
     it('should have correct SKALE configuration', () => {
       const config = getChainConfigByName('skale');
-      expect(config.chainId).toBe('0x585eb4b1');
+      expect(config.chainId).toBe('0x79f99296');
       expect(config.name).toBe('SKALE Europa Hub');
       expect(config.requiresAuth).toBe(false);
       expect(config.contracts.poolStorage).toBeDefined();

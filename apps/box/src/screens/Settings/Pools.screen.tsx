@@ -20,6 +20,11 @@ import MyLoader from '../../components/ContentLoader';
 import { useLogger } from '../../hooks';
 import { CHAIN_DISPLAY_NAMES } from '../../contracts/config';
 
+// --- Add this union type for FlatList items ---
+type PoolListItem =
+  | { type: 'pool'; pool: import('../../hooks/usePools').PoolData & import('../../models/pool').TPool }
+  | { type: 'skeleton'; id: number };
+
 export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
@@ -310,31 +315,36 @@ export const PoolsScreen = () => {
       }
       data={
         !refreshing
-          ? pools.filter((pool) =>
+          ? (pools.filter((pool) =>
               search !== ''
                 ? pool.name?.toLowerCase().includes(search?.toLowerCase())
                 : true
-            )
-          : Array.from({ length: 5 }, (_value, index) => index)
+            ).map(pool => ({ type: 'pool', pool })) as PoolListItem[])
+          : (Array.from({ length: 5 }, (_value, index) => ({ type: 'skeleton', id: index })) as PoolListItem[])
       }
-      keyExtractor={(item) => item.poolID}
-      renderItem={({ item }) =>
-        refreshing ? (
-          <MyLoader />
-        ) : (
+      keyExtractor={(item: PoolListItem) =>
+        item.type === 'pool' ? item.pool.poolID : `skeleton-${item.id}`
+      }
+      renderItem={({ item }: { item: PoolListItem }) => {
+        if (item.type === 'skeleton') {
+          return <MyLoader key={`skeleton-${item.id}`} />;
+        }
+        const pool = item.pool;
+        return (
           <PoolCard
-            pool={item}
+            key={pool.poolID}
+            pool={pool}
             isDetailed={!isList}
-            isRequested={item.requested}
-            isJoined={item.joined}
-            numVotes={item.numVotes}
-            numVoters={item.numVoters}
+            isRequested={pool.requested}
+            isJoined={pool.joined}
+            numVotes={pool.numVotes}
+            numVoters={pool.numVoters}
             leavePool={wrappedLeavePool}
             joinPool={allowJoin ? wrappedJoinPool : undefined}
             cancelJoinPool={wrappedCancelJoinPool}
           />
-        )
-      }
+        );
+      }}
     />
   );
 };

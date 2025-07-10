@@ -13,6 +13,7 @@ import { getChainConfigByName, METHOD_GAS_LIMITS, ContractMethod } from './confi
 
 export class ContractService {
   private provider: ethers.providers.Web3Provider | null = null;
+  private readOnlyProvider: ethers.providers.JsonRpcProvider | null = null;
   private signer: ethers.Signer | null = null;
   private chain: SupportedChain;
   private poolStorageContract: ethers.Contract | null = null;
@@ -21,6 +22,9 @@ export class ContractService {
 
   constructor(chain: SupportedChain = 'skale') {
     this.chain = chain;
+    // Initialize read-only provider for balance queries
+    const chainConfig = getChainConfigByName(this.chain);
+    this.readOnlyProvider = new ethers.providers.JsonRpcProvider(chainConfig.rpcUrl);
   }
 
   async initialize(provider: any): Promise<void> {
@@ -37,30 +41,52 @@ export class ContractService {
       const expectedChainId = parseInt(chainConfig.chainId, 16);
 
       if (network.chainId !== expectedChainId) {
-        // Try to switch to the correct chain
+        // Try to switch to the correct chain only once
+        let switchAttempted = false;
         try {
           await web3Provider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: chainConfig.chainId }],
           });
         } catch (switchError: any) {
-          // If chain doesn't exist, try to add it
-          if (switchError.code === 4902) {
-            await web3Provider.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: chainConfig.chainId,
-                chainName: chainConfig.name,
-                rpcUrls: [chainConfig.rpcUrl],
-                blockExplorerUrls: [chainConfig.blockExplorer],
-                nativeCurrency: {
-                  name: this.chain === 'skale' ? 'sFUEL' : 'ETH',
-                  symbol: this.chain === 'skale' ? 'sFUEL' : 'ETH',
-                  decimals: 18,
-                },
-              }],
-            });
+          // If chain doesn't exist, try to add it ONCE
+          if (switchError.code === 4902 && !switchAttempted) {
+            switchAttempted = true;
+            try {
+              await web3Provider.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: chainConfig.chainId,
+                  chainName: chainConfig.name,
+                  rpcUrls: [chainConfig.rpcUrl],
+                  blockExplorerUrls: [chainConfig.blockExplorer],
+                  nativeCurrency: {
+                    name: this.chain === 'skale' ? 'sFUEL' : 'ETH',
+                    symbol: this.chain === 'skale' ? 'sFUEL' : 'ETH',
+                    decimals: 18,
+                  },
+                }],
+              });
+            } catch (addError: any) {
+              // Notify user and abort further attempts
+              if (typeof globalThis.queueToast === 'function') {
+                globalThis.queueToast({
+                  type: 'error',
+                  title: 'Unsupported Network',
+                  message: `The selected chain (${chainConfig.chainId}) is not available in MetaMask. Please add it manually.`,
+                });
+              }
+              throw new Error(`Failed to add chain ${chainConfig.chainId} to MetaMask: ${addError?.message || addError}`);
+            }
           } else {
+            // Notify user and abort further attempts
+            if (typeof globalThis.queueToast === 'function') {
+              globalThis.queueToast({
+                type: 'error',
+                title: 'Unsupported Network',
+                message: `Please switch to ${chainConfig.name} network in MetaMask.`,
+              });
+            }
             throw new Error(`Please switch to ${chainConfig.name} network`);
           }
         }
@@ -303,10 +329,13 @@ export class ContractService {
 
   async getBalance(account?: string): Promise<string> {
     try {
-      if (!this.provider) throw new Error('Provider not initialized');
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
 
-      const address = account || await this.getConnectedAccount();
-      const balance = await this.provider.getBalance(address);
+      if (!account) {
+        throw new Error('Account address is required for balance query');
+      }
+
+      const balance = await this.readOnlyProvider.getBalance(account);
       return ethers.utils.formatEther(balance);
     } catch (error) {
       throw this.handleError(error);
@@ -316,11 +345,22 @@ export class ContractService {
   // FULA Token Methods
   async getFulaTokenBalance(account?: string): Promise<string> {
     try {
-      if (!this.fulaTokenContract) throw new Error('FULA token contract not initialized');
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
 
-      const address = account || await this.getConnectedAccount();
-      const balance = await this.fulaTokenContract.balanceOf(address);
-      const decimals = await this.fulaTokenContract.decimals();
+      if (!account) {
+        throw new Error('Account address is required for balance query');
+      }
+
+      // Create read-only contract instance for balance queries
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyTokenContract = new ethers.Contract(
+        chainConfig.contracts.fulaToken,
+        FULA_TOKEN_ABI,
+        this.readOnlyProvider
+      );
+
+      const balance = await readOnlyTokenContract.balanceOf(account);
+      const decimals = await readOnlyTokenContract.decimals();
       return ethers.utils.formatUnits(balance, decimals);
     } catch (error) {
       throw this.handleError(error);
@@ -334,13 +374,21 @@ export class ContractService {
     totalSupply: string;
   }> {
     try {
-      if (!this.fulaTokenContract) throw new Error('FULA token contract not initialized');
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      // Create read-only contract instance for token info queries
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyTokenContract = new ethers.Contract(
+        chainConfig.contracts.fulaToken,
+        FULA_TOKEN_ABI,
+        this.readOnlyProvider
+      );
 
       const [name, symbol, decimals, totalSupply] = await Promise.all([
-        this.fulaTokenContract.name(),
-        this.fulaTokenContract.symbol(),
-        this.fulaTokenContract.decimals(),
-        this.fulaTokenContract.totalSupply(),
+        readOnlyTokenContract.name(),
+        readOnlyTokenContract.symbol(),
+        readOnlyTokenContract.decimals(),
+        readOnlyTokenContract.totalSupply(),
       ]);
 
       return {

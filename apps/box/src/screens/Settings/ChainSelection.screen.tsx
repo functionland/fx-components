@@ -102,54 +102,51 @@ export const ChainSelectionScreen = () => {
             Select the blockchain network for pool operations:
           </FxText>
           
-          {/* SKALE Option */}
-          <FxBox
-            flexDirection="row"
-            alignItems="center"
-            paddingVertical="12"
-            paddingHorizontal="16"
-            backgroundColor={selectedChain === 'skale' ? 'backgroundSecondary' : 'transparent'}
-            borderRadius="m"
-            marginBottom="8"
-          >
-            <FxRadioButton
-              selected={selectedChain === 'skale'}
-              onPress={() => handleChainSelection('skale')}
-            />
-            <FxBox marginLeft="12" flex={1}>
-              <FxText variant="bodyMediumRegular">
-                {CHAIN_DISPLAY_NAMES.skale}
-              </FxText>
-              <FxText variant="bodyXSRegular" color="content2" marginTop="4">
-                Default network • Zero gas fees • No authorization required
-              </FxText>
+          {/* Chain Selection Radio Group */}
+          <FxRadioButton.Group value={selectedChain} onValueChange={val => handleChainSelection(val as SupportedChain)}>
+            {/* SKALE Option */}
+            <FxBox
+              flexDirection="row"
+              alignItems="center"
+              paddingVertical="12"
+              paddingHorizontal="16"
+              backgroundColor={selectedChain === 'skale' ? 'backgroundSecondary' : 'transparent'}
+              borderRadius="m"
+              marginBottom="8"
+            >
+              <FxRadioButton value="skale" />
+              <FxBox marginLeft="12" flex={1}>
+                <FxText variant="bodyMediumRegular">
+                  {CHAIN_DISPLAY_NAMES.skale}
+                </FxText>
+                <FxText variant="bodyXSRegular" color="content2" marginTop="4">
+                  Default network • Zero gas fees • No authorization required
+                </FxText>
+              </FxBox>
             </FxBox>
-          </FxBox>
 
-          {/* Base Option */}
-          <FxBox
-            flexDirection="row"
-            alignItems="center"
-            paddingVertical="12"
-            paddingHorizontal="16"
-            backgroundColor={selectedChain === 'base' ? 'backgroundSecondary' : 'transparent'}
-            borderRadius="m"
-            marginBottom="8"
-          >
-            <FxRadioButton
-              selected={selectedChain === 'base'}
-              onPress={() => handleChainSelection('base')}
-            />
-            <FxBox marginLeft="12" flex={1}>
-              <FxText variant="bodyMediumRegular">
-                {CHAIN_DISPLAY_NAMES.base}
-              </FxText>
-              <FxText variant="bodyXSRegular" color="content2" marginTop="4">
-                Requires authorization code • Gas fees apply
-                {baseAuthorized && ' • Authorized ✓'}
-              </FxText>
+            {/* Base Option */}
+            <FxBox
+              flexDirection="row"
+              alignItems="center"
+              paddingVertical="12"
+              paddingHorizontal="16"
+              backgroundColor={selectedChain === 'base' ? 'backgroundSecondary' : 'transparent'}
+              borderRadius="m"
+              marginBottom="8"
+            >
+              <FxRadioButton value="base" />
+              <FxBox marginLeft="12" flex={1}>
+                <FxText variant="bodyMediumRegular">
+                  {CHAIN_DISPLAY_NAMES.base}
+                </FxText>
+                <FxText variant="bodyXSRegular" color="content2" marginTop="4">
+                  Requires authorization code • Gas fees apply
+                  {baseAuthorized && ' • Authorized ✓'}
+                </FxText>
+              </FxBox>
             </FxBox>
-          </FxBox>
+          </FxRadioButton.Group>
 
           {/* Authorization Input */}
           {showAuthInput && (
@@ -171,7 +168,7 @@ export const ChainSelectionScreen = () => {
               />
               <FxBox flexDirection="row" justifyContent="space-between">
                 <FxButton
-                  variant="secondary"
+                  variant="inverted"
                   onPress={() => {
                     setShowAuthInput(false);
                     setAuthCode('');
@@ -197,7 +194,7 @@ export const ChainSelectionScreen = () => {
           {baseAuthorized && (
             <FxBox marginTop="24">
               <FxButton
-                variant="secondary"
+                variant="inverted"
                 onPress={handleResetBaseAuth}
                 size="small"
               >

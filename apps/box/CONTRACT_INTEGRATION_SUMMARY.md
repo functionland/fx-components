@@ -138,7 +138,7 @@ chainId: '0x7a69' // Hardhat local
 ### Production Networks
 ```typescript
 // SKALE Europa Hub
-chainId: '0x585eb4b1'
+chainId: '0x79f99296'
 rpcUrl: 'https://mainnet.skalenodes.com/v1/elated-tan-skat'
 
 // Base Network

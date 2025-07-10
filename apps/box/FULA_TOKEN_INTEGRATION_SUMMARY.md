@@ -130,7 +130,7 @@ const {
 ### Chain Configuration
 ```typescript
 // SKALE Europa Hub
-chainId: '0x585eb4b1'
+chainId: '0x79f99296'
 fulaToken: '0x9e12735d77c72c5C3670636D428f2F3815d8A4cB'
 
 // Base Network  
