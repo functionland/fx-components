@@ -78,6 +78,12 @@ export class ContractService {
         REWARD_ENGINE_ABI,
         this.signer
       );
+
+      this.fulaTokenContract = new ethers.Contract(
+        chainConfig.contracts.fulaToken,
+        FULA_TOKEN_ABI,
+        this.signer
+      );
     } catch (error) {
       throw this.handleError(error);
     }
@@ -298,10 +304,65 @@ export class ContractService {
   async getBalance(account?: string): Promise<string> {
     try {
       if (!this.provider) throw new Error('Provider not initialized');
-      
+
       const address = account || await this.getConnectedAccount();
       const balance = await this.provider.getBalance(address);
       return ethers.utils.formatEther(balance);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // FULA Token Methods
+  async getFulaTokenBalance(account?: string): Promise<string> {
+    try {
+      if (!this.fulaTokenContract) throw new Error('FULA token contract not initialized');
+
+      const address = account || await this.getConnectedAccount();
+      const balance = await this.fulaTokenContract.balanceOf(address);
+      const decimals = await this.fulaTokenContract.decimals();
+      return ethers.utils.formatUnits(balance, decimals);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async getFulaTokenInfo(): Promise<{
+    name: string;
+    symbol: string;
+    decimals: number;
+    totalSupply: string;
+  }> {
+    try {
+      if (!this.fulaTokenContract) throw new Error('FULA token contract not initialized');
+
+      const [name, symbol, decimals, totalSupply] = await Promise.all([
+        this.fulaTokenContract.name(),
+        this.fulaTokenContract.symbol(),
+        this.fulaTokenContract.decimals(),
+        this.fulaTokenContract.totalSupply(),
+      ]);
+
+      return {
+        name,
+        symbol,
+        decimals,
+        totalSupply: ethers.utils.formatUnits(totalSupply, decimals),
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async transferFulaToken(to: string, amount: string): Promise<void> {
+    try {
+      if (!this.fulaTokenContract) throw new Error('FULA token contract not initialized');
+
+      const decimals = await this.fulaTokenContract.decimals();
+      const amountWei = ethers.utils.parseUnits(amount, decimals);
+
+      const tx = await this.fulaTokenContract.transfer(to, amountWei);
+      await tx.wait();
     } catch (error) {
       throw this.handleError(error);
     }

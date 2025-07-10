@@ -22,6 +22,7 @@ import { chainNames } from '../utils/walletConnectConifg';
 import { fula, blockchain, fxblox } from '@functionland/react-native-fula';
 import { useContractService } from '../contracts/contractService';
 import { CHAIN_DISPLAY_NAMES } from '../contracts/config';
+import { useFulaBalance } from '../hooks/useFulaBalance';
 import { Linking, ActivityIndicator } from 'react-native';
 import {
   AccountOptionsSheet,
@@ -302,11 +303,11 @@ export const WalletDetails = ({
               <FxBox
                 width="8"
                 height="8"
-                borderRadius="4"
-                backgroundColor={contractInitialized ? 'success' : 'error'}
+                borderRadius="s"
+                backgroundColor={contractInitialized ? 'greenBase' : 'errorBase'}
                 marginRight="8"
               />
-              <FxText textAlign="center" color={contractInitialized ? 'success' : 'error'}>
+              <FxText textAlign="center" color={contractInitialized ? 'greenBase' : 'errorBase'}>
                 {contractInitialized
                   ? `Connected to ${CHAIN_DISPLAY_NAMES[selectedChain]}`
                   : 'Not Connected'

@@ -13,10 +13,11 @@ import {
   FxCopyIcon,
   FxPressableOpacity,
 } from '@functionland/component-library';
-import { blockchain } from '@functionland/react-native-fula';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { copyFromClipboard } from '../../utils/clipboard';
+import { useFulaBalance } from '../../hooks/useFulaBalance';
+import { useContractIntegration } from '../../hooks/useContractIntegration';
 
 type EarningCardProps = React.ComponentProps<typeof FxBox> & {
   data: { totalFula: string };
@@ -47,29 +48,30 @@ export const EarningCard = ({
     >
       <FxBox flexDirection="row" justifyContent="space-between">
         <FxCard.Title marginBottom="8">Rewards</FxCard.Title>
-        {loading ? (
+        {(loading || balanceLoading) ? (
           <ActivityIndicator />
         ) : (
-          onRefreshPress && (
-            <FxRefreshIcon fill={colors.content3} onPress={onRefreshPress} />
-          )
+          <FxRefreshIcon
+            fill={colors.content3}
+            onPress={() => {
+              refreshBalance();
+              onRefreshPress?.();
+            }}
+          />
         )}
       </FxBox>
-      {totalFula !== undefined && (
-        <FxCard.Row>
-          <FxCard.Row.Title>Total fula</FxCard.Row.Title>
-          <FxCard.Row.Data>
-            <FxBox style={styles.totalFulaContainer}>
-              {totalFula === 'NaN' ? (
-                <FxText>0</FxText>
-              ) : (
-                <FxText style={styles.totalFula}>{totalFula}</FxText>
-              )}
-              <FxText style={styles.superscript}> (x10⁻¹⁸)</FxText>
-            </FxBox>
-          </FxCard.Row.Data>
-        </FxCard.Row>
-      )}
+      <FxCard.Row>
+        <FxCard.Row.Title>Total {tokenSymbol}</FxCard.Row.Title>
+        <FxCard.Row.Data>
+          <FxBox style={styles.totalFulaContainer}>
+            {balanceError ? (
+              <FxText>Error loading balance</FxText>
+            ) : (
+              <FxText style={styles.totalFula}>{formattedBalance}</FxText>
+            )}
+          </FxBox>
+        </FxCard.Row.Data>
+      </FxCard.Row>
       <FxBottomSheetModal ref={bottomSheetRef} title="Token Transfer">
         <FxBox
           height={200}

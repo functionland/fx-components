@@ -316,32 +316,25 @@ const createUserProfileSlice: StateCreator<
       },
       getEarnings: async () => {
         try {
-          const { fulaIsReady } = get();
-          if (!fulaIsReady) {
-            console.log('Fula is not ready. Please wait...');
-            Promise.reject('internet is not connected');
-          }
-          await fula.isReady(false);
-          const account = await blockchain.getAccount();
-          console.log({ account: account });
-          const earnings = await blockchain.assetsBalance(
-            account.account,
-            '100',
-            '100'
-          );
-          console.log({ earnings: earnings });
+          // Use contract-based FULA token balance instead of old Fula SDK
+          const selectedChain = useSettingsStore.getState().selectedChain;
+          const contractService = getContractService(selectedChain);
+
+          const account = await contractService.getConnectedAccount();
+          console.log('Getting FULA token balance for account:', account);
+
+          const fulaBalance = await contractService.getFulaTokenBalance(account);
+          console.log('FULA token balance:', fulaBalance);
+
           set({
-            earnings: earnings.amount,
+            earnings: fulaBalance,
           });
         } catch (error) {
-          if (!error.toString().includes('response: 400')) {
-            console.log('Bad request: ', error.toString());
-          }
+          console.error('Error getting FULA token balance:', error);
           set({
             earnings: 'NaN',
           });
           throw error;
-        } finally {
         }
       },
       getContractRewards: async () => {

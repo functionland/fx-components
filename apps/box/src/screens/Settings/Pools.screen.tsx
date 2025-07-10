@@ -237,15 +237,15 @@ export const PoolsScreen = () => {
                 <FxBox
                   width="8"
                   height="8"
-                  borderRadius="4"
-                  backgroundColor={contractReady ? 'success' : 'error'}
+                  borderRadius="s"
+                  backgroundColor={contractReady ? 'greenBase' : 'errorBase'}
                   marginRight="8"
                 />
                 <FxText variant="bodySmallRegular">
                   {CHAIN_DISPLAY_NAMES[selectedChain]}
                 </FxText>
               </FxBox>
-              <FxText variant="bodyXSRegular" color={contractReady ? 'success' : 'error'}>
+              <FxText variant="bodyXSRegular" color={contractReady ? 'greenBase' : 'errorBase'}>
                 {contractReady ? 'Connected' : 'Disconnected'}
               </FxText>
             </FxBox>
