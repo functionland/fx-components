@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSDK } from '@metamask/sdk-react';
 import {
   FxBox,
   FxCard,
@@ -48,6 +49,32 @@ export const EarningCard = ({
   // Get refresh function from the base hook
   const { refreshBalance } = useFulaBalance();
 
+  // MetaMask SDK for wallet connection
+  const { sdk, connected, account, connecting } = useSDK();
+
+  // Handler for refresh icon click
+  const handleRefresh = async () => {
+    if (!account) {
+      try {
+        await sdk?.connect();
+        queueToast({
+          type: 'success',
+          title: 'Wallet Connected',
+          message: 'MetaMask wallet connected successfully',
+        });
+      } catch (e: any) {
+        queueToast({
+          type: 'error',
+          title: 'Wallet Connection Failed',
+          message: typeof e === 'object' && 'message' in e ? e.message : 'Failed to connect wallet',
+        });
+        return;
+      }
+    }
+    refreshBalance();
+    onRefreshPress?.();
+  };
+
   // Use contract integration for blockchain operations
   const { contractService } = useContractIntegration();
 
@@ -68,10 +95,8 @@ export const EarningCard = ({
         ) : (
           <FxRefreshIcon
             fill={colors.content3}
-            onPress={() => {
-              refreshBalance();
-              onRefreshPress?.();
-            }}
+            onPress={handleRefresh}
+            disabled={!!connecting}
           />
         )}
       </FxBox>

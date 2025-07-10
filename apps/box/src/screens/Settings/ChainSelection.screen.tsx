@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSDK } from '@metamask/sdk-react';
 import { Alert } from 'react-native';
 import {
   FxBox,
@@ -19,6 +20,45 @@ export const ChainSelectionScreen = () => {
   const { queueToast } = useToast();
   const [authCode, setAuthCode] = useState('');
   const [showAuthInput, setShowAuthInput] = useState(false);
+
+  // MetaMask SDK
+  const { sdk, connected, account, connecting, error } = useSDK();
+
+  const handleConnect = async () => {
+    try {
+      await sdk?.connect();
+      queueToast({
+        type: 'success',
+        title: 'Wallet Connected',
+        message: 'MetaMask wallet connected successfully',
+      });
+    } catch (e: any) {
+      queueToast({
+        type: 'error',
+        title: 'Connection Failed',
+        message: typeof e === 'object' && 'message' in e ? e.message : 'Failed to connect wallet',
+      });
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      await sdk?.disconnect();
+      queueToast({
+        type: 'info',
+        title: 'Wallet Disconnected',
+        message: 'MetaMask wallet disconnected',
+      });
+    } catch (e: any) {
+      queueToast({
+        type: 'error',
+        title: 'Disconnect Failed',
+        message: typeof e === 'object' && 'message' in e ? e.message : 'Failed to disconnect wallet',
+      });
+    }
+  };
+
+
   
   const [
     selectedChain,
@@ -96,6 +136,32 @@ export const ChainSelectionScreen = () => {
     <FxSafeAreaBox flex={1} edges={['top']}>
       <FxBox paddingHorizontal="20" paddingVertical="12">
         <FxHeader title="Chain Selection" />
+
+        {/* Wallet Connect/Disconnect Button */}
+        <FxBox marginTop="16" marginBottom="8" flexDirection="row" alignItems="center">
+          {connected && account ? (
+            <>
+              <FxButton
+                variant="inverted"
+                onPress={handleDisconnect}
+                disabled={connecting}
+                marginRight="8"
+              >
+                Disconnect Wallet
+              </FxButton>
+              <FxText variant="bodyXSRegular" color="content2" numberOfLines={1} ellipsizeMode="middle">
+                {account}
+              </FxText>
+            </>
+          ) : (
+            <FxButton
+              onPress={handleConnect}
+              disabled={!!connecting}
+            >
+              Connect Wallet
+            </FxButton>
+          )}
+        </FxBox>
         
         <FxBox marginTop="24">
           <FxText variant="bodyMediumRegular" marginBottom="16">
