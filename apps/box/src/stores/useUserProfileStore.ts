@@ -5,6 +5,8 @@ import { blockchain, fula } from '@functionland/react-native-fula';
 import { TAccount, TBloxFreeSpace } from '../models';
 import { KeyChain } from '../utils';
 import { useBloxsStore } from './useBloxsStore';
+import { useSettingsStore } from './useSettingsStore';
+import { getContractService } from '../contracts/contractService';
 import NetInfo from '@react-native-community/netinfo';
 import axios from 'axios';
 
@@ -23,6 +25,8 @@ interface UserProfileActions {
   setBloxPeerIds: (peerIds: string[] | undefined) => void;
   createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
   getEarnings: () => Promise<void>;
+  getContractRewards: () => Promise<void>; // New contract-based rewards
+  claimRewards: (poolId?: string) => Promise<void>; // New claim function
   getBloxSpace: () => Promise<TBloxFreeSpace>;
   logout: () => boolean;
   setFulaIsReady: (value: boolean) => void;
@@ -338,6 +342,52 @@ const createUserProfileSlice: StateCreator<
           });
           throw error;
         } finally {
+        }
+      },
+      getContractRewards: async () => {
+        try {
+          const selectedChain = useSettingsStore.getState().selectedChain;
+          const contractService = getContractService(selectedChain);
+
+          const account = await contractService.getConnectedAccount();
+          console.log('Getting rewards for account:', account);
+
+          const totalRewards = await contractService.getTotalRewards(account);
+          console.log('Total rewards:', totalRewards);
+
+          set({
+            earnings: totalRewards,
+          });
+        } catch (error) {
+          console.error('Error getting contract rewards:', error);
+          set({
+            earnings: 'NaN',
+          });
+          throw error;
+        }
+      },
+      claimRewards: async (poolId?: string) => {
+        try {
+          const selectedChain = useSettingsStore.getState().selectedChain;
+          const contractService = getContractService(selectedChain);
+
+          if (!poolId) {
+            // Get user's current pool
+            const account = await contractService.getConnectedAccount();
+            const userPool = await contractService.getUserPool(account);
+            if (!userPool.poolId || userPool.poolId === '0') {
+              throw new Error('User is not in any pool');
+            }
+            poolId = userPool.poolId;
+          }
+
+          await contractService.claimRewards(poolId);
+
+          // Refresh rewards after claiming
+          await get().getContractRewards();
+        } catch (error) {
+          console.error('Error claiming rewards:', error);
+          throw error;
         }
       },
       logout: () => {

@@ -37,6 +37,7 @@ export enum Routes {
   Settings = 'Settings',
   ConnectedDApps = 'ConnectedDApps',
   Mode = 'Mode',
+  ChainSelection = 'ChainSelection',
   Pools = 'Pools',
   About = 'About',
   ComponentGallery = 'Component Gallery',
@@ -87,6 +88,7 @@ export type SettingsStackParamList = {
     accountId?: string;
   };
   [Routes.Mode]: undefined;
+  [Routes.ChainSelection]: undefined;
   [Routes.Pools]: undefined;
   [Routes.About]: undefined;
   [Routes.BloxLogs]: undefined;

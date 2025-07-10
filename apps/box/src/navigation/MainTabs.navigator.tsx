@@ -31,6 +31,7 @@ import {
   BloxLogsScreen,
   PoolsScreen,
   ModeScreen,
+  ChainSelectionScreen,
   ConnectedDAppsScreen,
 } from '../screens/Settings';
 import { ComponentGalleryNavigator } from './ComponentGallery.navigator';
@@ -306,6 +307,7 @@ const SettingsNavigator = () => {
         component={ConnectedDAppsScreen}
       />
       <SettingsStack.Screen name={Routes.Mode} component={ModeScreen} />
+      <SettingsStack.Screen name={Routes.ChainSelection} component={ChainSelectionScreen} />
       <SettingsStack.Screen name={Routes.Pools} component={PoolsScreen} />
       <SettingsStack.Screen name={Routes.About} component={AboutScreen} />
       <SettingsStack.Screen name={Routes.BloxLogs} component={BloxLogsScreen} />

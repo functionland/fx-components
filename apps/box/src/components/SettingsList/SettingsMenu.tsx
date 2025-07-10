@@ -7,6 +7,7 @@ import {
 import { SettingMenuItem } from './SettingMenuItem';
 import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore } from '../../stores';
+import { CHAIN_DISPLAY_NAMES } from '../../contracts/config';
 
 export const SettingsMenu = () => {
   const navigation =
@@ -14,6 +15,7 @@ export const SettingsMenu = () => {
   const rootNavigation = useNavigation();
 
   const mode = useSettingsStore().getMode();
+  const selectedChain = useSettingsStore((state) => state.selectedChain);
 
   // Add app component gallery in development mode
   const appGallery = __DEV__
@@ -36,7 +38,12 @@ export const SettingsMenu = () => {
       name: 'Mode',
       detail: `Current: ${capitalizeFirstLetter(mode)} mode`,
       onPress: () => navigation.navigate(Routes.Mode),
-    }, // TODO: pull in mode from store when store is implemented
+    },
+    {
+      name: 'Chain Selection',
+      detail: `Current: ${CHAIN_DISPLAY_NAMES[selectedChain]}`,
+      onPress: () => navigation.navigate(Routes.ChainSelection),
+    },
     {
       name: 'Pools',
       detail: null,

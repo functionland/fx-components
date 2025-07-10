@@ -13,10 +13,12 @@ import {
   FxProgressBar,
 } from '@functionland/component-library';
 import { PoolCard } from '../../components/Cards/PoolCard';
-import { usePoolsStore } from '../../stores/usePoolsStore';
+import { usePools } from '../../hooks/usePools';
+import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useBloxsStore } from '../../stores/useBloxsStore';
 import MyLoader from '../../components/ContentLoader';
 import { useLogger } from '../../hooks';
+import { CHAIN_DISPLAY_NAMES } from '../../contracts/config';
 
 export const PoolsScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
@@ -26,23 +28,21 @@ export const PoolsScreen = () => {
   const [search, setSearch] = useState<string>('');
   const logger = useLogger();
   const { queueToast } = useToast();
-  const [
+  // Use new contract-based pools hook
+  const {
     pools,
+    loading: poolsLoading,
+    error: poolsError,
     enableInteraction,
     joinPool,
-    cancelPoolJoin,
-    getPools,
     leavePool,
-    dirty,
-  ] = usePoolsStore((state) => [
-    state.pools,
-    state.enableInteraction,
-    state.joinPool,
-    state.cancelPoolJoin,
-    state.getPools,
-    state.leavePool,
-    state.dirty,
-  ]);
+    cancelJoinRequest,
+    loadPools,
+    isReady: contractReady,
+    connectedAccount,
+  } = usePools();
+
+  const selectedChain = useSettingsStore((state) => state.selectedChain);
 
   const [
     checkChainSyncStatus,
@@ -63,11 +63,18 @@ export const PoolsScreen = () => {
 
   useEffect(() => {
     setIsError(false);
-    reloading();
-  }, [dirty, refreshing]);
+    if (refreshing) {
+      reloading();
+    }
+  }, [refreshing, contractReady]);
 
-
-  useEffect(() => {}, [enableInteraction]);
+  // Update allowJoin when pools or enableInteraction changes
+  useEffect(() => {
+    setAllowJoin(
+      pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
+        enableInteraction
+    );
+  }, [pools, enableInteraction]);
 
   const handlePoolActionErrors = (title: string, message: string) => {
     console.log(title, message);
@@ -81,14 +88,23 @@ export const PoolsScreen = () => {
 
   const wrappedJoinPool = async (poolID: number) => {
     try {
-      if (syncProgress==0 || syncProgress > 2){
-        setRefreshing(true);
-        await joinPool(poolID);
-      } else {
-        Alert.alert(
-          "Please wait",
-          "chain needs to complete the sync before you can join a pool"
-          )
+      if (!contractReady) {
+        queueToast({
+          type: 'error',
+          title: 'Contract Not Ready',
+          message: 'Please connect your wallet and wait for contract initialization',
+        });
+        return;
+      }
+
+      setRefreshing(true);
+      const result = await joinPool(poolID.toString());
+      if (result !== null) {
+        queueToast({
+          type: 'success',
+          title: 'Pool Join Requested',
+          message: 'Your join request has been submitted successfully',
+        });
       }
     } catch (e) {
       handlePoolActionErrors('Error joining pool', e.toString());
@@ -99,8 +115,24 @@ export const PoolsScreen = () => {
 
   const wrappedLeavePool = async (poolID: number) => {
     try {
+      if (!contractReady) {
+        queueToast({
+          type: 'error',
+          title: 'Contract Not Ready',
+          message: 'Please connect your wallet and wait for contract initialization',
+        });
+        return;
+      }
+
       setRefreshing(true);
-      await leavePool(poolID);
+      const result = await leavePool(poolID.toString());
+      if (result !== null) {
+        queueToast({
+          type: 'success',
+          title: 'Left Pool',
+          message: 'You have successfully left the pool',
+        });
+      }
     } catch (e) {
       handlePoolActionErrors('Error leaving', e.toString());
     } finally {
@@ -110,8 +142,24 @@ export const PoolsScreen = () => {
 
   const wrappedCancelJoinPool = async (poolID: number) => {
     try {
+      if (!contractReady) {
+        queueToast({
+          type: 'error',
+          title: 'Contract Not Ready',
+          message: 'Please connect your wallet and wait for contract initialization',
+        });
+        return;
+      }
+
       setRefreshing(true);
-      await cancelPoolJoin(poolID);
+      const result = await cancelJoinRequest(poolID.toString());
+      if (result !== null) {
+        queueToast({
+          type: 'success',
+          title: 'Join Request Cancelled',
+          message: 'Your join request has been cancelled',
+        });
+      }
     } catch (e) {
       handlePoolActionErrors('Error canceling pool join request', e.toString());
     } finally {
@@ -121,13 +169,14 @@ export const PoolsScreen = () => {
 
   const reloading = async () => {
     try {
-      await getPools();
-      console.log('enableInteraction: ', enableInteraction);
-      setAllowJoin(
-        pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
-          syncProgress > 0 &&
-          enableInteraction
-      );
+      if (contractReady) {
+        await loadPools();
+        console.log('enableInteraction: ', enableInteraction);
+        setAllowJoin(
+          pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
+            enableInteraction
+        );
+      }
     } catch (e) {
       setIsError(true);
       console.log('Error getting pools: ', e);
@@ -178,6 +227,35 @@ export const PoolsScreen = () => {
       contentContainerStyle={styles.list}
       ListHeaderComponent={
         <FxBox>
+          {/* Chain and Contract Status */}
+          <FxBox marginBottom="16" padding="12" backgroundColor="backgroundSecondary" borderRadius="m">
+            <FxText variant="bodyMediumRegular" marginBottom="8">
+              Network Status
+            </FxText>
+            <FxBox flexDirection="row" alignItems="center" justifyContent="space-between">
+              <FxBox flexDirection="row" alignItems="center">
+                <FxBox
+                  width="8"
+                  height="8"
+                  borderRadius="4"
+                  backgroundColor={contractReady ? 'success' : 'error'}
+                  marginRight="8"
+                />
+                <FxText variant="bodySmallRegular">
+                  {CHAIN_DISPLAY_NAMES[selectedChain]}
+                </FxText>
+              </FxBox>
+              <FxText variant="bodyXSRegular" color={contractReady ? 'success' : 'error'}>
+                {contractReady ? 'Connected' : 'Disconnected'}
+              </FxText>
+            </FxBox>
+            {connectedAccount && (
+              <FxText variant="bodyXSRegular" color="content2" marginTop="4">
+                Account: {connectedAccount.slice(0, 6)}...{connectedAccount.slice(-4)}
+              </FxText>
+            )}
+          </FxBox>
+
           <FxBox flex={1}>
             { syncProgress > 0 && syncProgress < 2  &&
               <FxBox

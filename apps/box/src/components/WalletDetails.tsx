@@ -12,6 +12,7 @@ import {
   useFxTheme,
 } from '@functionland/component-library';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import { copyToClipboard } from '../utils/clipboard';
 import { Helper } from '../utils';
 import { BloxIcon, CopyIcon, ExternalLinkIcon } from './Icons';
@@ -19,6 +20,8 @@ import { useBloxsStore } from '../stores';
 import { useSDK } from '@metamask/sdk-react';
 import { chainNames } from '../utils/walletConnectConifg';
 import { fula, blockchain, fxblox } from '@functionland/react-native-fula';
+import { useContractService } from '../contracts/contractService';
+import { CHAIN_DISPLAY_NAMES } from '../contracts/config';
 import { Linking, ActivityIndicator } from 'react-native';
 import {
   AccountOptionsSheet,
@@ -48,6 +51,7 @@ export const WalletDetails = ({
   const [loading, setLoading] = useState(false);
   const [bloxAccountId, setBloxAccountId] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
+  const [contractInitialized, setContractInitialized] = useState(false);
   const resetChainShown = useRef(false);
   const [
     signiture,
@@ -56,6 +60,7 @@ export const WalletDetails = ({
     fulaIsReady,
     appPeerId,
     checkBloxConnection,
+    getContractRewards,
   ] = useUserProfileStore((state) => [
     state.signiture,
     state.password,
@@ -63,8 +68,11 @@ export const WalletDetails = ({
     state.fulaIsReady,
     state.appPeerId,
     state.checkBloxConnection,
+    state.getContractRewards,
   ]);
-  const { account, chainId } = useSDK();
+  const selectedChain = useSettingsStore((state) => state.selectedChain);
+  const { account, chainId, provider } = useSDK();
+  const { initializeService } = useContractService();
   const accountOptionsSheetRef = useRef<FxBottomSheetModalMethods>(null);
   const { queueToast } = useToast();
   const { colors } = useFxTheme();
@@ -89,6 +97,43 @@ export const WalletDetails = ({
 
     updateData();
   }, [address]);
+
+  // Initialize contract service when wallet is connected
+  useEffect(() => {
+    const initializeContracts = async () => {
+      if (account && provider && selectedChain) {
+        try {
+          await initializeService(selectedChain);
+          setContractInitialized(true);
+
+          // Try to get contract rewards
+          try {
+            await getContractRewards();
+          } catch (error) {
+            console.log('Could not get contract rewards:', error);
+          }
+
+          queueToast({
+            type: 'success',
+            title: 'Contract Connected',
+            message: `Connected to ${CHAIN_DISPLAY_NAMES[selectedChain]} contracts`,
+          });
+        } catch (error) {
+          console.error('Contract initialization failed:', error);
+          setContractInitialized(false);
+          queueToast({
+            type: 'error',
+            title: 'Contract Connection Failed',
+            message: error.message || 'Failed to connect to contracts',
+          });
+        }
+      } else {
+        setContractInitialized(false);
+      }
+    };
+
+    initializeContracts();
+  }, [account, provider, selectedChain, initializeService, getContractRewards, queueToast]);
   const updateAccountId = async (retried = false) => {
     try {
       setLoading(true);
@@ -248,6 +293,27 @@ export const WalletDetails = ({
               </FxText>
             </FxBox>
           )}
+          {/* Contract Status */}
+          <FxBox marginTop="24">
+            <FxText variant="h300" textAlign="center">
+              Pool Contracts
+            </FxText>
+            <FxBox flexDirection="row" alignItems="center" justifyContent="center" marginTop="8">
+              <FxBox
+                width="8"
+                height="8"
+                borderRadius="4"
+                backgroundColor={contractInitialized ? 'success' : 'error'}
+                marginRight="8"
+              />
+              <FxText textAlign="center" color={contractInitialized ? 'success' : 'error'}>
+                {contractInitialized
+                  ? `Connected to ${CHAIN_DISPLAY_NAMES[selectedChain]}`
+                  : 'Not Connected'
+                }
+              </FxText>
+            </FxBox>
+          </FxBox>
         </FxBox>
         {bloxAccountId && (
           <FxBox marginTop="24" width="100%">
