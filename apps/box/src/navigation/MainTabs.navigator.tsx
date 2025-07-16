@@ -20,6 +20,8 @@ import {
   SettingsIcon,
 } from '../components';
 import { SvgUri } from 'react-native-svg';
+import { PoolDetailsScreen } from '../screens/Settings/PoolDetails.screen';
+import { JoinRequestsScreen } from '../screens/Settings/JoinRequests.screen';
 import {
   Routes,
   MainTabsParamList,
@@ -309,6 +311,8 @@ const SettingsNavigator = () => {
       <SettingsStack.Screen name={Routes.Mode} component={ModeScreen} />
       <SettingsStack.Screen name={Routes.ChainSelection} component={ChainSelectionScreen} />
       <SettingsStack.Screen name={Routes.Pools} component={PoolsScreen} />
+      <SettingsStack.Screen name={Routes.PoolDetails} component={PoolDetailsScreen} />
+      <SettingsStack.Screen name={Routes.JoinRequests} component={JoinRequestsScreen} />
       <SettingsStack.Screen name={Routes.About} component={AboutScreen} />
       <SettingsStack.Screen name={Routes.BloxLogs} component={BloxLogsScreen} />
       <SettingsStack.Screen

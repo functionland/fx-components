@@ -19,6 +19,7 @@ import {
 } from '../../components';
 import { TasksCard } from '../../components/Cards/TasksCard';
 import { EarningCard } from '../../components/Cards/EarningCard';
+import { PoolActionList } from '../../components/PoolActionList';
 import { BloxHeader } from './components/BloxHeader';
 import { BloxInteraction } from './components/BloxInteraction';
 import { BloxInteractionModal } from './modals/BloxInteractionModal';
@@ -590,6 +591,20 @@ export const BloxScreen = () => {
               totalFula: earnings,
             }}
           />
+
+          {/* Pool Action List */}
+          <PoolActionList
+            onNavigateToPools={() => navigation.navigate(Routes.SettingsStack, {
+              screen: Routes.Pools,
+            })}
+            onJoinPool={() => navigation.navigate(Routes.SettingsStack, {
+              screen: Routes.Pools,
+            })}
+            onManagePool={() => navigation.navigate(Routes.SettingsStack, {
+              screen: Routes.Pools,
+            })}
+          />
+
           {/* <FxSpacer height={8} />
           <QuoteStat divisionPercentage={divisionPercentage} />
           <FxSpacer height={24} />

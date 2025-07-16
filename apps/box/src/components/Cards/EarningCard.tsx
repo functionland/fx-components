@@ -39,12 +39,13 @@ export const EarningCard = ({
   const chain = 'mumbai';
 
   // Use the formatted balance hook to get balance data
+  const balanceData = useFormattedFulaBalance();
   const {
     formattedBalance,
     loading: balanceLoading,
-    error: balanceError,
-    tokenSymbol
-  } = useFormattedFulaBalance();
+    tokenSymbol,
+    error: balanceError
+  } = balanceData;
 
   // Get refresh function from the base hook
   const { refreshBalance } = useFulaBalance();

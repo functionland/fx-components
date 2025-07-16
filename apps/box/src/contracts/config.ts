@@ -10,9 +10,9 @@ export const CONTRACT_ADDRESSES: Record<SupportedChain, ChainConfig> = {
     blockExplorer: 'https://basescan.org',
     requiresAuth: true,
     contracts: {
-      // TODO: Replace with actual deployed contract addresses
-      poolStorage: '0x0000000000000000000000000000000000000000',
-      rewardEngine: '0x0000000000000000000000000000000000000000',
+      // Updated proxy contract addresses
+      poolStorage: '0xf293A6902662DcB09E310254A5e418cb28D71b6b',
+      rewardEngine: '0xB934cc71987a4369a046E9514FD47800C8c1A7d4',
       fulaToken: '0x9e12735d77c72c5C3670636D428f2F3815d8A4cB',
     },
   },
@@ -23,9 +23,9 @@ export const CONTRACT_ADDRESSES: Record<SupportedChain, ChainConfig> = {
     blockExplorer: 'https://elated-tan-skat.explorer.mainnet.skalenodes.com',
     requiresAuth: false,
     contracts: {
-      // TODO: Replace with actual deployed contract addresses
-      poolStorage: '0x0000000000000000000000000000000000000000',
-      rewardEngine: '0x0000000000000000000000000000000000000000',
+      // Updated proxy contract addresses
+      poolStorage: '0xf293A6902662DcB09E310254A5e418cb28D71b6b',
+      rewardEngine: '0xB934cc71987a4369a046E9514FD47800C8c1A7d4',
       fulaToken: '0x9e12735d77c72c5C3670636D428f2F3815d8A4cB',
     },
   },

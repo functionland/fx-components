@@ -39,6 +39,8 @@ export enum Routes {
   Mode = 'Mode',
   ChainSelection = 'ChainSelection',
   Pools = 'Pools',
+  PoolDetails = 'PoolDetails',
+  JoinRequests = 'JoinRequests',
   About = 'About',
   ComponentGallery = 'Component Gallery',
   BloxLogs = 'BloxLogs',
@@ -90,6 +92,8 @@ export type SettingsStackParamList = {
   [Routes.Mode]: undefined;
   [Routes.ChainSelection]: undefined;
   [Routes.Pools]: undefined;
+  [Routes.PoolDetails]: { poolId: string };
+  [Routes.JoinRequests]: { poolId: string };
   [Routes.About]: undefined;
   [Routes.BloxLogs]: undefined;
   [Routes.BluetoothCommands]: undefined;

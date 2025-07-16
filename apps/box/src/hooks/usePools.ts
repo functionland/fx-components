@@ -1,12 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usePoolOperations } from './useContractIntegration';
-import { PoolInfo, UserPoolInfo, JoinRequest } from '../contracts/types';
+import { PoolInfo, UserPoolInfo, JoinRequest, SupportedChain } from '../contracts/types';
+import { PoolApiService, JoinPoolRequest } from '../services/poolApiService';
+import { useSettingsStore } from '../stores/useSettingsStore';
+import { useBloxsStore } from '../stores/useBloxsStore';
 
 export interface PoolData extends PoolInfo {
   requested: boolean;
   joined: boolean;
   numVotes: number;
   numVoters: number;
+  hasActiveJoinRequest?: boolean;
+  userIsMember?: boolean;
 }
 
 export interface PoolsState {
@@ -15,39 +20,89 @@ export interface PoolsState {
   loading: boolean;
   error: string | null;
   enableInteraction: boolean;
+  userIsMemberOfAnyPool: boolean;
+  userMemberPools: string[];
+  userActiveRequests: string[];
 }
 
 export const usePools = () => {
   const poolOperations = usePoolOperations();
   const { contractService, connectedAccount, isReady } = poolOperations;
-  
+  const selectedChain = useSettingsStore((state) => state.selectedChain);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+
+
+
   const [state, setState] = useState<PoolsState>({
     pools: [],
     userPool: null,
     loading: false,
     error: null,
     enableInteraction: false,
+    userIsMemberOfAnyPool: false,
+    userMemberPools: [],
+    userActiveRequests: [],
   });
 
-  const loadPools = useCallback(async () => {
+  // Optimized membership check using new contract methods
+  const checkUserMembership = useCallback(async () => {
     if (!isReady || !contractService || !connectedAccount) {
-      setState(prev => ({ ...prev, enableInteraction: false }));
+      return {
+        isMemberOfAnyPool: false,
+        memberPools: [],
+        activeRequests: [],
+      };
+    }
+
+    try {
+      // Use optimized contract method for membership check
+      const isMemberOfAnyPool = await contractService.isMemberOfAnyPool(connectedAccount);
+
+      // If user is a member, we can get more details
+      const memberPools: string[] = [];
+      const activeRequests: string[] = [];
+
+      return {
+        isMemberOfAnyPool,
+        memberPools,
+        activeRequests,
+      };
+    } catch (error) {
+      console.error('Error checking user membership:', error);
+      return {
+        isMemberOfAnyPool: false,
+        memberPools: [],
+        activeRequests: [],
+      };
+    }
+  }, [isReady, contractService, connectedAccount]);
+
+  const loadPools = useCallback(async () => {
+    console.log('loadPools called - isReady:', isReady, 'contractService:', !!contractService, 'connectedAccount:', connectedAccount);
+
+    if (!isReady || !contractService || !connectedAccount) {
+      console.log('loadPools: Prerequisites not met');
+      setState(prev => ({ ...prev, enableInteraction: false, loading: false }));
       return;
     }
 
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
+      console.log('loadPools: Calling contractService.listPools...');
       // Get pools from contract
       const poolList = await contractService.listPools(0, 25);
-      console.log('Contract pools:', poolList);
-      
+      console.log('Contract pools received:', poolList, 'count:', poolList?.length);
+
+      // Check user membership optimally
+      const membershipInfo = await checkUserMembership();
+
       let requested = false;
       let joined = false;
       let numVotes = 0;
       let poolIdOfInterest = '';
       let userPool: UserPoolInfo | null = null;
-      
+
       try {
         // Get user pool info from contract
         userPool = await contractService.getUserPool(connectedAccount);
@@ -70,8 +125,14 @@ export const usePools = () => {
           requested = true;
           joined = false;
         }
-        
-        setState(prev => ({ ...prev, enableInteraction: true }));
+
+        setState(prev => ({
+          ...prev,
+          enableInteraction: true,
+          userIsMemberOfAnyPool: membershipInfo.isMemberOfAnyPool,
+          userMemberPools: membershipInfo.memberPools,
+          userActiveRequests: membershipInfo.activeRequests,
+        }));
       } catch (error) {
         console.log('Error getting user pool info:', error);
         setState(prev => ({ ...prev, enableInteraction: false }));
@@ -84,9 +145,11 @@ export const usePools = () => {
           requested: isUserPool ? requested : false,
           joined: isUserPool ? joined : false,
           numVotes: isUserPool ? numVotes : 0,
-          numVoters: pool.participants.length,
+          numVoters: pool.participants?.length || 0,
         };
-        
+
+        console.log('Transforming pool:', pool.poolId, pool.name);
+
         return {
           poolID: pool.poolId,
           name: pool.name,
@@ -97,6 +160,8 @@ export const usePools = () => {
           ...joinInfo,
         } as PoolData;
       });
+
+      console.log('Final transformed pools:', transformedPools);
       
       setState(prev => ({
         ...prev,
@@ -106,16 +171,58 @@ export const usePools = () => {
         error: null,
       }));
     } catch (error: any) {
-      console.error('Error getting pools:', error);
+      console.error('Error loading pools:', error);
       setState(prev => ({
         ...prev,
         pools: [],
         userPool: null,
-        loading: false,
         error: error.message || 'Failed to load pools',
+        loading: false,
+        enableInteraction: false,
       }));
     }
   }, [isReady, contractService, connectedAccount]);
+
+  // New API-based join pool function
+  const joinPoolViaAPI = useCallback(async (poolId: string, poolName: string): Promise<{success: boolean, message: string}> => {
+    if (!connectedAccount || !currentBloxPeerId) {
+      return {
+        success: false,
+        message: 'Wallet not connected or Blox peer ID not available',
+      };
+    }
+
+    try {
+      const request: JoinPoolRequest = {
+        peerId: currentBloxPeerId,
+        account: connectedAccount,
+        chain: selectedChain,
+        poolId: parseInt(poolId, 10),
+      };
+
+      const response = await PoolApiService.joinPool(request);
+
+      if (response.status === 'ok') {
+        // Refresh pools after successful join
+        await loadPools();
+        return {
+          success: true,
+          message: response.msg,
+        };
+      } else {
+        return {
+          success: false,
+          message: response.msg,
+        };
+      }
+    } catch (error) {
+      console.error('Error joining pool via API:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }, [connectedAccount, currentBloxPeerId, selectedChain, loadPools]);
 
   const joinPool = useCallback(async (poolId: string) => {
     const result = await poolOperations.joinPool(poolId);
@@ -125,6 +232,88 @@ export const usePools = () => {
     }
     return result;
   }, [poolOperations, loadPools]);
+
+  // API-based leave pool function
+  const leavePoolViaAPI = useCallback(async (poolId: string): Promise<{success: boolean, message: string}> => {
+    if (!connectedAccount || !currentBloxPeerId) {
+      return {
+        success: false,
+        message: 'Wallet not connected or Blox peer ID not available',
+      };
+    }
+
+    try {
+      const request: JoinPoolRequest = {
+        peerId: currentBloxPeerId,
+        account: connectedAccount,
+        chain: selectedChain,
+        poolId: parseInt(poolId, 10),
+      };
+
+      const response = await PoolApiService.leavePool(request);
+
+      if (response.status === 'ok') {
+        // Refresh pools after successful leave
+        await loadPools();
+        return {
+          success: true,
+          message: response.msg,
+        };
+      } else {
+        return {
+          success: false,
+          message: response.msg,
+        };
+      }
+    } catch (error) {
+      console.error('Error leaving pool via API:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }, [connectedAccount, currentBloxPeerId, selectedChain, loadPools]);
+
+  // API-based cancel join request function
+  const cancelJoinRequestViaAPI = useCallback(async (poolId: string): Promise<{success: boolean, message: string}> => {
+    if (!connectedAccount || !currentBloxPeerId) {
+      return {
+        success: false,
+        message: 'Wallet not connected or Blox peer ID not available',
+      };
+    }
+
+    try {
+      const request: JoinPoolRequest = {
+        peerId: currentBloxPeerId,
+        account: connectedAccount,
+        chain: selectedChain,
+        poolId: parseInt(poolId, 10),
+      };
+
+      const response = await PoolApiService.cancelJoinRequest(request);
+
+      if (response.status === 'ok') {
+        // Refresh pools after successful cancel
+        await loadPools();
+        return {
+          success: true,
+          message: response.msg,
+        };
+      } else {
+        return {
+          success: false,
+          message: response.msg,
+        };
+      }
+    } catch (error) {
+      console.error('Error canceling join request via API:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }, [connectedAccount, currentBloxPeerId, selectedChain, loadPools]);
 
   const leavePool = useCallback(async (poolId: string) => {
     const result = await poolOperations.leavePool(poolId);
@@ -171,10 +360,16 @@ export const usePools = () => {
     ...state,
     ...poolOperations,
     loadPools,
+    checkUserMembership,
+    // Original contract-based functions
     joinPool,
     leavePool,
     cancelJoinRequest,
     voteJoinRequest,
+    // New API-based functions
+    joinPoolViaAPI,
+    leavePoolViaAPI,
+    cancelJoinRequestViaAPI,
     // Convenience getters
     userPoolId: state.userPool?.poolId || null,
     userRequestPoolId: state.userPool?.requestPoolId || null,

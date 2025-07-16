@@ -216,35 +216,189 @@ export class ContractService {
 
   async listPools(offset: number = 0, limit: number = 25): Promise<PoolInfo[]> {
     try {
-      if (!this.poolStorageContract) throw new Error('Contract not initialized');
-      
-      const pools = await this.poolStorageContract.listPools(offset, limit);
-      return pools.map((pool: any) => ({
-        poolId: pool.poolId.toString(),
-        name: pool.name,
-        region: pool.region,
-        parent: pool.parent,
-        participants: pool.participants,
-        replicationFactor: pool.replicationFactor.toNumber(),
-      }));
+      console.log('📞 listPools: Starting contract call...');
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      const chainConfig = getChainConfigByName(this.chain);
+      console.log('📞 Using contract address:', chainConfig.contracts.poolStorage);
+      console.log('📞 Using RPC URL:', chainConfig.rpcUrl);
+
+      // Use read-only provider for queries
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      const pools: PoolInfo[] = [];
+      let index = 0;
+
+      console.log('📞 Starting to iterate through pool indices...');
+
+      while (true) {
+        try {
+          console.log('📞 Checking index:', index);
+          const poolId = await readOnlyContract.poolIds(index);
+          console.log('📞 Pool ID at index', index, ':', poolId);
+
+          // If poolId is 0, we've reached the end
+          if (poolId === 0) {
+            console.log('📞 Reached end of pools (poolId = 0)');
+            break;
+          }
+
+          console.log('📞 Getting pool details for ID:', poolId);
+          const pool = await readOnlyContract.pools(poolId);
+          console.log('📞 Pool data:', pool);
+
+          pools.push({
+            poolId: pool.id.toString(),
+            name: pool.name,
+            region: pool.region,
+            parent: '', // Not available in this contract
+            participants: [], // We'll need to get this separately if needed
+            replicationFactor: 1, // Default value
+          });
+
+          index++;
+        } catch (error) {
+          console.log('📞 Error at index', index, '- assuming end of pools:', error.message);
+          break;
+        }
+      }
+
+      console.log('📞 Final mapped pools:', pools);
+      return pools;
     } catch (error) {
+      console.error('📞 listPools error:', error);
       throw this.handleError(error);
     }
   }
 
-  async getUserPool(account: string): Promise<UserPoolInfo> {
-    try {
-      if (!this.poolStorageContract) throw new Error('Contract not initialized');
-      
-      const userPool = await this.poolStorageContract.getUserPool(account);
-      return {
-        poolId: userPool.poolId.toString(),
-        requestPoolId: userPool.requestPoolId.toString(),
-        account: userPool.account,
-      };
-    } catch (error) {
-      throw this.handleError(error);
+  // Get all pool IDs
+  async getAllPoolIds(): Promise<string[]> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    let ids: string[] = [];
+    let index = 0;
+    while (true) {
+      try {
+        const id = await this.poolStorageContract.poolIds(index);
+        ids.push(id.toString());
+        index++;
+      } catch (error) {
+        // End of array
+        break;
+      }
     }
+    return ids;
+  }
+
+  // Get pool details by ID
+  async getPool(poolId: string): Promise<any> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    const pool = await this.poolStorageContract.pools(poolId);
+    return {
+      creator: pool.creator,
+      id: pool.id.toString(),
+      maxChallengeResponsePeriod: pool.maxChallengeResponsePeriod.toString(),
+      memberCount: pool.memberCount.toString(),
+      maxMembers: pool.maxMembers.toString(),
+      requiredTokens: pool.requiredTokens.toString(),
+      minPingTime: pool.minPingTime.toString(),
+      name: pool.name,
+      region: pool.region
+    };
+  }
+
+  // Get member list for a pool
+  async getPoolMembers(poolId: string): Promise<string[]> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    return await this.poolStorageContract.getPoolMembers(poolId);
+  }
+
+  // Get peer IDs for a member in a pool
+  async getMemberPeerIds(poolId: string, member: string): Promise<string[]> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    return await this.poolStorageContract.getMemberPeerIds(poolId, member);
+  }
+
+  // Get peer info for a peerId in a pool
+  async getPeerIdInfo(poolId: string, peerId: string): Promise<{ member: string, lockedTokens: string }> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    const [member, lockedTokens] = await this.poolStorageContract.getPeerIdInfo(poolId, peerId);
+    return { member, lockedTokens: lockedTokens.toString() };
+  }
+
+  // Get member index for a member in a pool
+  async getMemberIndex(poolId: string, member: string): Promise<string> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    const idx = await this.poolStorageContract.getMemberIndex(poolId, member);
+    return idx.toString();
+  }
+
+  // Get join request for a poolId and peerId
+  async getJoinRequest(poolId: string, peerId: string): Promise<any> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    return await this.poolStorageContract.joinRequests(poolId, peerId);
+  }
+
+  // Get all join request keys for a pool
+  async getJoinRequestKeys(poolId: string): Promise<string[]> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    let keys: string[] = [];
+    let index = 0;
+    while (true) {
+      try {
+        const key = await this.poolStorageContract.joinRequestKeys(poolId, index);
+        keys.push(key);
+        index++;
+      } catch (error) {
+        // End of array
+        break;
+      }
+    }
+    return keys;
+  }
+
+  // Check if address is forfeited
+  async isForfeited(address: string): Promise<boolean> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    return await this.poolStorageContract.isForfeited(address);
+  }
+
+  // Get claimable tokens for a peerId
+  async claimableTokens(peerId: string): Promise<string> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    const tokens = await this.poolStorageContract.claimableTokens(peerId);
+    return tokens.toString();
+  }
+
+  // Get join timestamp for a peerId
+  async joinTimestamp(peerId: string): Promise<string> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    const ts = await this.poolStorageContract.joinTimestamp(peerId);
+    return ts.toString();
+  }
+
+  // Join a pool
+  async joinPool(poolId: string): Promise<void> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    const tx = await this.poolStorageContract.joinPool(poolId, { gasLimit: METHOD_GAS_LIMITS.joinPool });
+    await tx.wait();
+  }
+
+  // Leave a pool
+  async leavePool(poolId: string): Promise<void> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    const tx = await this.poolStorageContract.leavePool(poolId, { gasLimit: METHOD_GAS_LIMITS.leavePool });
+    await tx.wait();
+  }
+
+  // Cancel join request
+  async cancelJoinRequest(poolId: string): Promise<void> {
+    if (!this.poolStorageContract) throw new Error('Contract not initialized');
+    const tx = await this.poolStorageContract.cancelJoinRequest(poolId, { gasLimit: METHOD_GAS_LIMITS.cancelJoinRequest });
+    await tx.wait();
   }
 
   async getJoinRequest(poolId: string, account: string): Promise<JoinRequest> {

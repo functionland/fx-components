@@ -78,10 +78,15 @@ export const useFulaBalance = (account?: string) => {
       });
     } catch (error) {
       console.error('Error loading FULA balance:', error);
+      const errorMessage = error instanceof Error && error.message
+        ? error.message
+        : typeof error === 'string'
+        ? error
+        : 'Failed to load FULA balance';
       setState(prev => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error.message : 'Failed to load FULA balance',
+        error: errorMessage,
       }));
     }
   }, [selectedChain, account, metamaskAccount, connectedAccount]);
@@ -145,6 +150,11 @@ export const useMultipleFulaBalances = (accounts: string[]) => {
             } as FulaBalanceState,
           };
         } catch (error) {
+          const errorMessage = error instanceof Error && error.message
+            ? error.message
+            : typeof error === 'string'
+            ? error
+            : 'Failed to load balance';
           return {
             account,
             state: {
@@ -152,7 +162,7 @@ export const useMultipleFulaBalances = (accounts: string[]) => {
               formattedBalance: '0.00',
               tokenInfo,
               loading: false,
-              error: error instanceof Error ? error.message : 'Failed to load balance',
+              error: errorMessage,
             } as FulaBalanceState,
           };
         }
@@ -168,8 +178,13 @@ export const useMultipleFulaBalances = (accounts: string[]) => {
       setBalances(newBalances);
     } catch (error) {
       console.error('Error loading multiple FULA balances:', error);
-      
+
       // Set error state for all accounts
+      const errorMessage = error instanceof Error && error.message
+        ? error.message
+        : typeof error === 'string'
+        ? error
+        : 'Failed to load balances';
       const errorBalances: Record<string, FulaBalanceState> = {};
       accounts.forEach(account => {
         errorBalances[account] = {
@@ -177,7 +192,7 @@ export const useMultipleFulaBalances = (accounts: string[]) => {
           formattedBalance: '0.00',
           tokenInfo: null,
           loading: false,
-          error: error instanceof Error ? error.message : 'Failed to load balances',
+          error: errorMessage,
         };
       });
       setBalances(errorBalances);

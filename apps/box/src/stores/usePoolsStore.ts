@@ -59,81 +59,67 @@ const createPoolsModelSlice: StateCreator<
     },
     getPools: async () => {
       try {
-        // Get the selected chain from settings
         const selectedChain = useSettingsStore.getState().selectedChain;
         const contractService = getContractService(selectedChain);
-
-        // Get pools from contract
-        const poolList = await contractService.listPools(0, 25);
-        console.log('Contract pools:', poolList);
-
-        let requested = false;
-        let joined = false;
-        let numVotes = 0;
-        let poolIdOfInterest = '';
-
-        // Attempt to use stored wallet address to fetch user pool info without triggering MetaMask
         const accountId = useUserProfileStore.getState().address;
 
+        let enableInteraction = false;
         if (accountId) {
-          try {
-            console.log('Using stored wallet address to get user pool info:', accountId);
-
-            // Get user pool info from contract
-            const userPool = await contractService.getUserPool(accountId);
-            console.log('User pool:', userPool);
-
-            if (userPool && userPool.poolId !== '0') {
-              // User is in a pool
-              requested = true;
-              joined = true;
-              poolIdOfInterest = userPool.poolId;
-            } else if (userPool && userPool.requestPoolId !== '0') {
-              // User has a pending join request
-              poolIdOfInterest = userPool.requestPoolId;
-              const joinRequestInfo = await contractService.getJoinRequest(
-                userPool.requestPoolId,
-                accountId
-              );
-              console.log('Join request info:', joinRequestInfo);
-              numVotes = joinRequestInfo.positive_votes + joinRequestInfo.negative_votes;
-              requested = true;
-              joined = false;
-            }
-
-            set({ enableInteraction: true });
-          } catch (error) {
-            console.log('Error getting user pool info:', error);
-            set({ enableInteraction: false });
-          }
-        } else {
-          // Wallet address not available, disable pool interaction to avoid unwanted wallet prompts
-          set({ enableInteraction: false });
+          enableInteraction = true;
         }
+        set({ enableInteraction });
 
-        // Transform contract pools to app format
-        const transformedPools = poolList.map((pool) => {
-          const isUserPool = pool.poolId === poolIdOfInterest;
-          const joinInfo = {
-            requested: isUserPool ? requested : false,
-            joined: isUserPool ? joined : false,
-            numVotes: isUserPool ? numVotes : 0,
-            numVoters: pool.participants.length,
-          };
+        // Fetch all pool IDs
+        const poolIds = await contractService.getAllPoolIds();
+        const pools: PoolData[] = [];
 
-          return {
-            poolID: pool.poolId,
+        for (const poolId of poolIds) {
+          // Fetch pool details
+          const pool = await contractService.getPool(poolId);
+          // Fetch members
+          const participants = await contractService.getPoolMembers(poolId);
+
+          let joined = false;
+          let requested = false;
+          let numVotes = 0;
+          let numVoters = participants.length;
+
+          // Check if user is a member
+          if (accountId) {
+            const memberIndex = await contractService.getMemberIndex(poolId, accountId);
+            if (memberIndex !== '0') {
+              joined = true;
+            } else {
+              // If not a member, check for join request
+              // You may need a way to get peerId for this user, for now assume peerId = accountId
+              try {
+                const joinRequest = await contractService.getJoinRequest(poolId, accountId);
+                if (joinRequest && joinRequest.status === 1) {
+                  requested = true;
+                  numVotes = (joinRequest.approvals || 0) + (joinRequest.rejections || 0);
+                }
+              } catch (e) {
+                // No join request
+              }
+            }
+          }
+
+          pools.push({
+            poolID: pool.id,
             name: pool.name,
             region: pool.region,
-            parent: pool.parent,
-            participants: pool.participants,
-            replicationFactor: pool.replicationFactor,
-            ...joinInfo,
-          } as PoolData;
-        });
+            parent: '', // Not available in contract
+            participants,
+            replicationFactor: 1, // Not available in contract
+            requested,
+            joined,
+            numVotes,
+            numVoters,
+          });
+        }
 
         set({
-          pools: transformedPools,
+          pools,
           dirty: false,
         });
       } catch (error) {

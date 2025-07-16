@@ -354,19 +354,14 @@ export const WalletDetails = ({
           <FxBox marginTop="24" width="100%">
             <FxButton
               onPress={() => {
-                const baseUrl = 'https://fund.functionyard.fula.network/';
-                const url = bloxAccountId.startsWith('5')
-                  ? `${baseUrl}?accountId=${bloxAccountId}`
-                  : baseUrl;
-                Linking.openURL(url);
+                Linking.openURL('https://pools.fx.land/');
               }}
               iconLeft={<ExternalLinkIcon />}
               flexWrap="wrap"
               paddingHorizontal="32"
               size="large"
-              disabled={!bloxAccountId.startsWith('5')}
             >
-              Join Fula Testnet
+              Register Blox on Mainnet
             </FxButton>
           </FxBox>
         )}

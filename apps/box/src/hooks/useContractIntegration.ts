@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSDK } from '@metamask/sdk-react';
 import { useToast } from '@functionland/component-library';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -18,7 +18,8 @@ export const useContractIntegration = () => {
   const { provider, account, chainId } = useSDK();
   const { queueToast } = useToast();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
-  
+  const initializedChainRef = useRef<SupportedChain | null>(null);
+
   const [state, setState] = useState<ContractIntegrationState>({
     isInitialized: false,
     isInitializing: false,
@@ -28,7 +29,10 @@ export const useContractIntegration = () => {
   });
 
   const initializeContracts = useCallback(async (chain: SupportedChain) => {
+    console.log('initializeContracts called for chain:', chain, 'provider:', !!provider, 'account:', account);
+
     if (!provider || !account) {
+      console.log('Missing provider or account, cannot initialize contracts');
       setState(prev => ({
         ...prev,
         isInitialized: false,
@@ -39,13 +43,28 @@ export const useContractIntegration = () => {
       return;
     }
 
+    // Prevent re-initialization if already initializing or initialized for the same chain
+    if (state.isInitializing) {
+      console.log('Already initializing, skipping...');
+      return;
+    }
+
+    if (state.isInitialized && initializedChainRef.current === chain) {
+      console.log('Already initialized for chain:', chain, 'skipping...');
+      return;
+    }
+
     setState(prev => ({ ...prev, isInitializing: true, error: null }));
 
     try {
+      console.log('Getting contract service for chain:', chain);
       const service = getContractService(chain);
+      console.log('Initializing contract service...');
       await service.initialize(provider);
-      
+
+      console.log('Getting connected account...');
       const connectedAccount = await service.getConnectedAccount();
+      console.log('Connected account:', connectedAccount);
       
       setState({
         isInitialized: true,
@@ -54,6 +73,9 @@ export const useContractIntegration = () => {
         contractService: service,
         connectedAccount,
       });
+
+      // Track the initialized chain
+      initializedChainRef.current = chain;
 
       queueToast({
         type: 'success',
@@ -70,6 +92,9 @@ export const useContractIntegration = () => {
         contractService: null,
         connectedAccount: null,
       });
+
+      // Clear the initialized chain ref on error
+      initializedChainRef.current = null;
 
       queueToast({
         type: 'error',
@@ -140,27 +165,46 @@ export const useContractIntegration = () => {
     }
   }, [state.isInitialized, state.contractService, queueToast]);
 
-  // Initialize contracts when dependencies change - DISABLED to prevent auto MetaMask calls
-  // useEffect(() => {
-  //   if (account && provider && selectedChain) {
-  //     initializeContracts(selectedChain);
-  //   } else {
-  //     setState({
-  //       isInitialized: false,
-  //       isInitializing: false,
-  //       error: null,
-  //       contractService: null,
-  //       connectedAccount: null,
-  //     });
-  //   }
-  // }, [account, provider, selectedChain, initializeContracts]);
+  // Initialize contracts when dependencies change
+  useEffect(() => {
+    console.log('Contract integration useEffect triggered:', {
+      account: !!account,
+      provider: !!provider,
+      selectedChain,
+      isInitialized: state.isInitialized,
+      isInitializing: state.isInitializing
+    });
 
-  // Handle chain changes - DISABLED to prevent auto MetaMask calls
+    if (account && provider && selectedChain && !state.isInitializing && !state.isInitialized) {
+      console.log('Initializing contracts...');
+      initializeContracts(selectedChain);
+    } else if (!account || !provider) {
+      console.log('Clearing contract state - no account or provider');
+      setState({
+        isInitialized: false,
+        isInitializing: false,
+        error: null,
+        contractService: null,
+        connectedAccount: null,
+      });
+      // Clear the initialized chain ref when disconnecting
+      initializedChainRef.current = null;
+    }
+  }, [account, provider, selectedChain, state.isInitializing, state.isInitialized]);
+
+  // Handle chain changes - disabled to prevent loops, chain switching handled in initializeContracts
   // useEffect(() => {
-  //   if (state.isInitialized && selectedChain) {
+  //   console.log('Chain change useEffect triggered:', {
+  //     isInitialized: state.isInitialized,
+  //     selectedChain,
+  //     contractService: !!state.contractService
+  //   });
+  //
+  //   if (state.isInitialized && selectedChain && state.contractService) {
+  //     console.log('Switching to chain:', selectedChain);
   //     switchChain(selectedChain);
   //   }
-  // }, [selectedChain, state.isInitialized, switchChain]);
+  // }, [selectedChain, state.isInitialized, state.contractService]);
 
   return {
     ...state,

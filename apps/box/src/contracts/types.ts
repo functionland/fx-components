@@ -7,6 +7,13 @@ export interface PoolInfo {
   parent: string;
   participants: string[];
   replicationFactor: number;
+  // New fields from updated contract
+  creator?: string;
+  maxChallengeResponsePeriod?: number;
+  memberCount?: number;
+  maxMembers?: number;
+  requiredTokens?: string;
+  minPingTime?: string;
 }
 
 export interface UserPoolInfo {
@@ -21,6 +28,13 @@ export interface JoinRequest {
   voted: string[];
   positive_votes: number;
   negative_votes: number;
+  // New fields from updated contract
+  timestamp?: number;
+  index?: number;
+  approvals?: number;
+  rejections?: number;
+  status?: number; // 1=pending, 2=approved, 3=rejected/cancelled
+  peerId?: string;
 }
 
 export interface RewardInfo {

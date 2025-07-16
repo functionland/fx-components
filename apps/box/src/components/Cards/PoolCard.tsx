@@ -64,7 +64,80 @@ const DetailInfo = ({
         </FxCard.Row.Data>
       </FxCard.Row>
     )}
-    {isDetailed && isJoined && (
+    {/* Show join if not joined or requested, leave if joined, cancel if requested but not joined */}
+    {isDetailed && !isJoined && !isRequested && joinPool && (
+      <FxButton
+        onPress={() => joinPool(parseInt(pool.poolID, 10))}
+        flexWrap="wrap"
+        paddingHorizontal="16"
+        iconLeft={<FxPoolIcon />}
+      >
+        Join
+      </FxButton>
+            Join Pool
+          </FxButton>
+        )}
+
+        {/* Cancel Join Request button - show if user has active request */}
+        {hasActiveJoinRequest && cancelJoinRequestViaAPI && (
+          <FxButton
+            onPress={() => cancelJoinRequestViaAPI(pool.poolID)}
+            flexWrap="wrap"
+            paddingHorizontal="16"
+            marginRight="8"
+            marginBottom="8"
+            variant="destructive"
+          >
+            Cancel Request
+          </FxButton>
+        )}
+
+        {/* Leave Pool button - show if user is a member */}
+        {userIsMember && leavePoolViaAPI && (
+          <FxButton
+            onPress={() => leavePoolViaAPI(pool.poolID)}
+            flexWrap="wrap"
+            paddingHorizontal="16"
+            marginRight="8"
+            marginBottom="8"
+            variant="destructive"
+          >
+            Leave Pool
+          </FxButton>
+        )}
+
+        {/* View Join Requests button - show if user is a member */}
+        {userIsMember && onViewJoinRequests && (
+          <FxButton
+            onPress={() => onViewJoinRequests(parseInt(pool.poolID, 10))}
+            flexWrap="wrap"
+            paddingHorizontal="16"
+            marginRight="8"
+            marginBottom="8"
+            variant="inverted"
+          >
+            Join Requests
+          </FxButton>
+        )}
+
+        {/* Vote on Requests button - show if user can vote */}
+        {canVoteOnRequests && onVoteOnRequests && (
+          <FxButton
+            onPress={() => onVoteOnRequests(parseInt(pool.poolID, 10))}
+            flexWrap="wrap"
+            paddingHorizontal="16"
+            marginRight="8"
+            marginBottom="8"
+            variant="inverted"
+          >
+            Vote on Requests
+          </FxButton>
+        )}
+      </FxBox>
+    )}
+
+    {/* Legacy buttons for backward compatibility */}
+    {isDetailed && isJoined && !userIsMember && (
       <FxButton
         onPress={() => leavePool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
@@ -74,7 +147,7 @@ const DetailInfo = ({
         Leave
       </FxButton>
     )}
-    {isDetailed && isRequested && !isJoined && (
+    {isDetailed && isRequested && !isJoined && !hasActiveJoinRequest && (
       <FxButton
         onPress={() => cancelJoinPool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
@@ -84,7 +157,7 @@ const DetailInfo = ({
         Cancel
       </FxButton>
     )}
-    {isDetailed && !(isRequested && isJoined) && joinPool !== undefined && (
+    {isDetailed && !(isRequested && isJoined) && !userIsMember && !hasActiveJoinRequest && joinPool !== undefined && (
       <FxButton
         onPress={() => joinPool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
@@ -137,6 +210,7 @@ export const PoolCard = ({
           leavePool={leavePool}
           joinPool={joinPool}
           cancelJoinPool={cancelJoinPool}
+          leavePool={leavePool}
         />
       )}
     </FxCard>
