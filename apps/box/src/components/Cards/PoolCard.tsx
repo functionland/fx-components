@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   FxBox,
   FxButton,
@@ -7,8 +7,14 @@ import {
   FxSpacer,
   FxTag,
   FxText,
+  useToast,
 } from '@functionland/component-library';
+import { Alert } from 'react-native';
 import { TPool } from '../../models';
+import { useBloxsStore } from '../../stores/useBloxsStore';
+import { usePoolsStore } from '../../stores/usePoolsStore';
+import { useSettingsStore } from '../../stores/useSettingsStore';
+import { useSDK } from '@metamask/sdk-react';
 
 type PoolCardType = React.ComponentProps<typeof FxCard> & {
   pool: TPool;
@@ -18,8 +24,6 @@ type PoolCardType = React.ComponentProps<typeof FxCard> & {
   numVotes: number;
   numVoters: number;
   leavePool: (poolID: number) => Promise<void>;
-  // Undefined meaning we should not show it!
-  joinPool?: (poolID: number) => Promise<void>;
   cancelJoinPool: (poolID: number) => Promise<void>;
 };
 
@@ -31,7 +35,6 @@ const DetailInfo = ({
   numVotes,
   numVoters,
   leavePool,
-  joinPool,
   cancelJoinPool,
 }: {
   pool: TPool;
@@ -41,139 +44,192 @@ const DetailInfo = ({
   numVotes: number;
   numVoters: number;
   leavePool: (poolID: number) => Promise<void>;
-  joinPool?: (poolID: number) => Promise<void>;
   cancelJoinPool: (poolID: number) => Promise<void>;
-}) => (
-  <FxBox>
-    <FxSpacer marginTop="24" />
-    <FxCard.Row>
-      <FxCard.Row.Title>Location</FxCard.Row.Title>
-      <FxCard.Row.Data>{pool.region}</FxCard.Row.Data>
-    </FxCard.Row>
+}) => {
+  const [isJoining, setIsJoining] = useState(false);
+  const { queueToast } = useToast();
+  const { account } = useSDK();
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
+  const selectedChain = useSettingsStore((state) => state.selectedChain);
+  const joinPool = usePoolsStore((state) => state.joinPool);
+
+  // Check if Blox is connected
+  const isBloxConnected = currentBloxPeerId &&
+    bloxsConnectionStatus[currentBloxPeerId] === 'CONNECTED';
+
+  const handleJoinPool = async () => {
+    // Check if wallet is connected
+    if (!account) {
+      queueToast({
+        type: 'error',
+        title: 'Wallet Not Connected',
+        message: 'Please connect your wallet first.',
+      });
+      return;
+    }
+
+    // Check if we have the required data
+    if (!currentBloxPeerId) {
+      queueToast({
+        type: 'error',
+        title: 'Blox Peer ID Missing',
+        message: 'Blox peer ID is not available.',
+      });
+      return;
+    }
+
+    // Show confirmation dialog
+    Alert.alert(
+      'Join Pool',
+      `Are you sure you want to join pool: ${pool.name} on ${selectedChain} for Blox: ${currentBloxPeerId}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Join',
+          onPress: async () => {
+            setIsJoining(true);
+            try {
+              // Call the Blox store joinPool method first
+              await joinPool(parseInt(pool.poolID, 10));
+
+              queueToast({
+                type: 'success',
+                title: 'Pool Join Requested',
+                message: 'Your join request has been submitted successfully.',
+              });
+            } catch (error) {
+              console.error('Error joining pool:', error);
+
+              // Check for specific error messages
+              const errorMessage = error instanceof Error ? error.message : String(error);
+
+              if (errorMessage.includes('401') || errorMessage.includes('not registered')) {
+                Alert.alert(
+                  'Blox Not Registered',
+                  'Your Blox is not registered. Please contact sales@fx.land or register your Blox.',
+                  [
+                    {
+                      text: 'Contact Sales',
+                      onPress: () => {
+                        // Could open email client
+                      },
+                    },
+                    {
+                      text: 'Register Blox',
+                      onPress: () => {
+                        // Navigate to Users tab - this would need navigation prop
+                      },
+                    },
+                    {
+                      text: 'OK',
+                      style: 'cancel',
+                    },
+                  ]
+                );
+              } else {
+                queueToast({
+                  type: 'error',
+                  title: 'Join Pool Failed',
+                  message: errorMessage,
+                });
+              }
+            } finally {
+              setIsJoining(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  return (
+    <FxBox>
+      <FxSpacer marginTop="24" />
+      <FxCard.Row>
+        <FxCard.Row.Title>Location</FxCard.Row.Title>
+        <FxCard.Row.Data>{pool.region}</FxCard.Row.Data>
+      </FxCard.Row>
+
+      <FxCard.Row>
+        <FxCard.Row.Title>Blox Status</FxCard.Row.Title>
+        <FxCard.Row.Data>
+          {isBloxConnected ? '🟢 Connected' : '🔴 Disconnected'}
+        </FxCard.Row.Data>
+      </FxCard.Row>
+
     {isJoined && (
       <FxCard.Row>
-        <FxCard.Row.Title>Status </FxCard.Row.Title>
+        <FxCard.Row.Title>Status</FxCard.Row.Title>
         <FxCard.Row.Data>Joined</FxCard.Row.Data>
       </FxCard.Row>
     )}
+
     {isRequested && !isJoined && (
       <FxCard.Row>
-        <FxCard.Row.Title>Status </FxCard.Row.Title>
+        <FxCard.Row.Title>Status</FxCard.Row.Title>
         <FxCard.Row.Data>
           Requested (votes: {numVotes}/{numVoters})
         </FxCard.Row.Data>
       </FxCard.Row>
     )}
-    {/* Show join if not joined or requested, leave if joined, cancel if requested but not joined */}
-    {isDetailed && !isJoined && !isRequested && joinPool && (
+
+    {/* Join button */}
+    {isDetailed && !isJoined && !isRequested && (
       <FxButton
-        onPress={() => joinPool(parseInt(pool.poolID, 10))}
+        onPress={handleJoinPool}
         flexWrap="wrap"
         paddingHorizontal="16"
         iconLeft={<FxPoolIcon />}
+        disabled={isJoining || !isBloxConnected}
       >
-        Join
-      </FxButton>
-            Join Pool
-          </FxButton>
-        )}
-
-        {/* Cancel Join Request button - show if user has active request */}
-        {hasActiveJoinRequest && cancelJoinRequestViaAPI && (
-          <FxButton
-            onPress={() => cancelJoinRequestViaAPI(pool.poolID)}
-            flexWrap="wrap"
-            paddingHorizontal="16"
-            marginRight="8"
-            marginBottom="8"
-            variant="destructive"
-          >
-            Cancel Request
-          </FxButton>
-        )}
-
-        {/* Leave Pool button - show if user is a member */}
-        {userIsMember && leavePoolViaAPI && (
-          <FxButton
-            onPress={() => leavePoolViaAPI(pool.poolID)}
-            flexWrap="wrap"
-            paddingHorizontal="16"
-            marginRight="8"
-            marginBottom="8"
-            variant="destructive"
-          >
-            Leave Pool
-          </FxButton>
-        )}
-
-        {/* View Join Requests button - show if user is a member */}
-        {userIsMember && onViewJoinRequests && (
-          <FxButton
-            onPress={() => onViewJoinRequests(parseInt(pool.poolID, 10))}
-            flexWrap="wrap"
-            paddingHorizontal="16"
-            marginRight="8"
-            marginBottom="8"
-            variant="inverted"
-          >
-            Join Requests
-          </FxButton>
-        )}
-
-        {/* Vote on Requests button - show if user can vote */}
-        {canVoteOnRequests && onVoteOnRequests && (
-          <FxButton
-            onPress={() => onVoteOnRequests(parseInt(pool.poolID, 10))}
-            flexWrap="wrap"
-            paddingHorizontal="16"
-            marginRight="8"
-            marginBottom="8"
-            variant="inverted"
-          >
-            Vote on Requests
-          </FxButton>
-        )}
-      </FxBox>
-    )}
-
-    {/* Legacy buttons for backward compatibility */}
-    {isDetailed && isJoined && !userIsMember && (
-      <FxButton
-        onPress={() => leavePool(parseInt(pool.poolID, 10))}
-        flexWrap="wrap"
-        paddingHorizontal="16"
-        iconLeft={<FxPoolIcon />}
-      >
-        Leave
+        {isJoining ? 'Joining...' : !isBloxConnected ? 'Blox Disconnected' : 'Join'}
       </FxButton>
     )}
-    {isDetailed && isRequested && !isJoined && !hasActiveJoinRequest && (
+
+    {/* Cancel join request button */}
+    {isDetailed && isRequested && !isJoined && (
       <FxButton
         onPress={() => cancelJoinPool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
         paddingHorizontal="16"
-        iconLeft={<FxPoolIcon />}
+        marginRight="8"
+        marginBottom="8"
+        variant="destructive"
       >
-        Cancel
+        Cancel Request
       </FxButton>
     )}
-    {isDetailed && !(isRequested && isJoined) && !userIsMember && !hasActiveJoinRequest && joinPool !== undefined && (
+
+    {/* Leave pool button */}
+    {isDetailed && isJoined && (
       <FxButton
-        onPress={() => joinPool(parseInt(pool.poolID, 10))}
+        onPress={() => leavePool(parseInt(pool.poolID, 10))}
         flexWrap="wrap"
         paddingHorizontal="16"
-        iconLeft={<FxPoolIcon />}
+        marginRight="8"
+        marginBottom="8"
+        variant="destructive"
       >
-        Join
+        Leave Pool
       </FxButton>
     )}
-    {isDetailed && !isRequested && isJoined && (
-      <FxCard.Row.Data>
-        Voting status: {numVotes}/{numVoters}
-      </FxCard.Row.Data>
+
+    {/* Voting status */}
+    {isDetailed && isJoined && (
+      <FxCard.Row>
+        <FxCard.Row.Title>Voting status</FxCard.Row.Title>
+        <FxCard.Row.Data>
+          {numVotes}/{numVoters}
+        </FxCard.Row.Data>
+      </FxCard.Row>
     )}
-  </FxBox>
-);
+    </FxBox>
+  );
+};
 
 export const PoolCard = ({
   pool,
@@ -183,7 +239,6 @@ export const PoolCard = ({
   numVotes,
   numVoters,
   leavePool,
-  joinPool,
   cancelJoinPool,
   ...rest
 }: PoolCardType) => {
@@ -208,9 +263,7 @@ export const PoolCard = ({
           numVotes={numVotes}
           numVoters={numVoters}
           leavePool={leavePool}
-          joinPool={joinPool}
           cancelJoinPool={cancelJoinPool}
-          leavePool={leavePool}
         />
       )}
     </FxCard>

@@ -15,7 +15,7 @@ export class ContractService {
   private provider: ethers.providers.Web3Provider | null = null;
   private readOnlyProvider: ethers.providers.JsonRpcProvider | null = null;
   private signer: ethers.Signer | null = null;
-  private chain: SupportedChain;
+  public chain: SupportedChain;
   private poolStorageContract: ethers.Contract | null = null;
   private rewardEngineContract: ethers.Contract | null = null;
   private fulaTokenContract: ethers.Contract | null = null;
@@ -471,6 +471,141 @@ export class ContractService {
     }
   }
 
+  // User Membership Methods
+  async isMemberOfAnyPool(account: string): Promise<boolean> {
+    try {
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+      console.log('isMemberOfAnyPool', { account });
+
+      // Use read-only provider like we do for listPools to avoid signer issues
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('isMemberOfAnyPool call timed out after 30 seconds')), 30000);
+      });
+
+      const contractCallPromise = readOnlyContract.isMemberOfAnyPool(account);
+
+      console.log('isMemberOfAnyPool: Making contract call with read-only provider...');
+      const result = await Promise.race([contractCallPromise, timeoutPromise]);
+      console.log('isMemberOfAnyPool: Contract call completed', { result });
+
+      return result;
+    } catch (error) {
+      console.error('isMemberOfAnyPool error', { account, error: error instanceof Error ? error.message : String(error) });
+      throw this.handleError(error);
+    }
+  }
+
+  // Check if a peerId is member of a specific pool
+  async isPeerIdMemberOfPool(poolId: string, peerId: string): Promise<{ isMember: boolean, memberAddress: string }> {
+    try {
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      // Use read-only provider for consistency
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      console.log('isPeerIdMemberOfPool: Making contract call...', { poolId, peerId });
+      const [isMember, memberAddress] = await readOnlyContract.isPeerIdMemberOfPool(poolId, peerId);
+      console.log('isPeerIdMemberOfPool: Contract call completed', { isMember, memberAddress });
+
+      return { isMember, memberAddress };
+    } catch (error) {
+      console.error('isPeerIdMemberOfPool error', { poolId, peerId, error: error instanceof Error ? error.message : String(error) });
+      throw this.handleError(error);
+    }
+  }
+
+  // Get total members across all pools
+  async getTotalMembers(): Promise<string> {
+    try {
+      if (!this.poolStorageContract) throw new Error('Contract not initialized');
+      const total = await this.poolStorageContract.getTotalMembers();
+      return total.toString();
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // Get user pool info - follows the correct process:
+  // 1. Check if connected account is a member of any pool
+  // 2. If yes, check if blox peerId is a member of that pool
+  async getUserPoolInfo(account: string, peerId?: string): Promise<UserPoolInfo> {
+    try {
+      console.log('getUserPoolInfo', {account, peerId});
+      if (!this.poolStorageContract) throw new Error('Contract not initialized');
+
+      let poolId = '0';
+      let requestPoolId = '0';
+
+      // Step 1: Check if connected account is a member of any pool
+      const isMemberByAddress = await this.isMemberOfAnyPool(account);
+      console.log('getUserPoolInfo: isMemberByAddress called', {
+        isMemberByAddress,
+        account,
+      });
+
+      if (isMemberByAddress && peerId) {
+        // Step 2: If account is a member, find which pool(s) and check if peerId is also a member
+        const poolIds = await this.getAllPoolIds();
+        console.log('getUserPoolInfo: All pools fetched', { poolIds, peerId });
+
+        for (const pid of poolIds) {
+            // Account is a member, now check if peerId is also a member of this pool
+            const { isMember } = await this.isPeerIdMemberOfPool(pid, peerId);
+            console.log('getUserPoolInfo: isPeerIdMemberOfPool fetched', {
+              isMember,
+              pid,
+              peerId,
+            });
+            if (isMember) {
+              poolId = pid;
+              break;
+            }
+          
+        }
+      } else if (isMemberByAddress) {
+        // If no peerId provided, just find which pool the account is in
+        const poolIds = await this.getAllPoolIds();
+        console.log('getUserPoolInfo: All pools fetched', { poolIds });
+        for (const pid of poolIds) {
+          const memberIndex = await this.getMemberIndex(pid, account);
+          if (memberIndex !== '0') {
+            poolId = pid;
+            break;
+          }
+        }
+      }
+
+      // TODO: Check for pending join requests in requestPoolId
+
+      return {
+        account,
+        poolId,
+        requestPoolId,
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // Alias for backward compatibility - hooks expect this method name
+  async getUserPool(account: string, peerId?: string): Promise<UserPoolInfo> {
+    console.log('getUserPool', {account});
+    return this.getUserPoolInfo(account, peerId);
+  }
+
   // Utility Methods
   async getConnectedAccount(): Promise<string> {
     try {
@@ -593,6 +728,11 @@ export const getContractService = (chain?: SupportedChain): ContractService => {
     contractServiceInstance = new ContractService(chain);
   }
   return contractServiceInstance;
+};
+
+// Force reset the singleton instance (useful for development)
+export const resetContractService = (): void => {
+  contractServiceInstance = null;
 };
 
 // Hook to use contract service with MetaMask

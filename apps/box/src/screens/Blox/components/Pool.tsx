@@ -13,7 +13,17 @@ export const Pool = ({ pool }: TPoolProps) => {
     <>
       <CardHeader>Pool</CardHeader>
       {pool ? (
-        <PoolCard pool={pool} marginTop="0" isDetailed />
+        <PoolCard
+          pool={pool}
+          marginTop="0"
+          isDetailed={true}
+          isRequested={false}
+          isJoined={false}
+          numVotes={0}
+          numVoters={0}
+          leavePool={async () => {}}
+          cancelJoinPool={async () => {}}
+        />
       ) : (
         <EmptyCard
           placeholder="This device isn’t joined to a pool"

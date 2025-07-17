@@ -566,7 +566,6 @@ export const PoolsScreen = () => {
             numVotes={pool.numVotes}
             numVoters={pool.numVoters}
             leavePool={wrappedLeavePool}
-            joinPool={allowJoin ? wrappedJoinPool : undefined}
             cancelJoinPool={wrappedCancelJoinPool}
           />
         );

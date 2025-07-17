@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSDK } from '@metamask/sdk-react';
 import { useToast } from '@functionland/component-library';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import { getContractService, ContractService } from '../contracts/contractService';
+import { getContractService, ContractService, resetContractService } from '../contracts/contractService';
 import { SupportedChain } from '../contracts/types';
 import { CHAIN_DISPLAY_NAMES } from '../contracts/config';
 
@@ -58,6 +58,8 @@ export const useContractIntegration = () => {
 
     try {
       console.log('Getting contract service for chain:', chain);
+      // Reset singleton to ensure we get a fresh instance with all methods
+      resetContractService();
       const service = getContractService(chain);
       console.log('Initializing contract service...');
       await service.initialize(provider);
