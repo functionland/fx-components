@@ -16,12 +16,14 @@ import { PoolCard } from '../../components/Cards/PoolCard';
 import { usePools } from '../../hooks/usePools';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useBloxsStore } from '../../stores/useBloxsStore';
+import { usePoolsStore } from '../../stores/usePoolsStore';
 import MyLoader from '../../components/ContentLoader';
 import { useLogger } from '../../hooks';
 import { CHAIN_DISPLAY_NAMES } from '../../contracts/config';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { useNavigation } from '@react-navigation/native';
 import { Routes } from '../../navigation/navigationConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // --- Add this union type for FlatList items ---
 type PoolListItem =
@@ -59,6 +61,10 @@ export const PoolsScreen = () => {
     userMemberPools,
     userActiveRequests,
   } = usePools();
+
+  // Get Blox join pool method from store
+  const joinPoolBlox = usePoolsStore((state) => state.joinPool);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
 
   const selectedChain = useSettingsStore((state) => state.selectedChain);
 
@@ -131,7 +137,7 @@ export const PoolsScreen = () => {
     logger.logError('Pools action error: ', message);
   };
 
-  // New API-based join pool with user confirmation
+  // Enhanced join pool with two-step process
   const wrappedJoinPoolViaAPI = async (poolID: string, poolName: string) => {
     try {
       if (!contractReady) {
@@ -139,6 +145,15 @@ export const PoolsScreen = () => {
           type: 'error',
           title: 'Contract Not Ready',
           message: 'Please connect your wallet and wait for contract initialization',
+        });
+        return;
+      }
+
+      if (!currentBloxPeerId) {
+        queueToast({
+          type: 'error',
+          title: 'Blox Peer ID Missing',
+          message: 'Blox peer ID is not available.',
         });
         return;
       }
@@ -155,58 +170,133 @@ export const PoolsScreen = () => {
           {
             text: 'Join',
             onPress: async () => {
-              setRefreshing(true);
-              try {
-                const result = await joinPoolViaAPI(poolID, poolName);
-                if (result.success) {
-                  queueToast({
-                    type: 'success',
-                    title: 'Pool Join Requested',
-                    message: result.message,
-                  });
-                } else {
-                  if (result.message.includes('not registered')) {
-                    Alert.alert(
-                      'Blox Not Registered',
-                      'Your Blox is not registered. Please contact sales@fx.land or register your Blox.',
-                      [
-                        {
-                          text: 'Contact Sales',
-                          onPress: () => {
-                            // Could open email client or navigate to contact
-                          },
-                        },
-                        {
-                          text: 'Register Blox',
-                          onPress: () => {
-                            // Navigate to Users tab
-                          },
-                        },
-                        {
-                          text: 'OK',
-                          style: 'cancel',
-                        },
-                      ]
-                    );
-                  } else {
-                    queueToast({
-                      type: 'error',
-                      title: 'Join Pool Failed',
-                      message: result.message,
-                    });
-                  }
-                }
-              } catch (e) {
-                handlePoolActionErrors('Error joining pool', e.toString());
-              } finally {
-                setRefreshing(false);
-              }
+              await performEnhancedJoinPool(poolID, poolName);
             },
           },
         ]
       );
     } catch (e) {
       handlePoolActionErrors('Error joining pool', e.toString());
+    }
+  };
+
+  const performEnhancedJoinPool = async (poolID: string, poolName: string) => {
+    setRefreshing(true);
+    const poolIdNum = parseInt(poolID, 10);
+
+    // Load existing join state
+    const key = `joinState_${poolID}_${currentBloxPeerId}`;
+    let joinState = { step1Complete: false, step2Complete: false, step1Error: '', step2Error: '' };
+
+    try {
+      const stored = await AsyncStorage.getItem(key);
+      if (stored) {
+        joinState = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Error loading join state:', error);
+    }
+
+    try {
+      // Step 1: Call Blox join pool method (if not already completed)
+      if (!joinState.step1Complete) {
+        try {
+          console.log('Step 1: Calling Blox joinPool method...');
+          await joinPoolBlox(poolIdNum);
+
+          joinState.step1Complete = true;
+          joinState.step1Error = '';
+          console.log('Step 1: Blox joinPool succeeded');
+        } catch (error) {
+          console.error('Step 1: Blox joinPool failed:', error);
+          joinState.step1Error = error instanceof Error ? error.message : String(error);
+          // Continue to step 2 even if step 1 fails
+        }
+      }
+
+      // Step 2: Call API to join the pool (always execute if not completed)
+      if (!joinState.step2Complete) {
+        try {
+          console.log('Step 2: Calling API joinPool...');
+          const result = await joinPoolViaAPI(poolID, poolName);
+
+          if (result.success) {
+            joinState.step2Complete = true;
+            joinState.step2Error = '';
+            console.log('Step 2: API joinPool succeeded');
+          } else {
+            throw new Error(result.message || 'Join request failed');
+          }
+        } catch (error) {
+          console.error('Step 2: API joinPool failed:', error);
+          joinState.step2Error = error instanceof Error ? error.message : String(error);
+        }
+      }
+
+      // Save state
+      await AsyncStorage.setItem(key, JSON.stringify(joinState));
+
+      // Show appropriate message based on results
+      if (joinState.step1Complete && joinState.step2Complete) {
+        // Both steps succeeded
+        queueToast({
+          type: 'success',
+          title: 'Pool Joined Successfully',
+          message: 'You are now a member of the pool!',
+        });
+        // Clear the stored state since join is complete
+        await AsyncStorage.removeItem(key);
+      } else if (!joinState.step1Complete && joinState.step2Complete) {
+        // Step 1 failed but step 2 succeeded
+        queueToast({
+          type: 'warning',
+          title: 'Join Request Submitted',
+          message: 'Your join request has been submitted. It may take up to 1 hour to get processed.',
+        });
+      } else if (joinState.step1Complete && !joinState.step2Complete) {
+        // Step 1 succeeded but step 2 failed
+        queueToast({
+          type: 'warning',
+          title: 'Partial Join Complete',
+          message: 'Blox configuration updated. Please try again to complete the process.',
+        });
+      } else {
+        // Both steps failed
+        const errorMessage = joinState.step2Error || joinState.step1Error || 'Join failed';
+
+        if (errorMessage.includes('401') || errorMessage.includes('not registered')) {
+          Alert.alert(
+            'Blox Not Registered',
+            'Your Blox is not registered. Please contact sales@fx.land or register your Blox.',
+            [
+              {
+                text: 'Contact Sales',
+                onPress: () => {
+                  // Could open email client or navigate to contact
+                },
+              },
+              {
+                text: 'Register Blox',
+                onPress: () => {
+                  // Navigate to Users tab
+                },
+              },
+              {
+                text: 'OK',
+                style: 'cancel',
+              },
+            ]
+          );
+        } else {
+          queueToast({
+            type: 'error',
+            title: 'Join Pool Failed',
+            message: errorMessage,
+          });
+        }
+      }
+    } finally {
+      setRefreshing(false);
     }
   };
 
