@@ -134,10 +134,14 @@ const createPoolsModelSlice: StateCreator<
       }
     },
     joinPool: async (poolID: number) => {
-      // Join pool is handled via API only, not contract
-      // This method is kept for compatibility but doesn't do anything
-      // The actual join is handled by PoolApiService.joinPool
-      set({ dirty: true });
+      try {
+        await fula.isReady(false);
+        await blockchain.joinPool(poolID);
+        set({ dirty: true });
+      } catch (error) {
+        console.log('joinPool: ', error);
+        throw error;
+      }
     },
     cancelPoolJoin: async (poolID: number) => {
       try {

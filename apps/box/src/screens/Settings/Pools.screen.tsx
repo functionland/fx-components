@@ -62,21 +62,7 @@ export const PoolsScreen = () => {
 
   const selectedChain = useSettingsStore((state) => state.selectedChain);
 
-  const [
-    checkChainSyncStatus,
-    isChainSynced,
-    syncProgress,
-  ] = useBloxsStore((state) => [
-    state.checkChainSyncStatus,
-    state.isChainSynced,
-    state.syncProgress,
-  ]);
-
   const onChangeSearch = (query) => setSearch(query ? query : '');
-
-  useEffect(() => {
-    checkChainSyncStatus(); // Start the synchronization check
-  }, []);
 
   // Set a timeout to mark initial load as completed after a reasonable delay
   // This ensures that warnings can be shown even if contract initialization fails
@@ -509,20 +495,6 @@ export const PoolsScreen = () => {
           </FxBox>
 
           <FxBox flex={1}>
-            { syncProgress > 0 && syncProgress < 2  &&
-              <FxBox
-                flexDirection="row"
-                alignItems='center'
-              >
-                <FxText>Chain is Syncing: {Math.floor(syncProgress)}%</FxText>
-                <FxProgressBar
-                  height={5}
-                  progress={syncProgress > 0 ? syncProgress : 0}
-                  flex={1}
-                  total={100}
-                ></FxProgressBar>
-              </FxBox>
-            }
             <FxHeader
               title="Pools"
               marginBottom="16"

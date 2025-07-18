@@ -49,7 +49,7 @@ export const baseChainParams = {
   chainName: 'Base',
   blockExplorerUrls: ['https://basescan.org'],
   nativeCurrency: { symbol: 'ETH', decimals: 18 },
-  rpcUrls: ['https://mainnet.base.org'],
+  rpcUrls: ['https://base-rpc.publicnode.com'],
 };
 
 export const skaleChainParams = {

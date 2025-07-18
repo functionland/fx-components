@@ -86,11 +86,26 @@ export const useContractIntegration = () => {
       });
     } catch (error: any) {
       console.error('Contract initialization failed:', error);
-      
+
+      let errorMessage = error.message || 'Failed to connect to contracts';
+      let toastTitle = 'Contract Connection Failed';
+
+      // Handle specific network errors
+      if (error.message?.includes('underlying network changed')) {
+        errorMessage = 'Network changed during initialization. Please try again.';
+        toastTitle = 'Network Changed';
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = 'Connection timed out. Please try again.';
+        toastTitle = 'Connection Timeout';
+      } else if (error.message?.includes('connection') || error.message?.includes('fetch')) {
+        errorMessage = 'Connection failed. Please check your network and try again.';
+        toastTitle = 'Connection Failed';
+      }
+
       setState({
         isInitialized: false,
         isInitializing: false,
-        error: error.message || 'Failed to connect to contracts',
+        error: errorMessage,
         contractService: null,
         connectedAccount: null,
       });
@@ -100,8 +115,8 @@ export const useContractIntegration = () => {
 
       queueToast({
         type: 'error',
-        title: 'Contract Connection Failed',
-        message: error.message || 'Failed to connect to contracts',
+        title: toastTitle,
+        message: errorMessage,
       });
     }
   }, [provider, account, queueToast]);

@@ -6,7 +6,7 @@ export const CONTRACT_ADDRESSES: Record<SupportedChain, ChainConfig> = {
   base: {
     chainId: baseChainId,
     name: 'Base',
-    rpcUrl: 'https://mainnet.base.org',
+    rpcUrl: 'https://base-rpc.publicnode.com',
     blockExplorer: 'https://basescan.org',
     requiresAuth: true,
     contracts: {
@@ -99,9 +99,9 @@ export const CHAIN_DISPLAY_NAMES: Record<SupportedChain, string> = {
 // RPC endpoints with fallbacks
 export const RPC_ENDPOINTS: Record<SupportedChain, string[]> = {
   base: [
+    'https://base-rpc.publicnode.com',
+    'https://1rpc.io/base',
     'https://mainnet.base.org',
-    'https://base-mainnet.public.blastapi.io',
-    'https://base.gateway.tenderly.co',
   ],
   skale: [
     'https://mainnet.skalenodes.com/v1/elated-tan-skat',

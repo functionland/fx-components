@@ -707,15 +707,34 @@ export class ContractService {
 
   private handleError(error: any): ContractError {
     console.error('Contract error:', error);
-    
-    const contractError: ContractError = new Error(
-      error.reason || error.message || 'Unknown contract error'
-    );
-    
+
+    let errorMessage = error.reason || error.message || 'Unknown contract error';
+
+    // Handle specific error types
+    if (error.code === 'NETWORK_ERROR') {
+      if (error.message?.includes('underlying network changed')) {
+        errorMessage = 'Network changed during operation. Please refresh and try again.';
+      } else {
+        errorMessage = 'Network connection failed. Please check your internet connection.';
+      }
+    } else if (error.code === 'INSUFFICIENT_FUNDS') {
+      errorMessage = 'Insufficient funds for transaction.';
+    } else if (error.code === 'USER_REJECTED') {
+      errorMessage = 'Transaction was rejected by user.';
+    } else if (error.code === 'TIMEOUT' || error.message?.includes('timeout')) {
+      errorMessage = 'Request timed out. Please try again.';
+    } else if (error.message?.includes('execution reverted')) {
+      errorMessage = 'Transaction failed: ' + (error.reason || 'Contract execution reverted');
+    } else if (error.message?.includes('connection') || error.message?.includes('fetch')) {
+      errorMessage = 'Connection failed. Please check your network and try again.';
+    }
+
+    const contractError: ContractError = new Error(errorMessage);
+
     contractError.code = error.code;
     contractError.reason = error.reason;
     contractError.transaction = error.transaction;
-    
+
     return contractError;
   }
 }

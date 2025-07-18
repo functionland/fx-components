@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Alert } from 'react-native';
 import { useWalletConnection } from '../../hooks/useWalletConnection';
+import { useContractIntegration } from '../../hooks/useContractIntegration';
+import { useSDK } from '@metamask/sdk-react';
 import {
   FxBox,
   FxButton,
@@ -13,16 +15,23 @@ import {
   FxSpacer,
 } from '@functionland/component-library';
 import { useSettingsStore } from '../../stores/useSettingsStore';
-import { CHAIN_DISPLAY_NAMES } from '../../contracts/config';
+import { CHAIN_DISPLAY_NAMES, getChainConfigByName } from '../../contracts/config';
 import { SupportedChain } from '../../contracts/types';
 
 export const ChainSelectionScreen = () => {
   const { queueToast } = useToast();
   const [authCode, setAuthCode] = useState('');
   const [showAuthInput, setShowAuthInput] = useState(false);
+  const [switching, setSwitching] = useState(false);
 
   // Wallet connection
   const { connected, account, connecting, connectWallet, disconnectWallet } = useWalletConnection();
+
+  // Contract integration for chain switching
+  const { switchChain } = useContractIntegration();
+
+  // MetaMask SDK for direct provider access
+  const { provider } = useSDK();
 
 
   
@@ -40,30 +49,59 @@ export const ChainSelectionScreen = () => {
     state.resetBaseAuthorization,
   ]);
 
-  const handleChainSelection = (chain: SupportedChain) => {
+  const handleChainSelection = async (chain: SupportedChain) => {
     if (chain === 'base' && !baseAuthorized) {
       setShowAuthInput(true);
       return;
     }
-    
-    setSelectedChain(chain);
-    queueToast({
-      type: 'success',
-      title: 'Chain Updated',
-      message: `Switched to ${CHAIN_DISPLAY_NAMES[chain]}`,
-    });
-  };
 
-  const handleBaseAuthorization = () => {
-    if (authorizeBase(authCode)) {
-      setSelectedChain('base');
-      setShowAuthInput(false);
-      setAuthCode('');
+    // If wallet is connected, we need to handle chain switching properly
+    if (connected && provider) {
+      setSwitching(true);
+      try {
+        // First update the settings store
+        setSelectedChain(chain);
+
+        // Then trigger chain switch in MetaMask and contracts
+        await switchChain(chain);
+
+        queueToast({
+          type: 'success',
+          title: 'Chain Updated',
+          message: `Successfully switched to ${CHAIN_DISPLAY_NAMES[chain]}`,
+        });
+      } catch (error: any) {
+        console.error('Chain switch error:', error);
+
+        // If chain switch failed, revert the settings
+        // Don't revert here, let user try again or reconnect manually
+
+        queueToast({
+          type: 'error',
+          title: 'Chain Switch Failed',
+          message: error.message || 'Failed to switch chains. You may need to reconnect your wallet.',
+        });
+      } finally {
+        setSwitching(false);
+      }
+    } else {
+      // If wallet not connected, just update the setting
+      setSelectedChain(chain);
       queueToast({
         type: 'success',
-        title: 'Base Network Authorized',
-        message: 'You can now use Base network for pool operations',
+        title: 'Chain Updated',
+        message: `Switched to ${CHAIN_DISPLAY_NAMES[chain]}. Connect your wallet to use this network.`,
       });
+    }
+  };
+
+  const handleBaseAuthorization = async () => {
+    if (authorizeBase(authCode)) {
+      setShowAuthInput(false);
+      setAuthCode('');
+
+      // Now handle the chain selection with proper switching
+      await handleChainSelection('base');
     } else {
       queueToast({
         type: 'error',
@@ -110,7 +148,7 @@ export const ChainSelectionScreen = () => {
               <FxButton
                 variant="inverted"
                 onPress={disconnectWallet}
-                disabled={connecting}
+                disabled={connecting || switching}
                 marginRight="8"
               >
                 Disconnect Wallet
@@ -122,9 +160,9 @@ export const ChainSelectionScreen = () => {
           ) : (
             <FxButton
               onPress={connectWallet}
-              disabled={!!connecting}
+              disabled={!!connecting || switching}
             >
-              Connect Wallet
+              {switching ? 'Switching Chain...' : 'Connect Wallet'}
             </FxButton>
           )}
         </FxBox>
@@ -135,7 +173,10 @@ export const ChainSelectionScreen = () => {
           </FxText>
           
           {/* Chain Selection Radio Group */}
-          <FxRadioButton.Group value={selectedChain} onValueChange={val => handleChainSelection(val as SupportedChain)}>
+          <FxRadioButton.Group
+            value={selectedChain}
+            onValueChange={(val) => handleChainSelection(val as SupportedChain)}
+          >
             {/* SKALE Option */}
             <FxBox
               flexDirection="row"
@@ -228,7 +269,6 @@ export const ChainSelectionScreen = () => {
               <FxButton
                 variant="inverted"
                 onPress={handleResetBaseAuth}
-                size="small"
               >
                 Reset Base Authorization
               </FxButton>

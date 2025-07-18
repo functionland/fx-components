@@ -60,7 +60,7 @@ export const WalletDetails = ({
 
   const getContractRewards = useUserProfileStore((state) => state.getContractRewards);
   const selectedChain = useSettingsStore((state) => state.selectedChain);
-  const { account, chainId, provider } = useSDK();
+  const { account, chainId, provider, sdk, connected } = useSDK();
   const { initializeService } = useContractService();
   const { isInitialized: contractInitialized } = useContractIntegration();
   const { queueToast } = useToast();
@@ -98,24 +98,57 @@ export const WalletDetails = ({
   const calledRef = useRef(false); // Track if retry has already happened
   const connectWallet = useCallback(async () => {
     try {
-      if (provider) {
-        const accounts = await provider.request({ method: 'eth_requestAccounts' });
-        if (accounts.length > 0) {
+      if (sdk) {
+        await sdk.connect();
+        setUserHasExplicitlyConnected(true);
+        queueToast({
+          type: 'success',
+          title: 'Wallet Connected',
+          message: 'MetaMask wallet connected successfully',
+        });
+      } else if (provider) {
+        const accounts = await provider.request({ method: 'eth_requestAccounts' }) as string[];
+        if (accounts && accounts.length > 0) {
           setUserHasExplicitlyConnected(true);
+          queueToast({
+            type: 'success',
+            title: 'Wallet Connected',
+            message: 'MetaMask wallet connected successfully',
+          });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to connect wallet:', error);
+      queueToast({
+        type: 'error',
+        title: 'Connection Failed',
+        message: error.message || 'Failed to connect wallet. Please try again.',
+      });
     }
-  }, [provider]);
+  }, [sdk, provider, queueToast]);
 
-  const onRefreshPress = useCallback(() => {
+  const onRefreshPress = useCallback(async () => {
     calledRef.current = false; // Reset the retry flag
-    // Also try to connect wallet if not already connected
-    if (!userHasExplicitlyConnected && provider) {
-      connectWallet();
+    setLoading(true);
+
+    try {
+      // Try to connect wallet if not connected or if connection was lost
+      if (!connected || !account || !address) {
+        await connectWallet();
+      } else {
+        // If already connected, just refresh the data
+        queueToast({
+          type: 'info',
+          title: 'Refreshed',
+          message: 'Account details refreshed',
+        });
+      }
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [userHasExplicitlyConnected, provider, connectWallet]);
+  }, [connected, account, address, connectWallet, queueToast]);
 
   const DID = useMemo(() => {
     if (password && signiture) return Helper.getMyDID(password, signiture);

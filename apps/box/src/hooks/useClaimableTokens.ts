@@ -75,8 +75,22 @@ export const useClaimableTokens = () => {
         error: null,
         canClaim,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching claimable rewards:', error);
+
+      let errorMessage = 'Failed to fetch claimable rewards';
+
+      // Handle specific network errors
+      if (error.message?.includes('underlying network changed')) {
+        errorMessage = 'Network changed during operation. Please refresh and try again.';
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = 'Request timed out. Please try again.';
+      } else if (error.message?.includes('connection') || error.message?.includes('fetch')) {
+        errorMessage = 'Connection failed. Please check your network and try again.';
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       setState({
         unclaimedMining: '0',
         unclaimedStorage: '0',
@@ -84,7 +98,7 @@ export const useClaimableTokens = () => {
         lastClaimedTimestamp: 0,
         timeSinceLastClaim: 0,
         loading: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch claimable rewards',
+        error: errorMessage,
         canClaim: false,
       });
     }
