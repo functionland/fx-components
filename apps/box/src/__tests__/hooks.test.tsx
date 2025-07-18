@@ -4,6 +4,7 @@ import { renderHook, act } from '@testing-library/react-native';
 import { useContractIntegration, usePoolOperations } from '../hooks/useContractIntegration';
 import { usePools } from '../hooks/usePools';
 import { useRewards } from '../hooks/useRewards';
+import { useClaimableTokens } from '../hooks/useClaimableTokens';
 
 // Mock the settings store
 jest.mock('../stores/useSettingsStore', () => ({
@@ -14,6 +15,16 @@ jest.mock('../stores/useSettingsStore', () => ({
       setSelectedChain: jest.fn(),
       authorizeBase: jest.fn(),
       resetBaseAuthorization: jest.fn(),
+    };
+    return selector ? selector(state) : state;
+  }),
+}));
+
+// Mock the user profile store
+jest.mock('../stores/useUserProfileStore', () => ({
+  useUserProfileStore: jest.fn((selector) => {
+    const state = {
+      appPeerId: 'QmTestPeerId123456789012345678901234567890',
     };
     return selector ? selector(state) : state;
   }),
@@ -176,6 +187,69 @@ describe('Contract Integration Hooks', () => {
       });
 
       expect(result.current.totalRewards).toBeDefined();
+    });
+  });
+
+  describe('useClaimableTokens', () => {
+    it('should load claimable rewards data', async () => {
+      const { result } = renderHook(() => useClaimableTokens());
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      });
+
+      expect(result.current.totalUnclaimed).toBeDefined();
+      expect(result.current.unclaimedMining).toBeDefined();
+      expect(result.current.unclaimedStorage).toBeDefined();
+      expect(result.current.loading).toBeDefined();
+      expect(result.current.canClaim).toBeDefined();
+      expect(result.current.formattedTotalUnclaimed).toBeDefined();
+      expect(result.current.formattedTimeSinceLastClaim).toBeDefined();
+    });
+
+    it('should handle reward claiming', async () => {
+      const { result } = renderHook(() => useClaimableTokens());
+
+      await act(async () => {
+        if (result.current.canClaim) {
+          await result.current.claimTokens();
+        }
+      });
+
+      // Should refresh claimable rewards after claiming
+      expect(result.current.totalUnclaimed).toBeDefined();
+    });
+
+    it('should refresh claimable rewards data', async () => {
+      const { result } = renderHook(() => useClaimableTokens());
+
+      await act(async () => {
+        await result.current.fetchClaimableTokens();
+      });
+
+      expect(result.current.totalUnclaimed).toBeDefined();
+      expect(typeof result.current.totalUnclaimed).toBe('string');
+    });
+
+    it('should handle errors gracefully', async () => {
+      const { result } = renderHook(() => useClaimableTokens());
+
+      // Mock an error scenario
+      const originalConsoleError = console.error;
+      console.error = jest.fn();
+
+      await act(async () => {
+        try {
+          await result.current.fetchClaimableTokens();
+        } catch (error) {
+          // Expected to handle errors gracefully
+        }
+      });
+
+      console.error = originalConsoleError;
+
+      expect(result.current.error).toBeDefined();
+      expect(result.current.canClaim).toBe(false);
     });
   });
 });

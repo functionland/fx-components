@@ -34,6 +34,7 @@ export const PoolsScreen = () => {
   const [refreshing, setRefreshing] = useState(true);
   const [allowJoin, setAllowJoin] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
+  const [hasInitialLoadCompleted, setHasInitialLoadCompleted] = useState<boolean>(false);
   const logger = useLogger();
   const { queueToast } = useToast();
   const navigation = useNavigation();
@@ -76,7 +77,19 @@ export const PoolsScreen = () => {
   useEffect(() => {
     checkChainSyncStatus(); // Start the synchronization check
   }, []);
-  
+
+  // Set a timeout to mark initial load as completed after a reasonable delay
+  // This ensures that warnings can be shown even if contract initialization fails
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!hasInitialLoadCompleted) {
+        console.log('⏰ Timeout reached, marking initial load as completed');
+        setHasInitialLoadCompleted(true);
+      }
+    }, 5000); // 5 seconds timeout
+
+    return () => clearTimeout(timeout);
+  }, [hasInitialLoadCompleted]);
 
   useEffect(() => {
     setIsError(false);
@@ -379,6 +392,7 @@ export const PoolsScreen = () => {
       console.log('  - contractReady:', contractReady);
       console.log('  - connectedAccount:', connectedAccount);
       console.log('  - enableInteraction:', enableInteraction);
+      console.log('  - hasInitialLoadCompleted:', hasInitialLoadCompleted);
 
       if (contractReady && connectedAccount) {
         console.log('✅ Prerequisites met, calling loadPools...');
@@ -389,15 +403,24 @@ export const PoolsScreen = () => {
           pools.filter((pool) => pool.joined || pool.requested).length === 0 &&
             enableInteraction
         );
+        // Mark initial load as completed after successful load
+        if (!hasInitialLoadCompleted) {
+          setHasInitialLoadCompleted(true);
+        }
       } else {
         console.log('❌ Cannot load pools - prerequisites not met:');
         console.log('  - contractReady:', contractReady);
         console.log('  - connectedAccount:', connectedAccount);
-        queueToast({
-          type: 'warning',
-          title: 'Not Ready',
-          message: 'Please connect your wallet and wait for contract initialization',
-        });
+
+        // Only show warning if initial load has completed and we're still not ready
+        // This prevents showing the warning during the initial loading phase
+        if (hasInitialLoadCompleted) {
+          queueToast({
+            type: 'warning',
+            title: 'Not Ready',
+            message: 'Please connect your wallet and wait for contract initialization',
+          });
+        }
       }
     } catch (e) {
       setIsError(true);
@@ -408,6 +431,10 @@ export const PoolsScreen = () => {
         message: e.toString(),
       });
       logger.logError('Pools::reloading', e);
+      // Mark initial load as completed even on error
+      if (!hasInitialLoadCompleted) {
+        setHasInitialLoadCompleted(true);
+      }
     } finally {
       setRefreshing(false);
     }

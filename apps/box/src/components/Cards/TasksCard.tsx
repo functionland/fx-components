@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   FxBox,
   FxCard,
@@ -9,103 +9,75 @@ import {
   useFxTheme,
   FxRefreshIcon,
 } from '@functionland/component-library';
-import { chainApi } from '@functionland/react-native-fula';
 import { useNavigation } from '@react-navigation/native';
 import { Pressable, ActivityIndicator } from 'react-native';
+import { usePools } from '../../hooks/usePools';
+import { useWalletConnection } from '../../hooks/useWalletConnection';
+import { Routes } from '../../navigation/navigationConfig';
 
 type ValueType = string | number;
 
-type TaskListProps = {
-  pools: Array<{ joined: boolean; requested: boolean }>;
-  getPools: () => Promise<void>;
-  currentBloxPeerId: string;
-  accountId: string;
-  routes: any;
-};
-
-export type Task = {
+interface Task {
   id: ValueType;
   title: string;
-  route: any;
-};
+  route?: () => void;
+}
 
-export const TasksCard = ({
-  pools,
-  getPools,
-  currentBloxPeerId,
-  accountId,
-  routes,
-}: TaskListProps) => {
+export const TasksCard = () => {
   const navigation = useNavigation();
-  const tasks: Task[] = [
-    { id: 1, title: 'Join Testnet >', route: routes.UsersTab },
-    { id: 2, title: 'Join Closest Pool >', route: routes.Pools },
-  ];
-
+  const { userIsMemberOfAnyPool, userActiveRequests } = usePools();
+  const { connected, connectWallet } = useWalletConnection();
   const [completedTasks, setCompletedTasks] = useState<ValueType[]>([]);
   const { colors } = useFxTheme();
   const [refreshCard, setRefreshCard] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const handleTaskPress = (route: string) => {
-    navigation.navigate(route, {
-      screen: route,
+
+  const handleNavigateToPools = () => {
+    navigation.navigate(Routes.SettingsTab, {
+      screen: Routes.Pools,
     });
   };
 
-  const checkTasks = async () => {
-    if (!loading) {
-      setLoading(true);
-      await checkTestnetTask();
-      await checkPoolTask();
-      setLoading(false);
+  const handleTaskPress = (task: Task) => {
+    if (task.route && !completedTasks.includes(task.id)) {
+      task.route();
     }
   };
 
-  const checkTestnetTask = async () => {
-    try {
-      const api = await chainApi.init();
-      const gasBalanceStr = await chainApi.checkAccountBalance(api, accountId);
+  // Check if user has pending requests
+  const hasPendingRequest = userActiveRequests && userActiveRequests.length > 0 && userActiveRequests[0] !== '0';
 
-      if (gasBalanceStr && !gasBalanceStr.includes('Error')) {
-        console.log(gasBalanceStr);
-        const gasBalance = parseInt(gasBalanceStr, 10);
-        console.log(gasBalance);
-        if (gasBalance > 0) {
-          setCompletedTasks((prev) => (prev.includes(1) ? prev : [...prev, 1]));
-        } else {
-          setCompletedTasks((prev) => prev.filter((id) => id !== 1));
-        }
-      }
-    } catch (error) {
-      console.error('Error checking testnet balance:', error);
+  const tasks: Task[] = [
+    // Always show connect wallet task
+    {
+      id: 'connect-wallet',
+      title: 'Connect Wallet',
+      route: connected ? undefined : connectWallet,
+    },
+    // Always show join pool task
+    {
+      id: 'join-pool',
+      title: hasPendingRequest ? 'Join Pool (already tried to join pool. pending)' : 'Join Pool',
+      route: connected && !userIsMemberOfAnyPool && !hasPendingRequest ? handleNavigateToPools : undefined,
+    },
+  ];
+
+  // Update completed tasks based on current state
+  React.useEffect(() => {
+    const newCompletedTasks: ValueType[] = [];
+
+    // Mark connect wallet as completed if connected
+    if (connected) {
+      newCompletedTasks.push('connect-wallet');
     }
-  };
 
-  const checkPoolTask = async () => {
-    try {
-      const isPoolJoined =
-        pools.some((pool) => pool.joined || pool.requested) &&
-        currentBloxPeerId;
-
-      if (isPoolJoined) {
-        setCompletedTasks((prev) => (prev.includes(2) ? prev : [...prev, 2]));
-      } else {
-        setCompletedTasks((prev) => prev.filter((id) => id !== 2));
-      }
-    } catch (error) {
-      console.error('Error checking pool status:', error);
+    // Mark join pool as completed if user is member of any pool
+    if (userIsMemberOfAnyPool) {
+      newCompletedTasks.push('join-pool');
     }
-  };
 
-  useEffect(() => {
-    getPools();
-  }, [currentBloxPeerId]);
-
-  useEffect(() => {
-    if (currentBloxPeerId && accountId) {
-      checkTasks();
-    }
-  }, [pools, currentBloxPeerId, accountId, refreshCard]);
+    setCompletedTasks(newCompletedTasks);
+  }, [connected, userIsMemberOfAnyPool]);
 
   return (
     <FxCard>
@@ -124,7 +96,7 @@ export const TasksCard = ({
         <FxRadioButton.Group value={completedTasks} onValueChange={() => {}}>
           {tasks.map((task, index) => (
             <React.Fragment key={task.id}>
-              <Pressable onPress={() => handleTaskPress(task.route)}>
+              <Pressable onPress={() => handleTaskPress(task)}>
                 <FxRadioButtonWithLabel
                   disabled
                   value={task.id}

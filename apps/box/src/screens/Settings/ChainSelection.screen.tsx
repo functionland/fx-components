@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useSDK } from '@metamask/sdk-react';
 import { Alert } from 'react-native';
+import { useWalletConnection } from '../../hooks/useWalletConnection';
 import {
   FxBox,
   FxButton,
@@ -21,42 +21,8 @@ export const ChainSelectionScreen = () => {
   const [authCode, setAuthCode] = useState('');
   const [showAuthInput, setShowAuthInput] = useState(false);
 
-  // MetaMask SDK
-  const { sdk, connected, account, connecting, error } = useSDK();
-
-  const handleConnect = async () => {
-    try {
-      await sdk?.connect();
-      queueToast({
-        type: 'success',
-        title: 'Wallet Connected',
-        message: 'MetaMask wallet connected successfully',
-      });
-    } catch (e: any) {
-      queueToast({
-        type: 'error',
-        title: 'Connection Failed',
-        message: typeof e === 'object' && 'message' in e ? e.message : 'Failed to connect wallet',
-      });
-    }
-  };
-
-  const handleDisconnect = async () => {
-    try {
-      await sdk?.disconnect();
-      queueToast({
-        type: 'info',
-        title: 'Wallet Disconnected',
-        message: 'MetaMask wallet disconnected',
-      });
-    } catch (e: any) {
-      queueToast({
-        type: 'error',
-        title: 'Disconnect Failed',
-        message: typeof e === 'object' && 'message' in e ? e.message : 'Failed to disconnect wallet',
-      });
-    }
-  };
+  // Wallet connection
+  const { connected, account, connecting, connectWallet, disconnectWallet } = useWalletConnection();
 
 
   
@@ -143,7 +109,7 @@ export const ChainSelectionScreen = () => {
             <>
               <FxButton
                 variant="inverted"
-                onPress={handleDisconnect}
+                onPress={disconnectWallet}
                 disabled={connecting}
                 marginRight="8"
               >
@@ -155,7 +121,7 @@ export const ChainSelectionScreen = () => {
             </>
           ) : (
             <FxButton
-              onPress={handleConnect}
+              onPress={connectWallet}
               disabled={!!connecting}
             >
               Connect Wallet

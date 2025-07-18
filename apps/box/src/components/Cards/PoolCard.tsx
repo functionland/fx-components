@@ -12,9 +12,9 @@ import {
 import { Alert } from 'react-native';
 import { TPool } from '../../models';
 import { useBloxsStore } from '../../stores/useBloxsStore';
-import { usePoolsStore } from '../../stores/usePoolsStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useSDK } from '@metamask/sdk-react';
+import { PoolApiService } from '../../services/poolApiService';
 
 type PoolCardType = React.ComponentProps<typeof FxCard> & {
   pool: TPool;
@@ -52,7 +52,6 @@ const DetailInfo = ({
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
   const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
   const selectedChain = useSettingsStore((state) => state.selectedChain);
-  const joinPool = usePoolsStore((state) => state.joinPool);
 
   // Check if Blox is connected
   const isBloxConnected = currentBloxPeerId &&
@@ -93,14 +92,25 @@ const DetailInfo = ({
           onPress: async () => {
             setIsJoining(true);
             try {
-              // Call the Blox store joinPool method first
-              await joinPool(parseInt(pool.poolID, 10));
+              // Call ONLY the API to join the pool (no contract call)
+              const request = {
+                peerId: currentBloxPeerId,
+                account: account,
+                chain: selectedChain,
+                poolId: parseInt(pool.poolID, 10),
+              };
 
-              queueToast({
-                type: 'success',
-                title: 'Pool Join Requested',
-                message: 'Your join request has been submitted successfully.',
-              });
+              const response = await PoolApiService.joinPool(request);
+
+              if (response.status === 'ok') {
+                queueToast({
+                  type: 'success',
+                  title: 'Pool Join Requested',
+                  message: response.msg || 'Your join request has been submitted successfully.',
+                });
+              } else {
+                throw new Error(response.msg || 'Join request failed');
+              }
             } catch (error) {
               console.error('Error joining pool:', error);
 

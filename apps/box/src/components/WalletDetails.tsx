@@ -21,6 +21,7 @@ import { useSDK } from '@metamask/sdk-react';
 import { chainNames } from '../utils/walletConnectConifg';
 import { fula, blockchain, fxblox } from '@functionland/react-native-fula';
 import { useContractService } from '../contracts/contractService';
+import { useContractIntegration } from '../hooks/useContractIntegration';
 import { CHAIN_DISPLAY_NAMES } from '../contracts/config';
 import { useFulaBalance } from '../hooks/useFulaBalance';
 import { Linking, ActivityIndicator } from 'react-native';
@@ -48,11 +49,8 @@ export const WalletDetails = ({
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
   const bloxsArray = Object.values(bloxs || {});
   const [loading, setLoading] = useState(false);
-  const [bloxAccountId, setBloxAccountId] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
-  const [contractInitialized, setContractInitialized] = useState(false);
   const [userHasExplicitlyConnected, setUserHasExplicitlyConnected] = useState(false);
-  const resetChainShown = useRef(false);
 
   const signiture = useUserProfileStore((state) => state.signiture);
   const password = useUserProfileStore((state) => state.password);
@@ -64,7 +62,7 @@ export const WalletDetails = ({
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const { account, chainId, provider } = useSDK();
   const { initializeService } = useContractService();
-  const accountOptionsSheetRef = useRef<FxBottomSheetModalMethods>(null);
+  const { isInitialized: contractInitialized } = useContractIntegration();
   const { queueToast } = useToast();
   const { colors } = useFxTheme();
 
@@ -96,148 +94,8 @@ export const WalletDetails = ({
     updateData();
   }, [address]);
 
-  // Initialize contract service when wallet is connected and user has explicitly connected
-  // DISABLED to prevent automatic MetaMask calls
-  // useEffect(() => {
-  //   const initializeContracts = async () => {
-  //     // Only initialize if user has explicitly connected their wallet
-  //     if (account && provider && selectedChain && userHasExplicitlyConnected) {
-  //       try {
-  //         // Get the current functions from their sources to avoid dependency issues
-  //         const currentGetContractRewards = useUserProfileStore.getState().getContractRewards;
-
-  //         await initializeService(selectedChain);
-  //         setContractInitialized(true);
-
-  //         // Try to get contract rewards
-  //         try {
-  //           await currentGetContractRewards();
-  //         } catch (error) {
-  //           console.log('Could not get contract rewards:', error);
-  //         }
-
-  //         queueToast({
-  //           type: 'success',
-  //           title: 'Contract Connected',
-  //           message: `Connected to ${CHAIN_DISPLAY_NAMES[selectedChain]} contracts`,
-  //         });
-  //       } catch (error) {
-  //         console.error('Contract initialization failed:', error);
-  //         setContractInitialized(false);
-  //         queueToast({
-  //           type: 'error',
-  //           title: 'Contract Connection Failed',
-  //           message: error.message || 'Failed to connect to contracts',
-  //         });
-  //       }
-  //     } else {
-  //       setContractInitialized(false);
-  //     }
-  //   };
-
-  //   initializeContracts();
-  // }, [account, provider, selectedChain, userHasExplicitlyConnected, initializeService, queueToast]);
 
   const calledRef = useRef(false); // Track if retry has already happened
-
-  const showAccountModal = useCallback(() => {
-    resetChainShown.current = true;
-    accountOptionsSheetRef?.current?.present();
-  }, []);
-
-  const handleBloxAccountError = useCallback((e: any) => {
-    const err = e.message || e.toString();
-    if (err.includes('failed to dial')) {
-      setBloxAccountId('Connection to Blox not established');
-    } else if (err.includes('blockchain call error')) {
-      setBloxAccountId('Error with blockhain.');
-      if (!resetChainShown.current) {
-        showAccountModal();
-      }
-    } else {
-      setBloxAccountId(err);
-    }
-  }, [showAccountModal]);
-
-  const updateAccountId = useCallback(async () => {
-    if (calledRef.current) return; // Avoid looping
-
-    try {
-      setLoading(true);
-      setBloxAccountId('Waiting for connection');
-
-      if (fulaIsReady) {
-        // Get the current checkBloxConnection function from the store
-        const currentCheckBloxConnection = useUserProfileStore.getState().checkBloxConnection;
-        const connectionStatus = await currentCheckBloxConnection();
-        if (connectionStatus) {
-          setBloxAccountId('Connected to blox');
-          try {
-            const bloxAccount = await blockchain.getAccount();
-            setBloxAccountId(bloxAccount.account);
-          } catch (e) {
-            handleBloxAccountError(e);
-          }
-        } else {
-          setBloxAccountId('Not Connected to blox');
-        }
-      } else {
-        if (password && signiture && currentBloxPeerId && !calledRef.current) {
-          calledRef.current = true; // prevent infinite retry
-          await Helper.initFula({
-            password: password,
-            signiture: signiture,
-            bloxPeerId: currentBloxPeerId,
-          });
-          await updateAccountId();
-        } else {
-          setBloxAccountId('Fula is not ready');
-        }
-      }
-    } catch (error) {
-      setBloxAccountId(error.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [fulaIsReady, password, signiture, currentBloxPeerId, handleBloxAccountError]);
-
-  useEffect(() => {
-    console.log('useEffect triggered - updateAccountId dependency changed');
-    console.log('Current updateAccountId function:', updateAccountId.toString().substring(0, 100));
-    updateAccountId();
-  }, [updateAccountId]);
-
-  const handleAccountOptionSelect = async (type: AccountOptionsType) => {
-    accountOptionsSheetRef?.current?.close();
-    switch (type) {
-      case 'RESET-CHAIN':
-        if (fulaIsReady) {
-          console.log('resetting chain request');
-          try {
-            console.log('checking blox connection');
-            const currentCheckBloxConnection = useUserProfileStore.getState().checkBloxConnection;
-            const connectionStatus = await currentCheckBloxConnection();
-            if (connectionStatus) {
-              const eraseRes = await fxblox.eraseBlData();
-              console.log(eraseRes.msg);
-              queueToast({
-                type: 'info',
-                title: 'Reset chain Data',
-                message:
-                  eraseRes.msg || 'Your Blox does not support this command!',
-              });
-            }
-          } catch (error) {
-            console.log('handleAccountOptionSelect:checkBloxConnection', error);
-          }
-        } else {
-          console.log('fula is not ready');
-        }
-        break;
-      default:
-        break;
-    }
-  };
   const connectWallet = useCallback(async () => {
     try {
       if (provider) {
@@ -252,14 +110,12 @@ export const WalletDetails = ({
   }, [provider]);
 
   const onRefreshPress = useCallback(() => {
-    resetChainShown.current = false;
     calledRef.current = false; // Reset the retry flag
-    updateAccountId();
     // Also try to connect wallet if not already connected
     if (!userHasExplicitlyConnected && provider) {
       connectWallet();
     }
-  }, [updateAccountId, userHasExplicitlyConnected, provider, connectWallet]);
+  }, [userHasExplicitlyConnected, provider, connectWallet]);
 
   const DID = useMemo(() => {
     if (password && signiture) return Helper.getMyDID(password, signiture);
@@ -334,37 +190,15 @@ export const WalletDetails = ({
                 }
               </FxText>
             </FxBox>
+            {contractInitialized && account && (
+              <FxBox marginTop="8">
+                <FxText variant="bodySmallRegular" textAlign="center" color="content2">
+                  Wallet: {account.slice(0, 6)}...{account.slice(-4)}
+                </FxText>
+              </FxBox>
+            )}
           </FxBox>
         </FxBox>
-        {bloxAccountId && (
-          <FxBox marginTop="24" width="100%">
-            <FxButton
-              onPress={() => copyToClipboard(bloxAccountId)}
-              iconLeft={<CopyIcon />}
-              flexWrap="wrap"
-              paddingHorizontal="32"
-              size="large"
-              disabled={!bloxAccountId.startsWith('5')}
-            >
-              Blox account: {bloxAccountId}
-            </FxButton>
-          </FxBox>
-        )}
-        {bloxAccountId !== undefined && (
-          <FxBox marginTop="24" width="100%">
-            <FxButton
-              onPress={() => {
-                Linking.openURL('https://pools.fx.land/');
-              }}
-              iconLeft={<ExternalLinkIcon />}
-              flexWrap="wrap"
-              paddingHorizontal="32"
-              size="large"
-            >
-              Register Blox on Mainnet
-            </FxButton>
-          </FxBox>
-        )}
         {password && signiture && showDID && (
           <FxBox marginTop="24" width="100%">
             <FxButton
@@ -421,10 +255,6 @@ export const WalletDetails = ({
           </>
         )}
       </FxBox>
-      <AccountOptionsSheet
-        ref={accountOptionsSheetRef}
-        onSelected={handleAccountOptionSelect}
-      />
     </FxSafeAreaBox>
   );
 };

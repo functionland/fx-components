@@ -18,12 +18,10 @@ type BloxInfoBottomSheetProps = {
   onBloxRemovePress?: (peerId: string) => void;
   onResetToHotspotPress?: (peerId: string) => void;
   onRebootBloxPress?: (peerId: string) => void;
-  onResetChainPress?: (peerId: string) => void;
   onClearCachePress?: VoidFunction;
   bloxInfo: TBlox;
   resetingBloxHotspot?: boolean;
   rebootingBlox?: boolean;
-  resettingChain?: boolean;
 };
 
 export const BloxInfoBottomSheet = React.forwardRef<
@@ -35,11 +33,9 @@ export const BloxInfoBottomSheet = React.forwardRef<
       bloxInfo,
       resetingBloxHotspot,
       rebootingBlox,
-      resettingChain,
       onBloxRemovePress,
       onResetToHotspotPress,
       onRebootBloxPress,
-      onResetChainPress,
       onClearCachePress,
     },
     ref
@@ -128,22 +124,6 @@ export const BloxInfoBottomSheet = React.forwardRef<
               marginTop="16"
             >
               {!rebootingBlox ? 'Reboot blox' : <ActivityIndicator />}
-            </FxButton>
-            <FxButton
-              size="large"
-              variant="inverted"
-              onPress={() => onResetChainPress(bloxInfo?.peerId)}
-              marginTop="16"
-            >
-              {!resettingChain ? 'Reset Chain Data' : <ActivityIndicator />}
-            </FxButton>
-            <FxButton
-              size="large"
-              variant="inverted"
-              onPress={() => onClearCachePress()}
-              marginTop="16"
-            >
-              {!resettingChain ? 'Clear Cache' : <ActivityIndicator />}
             </FxButton>
             <FxButton
               onPress={() => onBloxRemovePress(bloxInfo?.peerId)}

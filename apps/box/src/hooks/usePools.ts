@@ -70,9 +70,9 @@ export const usePools = () => {
       );
 
       return {
-        isMemberOfAnyPool: poolId || requestPoolId > 0, // Only true if both account and peerId are members
-        memberPools: [poolId],
-        activeRequests: [requestPoolId],
+        isMemberOfAnyPool: poolId !== '0' && poolId !== '', // Only true if user is actually a member (not just has a request)
+        memberPools: poolId !== '0' && poolId !== '' ? [poolId] : [],
+        activeRequests: requestPoolId !== '0' && requestPoolId !== '' ? [requestPoolId] : [],
       };
     } catch (error) {
       console.error('Error checking user membership:', error);

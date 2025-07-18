@@ -52,6 +52,28 @@ describe('Contract Integration with Local Hardhat', () => {
       await expect(contractService.cancelJoinRequest('1')).resolves.not.toThrow();
     });
 
+    it('should handle reward operations', async () => {
+      await contractService.initialize(mockProvider);
+
+      // Test getting unclaimed rewards
+      const testAccount = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+      const testPeerId = 'QmTestPeerId123456789012345678901234567890';
+      const testPoolId = '1';
+
+      const unclaimedRewards = await contractService.getUnclaimedRewards(testAccount, testPeerId, testPoolId);
+      expect(typeof unclaimedRewards.totalUnclaimed).toBe('string');
+      expect(typeof unclaimedRewards.unclaimedMining).toBe('string');
+      expect(typeof unclaimedRewards.unclaimedStorage).toBe('string');
+
+      // Test getting claimed rewards info
+      const claimedInfo = await contractService.getClaimedRewardsInfo(testAccount, testPeerId, testPoolId);
+      expect(typeof claimedInfo.lastClaimedTimestamp).toBe('number');
+      expect(typeof claimedInfo.timeSinceLastClaim).toBe('number');
+
+      // Test claiming rewards (should not throw)
+      await expect(contractService.claimRewardsForPeer(testPeerId, testPoolId)).resolves.not.toThrow();
+    });
+
     it('should get connected account', async () => {
       await contractService.initialize(mockProvider);
       const account = await contractService.getConnectedAccount();

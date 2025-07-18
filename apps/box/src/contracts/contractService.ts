@@ -366,11 +366,49 @@ export class ContractService {
     return await this.poolStorageContract.isForfeited(address);
   }
 
-  // Get claimable tokens for a peerId
-  async claimableTokens(peerId: string): Promise<string> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    const tokens = await this.poolStorageContract.claimableTokens(peerId);
-    return tokens.toString();
+  // Get unclaimed rewards for a peerId and poolId using RewardEngine
+  async getUnclaimedRewards(account: string, peerId: string, poolId: string): Promise<{
+    unclaimedMining: string;
+    unclaimedStorage: string;
+    totalUnclaimed: string;
+  }> {
+    if (!this.rewardEngineContract) throw new Error('Contract not initialized');
+
+    const result = await this.rewardEngineContract.getUnclaimedRewards(account, peerId, poolId);
+    return {
+      unclaimedMining: ethers.utils.formatEther(result.unclaimedMining),
+      unclaimedStorage: ethers.utils.formatEther(result.unclaimedStorage),
+      totalUnclaimed: ethers.utils.formatEther(result.totalUnclaimed),
+    };
+  }
+
+  // Get claimed rewards info for a peerId and poolId
+  async getClaimedRewardsInfo(account: string, peerId: string, poolId: string): Promise<{
+    lastClaimedTimestamp: number;
+    timeSinceLastClaim: number;
+  }> {
+    if (!this.rewardEngineContract) throw new Error('Contract not initialized');
+
+    const result = await this.rewardEngineContract.getClaimedRewardsInfo(account, peerId, poolId);
+    return {
+      lastClaimedTimestamp: result.lastClaimedTimestamp.toNumber(),
+      timeSinceLastClaim: result.timeSinceLastClaim.toNumber(),
+    };
+  }
+
+  // Claim rewards for a peerId and poolId using RewardEngine
+  async claimRewardsForPeer(peerId: string, poolId: string): Promise<void> {
+    try {
+      if (!this.rewardEngineContract) throw new Error('Contract not initialized');
+
+      const tx = await this.rewardEngineContract.claimRewards(peerId, poolId, {
+        gasLimit: METHOD_GAS_LIMITS.claimRewards,
+      });
+
+      await tx.wait();
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   // Get join timestamp for a peerId
@@ -378,44 +416,6 @@ export class ContractService {
     if (!this.poolStorageContract) throw new Error('Contract not initialized');
     const ts = await this.poolStorageContract.joinTimestamp(peerId);
     return ts.toString();
-  }
-
-  // Join a pool
-  async joinPool(poolId: string): Promise<void> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    const tx = await this.poolStorageContract.joinPool(poolId, { gasLimit: METHOD_GAS_LIMITS.joinPool });
-    await tx.wait();
-  }
-
-  // Leave a pool
-  async leavePool(poolId: string): Promise<void> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    const tx = await this.poolStorageContract.leavePool(poolId, { gasLimit: METHOD_GAS_LIMITS.leavePool });
-    await tx.wait();
-  }
-
-  // Cancel join request
-  async cancelJoinRequest(poolId: string): Promise<void> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    const tx = await this.poolStorageContract.cancelJoinRequest(poolId, { gasLimit: METHOD_GAS_LIMITS.cancelJoinRequest });
-    await tx.wait();
-  }
-
-  async getJoinRequest(poolId: string, account: string): Promise<JoinRequest> {
-    try {
-      if (!this.poolStorageContract) throw new Error('Contract not initialized');
-      
-      const request = await this.poolStorageContract.getJoinRequest(poolId, account);
-      return {
-        account: request.account,
-        poolId: request.poolId.toString(),
-        voted: request.voted,
-        positive_votes: request.positive_votes.toNumber(),
-        negative_votes: request.negative_votes.toNumber(),
-      };
-    } catch (error) {
-      throw this.handleError(error);
-    }
   }
 
   // Reward Methods

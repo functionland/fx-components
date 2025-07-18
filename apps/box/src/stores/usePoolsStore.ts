@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TPool } from '../models';
 import { useUserProfileStore } from './useUserProfileStore';
+import { useSettingsStore } from './useSettingsStore';
+import { getContractService } from '../contracts/contractService';
 
 interface PoolsActionSlice {
   setHasHydrated: (isHydrated: boolean) => void;
@@ -132,16 +134,10 @@ const createPoolsModelSlice: StateCreator<
       }
     },
     joinPool: async (poolID: number) => {
-      try {
-        const selectedChain = useSettingsStore.getState().selectedChain;
-        const contractService = getContractService(selectedChain);
-
-        await contractService.joinPool(poolID.toString());
-        set({ dirty: true });
-      } catch (error) {
-        console.log('joinPool error:', error);
-        throw error;
-      }
+      // Join pool is handled via API only, not contract
+      // This method is kept for compatibility but doesn't do anything
+      // The actual join is handled by PoolApiService.joinPool
+      set({ dirty: true });
     },
     cancelPoolJoin: async (poolID: number) => {
       try {
