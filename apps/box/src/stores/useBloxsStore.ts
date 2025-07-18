@@ -29,7 +29,6 @@ interface BloxsActionSlice {
   updateBloxPropertyInfo: (peerId: string, info: TBloxProperty) => void;
   updateBloxSpaceInfo: (peerId: string, info: TBloxFreeSpace) => void;
   updateFolderSizeInfo: (peerId: string, info: TBloxFolderSize) => void;
-  checkChainSyncStatus: () => void;
   reset: () => void;
   setCurrentBloxPeerId: (peerId: string) => void;
 
@@ -289,33 +288,6 @@ const createModeSlice: StateCreator<
           },
         });
         return false;
-      }
-    },
-    checkChainSyncStatus: async () => {
-      try {
-        // Assuming fxblox.findBestAndTargetInLogs() is an existing function
-        // that returns { best: string, target: string }
-        const { best, target } = await fxblox.findBestAndTargetInLogs(
-          'fula_node',
-          '20'
-        );
-        const bestInt = parseInt(best, 10);
-        const targetInt = parseInt(target, 10);
-        const isSynced = Math.abs(targetInt - bestInt) < 10;
-        const progress = isSynced ? 100 : (bestInt / targetInt) * 100;
-
-        // Use set to update the state
-        set({ isChainSynced: isSynced, syncProgress: progress });
-
-        if (!isSynced) {
-          // If not synced, retry after 30 seconds
-          setTimeout(get().checkChainSyncStatus, 30000);
-        }
-      } catch (error) {
-        console.error('Error checking chain sync status: ', error);
-        set({ isChainSynced: false, syncProgress: 0 });
-        // Retry after 30 seconds upon error
-        setTimeout(get().checkChainSyncStatus, 30000);
       }
     },
   }),

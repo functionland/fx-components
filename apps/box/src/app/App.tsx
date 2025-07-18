@@ -17,6 +17,7 @@ import {
 } from '@functionland/component-library';
 import { RootNavigator } from '../navigation/Root.navigator';
 import { NavContainer } from '../navigation/NavContainer';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   AppState,
@@ -208,20 +209,27 @@ const AppContent = () => {
     copyToClipboard(value);
   };
   return (
-    <NavContainer>
-      {isDebugModeEnable && (
-        <FxPressableOpacity
-          onPress={shareUniqueId}
-          alignItems="center"
-          backgroundColor="backgroundSecondary"
-        >
-          <FxText textAlign="center" color="warningBase">
-            Debug mode is enable {debugMode.uniqueId}
-          </FxText>
-        </FxPressableOpacity>
-      )}
-      <RootNavigator />
-    </NavContainer>
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        // Log to crash reporting service in production
+        console.error('App Error Boundary:', error, errorInfo);
+      }}
+    >
+      <NavContainer>
+        {isDebugModeEnable && (
+          <FxPressableOpacity
+            onPress={shareUniqueId}
+            alignItems="center"
+            backgroundColor="backgroundSecondary"
+          >
+            <FxText textAlign="center" color="warningBase">
+              Debug mode is enable {debugMode.uniqueId}
+            </FxText>
+          </FxPressableOpacity>
+        )}
+        <RootNavigator />
+      </NavContainer>
+    </ErrorBoundary>
   );
 };
 

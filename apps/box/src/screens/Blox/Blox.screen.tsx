@@ -42,6 +42,7 @@ import { useSDK } from '@metamask/sdk-react';
 import { blockchain, fxblox } from '@functionland/react-native-fula';
 import { Helper } from '../../utils';
 import axios from 'axios';
+import { useContractIntegration } from '../../hooks/useContractIntegration';
 
 const DEFAULT_DIVISION = 30;
 
@@ -82,6 +83,9 @@ export const BloxScreen = () => {
 
   // Get wallet address from MetaMask SDK
   const { account } = useSDK();
+
+  // Initialize contract integration with notification enabled (only for Blox screen)
+  useContractIntegration({ showConnectedNotification: true });
 
   const [
     bloxs,
@@ -141,7 +145,7 @@ export const BloxScreen = () => {
     } else if (fulaIsReady && !bloxsConnectionStatus[currentBloxPeerId]) {
       checkBloxConnection();
     }
-  }, [fulaIsReady]);
+  }, [fulaIsReady, screenIsLoaded, currentBloxPeerId, bloxsConnectionStatus, updateBloxSpace, updateFulaEarnings, checkBloxConnection]);
 
   const updateBloxSpace = async () => {
     try {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   FxBox,
   FxCard,
@@ -9,86 +9,36 @@ import {
   useFxTheme,
   FxRefreshIcon,
 } from '@functionland/component-library';
-import { useNavigation } from '@react-navigation/native';
 import { Pressable, ActivityIndicator } from 'react-native';
-import { usePools } from '../../hooks/usePools';
-import { useWalletConnection } from '../../hooks/useWalletConnection';
-import { Routes } from '../../navigation/navigationConfig';
-
-type ValueType = string | number;
-
-interface Task {
-  id: ValueType;
-  title: string;
-  route?: () => void;
-}
+import { useTasksLogic } from '../../hooks/useTasksLogic';
+import { useTranslation } from 'react-i18next';
 
 export const TasksCard = () => {
-  const navigation = useNavigation();
-  const { userIsMemberOfAnyPool, userActiveRequests } = usePools();
-  const { connected, connectWallet } = useWalletConnection();
-  const [completedTasks, setCompletedTasks] = useState<ValueType[]>([]);
+  const { t } = useTranslation('tasks');
   const { colors } = useFxTheme();
-  const [refreshCard, setRefreshCard] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
+  const {
+    tasks,
+    completedTasks,
+    loading,
+    refreshing,
+    handleTaskPress,
+    refreshTasks,
+  } = useTasksLogic();
 
-  const handleNavigateToPools = () => {
-    navigation.navigate(Routes.SettingsTab, {
-      screen: Routes.Pools,
-    });
-  };
 
-  const handleTaskPress = (task: Task) => {
-    if (task.route && !completedTasks.includes(task.id)) {
-      task.route();
-    }
-  };
-
-  // Check if user has pending requests
-  const hasPendingRequest = userActiveRequests && userActiveRequests.length > 0 && userActiveRequests[0] !== '0';
-
-  const tasks: Task[] = [
-    // Always show connect wallet task
-    {
-      id: 'connect-wallet',
-      title: 'Connect Wallet',
-      route: connected ? undefined : connectWallet,
-    },
-    // Always show join pool task
-    {
-      id: 'join-pool',
-      title: hasPendingRequest ? 'Join Pool (already tried to join pool. pending)' : 'Join Pool',
-      route: connected && !userIsMemberOfAnyPool && !hasPendingRequest ? handleNavigateToPools : undefined,
-    },
-  ];
-
-  // Update completed tasks based on current state
-  React.useEffect(() => {
-    const newCompletedTasks: ValueType[] = [];
-
-    // Mark connect wallet as completed if connected
-    if (connected) {
-      newCompletedTasks.push('connect-wallet');
-    }
-
-    // Mark join pool as completed if user is member of any pool
-    if (userIsMemberOfAnyPool) {
-      newCompletedTasks.push('join-pool');
-    }
-
-    setCompletedTasks(newCompletedTasks);
-  }, [connected, userIsMemberOfAnyPool]);
 
   return (
     <FxCard>
       <FxBox flexDirection="row" justifyContent="space-between">
-        <FxCard.Title marginBottom="16">Action List</FxCard.Title>
-        {loading ? (
+        <FxCard.Title marginBottom="16">{t('actionList')}</FxCard.Title>
+        {loading || refreshing ? (
           <ActivityIndicator />
         ) : (
           <FxRefreshIcon
             fill={colors.content3}
-            onPress={() => setRefreshCard(!refreshCard)}
+            onPress={refreshTasks}
+            accessibilityLabel={t('refreshTasks')}
+            accessibilityHint="Refresh the task list to update completion status"
           />
         )}
       </FxBox>
@@ -96,7 +46,22 @@ export const TasksCard = () => {
         <FxRadioButton.Group value={completedTasks} onValueChange={() => {}}>
           {tasks.map((task, index) => (
             <React.Fragment key={task.id}>
-              <Pressable onPress={() => handleTaskPress(task)}>
+              <Pressable
+                onPress={() => handleTaskPress(task)}
+                accessibilityLabel={task.title}
+                accessibilityHint={
+                  task.isCompleted
+                    ? t('taskCompleted')
+                    : task.route
+                      ? `Tap to ${task.title.toLowerCase()}`
+                      : 'Task not available'
+                }
+                accessibilityRole="button"
+                accessibilityState={{
+                  checked: task.isCompleted,
+                  disabled: !task.route || task.isCompleted
+                }}
+              >
                 <FxRadioButtonWithLabel
                   disabled
                   value={task.id}

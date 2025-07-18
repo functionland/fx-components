@@ -27,8 +27,8 @@ export const ChainSelectionScreen = () => {
   // Wallet connection
   const { connected, account, connecting, connectWallet, disconnectWallet } = useWalletConnection();
 
-  // Contract integration for chain switching
-  const { switchChain } = useContractIntegration();
+  // Contract integration for chain switching (no notification)
+  const { switchChain } = useContractIntegration({ showConnectedNotification: false });
 
   // MetaMask SDK for direct provider access
   const { provider } = useSDK();

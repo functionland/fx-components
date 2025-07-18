@@ -6,19 +6,30 @@ import { getContractService, ContractService, resetContractService } from '../co
 import { SupportedChain } from '../contracts/types';
 import { CHAIN_DISPLAY_NAMES } from '../contracts/config';
 
+// Global flag to track if the "Contracts Connected" notification has been shown
+let contractsConnectedNotificationShown = false;
+
+// Function to reset the notification flag (useful for development or when wallet disconnects)
+export const resetContractsConnectedNotification = () => {
+  contractsConnectedNotificationShown = false;
+};
+
 export interface ContractIntegrationState {
   isInitialized: boolean;
   isInitializing: boolean;
   error: string | null;
   contractService: ContractService | null;
   connectedAccount: string | null;
+  retryCount: number;
+  canRetry: boolean;
 }
 
-export const useContractIntegration = () => {
+export const useContractIntegration = (options?: { showConnectedNotification?: boolean }) => {
   const { provider, account, chainId } = useSDK();
   const { queueToast } = useToast();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const initializedChainRef = useRef<SupportedChain | null>(null);
+  const showConnectedNotification = options?.showConnectedNotification ?? false;
 
   const [state, setState] = useState<ContractIntegrationState>({
     isInitialized: false,
@@ -26,6 +37,8 @@ export const useContractIntegration = () => {
     error: null,
     contractService: null,
     connectedAccount: null,
+    retryCount: 0,
+    canRetry: true,
   });
 
   const initializeContracts = useCallback(async (chain: SupportedChain) => {
@@ -79,16 +92,23 @@ export const useContractIntegration = () => {
       // Track the initialized chain
       initializedChainRef.current = chain;
 
-      queueToast({
-        type: 'success',
-        title: 'Contracts Connected',
-        message: `Connected to ${CHAIN_DISPLAY_NAMES[chain]} contracts`,
-      });
+      // Only show notification if allowed and not already shown
+      if (showConnectedNotification && !contractsConnectedNotificationShown) {
+        contractsConnectedNotificationShown = true;
+        queueToast({
+          type: 'success',
+          title: 'Contracts Connected',
+          message: `Connected to ${CHAIN_DISPLAY_NAMES[chain]} contracts`,
+        });
+      }
     } catch (error: any) {
       console.error('Contract initialization failed:', error);
 
       let errorMessage = error.message || 'Failed to connect to contracts';
       let toastTitle = 'Contract Connection Failed';
+      const currentRetryCount = state.retryCount + 1;
+      const maxRetries = 3;
+      const canRetry = currentRetryCount < maxRetries;
 
       // Handle specific network errors
       if (error.message?.includes('underlying network changed')) {
@@ -108,18 +128,35 @@ export const useContractIntegration = () => {
         error: errorMessage,
         contractService: null,
         connectedAccount: null,
+        retryCount: currentRetryCount,
+        canRetry,
       });
 
       // Clear the initialized chain ref on error
       initializedChainRef.current = null;
 
-      queueToast({
-        type: 'error',
-        title: toastTitle,
-        message: errorMessage,
-      });
+      // Auto-retry for certain errors if retries are available
+      if (canRetry && (error.message?.includes('timeout') || error.message?.includes('network'))) {
+        const retryDelay = Math.min(1000 * Math.pow(2, currentRetryCount), 10000); // Exponential backoff, max 10s
+
+        queueToast({
+          type: 'warning',
+          title: toastTitle,
+          message: `${errorMessage} Retrying in ${retryDelay / 1000}s... (${currentRetryCount}/${maxRetries})`,
+        });
+
+        setTimeout(() => {
+          initializeContracts(chain);
+        }, retryDelay);
+      } else {
+        queueToast({
+          type: 'error',
+          title: toastTitle,
+          message: canRetry ? `${errorMessage} You can try again manually.` : `${errorMessage} Maximum retries reached.`,
+        });
+      }
     }
-  }, [provider, account, queueToast]);
+  }, [provider, account, queueToast, state.retryCount]);
 
   const switchChain = useCallback(async (newChain: SupportedChain) => {
     if (state.contractService) {
@@ -136,6 +173,19 @@ export const useContractIntegration = () => {
       }
     }
   }, [state.contractService, initializeContracts, queueToast]);
+
+  // Manual retry function
+  const retryInitialization = useCallback(() => {
+    if (state.canRetry) {
+      setState(prev => ({
+        ...prev,
+        error: null,
+        retryCount: 0,
+        canRetry: true,
+      }));
+      initializeContracts(selectedChain);
+    }
+  }, [state.canRetry, initializeContracts, selectedChain]);
 
   const executeContractCall = useCallback(async <T>(
     operation: () => Promise<T>,
@@ -203,9 +253,13 @@ export const useContractIntegration = () => {
         error: null,
         contractService: null,
         connectedAccount: null,
+        retryCount: 0,
+        canRetry: true,
       });
       // Clear the initialized chain ref when disconnecting
       initializedChainRef.current = null;
+      // Reset notification flag when wallet disconnects
+      resetContractsConnectedNotification();
     }
   }, [account, provider, selectedChain, state.isInitializing, state.isInitialized]);
 
@@ -227,6 +281,7 @@ export const useContractIntegration = () => {
     ...state,
     initializeContracts,
     switchChain,
+    retryInitialization,
     executeContractCall,
     // Convenience methods
     isReady: state.isInitialized && !!state.contractService,
@@ -236,7 +291,7 @@ export const useContractIntegration = () => {
 
 // Pool-specific operations hook
 export const usePoolOperations = () => {
-  const contractIntegration = useContractIntegration();
+  const contractIntegration = useContractIntegration({ showConnectedNotification: false });
   const { executeContractCall, contractService } = contractIntegration;
 
   const joinPool = useCallback(async (poolId: string) => {
