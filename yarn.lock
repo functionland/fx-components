@@ -6938,13 +6938,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.14.202":
-  version: 4.17.10
-  resolution: "@types/lodash@npm:4.17.10"
-  checksum: 4600f2f25270c8fee6953e363d318149a5f0f1b1bb820aa2f42d7ada6e4f7de31848bb5ffc2c687b40bd73aa982167bdd6e6d8d456e72abe0c660ec77d1fa7e9
-  languageName: node
-  linkType: hard
-
 "@types/ms@npm:*":
   version: 0.7.34
   resolution: "@types/ms@npm:0.7.34"
@@ -8823,7 +8816,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:*, axios@npm:^1.5.1, axios@npm:^1.6.2":
+"axios@npm:*, axios@npm:^1.5.1":
   version: 1.7.7
   resolution: "axios@npm:1.7.7"
   dependencies:
@@ -8831,6 +8824,17 @@ __metadata:
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
   checksum: 882d4fe0ec694a07c7f5c1f68205eb6dc5a62aecdb632cc7a4a3d0985188ce3030e0b277e1a8260ac3f194d314ae342117660a151fabffdc5081ca0b5a8b47fe
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.8.2":
+  version: 1.10.0
+  resolution: "axios@npm:1.10.0"
+  dependencies:
+    follow-redirects: ^1.15.6
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: b5fd840d499469bf968e44b8ac96f4b363c6aa4c791a50834c086a7cffbc2d77fe24f27af1aba46c3e1f4840aaf991461fc27537990596b93dea0f4df3245a86
   languageName: node
   linkType: hard
 
@@ -13495,7 +13499,6 @@ __metadata:
     "@testing-library/react-native": 12.4.1
     "@types/axios": ^0.14.0
     "@types/jest": 29.5.10
-    "@types/lodash": ^4.14.202
     "@types/node": ^18.16.9
     "@types/react": 18.2.39
     "@types/react-native-background-timer": ^2.0.2
@@ -13507,7 +13510,7 @@ __metadata:
     "@walletconnect/react-native-compat": ^2.10.5
     "@web3modal/core-react-native": "*"
     "@web3modal/wagmi-react-native": ^1.1.1
-    axios: ^1.6.2
+    axios: ^1.8.2
     babel-jest: 29.7.0
     big-integer: ^1.6.52
     detox: 20.13.5
@@ -13532,7 +13535,6 @@ __metadata:
     jest-circus: 29.7.0
     jest-environment-jsdom: 29.7.0
     jest-react-native: 18.0.0
-    lodash: ^4.17.21
     metro: 0.80.1
     metro-babel-register: 0.80.1
     metro-react-native-babel-preset: 0.77.0

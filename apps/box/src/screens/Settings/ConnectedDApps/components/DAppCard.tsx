@@ -1,6 +1,5 @@
 import React from 'react';
 import { GestureResponderEvent, ImageSourcePropType } from 'react-native';
-import { pick } from 'lodash';
 import {
   convertMegabyteToGigabyte,
   FxButton,
@@ -10,6 +9,17 @@ import {
 
 import DAppHeader from './DAppHeader';
 import { TDApp } from '../../../../models';
+
+// Native JavaScript replacement for lodash pick
+const pick = <T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> => {
+  const result = {} as Pick<T, K>;
+  keys.forEach(key => {
+    if (key in obj) {
+      result[key] = obj[key];
+    }
+  });
+  return result;
+};
 
 type RowDetailsProps = {
   data: Pick<
