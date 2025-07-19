@@ -5,6 +5,11 @@ import { blockchain, fula } from '@functionland/react-native-fula';
 import { TAccount, TBloxFreeSpace } from '../models';
 import { KeyChain } from '../utils';
 import { useBloxsStore } from './useBloxsStore';
+import { useSettingsStore } from './useSettingsStore';
+import { getContractService } from '../contracts/contractService';
+import { ethers } from 'ethers';
+import { getChainConfigByName } from '../contracts/config';
+import { FULA_TOKEN_ABI } from '../contracts/abis';
 import NetInfo from '@react-native-community/netinfo';
 import axios from 'axios';
 
@@ -23,6 +28,8 @@ interface UserProfileActions {
   setBloxPeerIds: (peerIds: string[] | undefined) => void;
   createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
   getEarnings: () => Promise<void>;
+  getContractRewards: () => Promise<void>; // New contract-based rewards
+  claimRewards: (poolId?: string) => Promise<void>; // New claim function
   getBloxSpace: () => Promise<TBloxFreeSpace>;
   logout: () => boolean;
   setFulaIsReady: (value: boolean) => void;
@@ -310,34 +317,92 @@ const createUserProfileSlice: StateCreator<
           throw error;
         }
       },
-      getEarnings: async () => {
+/**
+ * Fetches the FULA token balance for the specified account address.
+ * If no address is provided, attempts to get the connected account (may trigger MetaMask).
+ * Use this to avoid unnecessary MetaMask popups by passing the known wallet address.
+ * @param account Optional wallet address to fetch balance for.
+ */
+getEarnings: async (account?: string) => {
+  try {
+    if (!account) {
+      throw new Error('Account address is required for balance query');
+    }
+
+    const selectedChain = useSettingsStore.getState().selectedChain;
+    const chainConfig = getChainConfigByName(selectedChain);
+
+    // Use read-only RPC provider for balance queries
+    const readOnlyProvider = new ethers.providers.JsonRpcProvider(chainConfig.rpcUrl);
+    const tokenContract = new ethers.Contract(
+      chainConfig.contracts.fulaToken,
+      FULA_TOKEN_ABI,
+      readOnlyProvider
+    );
+
+    console.log('Getting FULA token balance for account:', account);
+    const [balance, decimals] = await Promise.all([
+      tokenContract.balanceOf(account),
+      tokenContract.decimals(),
+    ]);
+
+    const fulaBalance = ethers.utils.formatUnits(balance, decimals);
+    console.log('FULA token balance:', fulaBalance);
+    set({
+      earnings: fulaBalance,
+    });
+  } catch (error) {
+    console.error('Error getting FULA token balance:', error);
+    set({
+      earnings: 'NaN',
+    });
+    throw error;
+  }
+},
+      getContractRewards: async () => {
         try {
-          const { fulaIsReady } = get();
-          if (!fulaIsReady) {
-            console.log('Fula is not ready. Please wait...');
-            Promise.reject('internet is not connected');
-          }
-          await fula.isReady(false);
-          const account = await blockchain.getAccount();
-          console.log({ account: account });
-          const earnings = await blockchain.assetsBalance(
-            account.account,
-            '100',
-            '100'
-          );
-          console.log({ earnings: earnings });
+          const selectedChain = useSettingsStore.getState().selectedChain;
+          const contractService = getContractService(selectedChain);
+
+          const account = await contractService.getConnectedAccount();
+          console.log('Getting rewards for account:', account);
+
+          const totalRewards = await contractService.getTotalRewards(account);
+          console.log('Total rewards:', totalRewards);
+
           set({
-            earnings: earnings.amount,
+            earnings: totalRewards,
           });
         } catch (error) {
-          if (!error.toString().includes('response: 400')) {
-            console.log('Bad request: ', error.toString());
-          }
+          console.error('Error getting contract rewards:', error);
           set({
             earnings: 'NaN',
           });
           throw error;
-        } finally {
+        }
+      },
+      claimRewards: async (poolId?: string) => {
+        try {
+          const selectedChain = useSettingsStore.getState().selectedChain;
+          const contractService = getContractService(selectedChain);
+
+          if (!poolId) {
+            // Get user's current pool
+            const account = await contractService.getConnectedAccount();
+            const userPool = await contractService.getUserPool(account);
+            if (!userPool.poolId || userPool.poolId === '0') {
+              throw new Error('User is not in any pool');
+            }
+            poolId = userPool.poolId;
+          }
+
+          await contractService.claimRewards(poolId);
+
+          // Refresh rewards after claiming
+          await get().getContractRewards();
+        } catch (error) {
+          console.error('Error claiming rewards:', error);
+          throw error;
         }
       },
       logout: () => {
@@ -489,13 +554,35 @@ const createUserProfileSlice: StateCreator<
   {
     name: 'userProfileSlice',
     version: 1,
-    getStorage: () => AsyncStorage,
-    serialize: (state) => JSON.stringify(state),
-    deserialize: (str) => JSON.parse(str),
+    storage: {
+      getItem: async (name: string) => {
+        try {
+          const value = await AsyncStorage.getItem(name);
+          return value ? JSON.parse(value) : null;
+        } catch (error) {
+          console.error('Error getting item from AsyncStorage:', error);
+          return null;
+        }
+      },
+      setItem: async (name: string, value: unknown) => {
+        try {
+          await AsyncStorage.setItem(name, JSON.stringify(value));
+        } catch (error) {
+          console.error('Error setting item in AsyncStorage:', error);
+        }
+      },
+      removeItem: async (name: string) => {
+        try {
+          await AsyncStorage.removeItem(name);
+        } catch (error) {
+          console.error('Error removing item from AsyncStorage:', error);
+        }
+      },
+    },
     onRehydrateStorage: () => {
       // anything to run before rehydrating, return function is called after rehydrating
       return (state) => {
-        state.setHasHydrated(true);
+        state?.setHasHydrated(true);
       };
     },
     partialize: (state): Partial<UserProfileSlice & UserProfileActions> => ({

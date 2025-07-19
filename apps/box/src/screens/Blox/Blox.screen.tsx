@@ -19,6 +19,7 @@ import {
 } from '../../components';
 import { TasksCard } from '../../components/Cards/TasksCard';
 import { EarningCard } from '../../components/Cards/EarningCard';
+
 import { BloxHeader } from './components/BloxHeader';
 import { BloxInteraction } from './components/BloxInteraction';
 import { BloxInteractionModal } from './modals/BloxInteractionModal';
@@ -37,9 +38,11 @@ import {
   usePoolsStore,
   useUserProfileStore,
 } from '../../stores';
+import { useSDK } from '@metamask/sdk-react';
 import { blockchain, fxblox } from '@functionland/react-native-fula';
 import { Helper } from '../../utils';
 import axios from 'axios';
+import { useContractIntegration } from '../../hooks/useContractIntegration';
 
 const DEFAULT_DIVISION = 30;
 
@@ -54,10 +57,8 @@ export const BloxScreen = () => {
   const [screenIsLoaded, setScreenIsLoaded] = useState(false);
   const [resetingBloxHotspot, setResetingBloxHotspot] = useState(false);
   const [rebootingBlox, setRebootingBlox] = useState(false);
-  const [resettingChain, setResettingChain] = useState(false);
   const [loadingBloxSpace, setLoadingBloxSpace] = useState(false);
   const [loadingFulaEarnings, setLoadingFulaEarnings] = useState(false);
-  const [bloxAccountId, setBloxAccountId] = useState('');
 
   const [selectedMode, setSelectedMode] = useState<EBloxInteractionType>(
     EBloxInteractionType.OfficeBloxUnit
@@ -79,6 +80,12 @@ export const BloxScreen = () => {
     state.password,
     state.signiture,
   ]);
+
+  // Get wallet address from MetaMask SDK
+  const { account } = useSDK();
+
+  // Initialize contract integration with notification enabled (only for Blox screen)
+  useContractIntegration({ showConnectedNotification: true });
 
   const [
     bloxs,
@@ -109,37 +116,6 @@ export const BloxScreen = () => {
     state.getPools,
   ]);
 
-  const updateBloxAccount = async (retried = false) => {
-    try {
-      if (fulaIsReady) {
-        const connectionStatus = await checkBloxConnection();
-        if (connectionStatus) {
-          const bloxAccount = await blockchain.getAccount();
-          setBloxAccountId(bloxAccount.account);
-        } else {
-          setBloxAccountId('Not Connected to blox');
-        }
-      } else {
-        if (retried === false) {
-          await checkFulaReadiness();
-          updateBloxAccount(true);
-        } else {
-          setBloxAccountId('Fula is not ready');
-        }
-      }
-    } catch (e) {
-      console.error('Error updating blox account:', e);
-      const err = e.message || e.toString();
-      if (err.includes('failed to dial')) {
-        setBloxAccountId('Connection to Blox not established');
-      } else if (err.includes('blockchain call error')) {
-        setBloxAccountId('Error with blockchain.');
-      } else {
-        setBloxAccountId(e.message || e.toString());
-      }
-    }
-  };
-
   const bloxInteractions = Object.values(bloxs || {}).map<TBloxInteraction>(
     (blox) => ({
       peerId: blox.peerId,
@@ -166,11 +142,10 @@ export const BloxScreen = () => {
       updateBloxSpace();
       updateFulaEarnings();
       checkBloxConnection();
-      updateBloxAccount();
     } else if (fulaIsReady && !bloxsConnectionStatus[currentBloxPeerId]) {
       checkBloxConnection();
     }
-  }, [fulaIsReady]);
+  }, [fulaIsReady, screenIsLoaded, currentBloxPeerId, bloxsConnectionStatus, updateBloxSpace, updateFulaEarnings, checkBloxConnection]);
 
   const updateBloxSpace = async () => {
     try {
@@ -190,8 +165,9 @@ export const BloxScreen = () => {
   const updateFulaEarnings = async () => {
     try {
       setLoadingFulaEarnings(true);
-      if (fulaIsReady) {
-        const space = await getEarnings();
+      if (fulaIsReady && account) {
+        // Pass MetaMask account address to getEarnings to avoid MetaMask popup
+        const space = await getEarnings(account);
         logger.log('updateFulaEarnings', space);
       }
     } catch (error) {
@@ -200,6 +176,7 @@ export const BloxScreen = () => {
       setLoadingFulaEarnings(false);
     }
   };
+
 
   const showInteractionModal = () => {
     bloxInteractionModalRef.current.present();
@@ -248,31 +225,6 @@ export const BloxScreen = () => {
             });
             checkBloxConnection();
           }
-          console.log('fula is not ready');
-        }
-        break;
-      case 'RESET-CHAIN':
-        if (fulaIsReady) {
-          try {
-            console.log('checking blox connection');
-            const connection = await checkBloxConnection();
-            if (connection) {
-              const eraseRes = await fxblox.eraseBlData();
-              console.log(eraseRes.msg);
-              queueToast({
-                type: 'info',
-                title: 'Reset chain Data',
-                message:
-                  eraseRes.msg || 'Your Blox does not support this command!',
-              });
-            }
-          } catch (error) {
-            logger.logError(
-              'handleOnConnectionOptionSelect:checkBloxConnection',
-              error
-            );
-          }
-        } else {
           console.log('fula is not ready');
         }
         break;
@@ -468,65 +420,6 @@ export const BloxScreen = () => {
       ]
     );
   };
-  const handleOnResetChainPress = (peerId: string) => {
-    Alert.alert(
-      'Reset Chain Data!',
-      `Are you sure want to erase chain data from '${bloxs[peerId]?.name}'? This operation is safe but takes time.`,
-      [
-        {
-          text: 'Yes',
-          onPress: async () => {
-            try {
-              setResettingChain(true);
-              const result = await fxblox.eraseBlData();
-              if (result.status) {
-                bloxInfoBottomSheetRef.current.close();
-                queueToast({
-                  type: 'success',
-                  title: 'Chain Data erased successfully! Rebooting now...',
-                });
-                const result = await fxblox.reboot();
-                if (result.status) {
-                  queueToast({
-                    type: 'success',
-                    title: 'The Blox will reboot in 10 seconds!',
-                  });
-                } else {
-                  queueToast({
-                    type: 'error',
-                    title: 'Failed',
-                    message:
-                      result.msg ||
-                      'Your Blox does not support this command! Please reboot manually',
-                  });
-                }
-              } else {
-                queueToast({
-                  type: 'error',
-                  title: 'Failed',
-                  message:
-                    (result.msg || 'Your Blox does not support this command!') +
-                    '; Format Manually.',
-                });
-              }
-            } catch (error) {
-              queueToast({
-                type: 'error',
-                title: error,
-              });
-            } finally {
-              setResettingChain(false);
-            }
-          },
-          style: 'destructive',
-        },
-        {
-          text: 'No',
-          style: 'cancel',
-        },
-      ]
-    );
-  };
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
       <BloxHeader
@@ -553,15 +446,7 @@ export const BloxScreen = () => {
               totalCapacity={currentBloxSpaceInfo?.size || 1000}
             />
           )}
-          {bloxAccountId && bloxAccountId.startsWith('5') && (
-            <TasksCard
-              pools={pools}
-              getPools={getPools}
-              currentBloxPeerId={currentBloxPeerId}
-              accountId={bloxAccountId} // Replace with actual account ID
-              routes={Routes}
-            />
-          )}
+
           <FxSpacer height={24} />
           <DeviceCard
             onRefreshPress={updateBloxSpace}
@@ -584,9 +469,12 @@ export const BloxScreen = () => {
               totalFula: earnings,
             }}
           />
-          {/* <FxSpacer height={8} />
-          <QuoteStat divisionPercentage={divisionPercentage} />
+
           <FxSpacer height={24} />
+          <TasksCard />
+          {/*<FxSpacer height={8} />
+          <QuoteStat divisionPercentage={divisionPercentage} />
+          <FxSpacer height={16} />
           <ColorSettingsCard />
           <FxSpacer height={16} />
           <EarningCard totalFula={4.2931} />
@@ -611,11 +499,9 @@ export const BloxScreen = () => {
         onBloxRemovePress={handleOnBloxRemovePress}
         onRestToHotspotPress={handleOnResetToHotspotPress}
         onRebootBloxPress={handleOnRebootBloxPress}
-        onResetChainPress={handleOnResetChainPress}
         onClearCachePress={handleOnClearCachePress}
         resetingBloxHotspot={resetingBloxHotspot}
         rebootingBlox={rebootingBlox}
-        resettingChain={resettingChain}
       />
       <ProfileBottomSheet
         ref={profileBottomSheetRef}

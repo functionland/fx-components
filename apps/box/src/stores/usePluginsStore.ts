@@ -225,9 +225,31 @@ const createPluginsModelSlice: StateCreator<
   }),
   {
     name: 'PluginsModelSlice',
-    getStorage: () => AsyncStorage,
-    serialize: (state) => JSON.stringify(state),
-    deserialize: (str) => JSON.parse(str),
+    storage: {
+      getItem: async (name: string) => {
+        try {
+          const value = await AsyncStorage.getItem(name);
+          return value ? JSON.parse(value) : null;
+        } catch (error) {
+          console.error('Error getting item from AsyncStorage:', error);
+          return null;
+        }
+      },
+      setItem: async (name: string, value: unknown) => {
+        try {
+          await AsyncStorage.setItem(name, JSON.stringify(value));
+        } catch (error) {
+          console.error('Error setting item in AsyncStorage:', error);
+        }
+      },
+      removeItem: async (name: string) => {
+        try {
+          await AsyncStorage.removeItem(name);
+        } catch (error) {
+          console.error('Error removing item from AsyncStorage:', error);
+        }
+      },
+    },
     onRehydrateStorage: () => (state) => {
       state?.setHasHydrated(true);
     },

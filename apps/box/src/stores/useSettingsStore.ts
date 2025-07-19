@@ -4,9 +4,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
 import { Helper } from '../utils';
 import moment from 'moment';
+import { SupportedChain } from '../contracts/types';
+import { DEFAULT_CHAIN, BASE_AUTH_CODE } from '../contracts/config';
 
 export type ColorScheme = 'light' | 'dark';
-interface ModeSlice {
+
+interface ChainSettings {
+  selectedChain: SupportedChain;
+  baseAuthorized: boolean;
+  setSelectedChain: (chain: SupportedChain) => void;
+  authorizeBase: (code: string) => boolean;
+  resetBaseAuthorization: () => void;
+}
+
+interface ModeSlice extends ChainSettings {
   _hasHydrated: boolean;
   setHasHydrated: (isHydrated: boolean) => void;
   /**
@@ -43,6 +54,29 @@ const createModeSlice: StateCreator<
       uniqueId: Helper.generateUniqueId(),
       endDate: moment().add(-2, 'days').toDate()
     },
+    // Chain settings
+    selectedChain: 'skale', // Default to SKALE
+    baseAuthorized: false,
+    setSelectedChain: (chain: SupportedChain) => {
+      // Only allow Base if authorized
+      if (chain === 'base' && !get().baseAuthorized) {
+        return;
+      }
+      set({ selectedChain: chain });
+    },
+    authorizeBase: (code: string) => {
+      if (code === '9870') {
+        set({ baseAuthorized: true });
+        return true;
+      }
+      return false;
+    },
+    resetBaseAuthorization: () => {
+      set({
+        baseAuthorized: false,
+        selectedChain: get().selectedChain === 'base' ? 'skale' : get().selectedChain
+      });
+    },
     setColorScheme: (colorScheme: ColorScheme) =>
       set(() => ({ colorScheme: colorScheme })),
     toggleIsAuto: () => set((state) => ({ isAuto: !state.isAuto })),
@@ -62,15 +96,44 @@ const createModeSlice: StateCreator<
   }),
   {
     name: 'modeSlice',
-    getStorage: () => AsyncStorage,
-    serialize: (state) => JSON.stringify(state),
-    deserialize: (str) => JSON.parse(str),
+    storage: {
+      getItem: async (name: string) => {
+        try {
+          const value = await AsyncStorage.getItem(name);
+          return value ? JSON.parse(value) : null;
+        } catch (error) {
+          console.error('Error getting item from AsyncStorage:', error);
+          return null;
+        }
+      },
+      setItem: async (name: string, value: unknown) => {
+        try {
+          await AsyncStorage.setItem(name, JSON.stringify(value));
+        } catch (error) {
+          console.error('Error setting item in AsyncStorage:', error);
+        }
+      },
+      removeItem: async (name: string) => {
+        try {
+          await AsyncStorage.removeItem(name);
+        } catch (error) {
+          console.error('Error removing item from AsyncStorage:', error);
+        }
+      },
+    },
     onRehydrateStorage: () => {
       // anything to run before rehydrating, return function is called after rehydrating
       return (state) => {
-        state.setHasHydrated(true);
+        state?.setHasHydrated(true);
       };
     },
+    partialize: (state): Partial<ModeSlice> => ({
+      isAuto: state.isAuto,
+      colorScheme: state.colorScheme,
+      debugMode: state.debugMode,
+      selectedChain: state.selectedChain,
+      baseAuthorized: state.baseAuthorized,
+    }),
   }
 );
 

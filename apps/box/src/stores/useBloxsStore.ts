@@ -29,7 +29,6 @@ interface BloxsActionSlice {
   updateBloxPropertyInfo: (peerId: string, info: TBloxProperty) => void;
   updateBloxSpaceInfo: (peerId: string, info: TBloxFreeSpace) => void;
   updateFolderSizeInfo: (peerId: string, info: TBloxFolderSize) => void;
-  checkChainSyncStatus: () => void;
   reset: () => void;
   setCurrentBloxPeerId: (peerId: string) => void;
 
@@ -291,44 +290,39 @@ const createModeSlice: StateCreator<
         return false;
       }
     },
-    checkChainSyncStatus: async () => {
-      try {
-        // Assuming fxblox.findBestAndTargetInLogs() is an existing function
-        // that returns { best: string, target: string }
-        const { best, target } = await fxblox.findBestAndTargetInLogs(
-          'fula_node',
-          '20'
-        );
-        const bestInt = parseInt(best, 10);
-        const targetInt = parseInt(target, 10);
-        const isSynced = Math.abs(targetInt - bestInt) < 10;
-        const progress = isSynced ? 100 : (bestInt / targetInt) * 100;
-
-        // Use set to update the state
-        set({ isChainSynced: isSynced, syncProgress: progress });
-
-        if (!isSynced) {
-          // If not synced, retry after 30 seconds
-          setTimeout(get().checkChainSyncStatus, 30000);
-        }
-      } catch (error) {
-        console.error('Error checking chain sync status: ', error);
-        set({ isChainSynced: false, syncProgress: 0 });
-        // Retry after 30 seconds upon error
-        setTimeout(get().checkChainSyncStatus, 30000);
-      }
-    },
   }),
   {
     name: 'bloxsModelSlice',
     version: 2,
-    getStorage: () => AsyncStorage,
-    serialize: (state) => JSON.stringify(state),
-    deserialize: (str) => JSON.parse(str),
+    storage: {
+      getItem: async (name: string) => {
+        try {
+          const value = await AsyncStorage.getItem(name);
+          return value ? JSON.parse(value) : null;
+        } catch (error) {
+          console.error('Error getting item from AsyncStorage:', error);
+          return null;
+        }
+      },
+      setItem: async (name: string, value: unknown) => {
+        try {
+          await AsyncStorage.setItem(name, JSON.stringify(value));
+        } catch (error) {
+          console.error('Error setting item in AsyncStorage:', error);
+        }
+      },
+      removeItem: async (name: string) => {
+        try {
+          await AsyncStorage.removeItem(name);
+        } catch (error) {
+          console.error('Error removing item from AsyncStorage:', error);
+        }
+      },
+    },
     onRehydrateStorage: () => {
       // anything to run before rehydrating, return function is called after rehydrating
       return (state) => {
-        state.setHasHydrated(true);
+        state?.setHasHydrated(true);
       };
     },
     partialize: (state): Partial<BloxsModelSlice> => ({

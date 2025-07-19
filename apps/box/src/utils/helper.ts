@@ -26,6 +26,16 @@ export const getMyDIDKeyPair = (
 };
 
 let initFulaPromise: Promise<string | undefined> | null = null; // Shared promise to track execution
+let initFulaTimeout: NodeJS.Timeout | null = null; // Timeout for cleanup
+
+// Cleanup function to reset promise and timeout
+const cleanupInitFula = () => {
+  if (initFulaTimeout) {
+    clearTimeout(initFulaTimeout);
+    initFulaTimeout = null;
+  }
+  initFulaPromise = null;
+};
 
 export const initFula = async ({
   password,
@@ -50,6 +60,13 @@ export const initFula = async ({
 
   // Create a new promise for this execution
   initFulaPromise = new Promise((resolve, reject) => {
+    // Set timeout for cleanup (30 seconds)
+    initFulaTimeout = setTimeout(() => {
+      console.warn('initFula timeout reached, cleaning up...');
+      cleanupInitFula();
+      reject(new Error('initFula operation timed out'));
+    }, 30000);
+
     (async () => {
       try {
         if (!password || !signiture) {
@@ -67,7 +84,8 @@ export const initFula = async ({
 
         const keyPair = getMyDIDKeyPair(password, signiture);
 
-        console.log('initFula helper.ts', { bloxAddress, bloxPeerId, keyPair });
+        // Log without sensitive keyPair data
+        console.log('initFula helper.ts', { bloxAddress, bloxPeerId, keyPairGenerated: !!keyPair });
 
         try {
           // Attempt to logout and shutdown any previous Fula client
@@ -104,7 +122,7 @@ export const initFula = async ({
         reject(error); // Reject with the error on failure
       } finally {
         console.log('Resetting initFulaPromise');
-        initFulaPromise = null; // Reset the shared promise after execution
+        cleanupInitFula(); // Use cleanup function
       }
     })(); // Immediately invoke the async function inside the executor
   });

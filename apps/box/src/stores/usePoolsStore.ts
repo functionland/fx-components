@@ -1,9 +1,11 @@
 import { create, StateCreator } from 'zustand';
+import { blockchain, fula } from '@functionland/react-native-fula';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { blockchain, chainApi, fula } from '@functionland/react-native-fula';
-
 import { TPool } from '../models';
+import { useUserProfileStore } from './useUserProfileStore';
+import { useSettingsStore } from './useSettingsStore';
+import { getContractService } from '../contracts/contractService';
 
 interface PoolsActionSlice {
   setHasHydrated: (isHydrated: boolean) => void;
@@ -59,87 +61,72 @@ const createPoolsModelSlice: StateCreator<
       });
     },
     getPools: async () => {
-      // throw "error"
       try {
-        const api = await chainApi.init();
-        const poolList = await chainApi.listPools(api, 1, 25);
-        console.log(poolList);
-        let requested = false;
-        let joined = false;
-        let numVotes = 0;
-        let poolIdOfInterest = -1;
-        try {
-          await fula.isReady(false);
-          const account = await blockchain.getAccount();
-          const accountId = account.account;
-          console.log('account: ', accountId);
-          const userPool = await chainApi.getUserPool(api, accountId);
-          console.log('userPool:', userPool);
+        const selectedChain = useSettingsStore.getState().selectedChain;
+        const contractService = getContractService(selectedChain);
+        const accountId = useUserProfileStore.getState().address;
 
-          if (userPool !== null) {
-            if (
-              userPool?.requestPoolId !== null &&
-              userPool?.requestPoolId !== ''
-            ) {
-              poolIdOfInterest = parseInt(userPool?.requestPoolId, 10);
-              const joinRequestInfo = await chainApi.checkJoinRequest(
-                api,
-                parseInt(userPool.requestPoolId, 10),
-                accountId
-              );
-              console.log('joinRequestInfo:', joinRequestInfo);
-              numVotes = joinRequestInfo ? joinRequestInfo.voted.length : 0;
-              requested = true;
-              joined = false;
-            } else if (
-              userPool.poolId !== undefined &&
-              userPool.poolId?.length > 0 &&
-              parseInt(userPool.poolId, 10) >= 0
-            ) {
-              requested = true;
+        let enableInteraction = false;
+        if (accountId) {
+          enableInteraction = true;
+        }
+        set({ enableInteraction });
+
+        // Fetch all pool IDs
+        const poolIds = await contractService.getAllPoolIds();
+        const pools: PoolData[] = [];
+
+        for (const poolId of poolIds) {
+          // Fetch pool details
+          const pool = await contractService.getPool(poolId);
+          // Fetch members
+          const participants = await contractService.getPoolMembers(poolId);
+
+          let joined = false;
+          let requested = false;
+          let numVotes = 0;
+          let numVoters = participants.length;
+
+          // Check if user is a member
+          if (accountId) {
+            const memberIndex = await contractService.getMemberIndex(poolId, accountId);
+            if (memberIndex !== '0') {
               joined = true;
-              poolIdOfInterest = parseInt(userPool.poolId, 10);
+            } else {
+              // If not a member, check for join request
+              // You may need a way to get peerId for this user, for now assume peerId = accountId
+              try {
+                const joinRequest = await contractService.getJoinRequest(poolId, accountId);
+                if (joinRequest && joinRequest.status === 1) {
+                  requested = true;
+                  numVotes = (joinRequest.approvals || 0) + (joinRequest.rejections || 0);
+                }
+              } catch (e) {
+                // No join request
+              }
             }
           }
-          set({ enableInteraction: true });
-        } catch (error) {
-          console.log('error getting join info, (skipping for now): ', error);
-          set({ enableInteraction: false });
+
+          pools.push({
+            poolID: pool.id,
+            name: pool.name,
+            region: pool.region,
+            parent: '', // Not available in contract
+            participants,
+            replicationFactor: 1, // Not available in contract
+            requested,
+            joined,
+            numVotes,
+            numVoters,
+          });
         }
-        const newPools = (poolList?.pools || []) as TPool[];
-        const userPoolData = newPools
-          .filter((pool) => parseInt(pool.poolID, 10) === poolIdOfInterest)
-          .map((pool) => {
-            const joinInfo = {
-              requested: requested,
-              joined: joined,
-              numVotes: numVotes,
-              numVoters: pool.participants.length,
-            };
-            return {
-              ...pool,
-              ...joinInfo,
-            } as PoolData;
-          }) as PoolData[];
-        const poolDatas = newPools
-          .filter((pool) => parseInt(pool.poolID, 10) !== poolIdOfInterest)
-          .map((pool) => {
-            const joinInfo = {
-              requested: false,
-              joined: false,
-              numVotes: 0,
-              numVoters: 0,
-            };
-            return {
-              ...pool,
-              ...joinInfo,
-            } as PoolData;
-          }) as PoolData[];
+
         set({
-          pools: [...userPoolData, ...poolDatas],
+          pools,
           dirty: false,
         });
       } catch (error) {
+        console.error('Error getting pools:', error);
         set({
           pools: [] as PoolData[],
           dirty: false,
@@ -159,21 +146,25 @@ const createPoolsModelSlice: StateCreator<
     },
     cancelPoolJoin: async (poolID: number) => {
       try {
-        await fula.isReady(false);
-        await blockchain.cancelPoolJoin(poolID);
+        const selectedChain = useSettingsStore.getState().selectedChain;
+        const contractService = getContractService(selectedChain);
+
+        await contractService.cancelJoinRequest(poolID.toString());
         set({ dirty: true });
       } catch (error) {
-        console.log('cancelPoolJoin: ', error);
+        console.log('cancelPoolJoin error:', error);
         throw error;
       }
     },
     leavePool: async (poolID: number) => {
       try {
-        await fula.isReady(false);
-        await blockchain.leavePool(poolID);
+        const selectedChain = useSettingsStore.getState().selectedChain;
+        const contractService = getContractService(selectedChain);
+
+        await contractService.leavePool(poolID.toString());
         set({ dirty: true });
       } catch (error) {
-        console.log('leavePool: ', error);
+        console.log('leavePool error:', error);
         throw error;
       }
     },
@@ -186,13 +177,35 @@ const createPoolsModelSlice: StateCreator<
   }),
   {
     name: 'PoolsModelSlice',
-    getStorage: () => AsyncStorage,
-    serialize: (state) => JSON.stringify(state),
-    deserialize: (str) => JSON.parse(str),
+    storage: {
+      getItem: async (name: string) => {
+        try {
+          const value = await AsyncStorage.getItem(name);
+          return value ? JSON.parse(value) : null;
+        } catch (error) {
+          console.error('Error getting item from AsyncStorage:', error);
+          return null;
+        }
+      },
+      setItem: async (name: string, value: unknown) => {
+        try {
+          await AsyncStorage.setItem(name, JSON.stringify(value));
+        } catch (error) {
+          console.error('Error setting item in AsyncStorage:', error);
+        }
+      },
+      removeItem: async (name: string) => {
+        try {
+          await AsyncStorage.removeItem(name);
+        } catch (error) {
+          console.error('Error removing item from AsyncStorage:', error);
+        }
+      },
+    },
     onRehydrateStorage: () => {
       // anything to run before rehydrating, return function is called after rehydrating
       return (state) => {
-        state.setHasHydrated(true);
+        state?.setHasHydrated(true);
       };
     },
     partialize: (state): Partial<PoolsModelSlice> => ({

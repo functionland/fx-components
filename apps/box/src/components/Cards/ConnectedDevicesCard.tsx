@@ -72,7 +72,7 @@ export const DeviceCard = ({
         <FxCard.Row.Data>{convertByteToCapacityUnit(capacity)}</FxCard.Row.Data>
       </FxCard.Row>
       <FxCard.Row>
-        <FxCard.Row.Title>Fula Size</FxCard.Row.Title>
+        <FxCard.Row.Title>Stored Files</FxCard.Row.Title>
         <FxCard.Row.Data>
           {convertByteToCapacityUnit(parseInt(folderInfo?.fula, 10)) +
             ' (' +
@@ -81,7 +81,7 @@ export const DeviceCard = ({
         </FxCard.Row.Data>
       </FxCard.Row>
       <FxCard.Row>
-        <FxCard.Row.Title>Chain Size</FxCard.Row.Title>
+        <FxCard.Row.Title>Other Data</FxCard.Row.Title>
         <FxCard.Row.Data>
           {convertByteToCapacityUnit(parseInt(folderInfo?.chain, 10))}
         </FxCard.Row.Data>

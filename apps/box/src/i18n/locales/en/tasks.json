@@ -1,0 +1,11 @@
+{
+  "actionList": "Action List",
+  "connectWallet": "Connect Wallet",
+  "joinPool": "Join Pool",
+  "joinPoolPending": "Join Pool (already tried to join pool. pending)",
+  "refreshTasks": "Refresh tasks",
+  "taskCompleted": "Task completed",
+  "allTasksCompleted": "All tasks completed!",
+  "pendingTasks": "{{count}} pending task",
+  "pendingTasks_plural": "{{count}} pending tasks"
+}

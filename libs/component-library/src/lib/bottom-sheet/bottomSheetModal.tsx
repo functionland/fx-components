@@ -6,7 +6,6 @@ import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
   BottomSheetScrollView,
-  useBottomSheetDynamicSnapPoints,
 } from '@gorhom/bottom-sheet';
 import { useFxTheme } from '../theme/useFxTheme';
 import { FxBox, FxBoxProps } from '../box/box';
@@ -21,7 +20,6 @@ type FxBottomSheetModalProps = Pick<BottomSheetModalProps, 'onDismiss'> & {
   children?: FxBoxProps['children'];
 };
 
-const snapPoints = ['CONTENT_HEIGHT'];
 const INSET = Dimensions.get('window').height * 0.05;
 
 export type FxBottomSheetModalMethods = BottomSheetModal;
@@ -33,17 +31,11 @@ export const FxBottomSheetModal = React.forwardRef<
   const theme = useFxTheme();
   const insets = useSafeAreaInsets();
   const bottomSheetModalRef = React.useRef<BottomSheetModal>(null);
-  const {
-    animatedHandleHeight,
-    animatedSnapPoints,
-    animatedContentHeight,
-    handleContentLayout,
-  } = useBottomSheetDynamicSnapPoints(snapPoints);
-  const [isReady, setIsReady] = useState(false)
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const interactionPromise = InteractionManager.runAfterInteractions(() =>
-      setIsReady(true),
+      setIsReady(true)
     );
     return () => interactionPromise.cancel();
   }, []);
@@ -68,9 +60,7 @@ export const FxBottomSheetModal = React.forwardRef<
   return (
     <BottomSheetModal
       ref={bottomSheetModalRef}
-      snapPoints={animatedSnapPoints}
-      handleHeight={animatedHandleHeight}
-      contentHeight={animatedContentHeight}
+      enableDynamicSizing
       keyboardBlurBehavior="restore"
       index={0}
       backdropComponent={renderBackdrop}
@@ -80,7 +70,6 @@ export const FxBottomSheetModal = React.forwardRef<
     >
       <BottomSheetScrollView
         stickyHeaderIndices={[0]}
-        onLayout={handleContentLayout}
         contentContainerStyle={{
           paddingBottom: insets.bottom + 20,
         }}
@@ -107,7 +96,9 @@ export const FxBottomSheetModal = React.forwardRef<
             <FxCloseIcon color="content1" />
           </FxPressableOpacity>
         </FxBox>
-        <FxBox paddingHorizontal="20">{isReady ? children : <ActivityIndicator></ActivityIndicator>}</FxBox>
+        <FxBox paddingHorizontal="20">
+          {isReady ? children : <ActivityIndicator />}
+        </FxBox>
       </BottomSheetScrollView>
     </BottomSheetModal>
   );

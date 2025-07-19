@@ -131,7 +131,6 @@ export const LinkPasswordScreen = () => {
   const disconnectWallet = () => {
     notifee.stopForegroundService();
     setLinking(false);
-    sdk?.disconnect();
     sdk?.terminate();
 
     console.log('sdk terminated');

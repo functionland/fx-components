@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Import translations directly
 import enTranslation from './locales/en/translation.json';
 import zhTranslation from './locales/zh/translation.json';
+import enTasks from './locales/en/tasks.json';
 
 // Default language
 const FALLBACK_LANGUAGE = 'en';
@@ -13,10 +14,12 @@ const FALLBACK_LANGUAGE = 'en';
 // Resources object with all translations
 const resources = {
   en: {
-    translation: enTranslation
+    translation: enTranslation,
+    tasks: enTasks
   },
   zh: {
-    translation: zhTranslation
+    translation: zhTranslation,
+    tasks: enTasks // Using English tasks for now, can be translated later
   }
 };
 
