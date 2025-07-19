@@ -55,7 +55,7 @@
     "@walletconnect/react-native-compat": "^2.10.5",
     "@web3modal/core-react-native": "*",
     "@web3modal/wagmi-react-native": "^1.1.1",
-    "axios": "^1.8.2",
+    "axios": "^1.10.0",
     "big-integer": "^1.6.52",
     "eciesjs": "^0.4.6",
     "ethers": "5.7.2",
