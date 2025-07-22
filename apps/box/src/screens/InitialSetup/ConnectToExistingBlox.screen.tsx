@@ -15,6 +15,7 @@ import {
   FxExclamationIcon,
   FxPressableOpacity,
   FxArrowLeftIcon,
+  useFxTheme,
 } from '@functionland/component-library';
 import { ActivityIndicator, FlatList, ListRenderItem, StyleSheet } from 'react-native';
 import { SmallHeaderText, SubHeaderText } from '../../components/Text';
@@ -38,6 +39,7 @@ type DicoveryDeviceType = {
 const zeroconf = new Zeroconf();
 export const ConnectToExistingBloxScreen = () => {
   const { t, i18n } = useTranslation(); // Add translation hook
+  const { colors } = useFxTheme();
   const [data, setData] = useState<MDNSBloxService[]>([]);
   const [scanning, setScanning] = useState(false);
   const [addingBloxs, setAddingBloxs] = useState(false);
@@ -284,7 +286,7 @@ export const ConnectToExistingBloxScreen = () => {
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxPressableOpacity onPress={() => rootNavigation.pop()}>
-        <FxArrowLeftIcon color="white" />
+        <FxArrowLeftIcon fill={colors.content1} />
       </FxPressableOpacity>
       <FxBox
         marginTop="16"
@@ -296,7 +298,7 @@ export const ConnectToExistingBloxScreen = () => {
         {scanning ? (
           <ActivityIndicator />
         ) : (
-          <FxRefreshIcon onPress={scanMDNS} color="white" />
+          <FxRefreshIcon onPress={scanMDNS} fill={colors.content1} />
         )}
       </FxBox>
       <SubHeaderText marginTop="4" variant="bodySmallLight">

@@ -7,6 +7,17 @@ import { useUserProfileStore } from './useUserProfileStore';
 import { useSettingsStore } from './useSettingsStore';
 import { getContractService } from '../contracts/contractService';
 
+// Type definitions for the new blockchain method responses
+export interface PoolJoinResponse {
+  account: string;
+  poolID: number;
+}
+
+export interface PoolLeaveResponse {
+  account: string;
+  poolID: number;
+}
+
 interface PoolsActionSlice {
   setHasHydrated: (isHydrated: boolean) => void;
   getPools: () => Promise<void>;
@@ -17,8 +28,8 @@ interface PoolsActionSlice {
     seed: string;
     poolName: string;
   }) => Promise<PoolData>;
-  joinPool: (poolID: number) => Promise<void>;
-  leavePool: (poolID: number) => Promise<void>;
+  joinPool: (poolID: number) => Promise<PoolJoinResponse>;
+  leavePool: (poolID: number) => Promise<PoolLeaveResponse>;
   cancelPoolJoin: (poolID: number) => Promise<void>;
   reset: () => void;
   setDirty: () => void;
@@ -135,10 +146,46 @@ const createPoolsModelSlice: StateCreator<
       }
     },
     joinPool: async (poolID: number) => {
+      let blockchainResponse: PoolJoinResponse | null = null;
+      let blockchainError: Error | null = null;
+
       try {
         await fula.isReady(false);
-        await blockchain.joinPool(poolID);
+        const selectedChain = useSettingsStore.getState().selectedChain;
+
+        // Step 1: Call blockchain.joinPoolWithChain (regardless of success/failure, continue to step 2)
+        try {
+          blockchainResponse = await blockchain.joinPoolWithChain(poolID, selectedChain);
+          console.log('joinPoolWithChain response:', blockchainResponse);
+        } catch (error) {
+          blockchainError = error instanceof Error ? error : new Error(String(error));
+          console.log('joinPoolWithChain error:', blockchainError);
+        }
+
+        // Step 2: Always call contractService.joinPool regardless of step 1 result
+        try {
+          const contractService = getContractService(selectedChain);
+          await contractService.joinPool(poolID.toString());
+          console.log('contractService.joinPool completed');
+        } catch (contractError) {
+          console.log('contractService.joinPool error:', contractError);
+          // Don't throw here, we want to return the blockchain response if available
+        }
+
         set({ dirty: true });
+
+        // If blockchain call succeeded, return its response
+        if (blockchainResponse) {
+          return blockchainResponse;
+        }
+
+        // If blockchain call failed, throw the error
+        if (blockchainError) {
+          throw blockchainError;
+        }
+
+        // This shouldn't happen, but just in case
+        throw new Error('Unknown error in joinPool');
       } catch (error) {
         console.log('joinPool: ', error);
         throw error;
@@ -157,12 +204,46 @@ const createPoolsModelSlice: StateCreator<
       }
     },
     leavePool: async (poolID: number) => {
-      try {
-        const selectedChain = useSettingsStore.getState().selectedChain;
-        const contractService = getContractService(selectedChain);
+      let blockchainResponse: PoolLeaveResponse | null = null;
+      let blockchainError: Error | null = null;
 
-        await contractService.leavePool(poolID.toString());
+      try {
+        await fula.isReady(false);
+        const selectedChain = useSettingsStore.getState().selectedChain;
+
+        // Step 1: Call blockchain.leavePoolWithChain (regardless of success/failure, continue to step 2)
+        try {
+          blockchainResponse = await blockchain.leavePoolWithChain(poolID, selectedChain);
+          console.log('leavePoolWithChain response:', blockchainResponse);
+        } catch (error) {
+          blockchainError = error instanceof Error ? error : new Error(String(error));
+          console.log('leavePoolWithChain error:', blockchainError);
+        }
+
+        // Step 2: Always call contractService.leavePool regardless of step 1 result
+        try {
+          const contractService = getContractService(selectedChain);
+          await contractService.leavePool(poolID.toString());
+          console.log('contractService.leavePool completed');
+        } catch (contractError) {
+          console.log('contractService.leavePool error:', contractError);
+          // Don't throw here, we want to return the blockchain response if available
+        }
+
         set({ dirty: true });
+
+        // If blockchain call succeeded, return its response
+        if (blockchainResponse) {
+          return blockchainResponse;
+        }
+
+        // If blockchain call failed, throw the error
+        if (blockchainError) {
+          throw blockchainError;
+        }
+
+        // This shouldn't happen, but just in case
+        throw new Error('Unknown error in leavePool');
       } catch (error) {
         console.log('leavePool error:', error);
         throw error;

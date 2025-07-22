@@ -55,7 +55,7 @@
 		</dict>
 	</dict>
 	<key>LSMinimumSystemVersion</key>
-	<string>12.0</string>
+	<string>15.0</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Looking for local mDNS/Bonjour services to find the iOT device over local wifi</string>
 	<key>NSBonjourServices</key>

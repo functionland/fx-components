@@ -202,7 +202,8 @@ export const PoolsScreen = () => {
       if (!joinState.step1Complete) {
         try {
           console.log('Step 1: Calling Blox joinPool method...');
-          await joinPoolBlox(poolIdNum);
+          const response = await joinPoolBlox(poolIdNum);
+          console.log('Step 1: Blox joinPool response:', response);
 
           joinState.step1Complete = true;
           joinState.step1Error = '';

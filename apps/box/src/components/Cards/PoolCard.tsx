@@ -147,7 +147,8 @@ const DetailInfo = ({
       if (!joinState.step1Complete) {
         try {
           console.log('Step 1: Calling Blox joinPool method...');
-          await joinPool(poolId);
+          const response = await joinPool(poolId);
+          console.log('Step 1: Blox joinPool response:', response);
 
           newJoinState.step1Complete = true;
           newJoinState.step1Error = undefined;
