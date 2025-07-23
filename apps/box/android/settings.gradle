@@ -1,10 +1,11 @@
-rootProject.name = 'Box'
+pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
+plugins { id("com.facebook.react.settings") }
 
 apply from: new File(["node", "--print", "require.resolve('expo/package.json')"].execute(null, rootDir).text.trim(), "../scripts/autolinking.gradle")
 useExpoModules()
 
-apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); 
-applyNativeModulesSettingsGradle(settings)
+extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 
+rootProject.name = 'Box'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')

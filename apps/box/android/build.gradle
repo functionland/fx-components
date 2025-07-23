@@ -6,10 +6,10 @@ buildscript {
         minSdkVersion = 26
         compileSdkVersion = 35
         targetSdkVersion = 35
-        kotlinVersion = "1.8.20"
+        kotlinVersion = "2.1.0"
         enableHermes = true
         // We use NDK 23 which has both M1 support and is the side-by-side NDK version from AGP.
-        ndkVersion = "26.2.11394342"
+        ndkVersion = "27.1.12297006"
     }
     repositories {
         google()
@@ -17,14 +17,14 @@ buildscript {
         maven { url 'https://jitpack.io' }
     }
     dependencies {
-        classpath("com.android.tools.build:gradle")
+        classpath("com.android.tools.build:gradle:8.13.0-alpha01")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         // Add the dependency for the Google services Grad
-        classpath 'com.google.gms:google-services:4.3.15'
+        classpath 'com.google.gms:google-services:4.4.3'
 
         // NOTE: 2.9.4 has issues: https://github.com/invertase/react-native-firebase/issues/6983
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.2'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.5'
     }
 }
 
@@ -34,8 +34,21 @@ allprojects {
         mavenCentral()
         maven { url 'https://jitpack.io' }
     }
+
+    configurations.all {
+        resolutionStrategy {
+            // Force Kotlin StdLib to 2.1.0 for all modules
+            // Use the exact version you've defined above
+            force "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
+            // It's good practice to also force the plugin here too, just in case
+            force "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        }
+    }
 }
 // @generated begin detox-import - expo prebuild (DO NOT MODIFY) sync-1c7ed0e9d1c19e4a2b5b79bb7ec877ac879fce8d
 def detoxMavenPath = new File(["node", "--print", "require.resolve('detox/package.json')"].execute(null, rootDir).text.trim(), "../Detox-android")
 allprojects { repositories { maven { url(detoxMavenPath) } } }
 // @generated end detox-import
+apply plugin: "com.facebook.react.rootproject"

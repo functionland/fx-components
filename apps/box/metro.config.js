@@ -8,17 +8,11 @@ const { assetExts, sourceExts } = defaultConfig.resolver;
 
 /**
  * Metro configuration
- * https://facebook.github.io/metro/docs/configuration
+ * https://reactnative.dev/docs/metro
  *
- * @type {import('metro-config').MetroConfig}
+ * @type {import('@react-native/metro-config').MetroConfig}
  */
 const customConfig = {
-  getTransformOptions: async () => ({
-    transform: {
-      experimentalImportSupport: false,
-      inlineRequires: true,
-    },
-  }),
   transformer: {
     babelTransformerPath: require.resolve('react-native-svg-transformer'),
   },
@@ -28,8 +22,6 @@ const customConfig = {
     sourceExts: [...sourceExts, 'svg'],
     resolverMainFields: ['sbmodern', 'react-native', 'browser', 'main'],
     blockList: exclusionList([/^(?!.*node_modules).*\/dist\/.*/]),
-    // unstable_enableSymlinks: true,
-    // unstable_enablePackageExports: true,
   },
 };
 

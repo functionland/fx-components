@@ -1,6 +1,6 @@
 import { FxText } from '@functionland/component-library';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { SafeAreaView } from 'react-native';
+import { SafeAreaView, StyleSheet, View, useColorScheme } from 'react-native';
 import WifiManager from 'react-native-wifi-reborn';
 import { getWifiStatus, putApDisable } from '../../api/wifi';
 import { DEFAULT_NETWORK_NAME } from '../../hooks';
@@ -16,6 +16,7 @@ enum NetworkStatus {
 
 export const CheckConnectionScreen = ({ route }) => {
   const { t } = useTranslation(); // Add translation hook
+  const isDarkMode = useColorScheme() === 'dark';
   const [status, setStatus] = useState(NetworkStatus.Connecting);
   const { ssid } = route.params;
 
@@ -75,13 +76,24 @@ export const CheckConnectionScreen = ({ route }) => {
   }, [status, ssid, t]);
 
   return (
-    <SafeAreaView>
-      <FxText variant="body" margin="16" color="primary">
-        {t('checkConnection.verifyingConnectionWith', { ssid })}
-      </FxText>
-      <FxText variant="body" margin="16" color="secondary">
-        {statusMessage}
-      </FxText>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <FxText variant="body" margin="16" color="primary">
+          {t('checkConnection.verifyingConnectionWith', { ssid })}
+        </FxText>
+        <FxText variant="body" margin="16" color="secondary">
+          {statusMessage}
+        </FxText>
+      </View>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});

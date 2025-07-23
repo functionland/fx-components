@@ -59,7 +59,6 @@
       "executor": "@nx/react-native:sync-deps",
       "options": {
         "include": [
-          "@web3modal/wagmi-react-native",
           "react-native-randombytes",
           "react-native-reanimated"
         ]
