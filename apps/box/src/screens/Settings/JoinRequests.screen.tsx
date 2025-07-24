@@ -168,21 +168,40 @@ export const JoinRequestsScreen = () => {
         ) : joinRequests.length > 0 ? (
           joinRequests.map((request, index) => (
             <FxCard key={`${request.account}-${index}`} marginBottom="16">
-              <FxBox flexDirection="row" justifyContent="space-between" alignItems="flex-start">
+              <FxBox
+                flexDirection="row"
+                justifyContent="space-between"
+                alignItems="flex-start"
+              >
                 <FxBox flex={1}>
                   <FxText variant="bodyMediumRegular" marginBottom="8">
                     Join Request #{index + 1}
                   </FxText>
-                  <FxText variant="bodySmallRegular" color="content2" marginBottom="4">
-                    Account: {request.account.slice(0, 6)}...{request.account.slice(-4)}
+                  <FxText
+                    variant="bodySmallRegular"
+                    color="content2"
+                    marginBottom="4"
+                  >
+                    Account: {request.account.slice(0, 6)}...
+                    {request.account.slice(-4)}
                   </FxText>
-                  <FxText variant="bodySmallRegular" color="content2" marginBottom="4">
-                    Peer ID: {request.peerId.slice(0, 8)}...{request.peerId.slice(-8)}
+                  <FxText
+                    variant="bodySmallRegular"
+                    color="content2"
+                    marginBottom="4"
+                  >
+                    Peer ID: {request.peerId.slice(0, 8)}...
+                    {request.peerId.slice(-8)}
                   </FxText>
-                  <FxText variant="bodySmallRegular" color="content2" marginBottom="8">
-                    Submitted: {new Date(request.timestamp * 1000).toLocaleDateString()}
+                  <FxText
+                    variant="bodySmallRegular"
+                    color="content2"
+                    marginBottom="8"
+                  >
+                    Submitted:{' '}
+                    {new Date(request.timestamp * 1000).toLocaleDateString()}
                   </FxText>
-                  
+
                   <FxBox flexDirection="row" marginBottom="16">
                     <FxBox marginRight="16">
                       <FxText variant="bodyXSRegular" color="greenBase">
@@ -209,19 +228,19 @@ export const JoinRequestsScreen = () => {
                       <FxButton
                         onPress={() => handleVote(request.account, false)}
                         size="small"
-                        variant="destructive"
+                        variant="inverted"
                       >
                         Reject
                       </FxButton>
                     </FxBox>
                   )}
-                  
+
                   {request.status === 2 && (
                     <FxText variant="bodySmallRegular" color="greenBase">
                       ✓ Approved
                     </FxText>
                   )}
-                  
+
                   {request.status === 3 && (
                     <FxText variant="bodySmallRegular" color="errorBase">
                       ✗ Rejected/Cancelled
@@ -237,7 +256,11 @@ export const JoinRequestsScreen = () => {
               <FxText variant="bodyLargeRegular" marginBottom="8">
                 No Join Requests
               </FxText>
-              <FxText variant="bodySmallRegular" color="content2" textAlign="center">
+              <FxText
+                variant="bodySmallRegular"
+                color="content2"
+                textAlign="center"
+              >
                 There are currently no pending join requests for this pool
               </FxText>
             </FxBox>
@@ -246,10 +269,19 @@ export const JoinRequestsScreen = () => {
 
         {/* Placeholder message for development */}
         <FxCard marginTop="16">
-          <FxBox padding="16" backgroundColor="backgroundSecondary" borderRadius="m">
-            <FxText variant="bodySmallRegular" color="content2" textAlign="center">
-              Note: Join request management is currently in development. 
-              This screen will show actual join requests once the backend integration is complete.
+          <FxBox
+            padding="16"
+            backgroundColor="backgroundSecondary"
+            borderRadius="m"
+          >
+            <FxText
+              variant="bodySmallRegular"
+              color="content2"
+              textAlign="center"
+            >
+              Note: Join request management is currently in development. This
+              screen will show actual join requests once the backend integration
+              is complete.
             </FxText>
           </FxBox>
         </FxCard>

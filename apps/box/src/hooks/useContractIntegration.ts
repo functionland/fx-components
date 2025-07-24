@@ -191,7 +191,13 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
     operation: () => Promise<T>,
     operationName: string
   ): Promise<T | null> => {
+    console.log(`executeContractCall: Starting ${operationName}`, {
+      isInitialized: state.isInitialized,
+      hasContractService: !!state.contractService
+    });
+
     if (!state.isInitialized || !state.contractService) {
+      console.log(`executeContractCall: Contract not ready for ${operationName}`);
       queueToast({
         type: 'error',
         title: 'Contract Not Ready',
@@ -201,7 +207,9 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
     }
 
     try {
+      console.log(`executeContractCall: Executing ${operationName} operation`);
       const result = await operation();
+      console.log(`executeContractCall: ${operationName} completed successfully`);
       queueToast({
         type: 'success',
         title: 'Transaction Successful',
@@ -209,10 +217,17 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
       });
       return result;
     } catch (error: any) {
-      console.error(`${operationName} failed:`, error);
-      
+      console.error(`executeContractCall: ${operationName} failed:`, error);
+      console.error(`executeContractCall: ${operationName} error details:`, {
+        message: error?.message,
+        code: error?.code,
+        reason: error?.reason,
+        data: error?.data,
+        stack: error?.stack
+      });
+
       let errorMessage = error.message || `${operationName} failed`;
-      
+
       // Handle common error cases
       if (error.code === 'INSUFFICIENT_FUNDS') {
         errorMessage = 'Insufficient funds for transaction';
@@ -227,7 +242,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
         title: 'Transaction Failed',
         message: errorMessage,
       });
-      
+
       return null;
     }
   }, [state.isInitialized, state.contractService, queueToast]);
@@ -294,30 +309,30 @@ export const usePoolOperations = () => {
   const contractIntegration = useContractIntegration({ showConnectedNotification: false });
   const { executeContractCall, contractService } = contractIntegration;
 
-  const joinPool = useCallback(async (poolId: string) => {
+  const joinPool = useCallback(async (poolId: string, peerId?: string) => {
     return executeContractCall(
-      () => contractService!.joinPool(poolId),
+      () => contractService!.joinPool(poolId, peerId),
       'Join Pool'
     );
   }, [executeContractCall, contractService]);
 
-  const leavePool = useCallback(async (poolId: string) => {
+  const leavePool = useCallback(async (poolId: string, peerId?: string) => {
     return executeContractCall(
-      () => contractService!.leavePool(poolId),
+      () => contractService!.leavePool(poolId, peerId),
       'Leave Pool'
     );
   }, [executeContractCall, contractService]);
 
-  const cancelJoinRequest = useCallback(async (poolId: string) => {
+  const cancelJoinRequest = useCallback(async (poolId: string, peerId?: string) => {
     return executeContractCall(
-      () => contractService!.cancelJoinRequest(poolId),
+      () => contractService!.cancelJoinRequest(poolId, peerId),
       'Cancel Join Request'
     );
   }, [executeContractCall, contractService]);
 
-  const voteJoinRequest = useCallback(async (poolId: string, account: string, vote: boolean) => {
+  const voteJoinRequest = useCallback(async (poolId: string, peerId: string, voterPeerId: string, vote: boolean) => {
     return executeContractCall(
-      () => contractService!.voteJoinRequest(poolId, account, vote),
+      () => contractService!.voteJoinRequest(poolId, peerId, voterPeerId, vote),
       'Vote on Join Request'
     );
   }, [executeContractCall, contractService]);

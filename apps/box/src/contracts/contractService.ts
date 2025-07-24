@@ -1,15 +1,16 @@
 import { ethers } from 'ethers';
 import { useSDK } from '@metamask/sdk-react';
-import { 
-  PoolInfo, 
-  UserPoolInfo, 
-  JoinRequest, 
-  RewardInfo, 
+import {
+  PoolInfo,
+  UserPoolInfo,
+  JoinRequest,
+  RewardInfo,
   ContractError,
-  SupportedChain 
+  SupportedChain
 } from './types';
 import { POOL_STORAGE_ABI, REWARD_ENGINE_ABI, FULA_TOKEN_ABI } from './abis';
 import { getChainConfigByName, METHOD_GAS_LIMITS, ContractMethod } from './config';
+import { peerIdToBytes32, bytes32ToPeerId } from '../utils/peerIdConversion';
 
 export class ContractService {
   private provider: ethers.providers.Web3Provider | null = null;
@@ -139,56 +140,159 @@ export class ContractService {
     }
   }
 
-  async joinPool(poolId: string): Promise<void> {
+  async joinPool(poolId: string, peerId?: string): Promise<void> {
     try {
       if (!this.poolStorageContract) throw new Error('Contract not initialized');
-      
-      const tx = await this.poolStorageContract.joinPool(poolId, {
+
+      if (!peerId) {
+        throw new Error('PeerId is required for joining pool');
+      }
+
+      // Convert peerId to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      console.log('joinPool: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+
+      const tx = await this.poolStorageContract.joinPoolRequest(poolId, peerIdBytes32, {
         gasLimit: METHOD_GAS_LIMITS.joinPool,
       });
-      
+
       await tx.wait();
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async leavePool(poolId: string): Promise<void> {
+  async leavePool(poolId: string, peerId?: string): Promise<void> {
     try {
+      console.log('leavePool: Starting leave pool process', { poolId, peerId });
+
       if (!this.poolStorageContract) throw new Error('Contract not initialized');
-      
-      const tx = await this.poolStorageContract.leavePool(poolId, {
-        gasLimit: METHOD_GAS_LIMITS.leavePool,
-      });
-      
-      await tx.wait();
+
+      if (!peerId) {
+        throw new Error('PeerId is required for leaving pool');
+      }
+
+      // Convert peerId to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      console.log('leavePool: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+      console.log('leavePool: About to call removeMemberPeerId on contract');
+      console.log('leavePool: removeMemberPeerId exists:', typeof this.poolStorageContract.removeMemberPeerId);
+      console.log('leavePool: Call parameters:', { poolId, peerIdBytes32, gasLimit: METHOD_GAS_LIMITS.leavePool });
+
+      try {
+        /*
+        try {
+          console.log("leavepool: dry-run transaction");
+          await this.poolStorageContract.callStatic
+          .removeMemberPeerId(
+            Number(poolId),                       // be explicit – BigNumberish
+            peerIdBytes32,
+            { from: await this.signer.getAddress() }
+          ); 
+        } catch (dryRunError) {
+          console.log("leavepool:", dryRunError);
+        }
+        // First, try to estimate gas to see if the transaction would succeed
+        console.log('leavePool: Estimating gas for removeMemberPeerId...');
+        
+        try {
+          // Add timeout to gas estimation
+          const gasEstimationPromise = this.poolStorageContract.estimateGas.removeMemberPeerId(Number(poolId), peerIdBytes32);
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Gas estimation timeout after 10 seconds')), 10000);
+          });
+
+          const estimatedGas = await Promise.race([gasEstimationPromise, timeoutPromise]);
+          console.log('leavePool: Gas estimation successful', { estimatedGas: estimatedGas.toString() });
+        } catch (gasEstimationError) {
+          console.error('leavePool: Gas estimation failed:', gasEstimationError);
+          console.error('leavePool: Gas estimation error details:', {
+            message: gasEstimationError.message,
+            code: gasEstimationError.code,
+            reason: gasEstimationError.reason,
+            data: gasEstimationError.data
+          });
+
+          // If gas estimation fails, the transaction will likely fail too
+          // But let's try anyway in case it's just a gas estimation issue
+          console.log('leavePool: Continuing despite gas estimation failure...');
+        }
+*/
+        console.log('leavePool: Calling removeMemberPeerId with transaction...');
+        console.log('leavePool: Transaction parameters:', {
+          poolId: Number(poolId),
+          peerIdBytes32,
+          gasLimit: 150000,
+          from: await this.signer.getAddress()
+        });
+
+        const tx = await this.poolStorageContract.removeMemberPeerId(
+          Number(poolId),
+          peerIdBytes32,
+          {
+            gasLimit: Number(150000),
+            from: await this.signer.getAddress(),
+          }
+        );
+
+        console.log('leavePool: Transaction sent, waiting for confirmation', { txHash: tx.hash });
+        const receipt = await tx.wait();
+        console.log('leavePool: Transaction confirmed', { txHash: receipt.transactionHash, blockNumber: receipt.blockNumber });
+      } catch (contractCallError) {
+        console.error('leavePool: Contract call failed:', contractCallError);
+        console.error('leavePool: Error details:', {
+          message: contractCallError.message,
+          code: contractCallError.code,
+          reason: contractCallError.reason,
+          data: contractCallError.data,
+          transaction: contractCallError.transaction
+        });
+        throw contractCallError;
+      }
     } catch (error) {
+      console.error('leavePool: Error occurred', error);
       throw this.handleError(error);
     }
   }
 
-  async cancelJoinRequest(poolId: string): Promise<void> {
+  async cancelJoinRequest(poolId: string, peerId?: string): Promise<void> {
     try {
       if (!this.poolStorageContract) throw new Error('Contract not initialized');
-      
-      const tx = await this.poolStorageContract.cancelJoinRequest(poolId, {
+
+      if (!peerId) {
+        throw new Error('PeerId is required for canceling join request');
+      }
+
+      // Convert peerId to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      console.log('cancelJoinRequest: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+
+      const tx = await this.poolStorageContract.cancelJoinRequest(poolId, peerIdBytes32, {
         gasLimit: METHOD_GAS_LIMITS.cancelJoinRequest,
       });
-      
+
       await tx.wait();
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async voteJoinRequest(poolId: string, account: string, vote: boolean): Promise<void> {
+  async voteJoinRequest(poolId: string, peerId: string, voterPeerId: string, vote: boolean): Promise<void> {
     try {
       if (!this.poolStorageContract) throw new Error('Contract not initialized');
-      
-      const tx = await this.poolStorageContract.voteJoinRequest(poolId, account, vote, {
+
+      // Convert both peerIds to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      const voterPeerIdBytes32 = await peerIdToBytes32(voterPeerId);
+      console.log('voteJoinRequest: Converted peerIds to bytes32', {
+        peerId, peerIdBytes32,
+        voterPeerId, voterPeerIdBytes32
+      });
+
+      const tx = await this.poolStorageContract.voteOnJoinRequest(poolId, peerIdBytes32, voterPeerIdBytes32, vote, {
         gasLimit: METHOD_GAS_LIMITS.voteJoinRequest,
       });
-      
+
       await tx.wait();
     } catch (error) {
       throw this.handleError(error);
@@ -196,23 +300,6 @@ export class ContractService {
   }
 
   // Pool Query Methods
-  async getPool(poolId: string): Promise<PoolInfo> {
-    try {
-      if (!this.poolStorageContract) throw new Error('Contract not initialized');
-      
-      const pool = await this.poolStorageContract.getPool(poolId);
-      return {
-        poolId: pool.poolId.toString(),
-        name: pool.name,
-        region: pool.region,
-        parent: pool.parent,
-        participants: pool.participants,
-        replicationFactor: pool.replicationFactor.toNumber(),
-      };
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
 
   async listPools(offset: number = 0, limit: number = 25): Promise<PoolInfo[]> {
     try {
@@ -277,37 +364,82 @@ export class ContractService {
 
   // Get all pool IDs
   async getAllPoolIds(): Promise<string[]> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    let ids: string[] = [];
-    let index = 0;
-    while (true) {
-      try {
-        const id = await this.poolStorageContract.poolIds(index);
-        ids.push(id.toString());
-        index++;
-      } catch (error) {
-        // End of array
-        break;
+    try {
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      // Use read-only provider like in listPools to avoid hanging issues
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      let ids: string[] = [];
+      let index = 0;
+
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('getAllPoolIds call timed out after 30 seconds')), 30000);
+      });
+
+      while (true) {
+        console.log("HERE index:"+index);
+        try {
+          const contractCallPromise = readOnlyContract.poolIds(index);
+          const id = await Promise.race([contractCallPromise, timeoutPromise]);
+          console.log("HERE id: "+id);
+
+          // If poolId is 0, we've reached the end
+          if (id === 0) {
+            console.log('getAllPoolIds: Reached end of pools (poolId = 0)');
+            break;
+          }
+
+          ids.push(id.toString());
+          index++;
+        } catch (error) {
+          // End of array or timeout
+          console.error("HERE Error", error);
+          break;
+        }
       }
+      console.log('getAllPoolIds: Final pool IDs:', ids);
+      return ids;
+    } catch (error) {
+      console.error('getAllPoolIds error:', error);
+      throw this.handleError(error);
     }
-    return ids;
   }
 
   // Get pool details by ID
   async getPool(poolId: string): Promise<any> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    const pool = await this.poolStorageContract.pools(poolId);
-    return {
-      creator: pool.creator,
-      id: pool.id.toString(),
-      maxChallengeResponsePeriod: pool.maxChallengeResponsePeriod.toString(),
-      memberCount: pool.memberCount.toString(),
-      maxMembers: pool.maxMembers.toString(),
-      requiredTokens: pool.requiredTokens.toString(),
-      minPingTime: pool.minPingTime.toString(),
-      name: pool.name,
-      region: pool.region
-    };
+    try {
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      // Use read-only provider for consistency
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      const pool = await readOnlyContract.pools(poolId);
+      return {
+        creator: pool.creator,
+        id: pool.id.toString(),
+        maxChallengeResponsePeriod: pool.maxChallengeResponsePeriod.toString(),
+        memberCount: pool.memberCount.toString(),
+        maxMembers: pool.maxMembers.toString(),
+        requiredTokens: pool.requiredTokens.toString(),
+        minPingTime: pool.minPingTime.toString(),
+        name: pool.name,
+        region: pool.region
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   // Get member list for a pool
@@ -318,46 +450,151 @@ export class ContractService {
 
   // Get peer IDs for a member in a pool
   async getMemberPeerIds(poolId: string, member: string): Promise<string[]> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    return await this.poolStorageContract.getMemberPeerIds(poolId, member);
+    try {
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      // Use read-only provider for consistency
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      const peerIds = await readOnlyContract.getMemberPeerIds(poolId, member);
+
+      // If the contract returns bytes32 peerIds, convert them back to string format
+      // Note: This depends on the contract implementation - if it returns strings, no conversion needed
+      const convertedPeerIds = await Promise.all(
+        peerIds.map(async (peerId: any) => {
+          // Check if it's a bytes32 (hex string starting with 0x and 66 chars long)
+          if (typeof peerId === 'string' && peerId.startsWith('0x') && peerId.length === 66) {
+            try {
+              return await bytes32ToPeerId(peerId);
+            } catch (error) {
+              console.warn('Failed to convert bytes32 to peerId, returning as-is:', peerId);
+              return peerId;
+            }
+          }
+          return peerId;
+        })
+      );
+
+      return convertedPeerIds;
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   // Get peer info for a peerId in a pool
   async getPeerIdInfo(poolId: string, peerId: string): Promise<{ member: string, lockedTokens: string }> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    const [member, lockedTokens] = await this.poolStorageContract.getPeerIdInfo(poolId, peerId);
-    return { member, lockedTokens: lockedTokens.toString() };
+    try {
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      // Use read-only provider for consistency
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      // Convert peerId to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      console.log('getPeerIdInfo: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+
+      const [member, lockedTokens] = await readOnlyContract.getPeerIdInfo(poolId, peerIdBytes32);
+      return { member, lockedTokens: lockedTokens.toString() };
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   // Get member index for a member in a pool
   async getMemberIndex(poolId: string, member: string): Promise<string> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    const idx = await this.poolStorageContract.getMemberIndex(poolId, member);
-    return idx.toString();
+    try {
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      // Use read-only provider for consistency
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      const idx = await readOnlyContract.getMemberIndex(poolId, member);
+      return idx.toString();
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   // Get join request for a poolId and peerId
   async getJoinRequest(poolId: string, peerId: string): Promise<any> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    return await this.poolStorageContract.joinRequests(poolId, peerId);
+    try {
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      // Use read-only provider for consistency
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      // Convert peerId to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      console.log('getJoinRequest: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+
+      return await readOnlyContract.joinRequests(poolId, peerIdBytes32);
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   // Get all join request keys for a pool
   async getJoinRequestKeys(poolId: string): Promise<string[]> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    let keys: string[] = [];
-    let index = 0;
-    while (true) {
-      try {
-        const key = await this.poolStorageContract.joinRequestKeys(poolId, index);
-        keys.push(key);
-        index++;
-      } catch (error) {
-        // End of array
-        break;
+    try {
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      // Use read-only provider for consistency
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      let keys: string[] = [];
+      let index = 0;
+      while (true) {
+        try {
+          const key = await readOnlyContract.joinRequestKeys(poolId, index);
+
+          // If the key is a bytes32 peerId, convert it back to string format
+          if (typeof key === 'string' && key.startsWith('0x') && key.length === 66) {
+            try {
+              const convertedKey = await bytes32ToPeerId(key);
+              keys.push(convertedKey);
+            } catch (error) {
+              console.warn('Failed to convert bytes32 to peerId, using as-is:', key);
+              keys.push(key);
+            }
+          } else {
+            keys.push(key);
+          }
+
+          index++;
+        } catch (error) {
+          // End of array
+          break;
+        }
       }
+      return keys;
+    } catch (error) {
+      throw this.handleError(error);
     }
-    return keys;
   }
 
   // Check if address is forfeited
@@ -372,14 +609,22 @@ export class ContractService {
     unclaimedStorage: string;
     totalUnclaimed: string;
   }> {
-    if (!this.rewardEngineContract) throw new Error('Contract not initialized');
+    try {
+      if (!this.rewardEngineContract) throw new Error('Contract not initialized');
 
-    const result = await this.rewardEngineContract.getUnclaimedRewards(account, peerId, poolId);
-    return {
-      unclaimedMining: ethers.utils.formatEther(result.unclaimedMining),
-      unclaimedStorage: ethers.utils.formatEther(result.unclaimedStorage),
-      totalUnclaimed: ethers.utils.formatEther(result.totalUnclaimed),
-    };
+      // Convert peerId to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      console.log('getUnclaimedRewards: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+
+      const result = await this.rewardEngineContract.getUnclaimedRewards(account, peerIdBytes32, poolId);
+      return {
+        unclaimedMining: ethers.utils.formatEther(result.unclaimedMining),
+        unclaimedStorage: ethers.utils.formatEther(result.unclaimedStorage),
+        totalUnclaimed: ethers.utils.formatEther(result.totalUnclaimed),
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   // Get claimed rewards info for a peerId and poolId
@@ -387,13 +632,21 @@ export class ContractService {
     lastClaimedTimestamp: number;
     timeSinceLastClaim: number;
   }> {
-    if (!this.rewardEngineContract) throw new Error('Contract not initialized');
+    try {
+      if (!this.rewardEngineContract) throw new Error('Contract not initialized');
 
-    const result = await this.rewardEngineContract.getClaimedRewardsInfo(account, peerId, poolId);
-    return {
-      lastClaimedTimestamp: result.lastClaimedTimestamp.toNumber(),
-      timeSinceLastClaim: result.timeSinceLastClaim.toNumber(),
-    };
+      // Convert peerId to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      console.log('getClaimedRewardsInfo: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+
+      const result = await this.rewardEngineContract.getClaimedRewardsInfo(account, peerIdBytes32, poolId);
+      return {
+        lastClaimedTimestamp: result.lastClaimedTimestamp.toNumber(),
+        timeSinceLastClaim: result.timeSinceLastClaim.toNumber(),
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   // Claim rewards for a peerId and poolId using RewardEngine
@@ -401,7 +654,11 @@ export class ContractService {
     try {
       if (!this.rewardEngineContract) throw new Error('Contract not initialized');
 
-      const tx = await this.rewardEngineContract.claimRewards(peerId, poolId, {
+      // Convert peerId to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      console.log('claimRewardsForPeer: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+
+      const tx = await this.rewardEngineContract.claimRewards(peerIdBytes32, poolId, {
         gasLimit: METHOD_GAS_LIMITS.claimRewards,
       });
 
@@ -413,9 +670,26 @@ export class ContractService {
 
   // Get join timestamp for a peerId
   async joinTimestamp(peerId: string): Promise<string> {
-    if (!this.poolStorageContract) throw new Error('Contract not initialized');
-    const ts = await this.poolStorageContract.joinTimestamp(peerId);
-    return ts.toString();
+    try {
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
+
+      // Use read-only provider for consistency
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyContract = new ethers.Contract(
+        chainConfig.contracts.poolStorage,
+        POOL_STORAGE_ABI,
+        this.readOnlyProvider
+      );
+
+      // Convert peerId to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      console.log('joinTimestamp: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+
+      const ts = await readOnlyContract.joinTimestamp(peerIdBytes32);
+      return ts.toString();
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   // Reward Methods
@@ -517,7 +791,12 @@ export class ContractService {
       );
 
       console.log('isPeerIdMemberOfPool: Making contract call...', { poolId, peerId });
-      const [isMember, memberAddress] = await readOnlyContract.isPeerIdMemberOfPool(poolId, peerId);
+
+      // Convert peerId to bytes32 format for contract call
+      const peerIdBytes32 = await peerIdToBytes32(peerId);
+      console.log('isPeerIdMemberOfPool: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+
+      const [isMember, memberAddress] = await readOnlyContract.isPeerIdMemberOfPool(poolId, peerIdBytes32);
       console.log('isPeerIdMemberOfPool: Contract call completed', { isMember, memberAddress });
 
       return { isMember, memberAddress };
@@ -557,6 +836,7 @@ export class ContractService {
       });
 
       if (isMemberByAddress && peerId) {
+        console.log("getUserPoolInfo: isMemberByAddress="+isMemberByAddress+", peerId"+peerId);
         // Step 2: If account is a member, find which pool(s) and check if peerId is also a member
         const poolIds = await this.getAllPoolIds();
         console.log('getUserPoolInfo: All pools fetched', { poolIds, peerId });
@@ -576,6 +856,7 @@ export class ContractService {
           
         }
       } else if (isMemberByAddress) {
+        console.log("getUserPoolInfo: only isMemberByAddress="+isMemberByAddress);
         // If no peerId provided, just find which pool the account is in
         const poolIds = await this.getAllPoolIds();
         console.log('getUserPoolInfo: All pools fetched', { poolIds });
@@ -586,7 +867,8 @@ export class ContractService {
             break;
           }
         }
-      }
+      } else 
+        console.log("getUserPoolInfo: None");
 
       // TODO: Check for pending join requests in requestPoolId
 

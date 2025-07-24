@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
           backgroundColor="backgroundApp"
         >
           <FxText
-            variant="bodyLargeBold"
+            variant="bodyMediumRegular"
             color="errorBase"
             textAlign="center"
             marginBottom="16"
@@ -83,7 +83,7 @@ export class ErrorBoundary extends Component<Props, State> {
               : 'An unexpected error occurred. Please try again.'}
           </FxText>
 
-          <FxButton onPress={this.handleRetry} variant="primary">
+          <FxButton onPress={this.handleRetry}>
             Try Again
           </FxButton>
         </FxBox>

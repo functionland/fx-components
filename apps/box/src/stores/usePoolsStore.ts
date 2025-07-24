@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TPool } from '../models';
 import { useUserProfileStore } from './useUserProfileStore';
 import { useSettingsStore } from './useSettingsStore';
+import { useBloxsStore } from './useBloxsStore';
 import { getContractService } from '../contracts/contractService';
 
 // Type definitions for the new blockchain method responses
@@ -163,14 +164,14 @@ const createPoolsModelSlice: StateCreator<
         }
 
         // Step 2: Always call contractService.joinPool regardless of step 1 result
-        try {
+        /*try {
           const contractService = getContractService(selectedChain);
           await contractService.joinPool(poolID.toString());
           console.log('contractService.joinPool completed');
         } catch (contractError) {
           console.log('contractService.joinPool error:', contractError);
           // Don't throw here, we want to return the blockchain response if available
-        }
+        }*/
 
         set({ dirty: true });
 
@@ -195,8 +196,13 @@ const createPoolsModelSlice: StateCreator<
       try {
         const selectedChain = useSettingsStore.getState().selectedChain;
         const contractService = getContractService(selectedChain);
+        const currentBloxPeerId = useBloxsStore.getState().currentBloxPeerId;
 
-        await contractService.cancelJoinRequest(poolID.toString());
+        if (!currentBloxPeerId) {
+          throw new Error('Current Blox peer ID is not available');
+        }
+
+        await contractService.cancelJoinRequest(poolID.toString(), currentBloxPeerId);
         set({ dirty: true });
       } catch (error) {
         console.log('cancelPoolJoin error:', error);
@@ -223,7 +229,13 @@ const createPoolsModelSlice: StateCreator<
         // Step 2: Always call contractService.leavePool regardless of step 1 result
         try {
           const contractService = getContractService(selectedChain);
-          await contractService.leavePool(poolID.toString());
+          const currentBloxPeerId = useBloxsStore.getState().currentBloxPeerId;
+
+          if (!currentBloxPeerId) {
+            throw new Error('Current Blox peer ID is not available');
+          }
+
+          await contractService.leavePool(poolID.toString(), currentBloxPeerId);
           console.log('contractService.leavePool completed');
         } catch (contractError) {
           console.log('contractService.leavePool error:', contractError);

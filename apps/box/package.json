@@ -38,6 +38,7 @@
     "expo-three": "*",
     "metro-config": "*",
     "moment": "2.29.4",
+    "multiformats": "^12.1.3",
     "node-libs-react-native": "*",
     "react": "*",
     "react-content-loader": "*",

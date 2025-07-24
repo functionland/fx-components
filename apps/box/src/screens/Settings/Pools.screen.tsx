@@ -218,7 +218,7 @@ export const PoolsScreen = () => {
       // Step 2: Call API to join the pool (always execute if not completed)
       if (!joinState.step2Complete) {
         try {
-          console.log('Step 2: Calling API joinPool...');
+          console.log('Step 2: Calling API joinPool....');
           const result = await joinPoolViaAPI(poolID, poolName);
 
           if (result.success) {
@@ -312,20 +312,25 @@ export const PoolsScreen = () => {
         return;
       }
 
-      setRefreshing(true);
+      // Don't set refreshing=true here! It triggers immediate pool reload
+      console.log('wrappedJoinPool: Starting join pool transaction...');
       const result = await joinPool(poolID.toString());
+
       if (result !== null) {
+        console.log('wrappedJoinPool: Transaction successful, now refreshing pools...');
         queueToast({
           type: 'success',
           title: 'Pool Join Requested',
           message: 'Your join request has been submitted successfully',
         });
+        // Only refresh pools AFTER successful transaction
+        setRefreshing(true);
       }
     } catch (e) {
+      console.error('wrappedJoinPool: Error occurred:', e);
       handlePoolActionErrors('Error joining pool', e.toString());
-    } finally {
-      setRefreshing(false);
     }
+    // Don't set refreshing=false in finally block since we only set it to true on success
   };
 
   // New API-based leave pool
@@ -407,20 +412,26 @@ export const PoolsScreen = () => {
         return;
       }
 
-      setRefreshing(true);
+      // Don't set refreshing=true here! It triggers immediate pool reload
+      // which interrupts the MetaMask transaction
+      console.log('wrappedLeavePool: Starting leave pool transaction...');
       const result = await leavePool(poolID.toString());
+
       if (result !== null) {
+        console.log('wrappedLeavePool: Transaction successful, now refreshing pools...');
         queueToast({
           type: 'success',
           title: 'Left Pool',
           message: 'You have successfully left the pool',
         });
+        // Only refresh pools AFTER successful transaction
+        setRefreshing(true);
       }
     } catch (e) {
+      console.error('wrappedLeavePool: Error occurred:', e);
       handlePoolActionErrors('Error leaving', e.toString());
-    } finally {
-      setRefreshing(false);
     }
+    // Don't set refreshing=false in finally block since we only set it to true on success
   };
 
   // Action handlers for new functionality

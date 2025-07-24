@@ -280,14 +280,17 @@ export const usePools = () => {
 
   const joinPool = useCallback(
     async (poolId: string) => {
-      const result = await poolOperations.joinPool(poolId);
+      if (!currentBloxPeerId) {
+        throw new Error('Current Blox peer ID is not available');
+      }
+      const result = await poolOperations.joinPool(poolId, currentBloxPeerId);
       if (result !== null) {
         // Refresh pools after successful join
         await loadPools();
       }
       return result;
     },
-    [poolOperations, loadPools]
+    [poolOperations, loadPools, currentBloxPeerId]
   );
 
   // API-based leave pool function
@@ -382,26 +385,45 @@ export const usePools = () => {
 
   const leavePool = useCallback(
     async (poolId: string) => {
-      const result = await poolOperations.leavePool(poolId);
+      console.log('usePools.leavePool: Starting leave pool', { poolId, currentBloxPeerId });
+
+      if (!currentBloxPeerId) {
+        console.error('usePools.leavePool: Current Blox peer ID is not available');
+        throw new Error('Current Blox peer ID is not available');
+      }
+
+      console.log('usePools.leavePool: Calling poolOperations.leavePool');
+      const result = await poolOperations.leavePool(poolId, currentBloxPeerId);
+      console.log('usePools.leavePool: poolOperations.leavePool result', { result });
+
+      // Only refresh pools if the transaction was successful
       if (result !== null) {
-        // Refresh pools after successful leave
-        await loadPools();
+        console.log('usePools.leavePool: Leave successful, refreshing pools');
+        // Add a small delay to ensure transaction is fully processed
+        setTimeout(async () => {
+          await loadPools();
+        }, 1000);
+      } else {
+        console.log('usePools.leavePool: Leave returned null, not refreshing pools');
       }
       return result;
     },
-    [poolOperations, loadPools]
+    [poolOperations, loadPools, currentBloxPeerId]
   );
 
   const cancelJoinRequest = useCallback(
     async (poolId: string) => {
-      const result = await poolOperations.cancelJoinRequest(poolId);
+      if (!currentBloxPeerId) {
+        throw new Error('Current Blox peer ID is not available');
+      }
+      const result = await poolOperations.cancelJoinRequest(poolId, currentBloxPeerId);
       if (result !== null) {
         // Refresh pools after successful cancel
         await loadPools();
       }
       return result;
     },
-    [poolOperations, loadPools]
+    [poolOperations, loadPools, currentBloxPeerId]
   );
 
   const voteJoinRequest = useCallback(

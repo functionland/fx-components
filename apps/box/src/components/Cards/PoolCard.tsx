@@ -399,7 +399,7 @@ const DetailInfo = ({
         paddingHorizontal="16"
         marginRight="8"
         marginBottom="8"
-        variant="destructive"
+        variant="inverted"
       >
         Cancel Request
       </FxButton>
@@ -419,7 +419,7 @@ const DetailInfo = ({
         paddingHorizontal="16"
         marginRight="8"
         marginBottom="8"
-        variant="destructive"
+        variant="inverted"
       >
         Leave Pool
       </FxButton>
