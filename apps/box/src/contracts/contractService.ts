@@ -9,7 +9,7 @@ import {
   SupportedChain
 } from './types';
 import { POOL_STORAGE_ABI, REWARD_ENGINE_ABI, FULA_TOKEN_ABI } from './abis';
-import { getChainConfigByName, METHOD_GAS_LIMITS, ContractMethod } from './config';
+import { getChainConfigByName, METHOD_GAS_LIMITS, ContractMethod, CONTRACT_ADDRESSES } from './config';
 import { peerIdToBytes32, bytes32ToPeerId } from '../utils/peerIdConversion';
 
 export class ContractService {
@@ -18,6 +18,7 @@ export class ContractService {
   private signer: ethers.Signer | null = null;
   public chain: SupportedChain;
   private poolStorageContract: ethers.Contract | null = null;
+
   private rewardEngineContract: ethers.Contract | null = null;
   private fulaTokenContract: ethers.Contract | null = null;
 
@@ -42,17 +43,84 @@ export class ContractService {
       const expectedChainId = parseInt(chainConfig.chainId, 16);
 
       if (network.chainId !== expectedChainId) {
-        // Try to switch to the correct chain only once
-        let switchAttempted = false;
+        // Check if the current chain is supported
+        const currentChainConfig = getChainConfig(`0x${network.chainId.toString(16)}`);
+
+        if (currentChainConfig) {
+          // If user is on a supported chain but different from app setting,
+          // suggest updating app setting instead of forcing chain switch
+          const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
+            key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === `0x${network.chainId.toString(16)}`
+          ) as SupportedChain;
+
+          if (currentChainName) {
+            if (typeof globalThis.queueToast === 'function') {
+              globalThis.queueToast({
+                type: 'info',
+                title: 'Chain Mismatch Detected',
+                message: `You're on ${CHAIN_DISPLAY_NAMES[currentChainName]} but app is set to ${chainConfig.name}. Go to Settings > Chain Selection to update.`,
+              });
+            }
+
+            // Initialize with the current chain instead of forcing a switch
+            this.chain = currentChainName;
+            const currentConfig = getChainConfigByName(currentChainName);
+
+            // Initialize contracts with current chain
+            this.poolStorageContract = new ethers.Contract(
+              currentConfig.contracts.poolStorage,
+              POOL_STORAGE_ABI,
+              this.signer
+            );
+
+            this.rewardEngineContract = new ethers.Contract(
+              currentConfig.contracts.rewardEngine,
+              REWARD_ENGINE_ABI,
+              this.signer
+            );
+
+            this.fulaTokenContract = new ethers.Contract(
+              currentConfig.contracts.fulaToken,
+              FULA_TOKEN_ABI,
+              this.signer
+            );
+
+            return; // Exit early, contracts are initialized
+          }
+        }
+
+        // Only attempt chain switch if user is on an unsupported chain
+        // or if this is an explicit user-initiated chain switch
         try {
           await web3Provider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: chainConfig.chainId }],
           });
+
+          // Wait a moment for the chain switch to complete
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          // Verify the switch was successful
+          const newNetwork = await this.provider.getNetwork();
+          if (newNetwork.chainId !== expectedChainId) {
+            throw new Error('Chain switch was not completed');
+          }
+
         } catch (switchError: any) {
-          // If chain doesn't exist, try to add it ONCE
-          if (switchError.code === 4902 && !switchAttempted) {
-            switchAttempted = true;
+          // Handle user rejection (code 4001) gracefully
+          if (switchError.code === 4001) {
+            if (typeof globalThis.queueToast === 'function') {
+              globalThis.queueToast({
+                type: 'warning',
+                title: 'Chain Switch Cancelled',
+                message: `Please switch to ${chainConfig.name} network in MetaMask to use this feature.`,
+              });
+            }
+            throw new Error(`Please switch to ${chainConfig.name} network to continue`);
+          }
+
+          // If chain doesn't exist, try to add it
+          if (switchError.code === 4902) {
             try {
               await web3Provider.request({
                 method: 'wallet_addEthereumChain',
@@ -69,23 +137,22 @@ export class ContractService {
                 }],
               });
             } catch (addError: any) {
-              // Notify user and abort further attempts
               if (typeof globalThis.queueToast === 'function') {
                 globalThis.queueToast({
                   type: 'error',
-                  title: 'Unsupported Network',
-                  message: `The selected chain (${chainConfig.chainId}) is not available in MetaMask. Please add it manually.`,
+                  title: 'Failed to Add Network',
+                  message: `Could not add ${chainConfig.name} to MetaMask. Please add it manually.`,
                 });
               }
-              throw new Error(`Failed to add chain ${chainConfig.chainId} to MetaMask: ${addError?.message || addError}`);
+              throw new Error(`Failed to add ${chainConfig.name} to MetaMask`);
             }
           } else {
-            // Notify user and abort further attempts
+            // Other errors
             if (typeof globalThis.queueToast === 'function') {
               globalThis.queueToast({
                 type: 'error',
-                title: 'Unsupported Network',
-                message: `Please switch to ${chainConfig.name} network in MetaMask.`,
+                title: 'Chain Switch Failed',
+                message: `Could not switch to ${chainConfig.name}. Please switch manually in MetaMask.`,
               });
             }
             throw new Error(`Please switch to ${chainConfig.name} network`);
@@ -180,6 +247,50 @@ export class ContractService {
       console.log('leavePool: Call parameters:', { poolId, peerIdBytes32, gasLimit: METHOD_GAS_LIMITS.leavePool });
 
       try {
+
+
+        /* Dry-run */
+        const pid   = Number(poolId);
+        const poolStorageAddress = CONTRACT_ADDRESSES[this.chain]?.contracts.poolStorage;
+        const iface = this.poolStorageContract!.interface;
+        const data  = iface.encodeFunctionData(
+          "removeMemberPeerId(uint32,bytes32)",
+          [pid, peerIdBytes32]
+        );
+        try {
+          await this.readOnlyProvider!.call({
+            to: poolStorageAddress,
+            data,
+          });
+          console.log("dry-run succeed")
+        } catch (err: any) {
+          if (err.data) {
+            const decoded = iface.parseError(err.data);       // PNF / PNF2 / OCA
+            console.error("Simulation revert:", decoded.name);
+          } else {
+            console.error("Node refused call:", err.message);
+          }
+          return;      // abort if it would revert on‑chain
+        }
+
+        console.log("leavepool: sending actual transaction")
+        const gasHex = ethers.utils.hexlify(150_000); 
+        const txHash = await this.provider!.provider.request({
+          method: 'eth_sendTransaction',
+          params: [
+            {
+              from: await this.signer!.getAddress(), // MetaMask fills if omitted on v0.30+
+              to: poolStorageAddress,
+              data,
+              gas: gasHex, // **gas**, not gasLimit
+              value: '0x0',
+            },
+          ],
+        });
+        console.log('User confirmed – hash:', txHash);
+
+        // 4. Optionally wait for inclusion with readOnlyProvider:
+        await this.readOnlyProvider!.waitForTransaction(txHash);
         /*
         try {
           console.log("leavepool: dry-run transaction");
@@ -217,7 +328,7 @@ export class ContractService {
           // But let's try anyway in case it's just a gas estimation issue
           console.log('leavePool: Continuing despite gas estimation failure...');
         }
-*/
+
         console.log('leavePool: Calling removeMemberPeerId with transaction...');
         console.log('leavePool: Transaction parameters:', {
           poolId: Number(poolId),
@@ -230,14 +341,14 @@ export class ContractService {
           Number(poolId),
           peerIdBytes32,
           {
-            gasLimit: Number(150000),
-            from: await this.signer.getAddress(),
+            gasLimit: Number(150000)
           }
         );
 
         console.log('leavePool: Transaction sent, waiting for confirmation', { txHash: tx.hash });
         const receipt = await tx.wait();
-        console.log('leavePool: Transaction confirmed', { txHash: receipt.transactionHash, blockNumber: receipt.blockNumber });
+*/
+        console.log('leavePool: Transaction confirmed', { txHash });
       } catch (contractCallError) {
         console.error('leavePool: Contract call failed:', contractCallError);
         console.error('leavePool: Error details:', {
