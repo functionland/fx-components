@@ -9,7 +9,7 @@ import {
   SupportedChain
 } from './types';
 import { POOL_STORAGE_ABI, REWARD_ENGINE_ABI, FULA_TOKEN_ABI } from './abis';
-import { getChainConfigByName, METHOD_GAS_LIMITS, ContractMethod, CONTRACT_ADDRESSES } from './config';
+import { getChainConfigByName, getChainConfig, METHOD_GAS_LIMITS, ContractMethod, CONTRACT_ADDRESSES, CHAIN_DISPLAY_NAMES } from './config';
 import { peerIdToBytes32, bytes32ToPeerId } from '../utils/peerIdConversion';
 
 export class ContractService {
@@ -41,6 +41,8 @@ export class ContractService {
       // Verify we're on the correct chain
       const network = await this.provider.getNetwork();
       const expectedChainId = parseInt(chainConfig.chainId, 16);
+
+      console.log(`Chain verification: current=${network.chainId}, expected=${expectedChainId}, chainName=${this.chain}`);
 
       if (network.chainId !== expectedChainId) {
         // Check if the current chain is supported

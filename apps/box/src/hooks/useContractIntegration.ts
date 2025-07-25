@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSDK } from '@metamask/sdk-react';
 import { useToast } from '@functionland/component-library';
+import { ethers } from 'ethers';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { getContractService, ContractService, resetContractService } from '../contracts/contractService';
 import { SupportedChain } from '../contracts/types';
-import { CHAIN_DISPLAY_NAMES } from '../contracts/config';
+import { CHAIN_DISPLAY_NAMES, getChainConfig, CONTRACT_ADDRESSES } from '../contracts/config';
 
 // Global flag to track if the "Contracts Connected" notification has been shown
 let contractsConnectedNotificationShown = false;
@@ -24,10 +25,30 @@ export interface ContractIntegrationState {
   canRetry: boolean;
 }
 
+// Helper function to detect current chain from MetaMask
+const detectCurrentChain = async (provider: any): Promise<SupportedChain | null> => {
+  try {
+    const web3Provider = provider.provider || provider;
+    const network = await new ethers.providers.Web3Provider(web3Provider).getNetwork();
+    const currentChainId = `0x${network.chainId.toString(16)}`;
+
+    // Find matching supported chain
+    const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
+      key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === currentChainId
+    ) as SupportedChain;
+
+    return currentChainName || null;
+  } catch (error) {
+    console.error('Failed to detect current chain:', error);
+    return null;
+  }
+};
+
 export const useContractIntegration = (options?: { showConnectedNotification?: boolean }) => {
   const { provider, account, chainId } = useSDK();
   const { queueToast } = useToast();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
+  const setSelectedChain = useSettingsStore((state) => state.setSelectedChain);
   const initializedChainRef = useRef<SupportedChain | null>(null);
   const showConnectedNotification = options?.showConnectedNotification ?? false;
 
@@ -87,10 +108,21 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
         error: null,
         contractService: service,
         connectedAccount,
+        retryCount: 0,
+        canRetry: true,
       });
 
+      // Check if the contract service switched chains during initialization
+      const actualChain = service.chain;
+      if (actualChain !== chain) {
+        console.log(`Chain mismatch detected: requested ${chain}, got ${actualChain}`);
+        // Update the settings store to match the actual chain
+        setSelectedChain(actualChain);
+        console.log(`Updated app settings to use ${actualChain} chain`);
+      }
+
       // Track the initialized chain
-      initializedChainRef.current = chain;
+      initializedChainRef.current = actualChain;
 
       // Only show notification if allowed and not already shown
       if (showConnectedNotification && !contractsConnectedNotificationShown) {
@@ -98,7 +130,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
         queueToast({
           type: 'success',
           title: 'Contracts Connected',
-          message: `Connected to ${CHAIN_DISPLAY_NAMES[chain]} contracts`,
+          message: `Connected to ${CHAIN_DISPLAY_NAMES[actualChain]} contracts`,
         });
       }
     } catch (error: any) {
@@ -259,7 +291,23 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
 
     if (account && provider && selectedChain && !state.isInitializing && !state.isInitialized) {
       console.log('Initializing contracts...');
-      initializeContracts(selectedChain);
+
+      // First detect what chain the user is actually on
+      detectCurrentChain(provider).then(detectedChain => {
+        if (detectedChain && detectedChain !== selectedChain) {
+          console.log(`User is on ${detectedChain} but app is set to ${selectedChain}. Using detected chain.`);
+          // Update settings to match user's current chain
+          setSelectedChain(detectedChain);
+          // Initialize with the detected chain
+          initializeContracts(detectedChain);
+        } else {
+          // Use the selected chain (either it matches or no chain was detected)
+          initializeContracts(selectedChain);
+        }
+      }).catch(error => {
+        console.error('Failed to detect chain, using selected chain:', error);
+        initializeContracts(selectedChain);
+      });
     } else if (!account || !provider) {
       console.log('Clearing contract state - no account or provider');
       setState({
@@ -276,7 +324,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
       // Reset notification flag when wallet disconnects
       resetContractsConnectedNotification();
     }
-  }, [account, provider, selectedChain, state.isInitializing, state.isInitialized]);
+  }, [account, provider, selectedChain, state.isInitializing, state.isInitialized, initializeContracts, setSelectedChain]);
 
   // Handle chain changes - disabled to prevent loops, chain switching handled in initializeContracts
   // useEffect(() => {
