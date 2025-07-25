@@ -145,10 +145,10 @@ export const useContractOperations = () => {
   const { contractService, isInitialized, connectedAccount } = useContractService();
   const { queueToast } = useToast();
 
-  const executeOperation = useCallback(async <T>(
-    operation: () => Promise<T>,
+  const executeOperation = useCallback(async (
+    operation: () => Promise<any>,
     operationName: string
-  ): Promise<T | null> => {
+  ): Promise<any | null> => {
     if (!isInitialized || !contractService) {
       queueToast({
         type: 'error',

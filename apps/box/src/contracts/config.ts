@@ -12,7 +12,7 @@ export const CONTRACT_ADDRESSES: Record<SupportedChain, ChainConfig> = {
     contracts: {
       // Updated proxy contract addresses
       poolStorage: '0xf293A6902662DcB09E310254A5e418cb28D71b6b',
-      rewardEngine: '0xB934cc71987a4369a046E9514FD47800C8c1A7d4',
+      rewardEngine: '0x02651083A2a5B5cEe6125659c2759EBFaCC7A90A',
       fulaToken: '0x9e12735d77c72c5C3670636D428f2F3815d8A4cB',
     },
   },
@@ -25,7 +25,7 @@ export const CONTRACT_ADDRESSES: Record<SupportedChain, ChainConfig> = {
     contracts: {
       // Updated proxy contract addresses
       poolStorage: '0xf293A6902662DcB09E310254A5e418cb28D71b6b',
-      rewardEngine: '0xB934cc71987a4369a046E9514FD47800C8c1A7d4',
+      rewardEngine: '0xa8CFA5758e706294eCbB8a4b104Df63fFB7e807B',
       fulaToken: '0x9e12735d77c72c5C3670636D428f2F3815d8A4cB',
     },
   },
