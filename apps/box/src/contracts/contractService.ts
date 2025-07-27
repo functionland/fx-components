@@ -276,6 +276,18 @@ export class ContractService {
         }
 
         console.log("leavepool: sending actual transaction")
+        
+        // Clean up any existing MetaMask listeners before transaction (prevents stale requests)
+        try {
+          const metamaskProvider = this.provider!.provider as any;
+          if (metamaskProvider && typeof metamaskProvider.removeAllListeners === 'function') {
+            console.log('leavePool: Cleaning up existing MetaMask listeners');
+            metamaskProvider.removeAllListeners();
+          }
+        } catch (cleanupError) {
+          console.warn('leavePool: Failed to cleanup MetaMask listeners:', cleanupError);
+        }
+        
         const gasHex = ethers.utils.hexlify(150_000); 
         const txHash = await this.provider!.provider.request({
           method: 'eth_sendTransaction',
@@ -351,20 +363,31 @@ export class ContractService {
         const receipt = await tx.wait();
 */
         console.log('leavePool: Transaction confirmed', { txHash });
-      } catch (contractCallError) {
+      } catch (contractCallError: any) {
         console.error('leavePool: Contract call failed:', contractCallError);
         console.error('leavePool: Error details:', {
-          message: contractCallError.message,
-          code: contractCallError.code,
-          reason: contractCallError.reason,
-          data: contractCallError.data,
-          transaction: contractCallError.transaction
+          message: contractCallError?.message,
+          code: contractCallError?.code,
+          reason: contractCallError?.reason,
+          data: contractCallError?.data,
+          transaction: contractCallError?.transaction
         });
         throw contractCallError;
       }
     } catch (error) {
       console.error('leavePool: Error occurred', error);
       throw this.handleError(error);
+    } finally {
+      // Always clean up MetaMask listeners after transaction (prevents stale requests)
+      try {
+        const metamaskProvider = this.provider?.provider as any;
+        if (metamaskProvider && typeof metamaskProvider.removeAllListeners === 'function') {
+          console.log('leavePool: Final cleanup of MetaMask listeners');
+          metamaskProvider.removeAllListeners();
+        }
+      } catch (finalCleanupError) {
+        console.warn('leavePool: Failed to perform final MetaMask cleanup:', finalCleanupError);
+      }
     }
   }
 

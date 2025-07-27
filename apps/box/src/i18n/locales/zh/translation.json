@@ -134,5 +134,24 @@
     "couldntConnectTryAgain": "无法连接 {{ssid}}。请重试。",
     "connectingWith": "正在连接 {{ssid}}...",
     "allDone": "全部完成\n您的设备已成功连接！"
+  },
+  "pools": {
+    "contractNotReady": "合约未就绪",
+    "connectWalletMessage": "请连接您的钱包并等待合约初始化",
+    "leavingPool": "正在离开池",
+    "leavePoolInProgress": "离开池交易正在进行中，点击返回应用",
+    "confirmTransactionInWallet": "请在您的钱包中确认交易",
+    "leftPoolSuccess": "成功离开池",
+    "leftPoolSuccessMessage": "您已成功离开池",
+    "transactionCancelled": "交易已取消",
+    "leavePoolCancelledMessage": "离开池交易已取消",
+    "leavePoolError": "离开池错误",
+    "leavePoolErrorMessage": "无法离开池。请重试。",
+    "transactionRejected": "交易被拒绝",
+    "transactionRejectedMessage": "您在钱包中拒绝了交易",
+    "insufficientFunds": "资金不足",
+    "insufficientFundsMessage": "您没有足够的资金完成此交易",
+    "networkError": "网络错误",
+    "networkErrorMessage": "网络连接问题。请检查您的连接并重试。"
   }
 }
