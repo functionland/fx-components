@@ -45,45 +45,49 @@ export class ContractService {
       console.log(`Chain verification: current=${network.chainId}, expected=${expectedChainId}, chainName=${this.chain}`);
 
       if (network.chainId !== expectedChainId) {
+        console.log(`ContractService: Chain mismatch detected - current: ${network.chainId}, expected: ${expectedChainId} (${chainConfig.name})`);
+        
         // Check if the current chain is supported
         const currentChainConfig = getChainConfig(`0x${network.chainId.toString(16)}`);
+        const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
+          key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === `0x${network.chainId.toString(16)}`
+        ) as SupportedChain;
 
-        if (currentChainConfig) {
-          // If user is on a supported chain but different from app setting,
-          // show notification but still force switch to app's selected chain
-          const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
-            key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === `0x${network.chainId.toString(16)}`
-          ) as SupportedChain;
-
-          if (currentChainName) {
-            if (typeof globalThis.queueToast === 'function') {
-              globalThis.queueToast({
-                type: 'info',
-                title: 'Network Switch Required',
-                message: `Switching from ${CHAIN_DISPLAY_NAMES[currentChainName]} to ${chainConfig.name} as selected in app settings.`,
-              });
-            }
+        if (currentChainConfig && currentChainName) {
+          console.log(`ContractService: User is on ${CHAIN_DISPLAY_NAMES[currentChainName]} but app requires ${chainConfig.name}`);
+          if (typeof globalThis.queueToast === 'function') {
+            globalThis.queueToast({
+              type: 'info',
+              title: 'Network Switch Required',
+              message: `Switching from ${CHAIN_DISPLAY_NAMES[currentChainName]} to ${chainConfig.name} as selected in app settings.`,
+            });
           }
         }
 
-        // Only attempt chain switch if user is on an unsupported chain
-        // or if this is an explicit user-initiated chain switch
+        // Always attempt chain switch when there's a mismatch (regardless of whether current chain is supported)
+        console.log(`ContractService: Attempting to switch to ${chainConfig.name} (${chainConfig.chainId})`);
         try {
+          console.log(`ContractService: Sending wallet_switchEthereumChain request with chainId: ${chainConfig.chainId}`);
           await web3Provider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: chainConfig.chainId }],
           });
+          console.log(`ContractService: Chain switch request completed`);
 
           // Wait a moment for the chain switch to complete
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log(`ContractService: Waiting for chain switch to complete...`);
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Increased wait time
 
           // Verify the switch was successful
           const newNetwork = await this.provider.getNetwork();
+          console.log(`ContractService: After switch - current chainId: ${newNetwork.chainId}, expected: ${expectedChainId}`);
           if (newNetwork.chainId !== expectedChainId) {
-            throw new Error('Chain switch was not completed');
+            console.error(`ContractService: Chain switch verification failed - got ${newNetwork.chainId}, expected ${expectedChainId}`);
+            throw new Error(`Chain switch was not completed. Current: ${newNetwork.chainId}, Expected: ${expectedChainId}`);
           }
-
+          console.log(`ContractService: Chain switch verified successfully`);
         } catch (switchError: any) {
+          console.error(`ContractService: Chain switch failed:`, switchError);
           // Handle user rejection (code 4001) gracefully
           if (switchError.code === 4001) {
             if (typeof globalThis.queueToast === 'function') {
