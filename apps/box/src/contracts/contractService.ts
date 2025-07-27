@@ -50,7 +50,7 @@ export class ContractService {
 
         if (currentChainConfig) {
           // If user is on a supported chain but different from app setting,
-          // suggest updating app setting instead of forcing chain switch
+          // show notification but still force switch to app's selected chain
           const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
             key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === `0x${network.chainId.toString(16)}`
           ) as SupportedChain;
@@ -59,35 +59,10 @@ export class ContractService {
             if (typeof globalThis.queueToast === 'function') {
               globalThis.queueToast({
                 type: 'info',
-                title: 'Chain Mismatch Detected',
-                message: `You're on ${CHAIN_DISPLAY_NAMES[currentChainName]} but app is set to ${chainConfig.name}. Go to Settings > Chain Selection to update.`,
+                title: 'Network Switch Required',
+                message: `Switching from ${CHAIN_DISPLAY_NAMES[currentChainName]} to ${chainConfig.name} as selected in app settings.`,
               });
             }
-
-            // Initialize with the current chain instead of forcing a switch
-            this.chain = currentChainName;
-            const currentConfig = getChainConfigByName(currentChainName);
-
-            // Initialize contracts with current chain
-            this.poolStorageContract = new ethers.Contract(
-              currentConfig.contracts.poolStorage,
-              POOL_STORAGE_ABI,
-              this.signer
-            );
-
-            this.rewardEngineContract = new ethers.Contract(
-              currentConfig.contracts.rewardEngine,
-              REWARD_ENGINE_ABI,
-              this.signer
-            );
-
-            this.fulaTokenContract = new ethers.Contract(
-              currentConfig.contracts.fulaToken,
-              FULA_TOKEN_ABI,
-              this.signer
-            );
-
-            return; // Exit early, contracts are initialized
           }
         }
 

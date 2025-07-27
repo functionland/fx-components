@@ -112,17 +112,13 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
         canRetry: true,
       });
 
-      // Check if the contract service switched chains during initialization
-      const actualChain = service.chain;
-      if (actualChain !== chain) {
-        console.log(`Chain mismatch detected: requested ${chain}, got ${actualChain}`);
-        // Update the settings store to match the actual chain
-        setSelectedChain(actualChain);
-        console.log(`Updated app settings to use ${actualChain} chain`);
+      // Track the initialized chain (should match requested chain after fix)
+      initializedChainRef.current = service.chain;
+      
+      // Verify the contract service is using the correct chain
+      if (service.chain !== chain) {
+        console.warn(`Chain mismatch after initialization: requested ${chain}, got ${service.chain}`);
       }
-
-      // Track the initialized chain
-      initializedChainRef.current = actualChain;
 
       // Only show notification if allowed and not already shown
       if (showConnectedNotification && !contractsConnectedNotificationShown) {
@@ -130,7 +126,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
         queueToast({
           type: 'success',
           title: 'Contracts Connected',
-          message: `Connected to ${CHAIN_DISPLAY_NAMES[actualChain]} contracts`,
+          message: `Connected to ${CHAIN_DISPLAY_NAMES[service.chain]} contracts`,
         });
       }
     } catch (error: any) {
