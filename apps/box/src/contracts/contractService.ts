@@ -38,19 +38,23 @@ export class ContractService {
 
       const chainConfig = getChainConfigByName(this.chain);
 
-      // Verify we're on the correct chain
-      const network = await this.provider.getNetwork();
+      // Verify we're on the correct chain - request fresh chain ID from MetaMask
+      console.log('ContractService: Requesting fresh chainId from MetaMask for verification...');
+      const rawProvider = this.provider.provider || this.provider;
+      const currentChainIdHex = await rawProvider?.request?.({ method: 'eth_chainId' }) || '0x0';
+      const currentChainId = parseInt(currentChainIdHex, 16);
       const expectedChainId = parseInt(chainConfig.chainId, 16);
 
-      console.log(`Chain verification: current=${network.chainId}, expected=${expectedChainId}, chainName=${this.chain}`);
+      console.log(`Chain verification: current=${currentChainId}, expected=${expectedChainId}, chainName=${this.chain}`);
+      console.log(`Chain verification hex: current=${currentChainIdHex}, expected=${chainConfig.chainId}`);
 
-      if (network.chainId !== expectedChainId) {
-        console.log(`ContractService: Chain mismatch detected - current: ${network.chainId}, expected: ${expectedChainId} (${chainConfig.name})`);
+      if (currentChainId !== expectedChainId) {
+        console.log(`ContractService: Chain mismatch detected - current: ${currentChainId}, expected: ${expectedChainId} (${chainConfig.name})`);
         
         // Check if the current chain is supported
-        const currentChainConfig = getChainConfig(`0x${network.chainId.toString(16)}`);
+        const currentChainConfig = getChainConfig(currentChainIdHex);
         const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
-          key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === `0x${network.chainId.toString(16)}`
+          key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === currentChainIdHex
         ) as SupportedChain;
 
         if (currentChainConfig && currentChainName) {
@@ -68,11 +72,18 @@ export class ContractService {
         console.log(`ContractService: Attempting to switch to ${chainConfig.name} (${chainConfig.chainId})`);
         try {
           console.log(`ContractService: Sending wallet_switchEthereumChain request with chainId: ${chainConfig.chainId}`);
-          await web3Provider.request({
+          console.log(`ContractService: Request params:`, { chainId: chainConfig.chainId });
+          
+          const switchResult = await web3Provider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: chainConfig.chainId }],
           });
-          console.log(`ContractService: Chain switch request completed`);
+          
+          console.log(`ContractService: Chain switch request completed with result:`, switchResult);
+          console.log(`ContractService: MetaMask should now be prompting user to switch to ${chainConfig.name}`);
+          
+          // Add a small delay to allow MetaMask to process the request
+          await new Promise(resolve => setTimeout(resolve, 1000));
 
           // Wait longer and retry verification multiple times for chain switch to complete
           console.log(`ContractService: Waiting for chain switch to complete...`);
@@ -111,8 +122,11 @@ export class ContractService {
           }
         } catch (switchError: any) {
           console.error(`ContractService: Chain switch failed:`, switchError);
+          console.error(`ContractService: Error details - code: ${switchError.code}, message: ${switchError.message}`);
+          
           // Handle user rejection (code 4001) gracefully
           if (switchError.code === 4001) {
+            console.log(`ContractService: User rejected chain switch request`);
             if (typeof globalThis.queueToast === 'function') {
               globalThis.queueToast({
                 type: 'warning',
@@ -121,6 +135,20 @@ export class ContractService {
               });
             }
             throw new Error(`Please switch to ${chainConfig.name} network to continue`);
+          }
+          
+          // Handle case where MetaMask doesn't respond or request fails silently
+          if (!switchError.code || switchError.code === -32603) {
+            console.warn(`ContractService: Chain switch request may have failed silently or MetaMask didn't respond properly`);
+            console.warn(`ContractService: This might indicate MetaMask is not showing the chain switch prompt`);
+            
+            if (typeof globalThis.queueToast === 'function') {
+              globalThis.queueToast({
+                type: 'warning',
+                title: 'Chain Switch Issue',
+                message: `MetaMask may not be responding. Please manually switch to ${chainConfig.name} network in MetaMask.`,
+              });
+            }
           }
 
           // If chain doesn't exist, try to add it

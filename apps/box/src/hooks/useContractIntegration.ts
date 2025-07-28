@@ -29,14 +29,21 @@ export interface ContractIntegrationState {
 const detectCurrentChain = async (provider: any): Promise<SupportedChain | null> => {
   try {
     const web3Provider = provider.provider || provider;
-    const network = await new ethers.providers.Web3Provider(web3Provider).getNetwork();
-    const currentChainId = `0x${network.chainId.toString(16)}`;
-
+    
+    // Force a fresh chain ID request instead of relying on cached network info
+    console.log('Requesting fresh chainId from MetaMask...');
+    const currentChainId = await web3Provider.request({
+      method: 'eth_chainId'
+    });
+    
+    console.log('Fresh chainId from MetaMask:', currentChainId);
+    
     // Find matching supported chain
     const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
       key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === currentChainId
     ) as SupportedChain;
 
+    console.log('Detected current chain:', currentChainName, 'for chainId:', currentChainId);
     return currentChainName || null;
   } catch (error) {
     console.error('Failed to detect current chain:', error);
@@ -289,7 +296,30 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
       isInitializing: state.isInitializing
     });
 
-    if (account && provider && selectedChain && !state.isInitializing && !state.isInitialized) {
+    // Check if we need to re-initialize due to chain change
+    const needsReinitialization = account && provider && selectedChain && !state.isInitializing && (
+      !state.isInitialized || // Not initialized yet
+      (state.isInitialized && initializedChainRef.current !== selectedChain) // Chain changed
+    );
+    
+    if (needsReinitialization) {
+      // If chain changed, reset the initialized state first
+      if (state.isInitialized && initializedChainRef.current !== selectedChain) {
+        console.log(`Chain changed from ${initializedChainRef.current} to ${selectedChain}, resetting contract state`);
+        setState({
+          isInitialized: false,
+          isInitializing: false,
+          error: null,
+          contractService: null,
+          connectedAccount: null,
+          retryCount: 0,
+          canRetry: true,
+        });
+        // Reset the initialized chain ref
+        initializedChainRef.current = null;
+        // Reset notification flag for new chain
+        resetContractsConnectedNotification();
+      }
       // Prevent rapid re-initialization attempts (debounce)
       const now = Date.now();
       const timeSinceLastAttempt = now - lastInitAttemptRef.current;
