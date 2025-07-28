@@ -222,6 +222,11 @@ export class ContractService {
     }
   }
 
+  // Public method to get the provider for chain verification
+  getProvider(): ethers.providers.Web3Provider | null {
+    return this.provider;
+  }
+
   // Pool Management Methods
   async createPool(name: string, region: string, parent: string): Promise<string> {
     try {
@@ -271,9 +276,22 @@ export class ContractService {
         throw new Error('PeerId is required for leaving pool');
       }
 
+      console.log('leavePool: Original peerId received:', peerId);
+      console.log('leavePool: peerId length:', peerId.length);
+      console.log('leavePool: peerId type:', typeof peerId);
+      
       // Convert peerId to bytes32 format for contract call
       const peerIdBytes32 = await peerIdToBytes32(peerId);
-      console.log('leavePool: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+      
+      console.log('leavePool: Converted peerId to bytes32:', peerIdBytes32);
+      console.log('leavePool: bytes32 length:', peerIdBytes32.length);
+      console.log('leavePool: bytes32 type:', typeof peerIdBytes32);
+      console.log('leavePool: Full conversion details:', { 
+        originalPeerId: peerId, 
+        convertedBytes32: peerIdBytes32,
+        poolId: poolId,
+        poolIdNumber: Number(poolId)
+      });
       console.log('leavePool: About to call removeMemberPeerId on contract');
       console.log('leavePool: removeMemberPeerId exists:', typeof this.poolStorageContract.removeMemberPeerId);
       console.log('leavePool: Call parameters:', { poolId, peerIdBytes32, gasLimit: METHOD_GAS_LIMITS.leavePool });

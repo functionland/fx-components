@@ -232,7 +232,8 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
   ): Promise<T | null> => {
     console.log(`executeContractCall: Starting ${operationName}`, {
       isInitialized: state.isInitialized,
-      hasContractService: !!state.contractService
+      hasContractService: !!state.contractService,
+      selectedChain
     });
 
     if (!state.isInitialized || !state.contractService) {
@@ -243,6 +244,53 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
         message: 'Please connect your wallet and initialize contracts first',
       });
       return null;
+    }
+
+    // Verify we're on the correct chain before executing operation
+    try {
+      console.log(`executeContractCall: Verifying chain for ${operationName}...`);
+      const provider = state.contractService.getProvider();
+      const rawProvider = provider?.provider || provider;
+      
+      if (rawProvider && 'request' in rawProvider && typeof rawProvider.request === 'function') {
+        const currentChainIdHex = await rawProvider.request({ method: 'eth_chainId' });
+        const currentChainId = parseInt(currentChainIdHex, 16);
+        
+        // Get expected chain ID from selected chain
+        const chainConfig = getChainConfig(selectedChain);
+        if (!chainConfig) {
+          console.error(`executeContractCall: Invalid chain config for ${selectedChain}`);
+          throw new Error(`Invalid chain configuration for ${selectedChain}`);
+        }
+        
+        const expectedChainId = parseInt(chainConfig.chainId, 16);
+        
+        console.log(`executeContractCall: Chain verification for ${operationName}:`, {
+          current: currentChainId,
+          expected: expectedChainId,
+          currentHex: currentChainIdHex,
+          expectedHex: chainConfig.chainId,
+          selectedChain
+        });
+        
+        if (currentChainId !== expectedChainId) {
+          console.log(`executeContractCall: Chain mismatch detected for ${operationName}, forcing re-initialization`);
+          
+          // Force contract re-initialization on correct chain
+          await initializeContracts(selectedChain);
+          
+          // Wait a moment for initialization to complete
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Verify the contract service is now ready
+          if (!state.contractService) {
+            throw new Error('Contract re-initialization failed');
+          }
+        }
+      }
+    } catch (chainError) {
+      console.error(`executeContractCall: Chain verification failed for ${operationName}:`, chainError);
+      // Continue with operation - the contract service will handle chain switching internally
     }
 
     try {
