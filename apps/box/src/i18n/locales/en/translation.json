@@ -134,5 +134,24 @@
       "couldntConnectTryAgain": "Couldn't connect with {{ssid}}. Please try again.",
       "connectingWith": "Connecting with {{ssid}}...",
       "allDone": "All done\nYour device is connected with success!"
+    },
+    "pools": {
+      "contractNotReady": "Contract Not Ready",
+      "connectWalletMessage": "Please connect your wallet and wait for contract initialization",
+      "leavingPool": "Leaving Pool",
+      "leavePoolInProgress": "Pool leave transaction in progress, click to return to the app",
+      "confirmTransactionInWallet": "Please confirm the transaction in your wallet",
+      "leftPoolSuccess": "Left Pool Successfully",
+      "leftPoolSuccessMessage": "You have successfully left the pool",
+      "transactionCancelled": "Transaction Cancelled",
+      "leavePoolCancelledMessage": "Pool leave transaction was cancelled",
+      "leavePoolError": "Leave Pool Error",
+      "leavePoolErrorMessage": "Unable to leave the pool. Please try again.",
+      "transactionRejected": "Transaction Rejected",
+      "transactionRejectedMessage": "You rejected the transaction in your wallet",
+      "insufficientFunds": "Insufficient Funds",
+      "insufficientFundsMessage": "You don't have enough funds to complete this transaction",
+      "networkError": "Network Error",
+      "networkErrorMessage": "Network connection issue. Please check your connection and try again."
     }
   }

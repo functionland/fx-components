@@ -38,79 +38,95 @@ export class ContractService {
 
       const chainConfig = getChainConfigByName(this.chain);
 
-      // Verify we're on the correct chain
-      const network = await this.provider.getNetwork();
+      // Verify we're on the correct chain - request fresh chain ID from MetaMask
+      console.log('ContractService: Requesting fresh chainId from MetaMask for verification...');
+      const rawProvider = this.provider.provider || this.provider;
+      const currentChainIdHex = await rawProvider?.request?.({ method: 'eth_chainId' }) || '0x0';
+      const currentChainId = parseInt(currentChainIdHex, 16);
       const expectedChainId = parseInt(chainConfig.chainId, 16);
 
-      console.log(`Chain verification: current=${network.chainId}, expected=${expectedChainId}, chainName=${this.chain}`);
+      console.log(`Chain verification: current=${currentChainId}, expected=${expectedChainId}, chainName=${this.chain}`);
+      console.log(`Chain verification hex: current=${currentChainIdHex}, expected=${chainConfig.chainId}`);
 
-      if (network.chainId !== expectedChainId) {
+      if (currentChainId !== expectedChainId) {
+        console.log(`ContractService: Chain mismatch detected - current: ${currentChainId}, expected: ${expectedChainId} (${chainConfig.name})`);
+        
         // Check if the current chain is supported
-        const currentChainConfig = getChainConfig(`0x${network.chainId.toString(16)}`);
+        const currentChainConfig = getChainConfig(currentChainIdHex);
+        const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
+          key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === currentChainIdHex
+        ) as SupportedChain;
 
-        if (currentChainConfig) {
-          // If user is on a supported chain but different from app setting,
-          // suggest updating app setting instead of forcing chain switch
-          const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
-            key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === `0x${network.chainId.toString(16)}`
-          ) as SupportedChain;
-
-          if (currentChainName) {
-            if (typeof globalThis.queueToast === 'function') {
-              globalThis.queueToast({
-                type: 'info',
-                title: 'Chain Mismatch Detected',
-                message: `You're on ${CHAIN_DISPLAY_NAMES[currentChainName]} but app is set to ${chainConfig.name}. Go to Settings > Chain Selection to update.`,
-              });
-            }
-
-            // Initialize with the current chain instead of forcing a switch
-            this.chain = currentChainName;
-            const currentConfig = getChainConfigByName(currentChainName);
-
-            // Initialize contracts with current chain
-            this.poolStorageContract = new ethers.Contract(
-              currentConfig.contracts.poolStorage,
-              POOL_STORAGE_ABI,
-              this.signer
-            );
-
-            this.rewardEngineContract = new ethers.Contract(
-              currentConfig.contracts.rewardEngine,
-              REWARD_ENGINE_ABI,
-              this.signer
-            );
-
-            this.fulaTokenContract = new ethers.Contract(
-              currentConfig.contracts.fulaToken,
-              FULA_TOKEN_ABI,
-              this.signer
-            );
-
-            return; // Exit early, contracts are initialized
+        if (currentChainConfig && currentChainName) {
+          console.log(`ContractService: User is on ${CHAIN_DISPLAY_NAMES[currentChainName]} but app requires ${chainConfig.name}`);
+          if (typeof globalThis.queueToast === 'function') {
+            globalThis.queueToast({
+              type: 'info',
+              title: 'Network Switch Required',
+              message: `Switching from ${CHAIN_DISPLAY_NAMES[currentChainName]} to ${chainConfig.name} as selected in app settings.`,
+            });
           }
         }
 
-        // Only attempt chain switch if user is on an unsupported chain
-        // or if this is an explicit user-initiated chain switch
+        // Always attempt chain switch when there's a mismatch (regardless of whether current chain is supported)
+        console.log(`ContractService: Attempting to switch to ${chainConfig.name} (${chainConfig.chainId})`);
         try {
-          await web3Provider.request({
+          console.log(`ContractService: Sending wallet_switchEthereumChain request with chainId: ${chainConfig.chainId}`);
+          console.log(`ContractService: Request params:`, { chainId: chainConfig.chainId });
+          
+          const switchResult = await web3Provider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: chainConfig.chainId }],
           });
-
-          // Wait a moment for the chain switch to complete
+          
+          console.log(`ContractService: Chain switch request completed with result:`, switchResult);
+          console.log(`ContractService: MetaMask should now be prompting user to switch to ${chainConfig.name}`);
+          
+          // Add a small delay to allow MetaMask to process the request
           await new Promise(resolve => setTimeout(resolve, 1000));
 
-          // Verify the switch was successful
-          const newNetwork = await this.provider.getNetwork();
-          if (newNetwork.chainId !== expectedChainId) {
-            throw new Error('Chain switch was not completed');
+          // Wait longer and retry verification multiple times for chain switch to complete
+          console.log(`ContractService: Waiting for chain switch to complete...`);
+          
+          let verificationAttempts = 0;
+          const maxVerificationAttempts = 5;
+          let chainSwitchSuccessful = false;
+          
+          while (verificationAttempts < maxVerificationAttempts && !chainSwitchSuccessful) {
+            verificationAttempts++;
+            console.log(`ContractService: Chain switch verification attempt ${verificationAttempts}/${maxVerificationAttempts}`);
+            
+            // Wait progressively longer between attempts
+            const waitTime = 2000 + (verificationAttempts * 1000); // 2s, 3s, 4s, 5s, 6s
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            
+            try {
+              const newNetwork = await this.provider.getNetwork();
+              console.log(`ContractService: Verification attempt ${verificationAttempts} - current chainId: ${newNetwork.chainId}, expected: ${expectedChainId}`);
+              
+              if (newNetwork.chainId === expectedChainId) {
+                console.log(`ContractService: Chain switch verified successfully on attempt ${verificationAttempts}`);
+                chainSwitchSuccessful = true;
+                break;
+              } else {
+                console.log(`ContractService: Chain switch not yet complete on attempt ${verificationAttempts}. Current: ${newNetwork.chainId}, Expected: ${expectedChainId}`);
+              }
+            } catch (verificationError) {
+              console.warn(`ContractService: Network verification attempt ${verificationAttempts} failed:`, verificationError);
+            }
           }
-
+          
+          if (!chainSwitchSuccessful) {
+            console.error(`ContractService: Chain switch verification failed after ${maxVerificationAttempts} attempts`);
+            throw new Error(`Chain switch was not completed after ${maxVerificationAttempts} verification attempts. Please manually switch to ${chainConfig.name} in MetaMask.`);
+          }
         } catch (switchError: any) {
+          console.error(`ContractService: Chain switch failed:`, switchError);
+          console.error(`ContractService: Error details - code: ${switchError.code}, message: ${switchError.message}`);
+          
           // Handle user rejection (code 4001) gracefully
           if (switchError.code === 4001) {
+            console.log(`ContractService: User rejected chain switch request`);
             if (typeof globalThis.queueToast === 'function') {
               globalThis.queueToast({
                 type: 'warning',
@@ -119,6 +135,20 @@ export class ContractService {
               });
             }
             throw new Error(`Please switch to ${chainConfig.name} network to continue`);
+          }
+          
+          // Handle case where MetaMask doesn't respond or request fails silently
+          if (!switchError.code || switchError.code === -32603) {
+            console.warn(`ContractService: Chain switch request may have failed silently or MetaMask didn't respond properly`);
+            console.warn(`ContractService: This might indicate MetaMask is not showing the chain switch prompt`);
+            
+            if (typeof globalThis.queueToast === 'function') {
+              globalThis.queueToast({
+                type: 'warning',
+                title: 'Chain Switch Issue',
+                message: `MetaMask may not be responding. Please manually switch to ${chainConfig.name} network in MetaMask.`,
+              });
+            }
           }
 
           // If chain doesn't exist, try to add it
@@ -192,6 +222,11 @@ export class ContractService {
     }
   }
 
+  // Public method to get the provider for chain verification
+  getProvider(): ethers.providers.Web3Provider | null {
+    return this.provider;
+  }
+
   // Pool Management Methods
   async createPool(name: string, region: string, parent: string): Promise<string> {
     try {
@@ -233,138 +268,156 @@ export class ContractService {
 
   async leavePool(poolId: string, peerId?: string): Promise<void> {
     try {
-      console.log('leavePool: Starting leave pool process', { poolId, peerId });
-
       if (!this.poolStorageContract) throw new Error('Contract not initialized');
+      if (!this.signer) throw new Error('Signer not available');
 
-      if (!peerId) {
-        throw new Error('PeerId is required for leaving pool');
+      // Use the connected account's peerId if not provided
+      const connectedAccount = await this.getConnectedAccount();
+      if (!connectedAccount) throw new Error('No connected account');
+      
+      const peerIdToUse = peerId || connectedAccount;
+      console.log('leavePool: Using peerId:', peerIdToUse);
+      
+      // Convert peerId to bytes32
+      const peerIdBytes32 = await peerIdToBytes32(peerIdToUse);
+      console.log('leavePool: Contract address:', this.poolStorageContract.address);
+      console.log('leavePool: Current chain:', this.chain);
+      
+      const chainConfig = getChainConfigByName(this.chain);
+      if (!chainConfig) {
+        throw new Error(`Invalid chain configuration for ${this.chain}`);
       }
-
-      // Convert peerId to bytes32 format for contract call
-      const peerIdBytes32 = await peerIdToBytes32(peerId);
-      console.log('leavePool: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+      console.log('leavePool: Expected contract address from config:', chainConfig.contracts.poolStorage);
+      console.log('leavePool: Converted peerId to bytes32:', peerIdBytes32);
+      console.log('leavePool: bytes32 length:', peerIdBytes32.length);
+      console.log('leavePool: bytes32 type:', typeof peerIdBytes32);
+      console.log('leavePool: Full conversion details:', { 
+        originalPeerId: peerIdToUse, 
+        convertedBytes32: peerIdBytes32,
+        poolId: poolId,
+        poolIdNumber: Number(poolId)
+      });
       console.log('leavePool: About to call removeMemberPeerId on contract');
       console.log('leavePool: removeMemberPeerId exists:', typeof this.poolStorageContract.removeMemberPeerId);
-      console.log('leavePool: Call parameters:', { poolId, peerIdBytes32, gasLimit: METHOD_GAS_LIMITS.leavePool });
 
       try {
+        // First, verify user is actually a member of this pool
+        console.log('leavePool: Checking membership status...');
+        try {
+          const membershipResult = await this.isPeerIdMemberOfPool(poolId, peerIdToUse);
+          console.log('leavePool: Membership check result:', membershipResult);
+          
+          if (!membershipResult.isMember) {
+            console.error('leavePool: User is not a member of this pool');
+            throw new Error(`You are not a member of pool ${poolId}. Cannot leave a pool you haven't joined.`);
+          }
+        } catch (membershipError) {
+          console.error('leavePool: Failed to check membership:', membershipError);
+          // Continue anyway, let the contract handle the validation
+        }
 
-
-        /* Dry-run */
-        const pid   = Number(poolId);
-        const poolStorageAddress = CONTRACT_ADDRESSES[this.chain]?.contracts.poolStorage;
-        const iface = this.poolStorageContract!.interface;
-        const data  = iface.encodeFunctionData(
+        // Dry-run simulation first
+        const pid = Number(poolId);
+        const poolStorageAddress = chainConfig.contracts.poolStorage;
+        const iface = this.poolStorageContract.interface;
+        const data = iface.encodeFunctionData(
           "removeMemberPeerId(uint32,bytes32)",
           [pid, peerIdBytes32]
         );
+        
         try {
           await this.readOnlyProvider!.call({
             to: poolStorageAddress,
             data,
           });
-          console.log("dry-run succeed")
+          console.log("leavePool: Dry-run simulation succeeded");
         } catch (err: any) {
-          if (err.data) {
-            const decoded = iface.parseError(err.data);       // PNF / PNF2 / OCA
-            console.error("Simulation revert:", decoded.name);
-          } else {
-            console.error("Node refused call:", err.message);
+          console.error("leavePool: Dry-run simulation failed:", err);
+          
+          // Try to decode specific error types
+          if (err.data && err.data !== '0x') {
+            try {
+              const decoded = iface.parseError(err.data);
+              console.error("leavePool: Decoded error:", decoded.name, decoded.args);
+              
+              // Handle specific error cases
+              switch (decoded.name) {
+                case 'NM':
+                  throw new Error('You are not a member of this pool.');
+                case 'OCA':
+                  throw new Error('Only contract admin can perform this action.');
+                case 'CannotRemoveSelf':
+                  throw new Error('You cannot remove yourself from the pool.');
+                case 'AccessControlUnauthorizedAccount':
+                  throw new Error('You do not have permission to leave this pool.');
+                default:
+                  throw new Error(`Pool operation failed: ${decoded.name}`);
+              }
+            } catch (parseError) {
+              console.error("leavePool: Failed to parse error:", parseError);
+            }
           }
-          return;      // abort if it would revert on‑chain
+          
+          // If we can't decode the error, provide a generic message
+          throw new Error('Pool leave operation would fail. Please check if you are a member of this pool and try again.');
         }
 
-        console.log("leavepool: sending actual transaction")
+        console.log("leavePool: Sending actual transaction");
+        
+        // Clean up any existing MetaMask listeners before transaction
+        try {
+          const metamaskProvider = this.provider!.provider as any;
+          if (metamaskProvider && typeof metamaskProvider.removeAllListeners === 'function') {
+            console.log('leavePool: Cleaning up existing MetaMask listeners');
+            metamaskProvider.removeAllListeners();
+          }
+        } catch (cleanupError) {
+          console.warn('leavePool: Failed to cleanup MetaMask listeners:', cleanupError);
+        }
+        
         const gasHex = ethers.utils.hexlify(150_000); 
         const txHash = await this.provider!.provider.request({
           method: 'eth_sendTransaction',
           params: [
             {
-              from: await this.signer!.getAddress(), // MetaMask fills if omitted on v0.30+
+              from: await this.signer!.getAddress(),
               to: poolStorageAddress,
               data,
-              gas: gasHex, // **gas**, not gasLimit
+              gas: gasHex,
               value: '0x0',
             },
           ],
         });
-        console.log('User confirmed – hash:', txHash);
+        console.log('leavePool: User confirmed transaction – hash:', txHash);
 
-        // 4. Optionally wait for inclusion with readOnlyProvider:
+        // Wait for transaction confirmation
         await this.readOnlyProvider!.waitForTransaction(txHash);
-        /*
-        try {
-          console.log("leavepool: dry-run transaction");
-          await this.poolStorageContract.callStatic
-          .removeMemberPeerId(
-            Number(poolId),                       // be explicit – BigNumberish
-            peerIdBytes32,
-            { from: await this.signer.getAddress() }
-          ); 
-        } catch (dryRunError) {
-          console.log("leavepool:", dryRunError);
-        }
-        // First, try to estimate gas to see if the transaction would succeed
-        console.log('leavePool: Estimating gas for removeMemberPeerId...');
-        
-        try {
-          // Add timeout to gas estimation
-          const gasEstimationPromise = this.poolStorageContract.estimateGas.removeMemberPeerId(Number(poolId), peerIdBytes32);
-          const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('Gas estimation timeout after 10 seconds')), 10000);
-          });
-
-          const estimatedGas = await Promise.race([gasEstimationPromise, timeoutPromise]);
-          console.log('leavePool: Gas estimation successful', { estimatedGas: estimatedGas.toString() });
-        } catch (gasEstimationError) {
-          console.error('leavePool: Gas estimation failed:', gasEstimationError);
-          console.error('leavePool: Gas estimation error details:', {
-            message: gasEstimationError.message,
-            code: gasEstimationError.code,
-            reason: gasEstimationError.reason,
-            data: gasEstimationError.data
-          });
-
-          // If gas estimation fails, the transaction will likely fail too
-          // But let's try anyway in case it's just a gas estimation issue
-          console.log('leavePool: Continuing despite gas estimation failure...');
-        }
-
-        console.log('leavePool: Calling removeMemberPeerId with transaction...');
-        console.log('leavePool: Transaction parameters:', {
-          poolId: Number(poolId),
-          peerIdBytes32,
-          gasLimit: 150000,
-          from: await this.signer.getAddress()
-        });
-
-        const tx = await this.poolStorageContract.removeMemberPeerId(
-          Number(poolId),
-          peerIdBytes32,
-          {
-            gasLimit: Number(150000)
-          }
-        );
-
-        console.log('leavePool: Transaction sent, waiting for confirmation', { txHash: tx.hash });
-        const receipt = await tx.wait();
-*/
         console.log('leavePool: Transaction confirmed', { txHash });
-      } catch (contractCallError) {
+      } catch (contractCallError: any) {
         console.error('leavePool: Contract call failed:', contractCallError);
         console.error('leavePool: Error details:', {
-          message: contractCallError.message,
-          code: contractCallError.code,
-          reason: contractCallError.reason,
-          data: contractCallError.data,
-          transaction: contractCallError.transaction
+          message: contractCallError?.message,
+          code: contractCallError?.code,
+          reason: contractCallError?.reason,
+          data: contractCallError?.data,
+          transaction: contractCallError?.transaction
         });
         throw contractCallError;
       }
     } catch (error) {
       console.error('leavePool: Error occurred', error);
       throw this.handleError(error);
+    } finally {
+      // Always clean up MetaMask listeners after transaction
+      try {
+        const metamaskProvider = this.provider?.provider as any;
+        if (metamaskProvider && typeof metamaskProvider.removeAllListeners === 'function') {
+          console.log('leavePool: Final cleanup of MetaMask listeners');
+          metamaskProvider.removeAllListeners();
+        }
+      } catch (finalCleanupError) {
+        console.warn('leavePool: Failed to perform final MetaMask cleanup:', finalCleanupError);
+      }
     }
   }
 

@@ -24,6 +24,9 @@ import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { useNavigation } from '@react-navigation/native';
 import { Routes } from '../../navigation/navigationConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import notifee from '@notifee/react-native';
+import { useTranslation } from 'react-i18next';
+import { useSDK } from '@metamask/sdk-react';
 
 // --- Add this union type for FlatList items ---
 type PoolListItem =
@@ -31,6 +34,8 @@ type PoolListItem =
   | { type: 'skeleton'; id: number };
 
 export const PoolsScreen = () => {
+  const { t } = useTranslation();
+  const { sdk } = useSDK(); // Add MetaMask SDK access for provider cleanup
   const [isList, setIsList] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState(true);
@@ -402,36 +407,162 @@ export const PoolsScreen = () => {
   };
 
   const wrappedLeavePool = async (poolID: number) => {
+    let notificationShown = false;
+    let transactionCompleted = false;
+    let resolveTransaction = () => {};
+    
+    // Create a promise that resolves when transaction completes (similar to LinkPassword pattern)
+    const transactionPromise = new Promise<void>((resolve) => {
+      resolveTransaction = resolve;
+    });
+    
     try {
       if (!contractReady) {
         queueToast({
           type: 'error',
-          title: 'Contract Not Ready',
-          message: 'Please connect your wallet and wait for contract initialization',
+          title: t('pools.contractNotReady'),
+          message: t('pools.connectWalletMessage'),
+          autoHideDuration: 4000,
         });
         return;
       }
 
-      // Don't set refreshing=true here! It triggers immediate pool reload
-      // which interrupts the MetaMask transaction
-      console.log('wrappedLeavePool: Starting leave pool transaction...');
+      // Show foreground service notification similar to LinkPassword
+      try {
+        // Register foreground service first (required for foreground notifications)
+        notifee.registerForegroundService(() => transactionPromise);
+        
+        await notifee.displayNotification({
+          id: 'leavePool',
+          title: t('pools.leavingPool'),
+          body: t('pools.leavePoolInProgress'),
+          android: {
+            progress: {
+              indeterminate: true,
+            },
+            pressAction: {
+              id: 'default',
+            },
+            ongoing: true,
+            asForegroundService: true,
+            channelId: 'sticky',
+          },
+        });
+        notificationShown = true;
+      } catch (notificationError) {
+        console.warn('Failed to show notification:', notificationError);
+        // Continue with transaction even if notification fails
+      }
+
+      console.log('wrappedLeavePool: Starting leave pool transaction...', { poolID });
+      
+      // Clean up any existing MetaMask listeners/requests before transaction (prevents stale popups)
+      try {
+        const provider = await sdk?.getProvider();
+        if (provider && typeof provider.removeAllListeners === 'function') {
+          console.log('wrappedLeavePool: Cleaning up existing MetaMask listeners');
+          provider.removeAllListeners();
+        }
+      } catch (cleanupError) {
+        console.warn('wrappedLeavePool: Failed to cleanup MetaMask listeners:', cleanupError);
+      }
+      
+      // Show initial feedback toast
+      queueToast({
+        type: 'info',
+        title: t('pools.leavingPool'),
+        message: t('pools.confirmTransactionInWallet'),
+        autoHideDuration: 3000,
+      });
+
       const result = await leavePool(poolID.toString());
 
       if (result !== null) {
         console.log('wrappedLeavePool: Transaction successful, now refreshing pools...');
+        
+        // Resolve transaction promise for foreground service
+        resolveTransaction();
+        
+        // Show success notification
         queueToast({
           type: 'success',
-          title: 'Left Pool',
-          message: 'You have successfully left the pool',
+          title: t('pools.leftPoolSuccess'),
+          message: t('pools.leftPoolSuccessMessage'),
+          autoHideDuration: 4000,
         });
+        
         // Only refresh pools AFTER successful transaction
         setRefreshing(true);
+      } else {
+        // Handle case where result is null (transaction failed or was cancelled)
+        console.warn('wrappedLeavePool: Leave pool returned null');
+        
+        // Resolve transaction promise for foreground service
+        resolveTransaction();
+        
+        queueToast({
+          type: 'warning',
+          title: t('pools.transactionCancelled'),
+          message: t('pools.leavePoolCancelledMessage'),
+          autoHideDuration: 4000,
+        });
       }
-    } catch (e) {
-      console.error('wrappedLeavePool: Error occurred:', e);
-      handlePoolActionErrors('Error leaving', e.toString());
+    } catch (error: any) {
+      console.error('wrappedLeavePool: Error occurred:', error);
+      
+      // Enhanced error handling with specific error messages
+      let errorTitle = t('pools.leavePoolError');
+      let errorMessage = t('pools.leavePoolErrorMessage');
+      
+      if (error?.message) {
+        if (error.message.includes('User denied') || error.message.includes('rejected')) {
+          errorTitle = t('pools.transactionRejected');
+          errorMessage = t('pools.transactionRejectedMessage');
+        } else if (error.message.includes('insufficient funds')) {
+          errorTitle = t('pools.insufficientFunds');
+          errorMessage = t('pools.insufficientFundsMessage');
+        } else if (error.message.includes('network')) {
+          errorTitle = t('pools.networkError');
+          errorMessage = t('pools.networkErrorMessage');
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      queueToast({
+        type: 'error',
+        title: errorTitle,
+        message: errorMessage,
+        autoHideDuration: 5000,
+      });
+      
+      // Resolve transaction promise for foreground service (even on error)
+      resolveTransaction();
+      
+      // Log error for debugging
+      logger.logError('wrappedLeavePool', error);
+    } finally {
+      // Always stop the foreground service notification
+      if (notificationShown) {
+        try {
+          await notifee.stopForegroundService();
+          await notifee.cancelNotification('leavePool');
+        } catch (cleanupError) {
+          console.warn('Failed to cleanup notification:', cleanupError);
+        }
+      }
+      
+      // Always clean up MetaMask listeners after transaction (prevents stale requests)
+      try {
+        const provider = await sdk?.getProvider();
+        if (provider && typeof provider.removeAllListeners === 'function') {
+          console.log('wrappedLeavePool: Final cleanup of MetaMask listeners');
+          provider.removeAllListeners();
+        }
+      } catch (finalCleanupError) {
+        console.warn('wrappedLeavePool: Failed to perform final MetaMask cleanup:', finalCleanupError);
+      }
     }
-    // Don't set refreshing=false in finally block since we only set it to true on success
   };
 
   // Action handlers for new functionality
