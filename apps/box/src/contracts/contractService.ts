@@ -301,6 +301,21 @@ export class ContractService {
       console.log('leavePool: removeMemberPeerId exists:', typeof this.poolStorageContract.removeMemberPeerId);
 
       try {
+        // First, verify user is actually a member of this pool
+        console.log('leavePool: Checking membership status...');
+        try {
+          const membershipResult = await this.isPeerIdMemberOfPool(poolId, peerIdToUse);
+          console.log('leavePool: Membership check result:', membershipResult);
+          
+          if (!membershipResult.isMember) {
+            console.error('leavePool: User is not a member of this pool');
+            throw new Error(`You are not a member of pool ${poolId}. Cannot leave a pool you haven't joined.`);
+          }
+        } catch (membershipError) {
+          console.error('leavePool: Failed to check membership:', membershipError);
+          // Continue anyway, let the contract handle the validation
+        }
+
         // Dry-run simulation first
         const pid = Number(poolId);
         const poolStorageAddress = chainConfig.contracts.poolStorage;
@@ -317,13 +332,34 @@ export class ContractService {
           });
           console.log("leavePool: Dry-run simulation succeeded");
         } catch (err: any) {
-          if (err.data) {
-            const decoded = iface.parseError(err.data);
-            console.error("leavePool: Simulation revert:", decoded.name);
-          } else {
-            console.error("leavePool: Node refused call:", err.message);
+          console.error("leavePool: Dry-run simulation failed:", err);
+          
+          // Try to decode specific error types
+          if (err.data && err.data !== '0x') {
+            try {
+              const decoded = iface.parseError(err.data);
+              console.error("leavePool: Decoded error:", decoded.name, decoded.args);
+              
+              // Handle specific error cases
+              switch (decoded.name) {
+                case 'NM':
+                  throw new Error('You are not a member of this pool.');
+                case 'OCA':
+                  throw new Error('Only contract admin can perform this action.');
+                case 'CannotRemoveSelf':
+                  throw new Error('You cannot remove yourself from the pool.');
+                case 'AccessControlUnauthorizedAccount':
+                  throw new Error('You do not have permission to leave this pool.');
+                default:
+                  throw new Error(`Pool operation failed: ${decoded.name}`);
+              }
+            } catch (parseError) {
+              console.error("leavePool: Failed to parse error:", parseError);
+            }
           }
-          return; // abort if it would revert on-chain
+          
+          // If we can't decode the error, provide a generic message
+          throw new Error('Pool leave operation would fail. Please check if you are a member of this pool and try again.');
         }
 
         console.log("leavePool: Sending actual transaction");
