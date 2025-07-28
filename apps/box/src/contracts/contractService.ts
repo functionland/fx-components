@@ -74,18 +74,41 @@ export class ContractService {
           });
           console.log(`ContractService: Chain switch request completed`);
 
-          // Wait a moment for the chain switch to complete
+          // Wait longer and retry verification multiple times for chain switch to complete
           console.log(`ContractService: Waiting for chain switch to complete...`);
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Increased wait time
-
-          // Verify the switch was successful
-          const newNetwork = await this.provider.getNetwork();
-          console.log(`ContractService: After switch - current chainId: ${newNetwork.chainId}, expected: ${expectedChainId}`);
-          if (newNetwork.chainId !== expectedChainId) {
-            console.error(`ContractService: Chain switch verification failed - got ${newNetwork.chainId}, expected ${expectedChainId}`);
-            throw new Error(`Chain switch was not completed. Current: ${newNetwork.chainId}, Expected: ${expectedChainId}`);
+          
+          let verificationAttempts = 0;
+          const maxVerificationAttempts = 5;
+          let chainSwitchSuccessful = false;
+          
+          while (verificationAttempts < maxVerificationAttempts && !chainSwitchSuccessful) {
+            verificationAttempts++;
+            console.log(`ContractService: Chain switch verification attempt ${verificationAttempts}/${maxVerificationAttempts}`);
+            
+            // Wait progressively longer between attempts
+            const waitTime = 2000 + (verificationAttempts * 1000); // 2s, 3s, 4s, 5s, 6s
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            
+            try {
+              const newNetwork = await this.provider.getNetwork();
+              console.log(`ContractService: Verification attempt ${verificationAttempts} - current chainId: ${newNetwork.chainId}, expected: ${expectedChainId}`);
+              
+              if (newNetwork.chainId === expectedChainId) {
+                console.log(`ContractService: Chain switch verified successfully on attempt ${verificationAttempts}`);
+                chainSwitchSuccessful = true;
+                break;
+              } else {
+                console.log(`ContractService: Chain switch not yet complete on attempt ${verificationAttempts}. Current: ${newNetwork.chainId}, Expected: ${expectedChainId}`);
+              }
+            } catch (verificationError) {
+              console.warn(`ContractService: Network verification attempt ${verificationAttempts} failed:`, verificationError);
+            }
           }
-          console.log(`ContractService: Chain switch verified successfully`);
+          
+          if (!chainSwitchSuccessful) {
+            console.error(`ContractService: Chain switch verification failed after ${maxVerificationAttempts} attempts`);
+            throw new Error(`Chain switch was not completed after ${maxVerificationAttempts} verification attempts. Please manually switch to ${chainConfig.name} in MetaMask.`);
+          }
         } catch (switchError: any) {
           console.error(`ContractService: Chain switch failed:`, switchError);
           // Handle user rejection (code 4001) gracefully
