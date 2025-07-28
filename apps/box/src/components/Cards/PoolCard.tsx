@@ -336,26 +336,36 @@ const DetailInfo = ({
       </FxCard.Row>
     )}
 
-    {/* Join button - enhanced with state management */}
-    {isDetailed && !isJoined && !isRequested && (
+    {/* Join/Leave button - enhanced with state management */}
+    {isDetailed && !isRequested && (
       <FxButton
         onPress={
-          joinState.step1Complete && !joinState.step2Complete
-            ? handleResendJoin
-            : handleJoinPool
+          joinState.step2Complete
+            ? async () => {
+                await leavePool(parseInt(pool.poolID, 10));
+                // Clear join state when leaving pool
+                const key = `joinState_${pool.poolID}_${currentBloxPeerId}`;
+                await AsyncStorage.removeItem(key);
+                setJoinState({ step1Complete: false, step2Complete: false });
+              }
+            : joinState.step1Complete && !joinState.step2Complete
+              ? handleResendJoin
+              : handleJoinPool
         }
         flexWrap="wrap"
         paddingHorizontal="16"
         iconLeft={<FxPoolIcon />}
-        disabled={isJoining || !isBloxConnected}
+        disabled={isJoining || (!isBloxConnected && !joinState.step2Complete)}
       >
         {isJoining
           ? 'Processing...'
-          : !isBloxConnected
-            ? 'Blox Disconnected'
-            : joinState.step1Complete && !joinState.step2Complete
-              ? 'Re-send Join'
-              : 'Join'
+          : joinState.step2Complete
+            ? 'Leave Pool'
+            : !isBloxConnected
+              ? 'Blox Disconnected'
+              : joinState.step1Complete && !joinState.step2Complete
+                ? 'Re-send Join'
+                : 'Join'
         }
       </FxButton>
     )}
@@ -366,17 +376,9 @@ const DetailInfo = ({
         <FxText variant="bodyXSRegular" color="content2">
           Join Status:
         </FxText>
-        <FxText variant="bodyXSRegular" color={joinState.step1Complete ? 'greenBase' : 'errorBase'}>
-          • Blox Configuration: {joinState.step1Complete ? '✓ Complete' : '✗ Failed'}
-        </FxText>
         <FxText variant="bodyXSRegular" color={joinState.step2Complete ? 'greenBase' : 'errorBase'}>
           • Pool Registration: {joinState.step2Complete ? '✓ Complete' : '✗ Pending'}
         </FxText>
-        {joinState.step1Error && (
-          <FxText variant="bodyXSRegular" color="errorBase" marginTop="4">
-            Blox Error: {joinState.step1Error}
-          </FxText>
-        )}
         {joinState.step2Error && (
           <FxText variant="bodyXSRegular" color="errorBase" marginTop="4">
             API Error: {joinState.step2Error}

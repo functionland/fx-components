@@ -268,64 +268,67 @@ export class ContractService {
 
   async leavePool(poolId: string, peerId?: string): Promise<void> {
     try {
-      console.log('leavePool: Starting leave pool process', { poolId, peerId });
-
       if (!this.poolStorageContract) throw new Error('Contract not initialized');
+      if (!this.signer) throw new Error('Signer not available');
 
-      if (!peerId) {
-        throw new Error('PeerId is required for leaving pool');
+      // Use the connected account's peerId if not provided
+      const connectedAccount = await this.getConnectedAccount();
+      if (!connectedAccount) throw new Error('No connected account');
+      
+      const peerIdToUse = peerId || connectedAccount;
+      console.log('leavePool: Using peerId:', peerIdToUse);
+      
+      // Convert peerId to bytes32
+      const peerIdBytes32 = await peerIdToBytes32(peerIdToUse);
+      console.log('leavePool: Contract address:', this.poolStorageContract.address);
+      console.log('leavePool: Current chain:', this.chain);
+      
+      const chainConfig = getChainConfigByName(this.chain);
+      if (!chainConfig) {
+        throw new Error(`Invalid chain configuration for ${this.chain}`);
       }
-
-      console.log('leavePool: Original peerId received:', peerId);
-      console.log('leavePool: peerId length:', peerId.length);
-      console.log('leavePool: peerId type:', typeof peerId);
-      
-      // Convert peerId to bytes32 format for contract call
-      const peerIdBytes32 = await peerIdToBytes32(peerId);
-      
+      console.log('leavePool: Expected contract address from config:', chainConfig.contracts.poolStorage);
       console.log('leavePool: Converted peerId to bytes32:', peerIdBytes32);
       console.log('leavePool: bytes32 length:', peerIdBytes32.length);
       console.log('leavePool: bytes32 type:', typeof peerIdBytes32);
       console.log('leavePool: Full conversion details:', { 
-        originalPeerId: peerId, 
+        originalPeerId: peerIdToUse, 
         convertedBytes32: peerIdBytes32,
         poolId: poolId,
         poolIdNumber: Number(poolId)
       });
       console.log('leavePool: About to call removeMemberPeerId on contract');
       console.log('leavePool: removeMemberPeerId exists:', typeof this.poolStorageContract.removeMemberPeerId);
-      console.log('leavePool: Call parameters:', { poolId, peerIdBytes32, gasLimit: METHOD_GAS_LIMITS.leavePool });
 
       try {
-
-
-        /* Dry-run */
-        const pid   = Number(poolId);
-        const poolStorageAddress = CONTRACT_ADDRESSES[this.chain]?.contracts.poolStorage;
-        const iface = this.poolStorageContract!.interface;
-        const data  = iface.encodeFunctionData(
+        // Dry-run simulation first
+        const pid = Number(poolId);
+        const poolStorageAddress = chainConfig.contracts.poolStorage;
+        const iface = this.poolStorageContract.interface;
+        const data = iface.encodeFunctionData(
           "removeMemberPeerId(uint32,bytes32)",
           [pid, peerIdBytes32]
         );
+        
         try {
           await this.readOnlyProvider!.call({
             to: poolStorageAddress,
             data,
           });
-          console.log("dry-run succeed")
+          console.log("leavePool: Dry-run simulation succeeded");
         } catch (err: any) {
           if (err.data) {
-            const decoded = iface.parseError(err.data);       // PNF / PNF2 / OCA
-            console.error("Simulation revert:", decoded.name);
+            const decoded = iface.parseError(err.data);
+            console.error("leavePool: Simulation revert:", decoded.name);
           } else {
-            console.error("Node refused call:", err.message);
+            console.error("leavePool: Node refused call:", err.message);
           }
-          return;      // abort if it would revert on‑chain
+          return; // abort if it would revert on-chain
         }
 
-        console.log("leavepool: sending actual transaction")
+        console.log("leavePool: Sending actual transaction");
         
-        // Clean up any existing MetaMask listeners before transaction (prevents stale requests)
+        // Clean up any existing MetaMask listeners before transaction
         try {
           const metamaskProvider = this.provider!.provider as any;
           if (metamaskProvider && typeof metamaskProvider.removeAllListeners === 'function') {
@@ -341,75 +344,18 @@ export class ContractService {
           method: 'eth_sendTransaction',
           params: [
             {
-              from: await this.signer!.getAddress(), // MetaMask fills if omitted on v0.30+
+              from: await this.signer!.getAddress(),
               to: poolStorageAddress,
               data,
-              gas: gasHex, // **gas**, not gasLimit
+              gas: gasHex,
               value: '0x0',
             },
           ],
         });
-        console.log('User confirmed – hash:', txHash);
+        console.log('leavePool: User confirmed transaction – hash:', txHash);
 
-        // 4. Optionally wait for inclusion with readOnlyProvider:
+        // Wait for transaction confirmation
         await this.readOnlyProvider!.waitForTransaction(txHash);
-        /*
-        try {
-          console.log("leavepool: dry-run transaction");
-          await this.poolStorageContract.callStatic
-          .removeMemberPeerId(
-            Number(poolId),                       // be explicit – BigNumberish
-            peerIdBytes32,
-            { from: await this.signer.getAddress() }
-          ); 
-        } catch (dryRunError) {
-          console.log("leavepool:", dryRunError);
-        }
-        // First, try to estimate gas to see if the transaction would succeed
-        console.log('leavePool: Estimating gas for removeMemberPeerId...');
-        
-        try {
-          // Add timeout to gas estimation
-          const gasEstimationPromise = this.poolStorageContract.estimateGas.removeMemberPeerId(Number(poolId), peerIdBytes32);
-          const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('Gas estimation timeout after 10 seconds')), 10000);
-          });
-
-          const estimatedGas = await Promise.race([gasEstimationPromise, timeoutPromise]);
-          console.log('leavePool: Gas estimation successful', { estimatedGas: estimatedGas.toString() });
-        } catch (gasEstimationError) {
-          console.error('leavePool: Gas estimation failed:', gasEstimationError);
-          console.error('leavePool: Gas estimation error details:', {
-            message: gasEstimationError.message,
-            code: gasEstimationError.code,
-            reason: gasEstimationError.reason,
-            data: gasEstimationError.data
-          });
-
-          // If gas estimation fails, the transaction will likely fail too
-          // But let's try anyway in case it's just a gas estimation issue
-          console.log('leavePool: Continuing despite gas estimation failure...');
-        }
-
-        console.log('leavePool: Calling removeMemberPeerId with transaction...');
-        console.log('leavePool: Transaction parameters:', {
-          poolId: Number(poolId),
-          peerIdBytes32,
-          gasLimit: 150000,
-          from: await this.signer.getAddress()
-        });
-
-        const tx = await this.poolStorageContract.removeMemberPeerId(
-          Number(poolId),
-          peerIdBytes32,
-          {
-            gasLimit: Number(150000)
-          }
-        );
-
-        console.log('leavePool: Transaction sent, waiting for confirmation', { txHash: tx.hash });
-        const receipt = await tx.wait();
-*/
         console.log('leavePool: Transaction confirmed', { txHash });
       } catch (contractCallError: any) {
         console.error('leavePool: Contract call failed:', contractCallError);
@@ -426,7 +372,7 @@ export class ContractService {
       console.error('leavePool: Error occurred', error);
       throw this.handleError(error);
     } finally {
-      // Always clean up MetaMask listeners after transaction (prevents stale requests)
+      // Always clean up MetaMask listeners after transaction
       try {
         const metamaskProvider = this.provider?.provider as any;
         if (metamaskProvider && typeof metamaskProvider.removeAllListeners === 'function') {

@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { getContractService, ContractService, resetContractService } from '../contracts/contractService';
 import { SupportedChain } from '../contracts/types';
-import { CHAIN_DISPLAY_NAMES, getChainConfig, CONTRACT_ADDRESSES } from '../contracts/config';
+import { CHAIN_DISPLAY_NAMES, getChainConfig, getChainConfigByName, CONTRACT_ADDRESSES } from '../contracts/config';
 
 // Global flag to track if the "Contracts Connected" notification has been shown
 let contractsConnectedNotificationShown = false;
@@ -257,7 +257,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
         const currentChainId = parseInt(currentChainIdHex, 16);
         
         // Get expected chain ID from selected chain
-        const chainConfig = getChainConfig(selectedChain);
+        const chainConfig = getChainConfigByName(selectedChain);
         if (!chainConfig) {
           console.error(`executeContractCall: Invalid chain config for ${selectedChain}`);
           throw new Error(`Invalid chain configuration for ${selectedChain}`);
