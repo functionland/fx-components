@@ -38,8 +38,8 @@ export const LinkPasswordScreen = () => {
   const [passwordInput, setPasswordInput] = useState('');
   const [manualSignature, setManualSignature] = useState(false);
   const [mSig, setMSig] = useState('');
-  const [setKeyChainValue, signiture, password] = useUserProfileStore(
-    (state) => [state.setKeyChainValue, state.signiture, state.password]
+  const [setKeyChainValue, signiture, password, setWalletId] = useUserProfileStore(
+    (state) => [state.setKeyChainValue, state.signiture, state.password, state.setWalletId]
   );
 
   useEffect(() => {
@@ -207,118 +207,138 @@ export const LinkPasswordScreen = () => {
   const handleSkipToManulaSetup = () => {
     navigation.navigate(Routes.SetBloxAuthorizer, { isManualSetup: true });
   };
+
+  const handleClearCachedIdentity = async () => {
+    // Clear cached signature and password data
+    await setWalletId('', true); // true flag clears signature data
+    queueToast({
+      type: 'success',
+      message: t('linkPassword.cachedDataCleared'),
+      autoHideDuration: 3000,
+    });
+  };
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={40} />
       <FxBox flex={1} justifyContent="space-between" paddingVertical="80">
-        {password && signiture ? (
-          <FxBox>
-            <FxText variant="h300" textAlign="center">
-              {t('linkPassword.yourIdentity')}
-            </FxText>
-            <FxText textAlign="center" marginTop="8">
-              {helper.getMyDID(password, signiture)}
-            </FxText>
-          </FxBox>
-        ) : (
-          <>
-            <FxText variant="h300" textAlign="center">
-              {t('linkPassword.title')}
-            </FxText>
-            {!linking ? (
-              <FxTextInput
-                caption={t('linkPassword.password')}
-                autoFocus
-                secureTextEntry
-                value={passwordInput}
-                onChangeText={setPasswordInput}
-              />
-            ) : (
-              <ActivityIndicator />
-            )}
-            {!linking && manualSignature ? (
-              <FxTextInput
-                caption={t('linkPassword.signature')}
-                autoFocus
-                secureTextEntry
-                value={mSig}
-                onChangeText={setMSig}
-              />
-            ) : (
-              <></>
-            )}
-            <FxBox>
-              <FxText
-                variant="bodyMediumRegular"
-                color="warningBase"
-                textAlign="center"
-                paddingBottom="20"
-              >
-                {t('linkPassword.warning')}
+        <FxBox>
+          <FxText variant="h300" textAlign="center">
+            {t('linkPassword.title')}
+          </FxText>
+          {password && signiture && (
+            <FxBox marginVertical="20" padding="16" backgroundColor="backgroundSecondary" borderRadius="m">
+              <FxText variant="bodyMediumRegular" textAlign="center" color="greenBase">
+                {t('linkPassword.existingIdentity')}
               </FxText>
-              <FxRadioButton.Group
-                value={iKnow ? [1] : []}
-                onValueChange={(val) =>
-                  setIKnow(val && val[0] === 1 ? true : false)
-                }
-              >
-                <FxRadioButtonWithLabel
-                  paddingVertical="8"
-                  label={t('linkPassword.passwordRisk')}
-                  value={1}
-                />
-              </FxRadioButton.Group>
-              <FxRadioButton.Group
-                value={metamaskOpen ? [1] : []}
-                onValueChange={(val) =>
-                  setMetamaskOpen(val && val[0] === 1 ? true : false)
-                }
-              >
-                <FxRadioButtonWithLabel
-                  paddingVertical="8"
-                  label={t('linkPassword.metamaskOpen')}
-                  value={1}
-                />
-              </FxRadioButton.Group>
+              <FxText textAlign="center" marginTop="8" color="greenBase">
+                {helper.getMyDID(password, signiture)}
+              </FxText>
             </FxBox>
-          </>
-        )}
-
-        {signiture ? (
+          )}
+        </FxBox>
+        <FxBox>
+          {!linking ? (
+            <FxTextInput
+              caption={t('linkPassword.password')}
+              autoFocus
+              secureTextEntry
+              value={passwordInput}
+              onChangeText={setPasswordInput}
+            />
+          ) : (
+            <ActivityIndicator />
+          )}
+          {!linking && manualSignature ? (
+            <FxTextInput
+              caption={t('linkPassword.signature')}
+              autoFocus
+              secureTextEntry
+              value={mSig}
+              onChangeText={setMSig}
+            />
+          ) : (
+            <></>
+          )}
           <FxBox>
-            <FxButton
-              size="large"
-              marginBottom="16"
-              onPress={handleConnectToBlox}
+            <FxText
+              variant="bodyMediumRegular"
+              color="warningBase"
+              textAlign="center"
+              paddingBottom="20"
             >
-              {t('linkPassword.connectToBlox')}
-            </FxButton>
-            <FxButton
-              size="large"
-              variant="inverted"
-              onPress={handleConnectToExistingBlox}
+              {t('linkPassword.warning')}
+            </FxText>
+            <FxRadioButton.Group
+              value={iKnow ? [1] : []}
+              onValueChange={(val: any) =>
+                setIKnow(val && val[0] === 1 ? true : false)
+              }
             >
-              {t('linkPassword.reconnectExisting')}
-            </FxButton>
-            {logger.isDebugModeEnable && (
+              <FxRadioButtonWithLabel
+                paddingVertical="8"
+                label={t('linkPassword.passwordRisk')}
+                value={1}
+              />
+            </FxRadioButton.Group>
+            <FxRadioButton.Group
+              value={metamaskOpen ? [1] : []}
+              onValueChange={(val: any) =>
+                setMetamaskOpen(val && val[0] === 1 ? true : false)
+              }
+            >
+              <FxRadioButtonWithLabel
+                paddingVertical="8"
+                label={t('linkPassword.metamaskOpen')}
+                value={1}
+              />
+            </FxRadioButton.Group>
+          </FxBox>
+        </FxBox>
+
+        <FxBox>
+          {signiture ? (
+            <>
+              <FxButton
+                size="large"
+                marginBottom="16"
+                onPress={handleConnectToBlox}
+              >
+                {t('linkPassword.continueWithExisting')}
+              </FxButton>
               <FxButton
                 size="large"
                 variant="inverted"
-                marginTop="16"
-                onPress={handleOnBluetoothCommand}
+                marginBottom="16"
+                onPress={handleClearCachedIdentity}
               >
-                {t('linkPassword.bluetoothCommands')}
+                {t('linkPassword.clearCachedData')}
               </FxButton>
-            )}
-            <FxButton
-              variant="inverted"
-              marginTop="16"
-              onPress={handleSkipToManulaSetup}
-            >
-              {t('linkPassword.skipManualSetup')}
-            </FxButton>
-          </FxBox>
-        ) : (
+              <FxButton
+                size="large"
+                variant="inverted"
+                onPress={handleConnectToExistingBlox}
+              >
+                {t('linkPassword.reconnectExisting')}
+              </FxButton>
+              {logger.isDebugModeEnable && (
+                <FxButton
+                  size="large"
+                  variant="inverted"
+                  marginTop="16"
+                  onPress={handleOnBluetoothCommand}
+                >
+                  {t('linkPassword.bluetoothCommands')}
+                </FxButton>
+              )}
+              <FxButton
+                variant="inverted"
+                marginTop="16"
+                onPress={handleSkipToManulaSetup}
+              >
+                {t('linkPassword.skipManualSetup')}
+              </FxButton>
+            </>
+          ) : (
           <FxBox>
             <FxButton
               size="large"
@@ -361,7 +381,8 @@ export const LinkPasswordScreen = () => {
                 : t('linkPassword.signManually')}
             </FxButton>
           </FxBox>
-        )}
+          )}
+        </FxBox>
       </FxBox>
     </FxSafeAreaBox>
   );

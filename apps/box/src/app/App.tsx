@@ -59,10 +59,38 @@ const barStyles = {
   dark: 'light-content',
 } as const;
 
-const openDeeplink = (link: string, _target?: string) => {
+const openDeeplink = async (link: string, _target?: string) => {
   console.debug(`App::openDeepLink() ${link}`);
   if (canOpenLink) {
-    Linking.openURL(link);
+    try {
+      // Check if the URL can be opened (app is installed)
+      const canOpen = await Linking.canOpenURL(link);
+      console.debug(`App::openDeepLink() canOpen: ${canOpen}`);
+      
+      if (canOpen) {
+        await Linking.openURL(link);
+        console.debug(`App::openDeepLink() Successfully opened: ${link}`);
+      } else {
+        console.warn(`App::openDeepLink() Cannot open URL: ${link}`);
+        
+        // If it's a MetaMask deep link and can't be opened, try the universal link or App Store
+        if (link.startsWith('metamask://')) {
+          const universalLink = link.replace('metamask://', 'https://metamask.app.link/');
+          console.debug(`App::openDeepLink() Trying universal link: ${universalLink}`);
+          
+          const canOpenUniversal = await Linking.canOpenURL(universalLink);
+          if (canOpenUniversal) {
+            await Linking.openURL(universalLink);
+          } else {
+            // Fallback to App Store
+            console.debug(`App::openDeepLink() Opening App Store for MetaMask`);
+            await Linking.openURL('https://apps.apple.com/app/metamask/id1438144202');
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`App::openDeepLink() Error opening URL: ${link}`, error);
+    }
   } else {
     console.debug(
       'useBlockchainProiver::openDeepLink app is not active - skip link',
@@ -98,6 +126,7 @@ const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
         openDeeplink: openDeeplink,
         timer: BackgroundTimer,
         useDeeplink,
+        extensionOnly: false, // Enable mobile app integration
         checkInstallationImmediately: false, // Prevent auto-opening MetaMask
         autoConnect: false, // Prevent automatic connection
         storage: {
