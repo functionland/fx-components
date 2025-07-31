@@ -11,8 +11,8 @@ export const CONTRACT_ADDRESSES: Record<SupportedChain, ChainConfig> = {
     requiresAuth: true,
     contracts: {
       // Updated proxy contract addresses
-      poolStorage: '0xf293A6902662DcB09E310254A5e418cb28D71b6b',
-      rewardEngine: '0x02651083A2a5B5cEe6125659c2759EBFaCC7A90A',
+      poolStorage: '0xb093fF4B3B3B87a712107B26566e0cCE5E752b4D',
+      rewardEngine: '0x31029f90405fd3D9cB0835c6d21b9DFF058Df45A',
       fulaToken: '0x9e12735d77c72c5C3670636D428f2F3815d8A4cB',
     },
   },
@@ -24,8 +24,8 @@ export const CONTRACT_ADDRESSES: Record<SupportedChain, ChainConfig> = {
     requiresAuth: false,
     contracts: {
       // Updated proxy contract addresses
-      poolStorage: '0xf293A6902662DcB09E310254A5e418cb28D71b6b',
-      rewardEngine: '0xa8CFA5758e706294eCbB8a4b104Df63fFB7e807B',
+      poolStorage: '0xf9176Ffde541bF0aa7884298Ce538c471Ad0F015',
+      rewardEngine: '0xF7c64248294C45Eb3AcdD282b58675F1831fb047',
       fulaToken: '0x9e12735d77c72c5C3670636D428f2F3815d8A4cB',
     },
   },
