@@ -38,9 +38,18 @@ export const LinkPasswordScreen = () => {
   const [passwordInput, setPasswordInput] = useState('');
   const [manualSignature, setManualSignature] = useState(false);
   const [mSig, setMSig] = useState('');
+  const [identityReset, setIdentityReset] = useState(false);
   const [setKeyChainValue, signiture, password, setWalletId] = useUserProfileStore(
     (state) => [state.setKeyChainValue, state.signiture, state.password, state.setWalletId]
   );
+
+  // Computed value to determine if we have an identity (either cached or fresh)
+  const hasIdentity = useMemo(() => {
+    const hasCachedIdentity = !!(signiture && password);
+    const hasFreshSignature = !!signatureData;
+    console.log('Identity check:', { hasCachedIdentity, hasFreshSignature, identityReset, signiture: !!signiture, password: !!password, signatureData: !!signatureData });
+    return (hasCachedIdentity || hasFreshSignature) && !identityReset;
+  }, [signiture, password, signatureData, identityReset]);
 
   useEffect(() => {
     console.log('in test useEffect');
@@ -211,6 +220,7 @@ export const LinkPasswordScreen = () => {
   const handleClearCachedIdentity = async () => {
     // Clear cached signature and password data
     await setWalletId('', true); // true flag clears signature data
+    setIdentityReset(true);
     queueToast({
       type: 'success',
       message: t('linkPassword.cachedDataCleared'),
@@ -237,66 +247,71 @@ export const LinkPasswordScreen = () => {
           )}
         </FxBox>
         <FxBox>
-          {!linking ? (
-            <FxTextInput
-              caption={t('linkPassword.password')}
-              autoFocus
-              secureTextEntry
-              value={passwordInput}
-              onChangeText={setPasswordInput}
-            />
-          ) : (
-            <ActivityIndicator />
+          {/* Only show password input and checkboxes when NO existing identity is found */}
+          {!(password && signiture) && (
+            <>
+              {!linking ? (
+                <FxTextInput
+                  caption={t('linkPassword.password')}
+                  autoFocus
+                  secureTextEntry
+                  value={passwordInput}
+                  onChangeText={setPasswordInput}
+                />
+              ) : (
+                <ActivityIndicator />
+              )}
+              {!linking && manualSignature ? (
+                <FxTextInput
+                  caption={t('linkPassword.signature')}
+                  autoFocus
+                  secureTextEntry
+                  value={mSig}
+                  onChangeText={setMSig}
+                />
+              ) : (
+                <></>
+              )}
+              <FxBox>
+                <FxText
+                  variant="bodyMediumRegular"
+                  color="warningBase"
+                  textAlign="center"
+                  paddingBottom="20"
+                >
+                  {t('linkPassword.warning')}
+                </FxText>
+                <FxRadioButton.Group
+                  value={iKnow ? [1] : []}
+                  onValueChange={(val: any) =>
+                    setIKnow(val && val[0] === 1 ? true : false)
+                  }
+                >
+                  <FxRadioButtonWithLabel
+                    paddingVertical="8"
+                    label={t('linkPassword.passwordRisk')}
+                    value={1}
+                  />
+                </FxRadioButton.Group>
+                <FxRadioButton.Group
+                  value={metamaskOpen ? [1] : []}
+                  onValueChange={(val: any) =>
+                    setMetamaskOpen(val && val[0] === 1 ? true : false)
+                  }
+                >
+                  <FxRadioButtonWithLabel
+                    paddingVertical="8"
+                    label={t('linkPassword.metamaskOpen')}
+                    value={1}
+                  />
+                </FxRadioButton.Group>
+              </FxBox>
+            </>
           )}
-          {!linking && manualSignature ? (
-            <FxTextInput
-              caption={t('linkPassword.signature')}
-              autoFocus
-              secureTextEntry
-              value={mSig}
-              onChangeText={setMSig}
-            />
-          ) : (
-            <></>
-          )}
-          <FxBox>
-            <FxText
-              variant="bodyMediumRegular"
-              color="warningBase"
-              textAlign="center"
-              paddingBottom="20"
-            >
-              {t('linkPassword.warning')}
-            </FxText>
-            <FxRadioButton.Group
-              value={iKnow ? [1] : []}
-              onValueChange={(val: any) =>
-                setIKnow(val && val[0] === 1 ? true : false)
-              }
-            >
-              <FxRadioButtonWithLabel
-                paddingVertical="8"
-                label={t('linkPassword.passwordRisk')}
-                value={1}
-              />
-            </FxRadioButton.Group>
-            <FxRadioButton.Group
-              value={metamaskOpen ? [1] : []}
-              onValueChange={(val: any) =>
-                setMetamaskOpen(val && val[0] === 1 ? true : false)
-              }
-            >
-              <FxRadioButtonWithLabel
-                paddingVertical="8"
-                label={t('linkPassword.metamaskOpen')}
-                value={1}
-              />
-            </FxRadioButton.Group>
-          </FxBox>
         </FxBox>
 
         <FxBox>
-          {signiture ? (
+          {password && signiture ? (
             <>
               <FxButton
                 size="large"

@@ -30,7 +30,11 @@
     "connectToBlox": "连接到 Blox",
     "reconnectExisting": "重新连接到现有 blox",
     "bluetoothCommands": "蓝牙命令",
-    "skipManualSetup": "跳到手动设置"
+    "skipManualSetup": "跳到手动设置",
+    "existingIdentity": "发现现有身份",
+    "continueWithExisting": "继续",
+    "clearCachedData": "重置身份",
+    "cachedDataCleared": "身份已成功重置"
   },
   "connectToBlox": {
     "title": "连接到 Blox",

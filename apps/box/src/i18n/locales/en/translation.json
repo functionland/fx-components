@@ -30,7 +30,11 @@
       "connectToBlox": "Connect to Blox",
       "reconnectExisting": "Reconnect to existing blox",
       "bluetoothCommands": "Bluetooth commands",
-      "skipManualSetup": "Skip to manual setup"
+      "skipManualSetup": "Skip to manual setup",
+      "existingIdentity": "Existing Identity Found",
+      "continueWithExisting": "Continue",
+      "clearCachedData": "Reset Identity",
+      "cachedDataCleared": "Identity has been reset successfully"
     },
     "connectToBlox": {
       "title": "Connect to Blox",
