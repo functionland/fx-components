@@ -63,33 +63,51 @@ const openDeeplink = async (link: string, _target?: string) => {
   console.debug(`App::openDeepLink() ${link}`);
   if (canOpenLink) {
     try {
-      // Check if the URL can be opened (app is installed)
-      const canOpen = await Linking.canOpenURL(link);
-      console.debug(`App::openDeepLink() canOpen: ${canOpen}`);
-      
-      if (canOpen) {
+      if (Platform.OS === 'android') {
+        // On Android, canOpenURL may return false even when app is installed
+        // due to security restrictions, so try opening directly first
+        console.debug(`App::openDeepLink() Android: Attempting to open directly`);
         await Linking.openURL(link);
-        console.debug(`App::openDeepLink() Successfully opened: ${link}`);
+        console.debug(`App::openDeepLink() Android: Successfully opened: ${link}`);
       } else {
-        console.warn(`App::openDeepLink() Cannot open URL: ${link}`);
+        // iOS: Check if the URL can be opened (app is installed)
+        const canOpen = await Linking.canOpenURL(link);
+        console.debug(`App::openDeepLink() iOS canOpen: ${canOpen}`);
         
-        // If it's a MetaMask deep link and can't be opened, try the universal link or App Store
-        if (link.startsWith('metamask://')) {
-          const universalLink = link.replace('metamask://', 'https://metamask.app.link/');
-          console.debug(`App::openDeepLink() Trying universal link: ${universalLink}`);
+        if (canOpen) {
+          await Linking.openURL(link);
+          console.debug(`App::openDeepLink() iOS: Successfully opened: ${link}`);
+        } else {
+          console.warn(`App::openDeepLink() iOS: Cannot open URL: ${link}`);
           
-          const canOpenUniversal = await Linking.canOpenURL(universalLink);
-          if (canOpenUniversal) {
-            await Linking.openURL(universalLink);
-          } else {
-            // Fallback to App Store
-            console.debug(`App::openDeepLink() Opening App Store for MetaMask`);
-            await Linking.openURL('https://apps.apple.com/app/metamask/id1438144202');
+          // If it's a MetaMask deep link and can't be opened, try the universal link or App Store
+          if (link.startsWith('metamask://')) {
+            const universalLink = link.replace('metamask://', 'https://metamask.app.link/');
+            console.debug(`App::openDeepLink() iOS: Trying universal link: ${universalLink}`);
+            
+            const canOpenUniversal = await Linking.canOpenURL(universalLink);
+            if (canOpenUniversal) {
+              await Linking.openURL(universalLink);
+            } else {
+              // Fallback to App Store
+              console.debug(`App::openDeepLink() iOS: Opening App Store for MetaMask`);
+              await Linking.openURL('https://apps.apple.com/app/metamask/id1438144202');
+            }
           }
         }
       }
     } catch (error) {
       console.error(`App::openDeepLink() Error opening URL: ${link}`, error);
+      
+      // Only on Android, if direct opening fails, try fallback to Play Store
+      if (Platform.OS === 'android' && link.startsWith('metamask://')) {
+        console.debug(`App::openDeepLink() Android: Opening Play Store for MetaMask`);
+        try {
+          await Linking.openURL('https://play.google.com/store/apps/details?id=io.metamask');
+        } catch (fallbackError) {
+          console.error(`App::openDeepLink() Android: Fallback also failed`, fallbackError);
+        }
+      }
     }
   } else {
     console.debug(
