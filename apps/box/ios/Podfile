@@ -7,6 +7,13 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+# Setup react-native-permissions
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native-permissions/scripts/setup.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
 platform :ios, '15.0'
 prepare_react_native_project!
 
@@ -31,6 +38,13 @@ target 'Box' do
   pod 'Fula', :podspec => 'https://raw.githubusercontent.com/functionland/go-fula/main/Fula.podspec'
   #pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec', :modular_headers => false
   config = use_native_modules!
+
+  # Permissions for react-native-permissions
+  setup_permissions([
+    'LocationWhenInUse',
+    'LocationAlways',
+    'Bluetooth'
+  ])
 
   # Flags change depending on the env values.
   flags = get_default_flags()

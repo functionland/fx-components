@@ -85,6 +85,8 @@
 	<string>This app uses Bluetooth to connect to nearby devices for setting up the hardware iOT device locally without wifi.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app requires location access to find nearby devices through zeroconf</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app uses Bluetooth to discover and connect to nearby IoT devices. Location access is required for Bluetooth scanning on iOS.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

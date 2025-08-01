@@ -1,6 +1,7 @@
 import BleManager, { Peripheral } from 'react-native-ble-manager';
 import BleManagerEmitter from 'react-native-ble-manager';
 import { NativeEventEmitter, NativeModules, Platform, PermissionsAndroid } from 'react-native';
+import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { EConnectionStatus } from '../models';
 
 const BleManagerModule = NativeModules.BleManager;
@@ -285,6 +286,19 @@ export class BleManagerWrapper extends ResponseAssembler {
                 }
             } catch (error) {
                 console.error('Permission request error:', error);
+                return false;
+            }
+        } else if (Platform.OS === 'ios') {
+            // iOS requires location permission for BLE scanning
+            try {
+                const locationResult = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+                if (locationResult !== RESULTS.GRANTED) {
+                    console.log('Location permission denied on iOS - required for BLE scanning');
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('iOS permission request error:', error);
                 return false;
             }
         }
