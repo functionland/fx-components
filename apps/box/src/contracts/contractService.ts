@@ -222,9 +222,90 @@ export class ContractService {
   }
 
   async switchChain(newChain: SupportedChain): Promise<void> {
-    this.chain = newChain;
-    if (this.provider) {
-      await this.initialize(this.provider.provider);
+    console.log(`ContractService: switchChain called - switching from ${this.chain} to ${newChain}`);
+    
+    if (!this.provider) {
+      console.error('ContractService: switchChain called but no provider available');
+      throw new Error('No provider available for chain switching');
+    }
+
+    const chainConfig = getChainConfigByName(newChain);
+    console.log(`ContractService: Target chain config:`, chainConfig);
+
+    try {
+      // Get current network to check if switch is needed
+      const currentNetwork = await this.provider.getNetwork();
+      const expectedChainId = parseInt(chainConfig.chainId, 16);
+      
+      console.log(`ContractService: Current chainId: ${currentNetwork.chainId}, Target chainId: ${expectedChainId}`);
+      
+      if (currentNetwork.chainId === expectedChainId) {
+        console.log(`ContractService: Already on target chain ${newChain}, updating internal state only`);
+        this.chain = newChain;
+        await this.initialize(this.provider.provider, { allowNetworkSwitch: false });
+        return;
+      }
+
+      // Request MetaMask to switch to the target chain
+      console.log(`ContractService: Requesting MetaMask to switch to ${chainConfig.name} (${chainConfig.chainId})`);
+      
+      const web3Provider = this.provider.provider;
+      await web3Provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: chainConfig.chainId }],
+      });
+      
+      console.log(`ContractService: Chain switch request sent to MetaMask`);
+      
+      // Wait for the switch to complete and verify
+      let verificationAttempts = 0;
+      const maxVerificationAttempts = 5;
+      let chainSwitchSuccessful = false;
+      
+      while (verificationAttempts < maxVerificationAttempts && !chainSwitchSuccessful) {
+        verificationAttempts++;
+        console.log(`ContractService: Chain switch verification attempt ${verificationAttempts}/${maxVerificationAttempts}`);
+        
+        // Wait progressively longer between attempts
+        const waitTime = 2000 + (verificationAttempts * 1000);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        
+        try {
+          const newNetwork = await this.provider.getNetwork();
+          console.log(`ContractService: Verification attempt ${verificationAttempts} - current chainId: ${newNetwork.chainId}, expected: ${expectedChainId}`);
+          
+          if (newNetwork.chainId === expectedChainId) {
+            console.log(`ContractService: Chain switch verified successfully on attempt ${verificationAttempts}`);
+            chainSwitchSuccessful = true;
+            break;
+          }
+        } catch (verificationError) {
+          console.warn(`ContractService: Network verification attempt ${verificationAttempts} failed:`, verificationError);
+        }
+      }
+      
+      if (!chainSwitchSuccessful) {
+        console.error(`ContractService: Chain switch verification failed after ${maxVerificationAttempts} attempts`);
+        throw new Error(`Chain switch was not completed. Please manually switch to ${chainConfig.name} in MetaMask.`);
+      }
+      
+      // Update internal state and reinitialize with the new chain
+      this.chain = newChain;
+      await this.initialize(this.provider.provider, { allowNetworkSwitch: false });
+      
+      console.log(`ContractService: Successfully switched to ${newChain} and reinitialized`);
+      
+    } catch (error: any) {
+      console.error(`ContractService: switchChain failed:`, error);
+      
+      // Handle user rejection gracefully
+      if (error.code === 4001) {
+        console.log(`ContractService: User rejected chain switch request`);
+        throw new Error(`Chain switch cancelled by user`);
+      }
+      
+      // Re-throw other errors
+      throw error;
     }
   }
 
