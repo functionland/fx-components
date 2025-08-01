@@ -39,6 +39,8 @@ import {
   useUserProfileStore,
 } from '../../stores';
 import { useSDK } from '@metamask/sdk-react';
+import { useWalletNetwork } from '../../hooks/useWalletNetwork';
+import { WalletNotification } from '../../components/WalletNotification';
 import { blockchain, fxblox } from '@functionland/react-native-fula';
 import { Helper } from '../../utils';
 import axios from 'axios';
@@ -439,6 +441,11 @@ export const BloxScreen = () => {
             }
             onBloxPress={() => bloxInfoBottomSheetRef.current.present()}
           />
+          <FxSpacer height={16} />
+          
+          {/* Wallet Connection and Network Notification */}
+          <WalletNotification compact={true} />
+          
           <FxSpacer height={24} />
           {currentBloxSpaceInfo?.size != undefined && (
             <UsageBar

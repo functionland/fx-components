@@ -27,6 +27,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import notifee from '@notifee/react-native';
 import { useTranslation } from 'react-i18next';
 import { useSDK } from '@metamask/sdk-react';
+import { useWalletNetwork } from '../../hooks/useWalletNetwork';
+import { WalletNotification } from '../../components/WalletNotification';
 
 // --- Add this union type for FlatList items ---
 type PoolListItem =
@@ -72,6 +74,15 @@ export const PoolsScreen = () => {
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
 
   const selectedChain = useSettingsStore((state) => state.selectedChain);
+
+  // Network switching functionality
+  const { 
+    isOnCorrectNetwork, 
+    isSwitchingNetwork, 
+    withCorrectNetwork, 
+    ensureCorrectNetworkConnection,
+    targetNetworkName 
+  } = useWalletNetwork();
 
   const onChangeSearch = (query) => setSearch(query ? query : '');
 
@@ -319,7 +330,11 @@ export const PoolsScreen = () => {
 
       // Don't set refreshing=true here! It triggers immediate pool reload
       console.log('wrappedJoinPool: Starting join pool transaction...');
-      const result = await joinPool(poolID.toString());
+      
+      // Ensure MetaMask is on the correct network before transaction
+      const result = await withCorrectNetwork(async () => {
+        return await joinPool(poolID.toString());
+      });
 
       if (result !== null) {
         console.log('wrappedJoinPool: Transaction successful, now refreshing pools...');
@@ -331,9 +346,20 @@ export const PoolsScreen = () => {
         // Only refresh pools AFTER successful transaction
         setRefreshing(true);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('wrappedJoinPool: Error occurred:', e);
-      handlePoolActionErrors('Error joining pool', e.toString());
+      
+      // Handle network switch required error specifically
+      if (e.message?.includes('NETWORK_SWITCH_REQUIRED')) {
+        queueToast({
+          type: 'warning',
+          title: 'Network Switch Required',
+          message: 'Please use the network notification above to switch to the correct network, then try again.',
+          autoHideDuration: 5000,
+        });
+      } else {
+        handlePoolActionErrors('Error joining pool', e.toString());
+      }
     }
     // Don't set refreshing=false in finally block since we only set it to true on success
   };
@@ -475,7 +501,10 @@ export const PoolsScreen = () => {
         autoHideDuration: 3000,
       });
 
-      const result = await leavePool(poolID.toString());
+      // Ensure MetaMask is on the correct network before transaction
+      const result = await withCorrectNetwork(async () => {
+        return await leavePool(poolID.toString());
+      });
 
       if (result !== null) {
         console.log('wrappedLeavePool: Transaction successful, now refreshing pools...');
@@ -726,6 +755,9 @@ export const PoolsScreen = () => {
               </FxText>
             )}
           </FxBox>
+
+          {/* Wallet Connection and Network Notification */}
+          <WalletNotification compact={false} />
 
           <FxBox flex={1}>
             <FxHeader

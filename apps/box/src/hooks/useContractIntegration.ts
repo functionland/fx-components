@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSDK } from '@metamask/sdk-react';
 import { useToast } from '@functionland/component-library';
-import { ethers } from 'ethers';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useWalletNetwork } from './useWalletNetwork';
 import { getContractService, ContractService, resetContractService } from '../contracts/contractService';
 import { SupportedChain } from '../contracts/types';
 import { CHAIN_DISPLAY_NAMES, getChainConfig, getChainConfigByName, CONTRACT_ADDRESSES } from '../contracts/config';
@@ -52,8 +52,9 @@ const detectCurrentChain = async (provider: any): Promise<SupportedChain | null>
 };
 
 export const useContractIntegration = (options?: { showConnectedNotification?: boolean }) => {
-  const { provider, account, chainId } = useSDK();
+  const { provider, account } = useSDK();
   const { queueToast } = useToast();
+  const { isOnCorrectNetwork } = useWalletNetwork();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const setSelectedChain = useSettingsStore((state) => state.setSelectedChain);
   const initializedChainRef = useRef<SupportedChain | null>(null);
@@ -73,7 +74,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
   const initializationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastInitAttemptRef = useRef<number>(0);
 
-  const initializeContracts = useCallback(async (chain: SupportedChain) => {
+  const initializeContracts = useCallback(async (chain: SupportedChain, options: { allowNetworkSwitch?: boolean } = {}) => {
     console.log('initializeContracts called for chain:', chain, 'provider:', !!provider, 'account:', account);
 
     if (!provider || !account) {
@@ -107,7 +108,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
       resetContractService();
       const service = getContractService(chain);
       console.log('Initializing contract service...');
-      await service.initialize(provider);
+      await service.initialize(provider, options);
 
       console.log('Getting connected account...');
       const connectedAccount = await service.getConnectedAccount();
@@ -334,7 +335,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
     }
   }, [state.isInitialized, state.contractService, queueToast]);
 
-  // Initialize contracts when dependencies change
+  // Smart automatic initialization - safe when no network switch needed
   useEffect(() => {
     console.log('Contract integration useEffect triggered:', {
       account: !!account,
@@ -344,73 +345,8 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
       isInitializing: state.isInitializing
     });
 
-    // Check if we need to re-initialize due to chain change
-    const needsReinitialization = account && provider && selectedChain && !state.isInitializing && (
-      !state.isInitialized || // Not initialized yet
-      (state.isInitialized && initializedChainRef.current !== selectedChain) // Chain changed
-    );
-    
-    if (needsReinitialization) {
-      // If chain changed, reset the initialized state first
-      if (state.isInitialized && initializedChainRef.current !== selectedChain) {
-        console.log(`Chain changed from ${initializedChainRef.current} to ${selectedChain}, resetting contract state`);
-        setState({
-          isInitialized: false,
-          isInitializing: false,
-          error: null,
-          contractService: null,
-          connectedAccount: null,
-          retryCount: 0,
-          canRetry: true,
-        });
-        // Reset the initialized chain ref
-        initializedChainRef.current = null;
-        // Reset notification flag for new chain
-        resetContractsConnectedNotification();
-      }
-      // Prevent rapid re-initialization attempts (debounce)
-      const now = Date.now();
-      const timeSinceLastAttempt = now - lastInitAttemptRef.current;
-      const MIN_RETRY_INTERVAL = 5000; // 5 seconds minimum between attempts
-      
-      if (timeSinceLastAttempt < MIN_RETRY_INTERVAL) {
-        console.log(`Debouncing contract initialization. Last attempt was ${timeSinceLastAttempt}ms ago, waiting ${MIN_RETRY_INTERVAL - timeSinceLastAttempt}ms more.`);
-        
-        // Clear any existing timeout
-        if (initializationTimeoutRef.current) {
-          clearTimeout(initializationTimeoutRef.current);
-        }
-        
-        // Schedule initialization after debounce period
-        initializationTimeoutRef.current = setTimeout(() => {
-          console.log('Debounced contract initialization starting...');
-          lastInitAttemptRef.current = Date.now();
-          initializeContracts(selectedChain);
-        }, MIN_RETRY_INTERVAL - timeSinceLastAttempt);
-        
-        return;
-      }
-      
-      console.log('Initializing contracts...');
-      lastInitAttemptRef.current = now;
-
-      // Always use the user's selected chain - let the contract service handle chain switching
-      console.log(`Initializing contracts with user-selected chain: ${selectedChain}`);
-      
-      // Detect current chain for logging purposes only
-      detectCurrentChain(provider).then(detectedChain => {
-        if (detectedChain && detectedChain !== selectedChain) {
-          console.log(`MetaMask is on ${detectedChain} but app requires ${selectedChain}. Contract service will handle the switch.`);
-        } else {
-          console.log(`MetaMask chain matches selected chain: ${selectedChain}`);
-        }
-      }).catch(error => {
-        console.log('Could not detect current chain:', error);
-      });
-      
-      // Always initialize with the user's selected chain
-      initializeContracts(selectedChain);
-    } else if (!account || !provider) {
+    // Clear state when wallet disconnects
+    if (!account || !provider) {
       console.log('Clearing contract state - no account or provider');
       setState({
         isInitialized: false,
@@ -425,8 +361,70 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
       initializedChainRef.current = null;
       // Reset notification flag when wallet disconnects
       resetContractsConnectedNotification();
+      return;
     }
-  }, [account, provider, selectedChain, state.isInitializing, state.isInitialized, initializeContracts, setSelectedChain]);
+    
+    // Reset contract state when chain changes
+    if (state.isInitialized && initializedChainRef.current !== selectedChain) {
+      console.log(`Chain changed from ${initializedChainRef.current} to ${selectedChain}, resetting contract state`);
+      setState({
+        isInitialized: false,
+        isInitializing: false,
+        error: null,
+        contractService: null,
+        connectedAccount: null,
+        retryCount: 0,
+        canRetry: true,
+      });
+      // Reset the initialized chain ref
+      initializedChainRef.current = null;
+      // Reset notification flag for new chain
+      resetContractsConnectedNotification();
+    }
+    
+    // Smart automatic initialization when safe (only when wallet is connected AND on correct network)
+    const needsInitialization = account && provider && selectedChain && isOnCorrectNetwork && !state.isInitializing && !state.isInitialized && initializedChainRef.current !== selectedChain;
+    
+    if (needsInitialization) {
+      console.log('Wallet is connected and on correct network - attempting automatic contract initialization for chain:', selectedChain);
+      
+      // Clear any existing timeout
+      if (initializationTimeoutRef.current) {
+        clearTimeout(initializationTimeoutRef.current);
+      }
+      
+      // Debounce initialization attempts
+      initializationTimeoutRef.current = setTimeout(() => {
+        // Try safe initialization first (no network switching)
+        initializeContracts(selectedChain, { allowNetworkSwitch: false })
+          .catch((error: any) => {
+            if (error.message?.includes('NETWORK_SWITCH_REQUIRED')) {
+              console.log('Network switch required - user action needed');
+              // Set error state to trigger WalletNotification component
+              setState(prev => ({
+                ...prev,
+                isInitialized: false,
+                isInitializing: false,
+                error: 'Network switch required',
+                contractService: null,
+                connectedAccount: null,
+              }));
+            } else {
+              console.error('Safe initialization failed with unexpected error:', error);
+              // Handle other initialization errors normally
+              setState(prev => ({
+                ...prev,
+                isInitialized: false,
+                isInitializing: false,
+                error: error.message || 'Contract initialization failed',
+                contractService: null,
+                connectedAccount: null,
+              }));
+            }
+          });
+      }, 500); // 500ms debounce
+    }
+  }, [account, provider, selectedChain, isOnCorrectNetwork, state.isInitialized, state.isInitializing]);
 
   // Cleanup timeout on unmount
   useEffect(() => {

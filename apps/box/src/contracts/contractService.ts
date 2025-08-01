@@ -29,7 +29,8 @@ export class ContractService {
     this.readOnlyProvider = new ethers.providers.JsonRpcProvider(chainConfig.rpcUrl);
   }
 
-  async initialize(provider: any): Promise<void> {
+  async initialize(provider: any, options: { allowNetworkSwitch?: boolean } = {}): Promise<void> {
+    const { allowNetworkSwitch = true } = options;
     try {
       // Handle MetaMask provider
       const web3Provider = provider.provider || provider;
@@ -51,6 +52,11 @@ export class ContractService {
       if (currentChainId !== expectedChainId) {
         console.log(`ContractService: Chain mismatch detected - current: ${currentChainId}, expected: ${expectedChainId} (${chainConfig.name})`);
         
+        if (!allowNetworkSwitch) {
+          console.log('ContractService: Network switch not allowed, throwing error for user-initiated handling');
+          throw new Error(`NETWORK_SWITCH_REQUIRED: MetaMask is on chain ${currentChainId} but app requires ${expectedChainId} (${chainConfig.name})`);
+        }
+        
         // Check if the current chain is supported
         const currentChainConfig = getChainConfig(currentChainIdHex);
         const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
@@ -59,8 +65,8 @@ export class ContractService {
 
         if (currentChainConfig && currentChainName) {
           console.log(`ContractService: User is on ${CHAIN_DISPLAY_NAMES[currentChainName]} but app requires ${chainConfig.name}`);
-          if (typeof globalThis.queueToast === 'function') {
-            globalThis.queueToast({
+          if (typeof (globalThis as any).queueToast === 'function') {
+            (globalThis as any).queueToast({
               type: 'info',
               title: 'Network Switch Required',
               message: `Switching from ${CHAIN_DISPLAY_NAMES[currentChainName]} to ${chainConfig.name} as selected in app settings.`,
@@ -68,7 +74,7 @@ export class ContractService {
           }
         }
 
-        // Always attempt chain switch when there's a mismatch (regardless of whether current chain is supported)
+        // Attempt chain switch when allowed
         console.log(`ContractService: Attempting to switch to ${chainConfig.name} (${chainConfig.chainId})`);
         try {
           console.log(`ContractService: Sending wallet_switchEthereumChain request with chainId: ${chainConfig.chainId}`);

@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { useWalletConnection } from '../../hooks/useWalletConnection';
 import { useContractIntegration } from '../../hooks/useContractIntegration';
 import { useSDK } from '@metamask/sdk-react';
+import { useWalletNetwork } from '../../hooks/useWalletNetwork';
 import {
   FxBox,
   FxButton,
@@ -32,6 +33,9 @@ export const ChainSelectionScreen = () => {
 
   // MetaMask SDK for direct provider access
   const { provider } = useSDK();
+
+  // Network switching functionality
+  const { ensureCorrectNetworkConnection } = useWalletNetwork();
 
 
   
