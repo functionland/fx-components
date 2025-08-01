@@ -247,7 +247,7 @@ export const BluetoothCommandsScreen = () => {
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxPressableOpacity onPress={() => rootNavigation.pop()}>
-        <FxArrowLeftIcon color="white" />
+        <FxArrowLeftIcon color="content1" />
       </FxPressableOpacity>
       <FxBox
         marginTop="16"
@@ -268,7 +268,6 @@ export const BluetoothCommandsScreen = () => {
         >
           <FxPlugIcon
             color={currentPeripheral ? 'greenBase' : 'greenBase'}
-            size={24} // Ensure consistent size
           />
         </FxPressableOpacity>
       </FxBox>

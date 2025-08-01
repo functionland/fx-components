@@ -161,6 +161,14 @@ export const ConnectToWifiScreen = () => {
                 onSubmitEditing={() => handleSelectedWifiDevice(selectedSsid)}
                 placeholder={t('connectToWifi.enterWifiName')}
               />
+              <FxText
+                variant="bodySmallRegular"
+                color="content2"
+                marginBottom="8"
+                textAlign="left"
+              >
+                {t('connectToWifi.caseSensitiveWarning')}
+              </FxText>
               <FxButton
                 onPress={() => {
                   handleSelectedWifiDevice(selectedSsid);

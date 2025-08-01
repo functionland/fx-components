@@ -9,6 +9,7 @@ import {
   useToast,
   FxRefreshIcon,
   FxSafeAreaBox,
+  FxPressableOpacity,
   useFxTheme,
 } from '@functionland/component-library';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
@@ -171,11 +172,22 @@ export const WalletDetails = ({
             <ActivityIndicator />
           ) : (
             onRefreshPress && (
-              <FxRefreshIcon
-                fill={colors.content3}
+              <FxPressableOpacity
                 onPress={onRefreshPress}
-                style={{ position: 'absolute', right: 0 }}
-              />
+                disabled={loading}
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  padding: 8, // Larger touch target for iOS
+                  borderRadius: 8,
+                  backgroundColor: loading ? 'rgba(0,0,0,0.1)' : 'transparent',
+                }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} // iOS touch target expansion
+              >
+                <FxRefreshIcon
+                  fill={colors.content3}
+                />
+              </FxPressableOpacity>
             )
           )}
         </FxBox>
