@@ -124,14 +124,24 @@ export const BluetoothCommandsScreen = () => {
 
   const connectViaBLE = async () => {
     try {
+      console.log('BluetoothCommands: Starting BLE connection...');
       setRunningCommand(true);
       setIsConnecting(true);
+      
+      // Add a small delay to ensure UI updates
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('BluetoothCommands: Calling bleManager.connect()...');
       const connected = await bleManager.connect();
+      console.log('BluetoothCommands: bleManager.connect() result:', connected);
+      
       const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+      console.log('BluetoothCommands: Connected peripherals:', connectedPeripherals);
+      
       const isConnectedBLE = connectedPeripherals.length > 0;
       if (isConnectedBLE) {
         setCurrentPeripheral(connectedPeripherals[0]);
-        console.log({ connectedPeripherals });
+        console.log('BluetoothCommands: Successfully connected, fetching logs...');
         fetchFullLogs(
           {
             docker: ['fula_go', 'ipfs_host', 'ipfs_cluster'],
@@ -139,14 +149,17 @@ export const BluetoothCommandsScreen = () => {
           },
           connectedPeripherals[0]
         );
+      } else {
+        console.log('BluetoothCommands: No peripherals connected after connection attempt');
       }
       return connected;
     } catch (error) {
+      console.error('BluetoothCommands: Connection error:', error);
       logger.logError('connectViaBLE', error);
       queueToast({
         type: 'error',
         title: 'Connection failed',
-        message: error.message,
+        message: (error as Error)?.message || 'Unknown connection error',
       });
       return false;
     } finally {

@@ -327,15 +327,27 @@ export class BleManagerWrapper extends ResponseAssembler {
             const state = await BleManager.checkState();
             console.log('BLE state:', state);
     
-            if (state === 'on') return true;
+            // Accept 'on' or 'unknown' states on iOS (unknown is common on first launch)
+            if (state === 'on' || (Platform.OS === 'ios' && state === 'unknown')) {
+                console.log('Bluetooth state acceptable, proceeding with connection');
+                return true;
+            }
     
             if (Platform.OS === 'android') {
-                await BleManager.enableBluetooth();
-                return true;
+                if (state === 'off') {
+                    await BleManager.enableBluetooth();
+                    return true;
+                }
+                return String(state) === 'on';
             } else {
-                // On iOS, guide user to enable Bluetooth manually
-                console.log('Please enable Bluetooth manually on iOS');
-                return false;
+                // On iOS, only fail if explicitly off or unauthorized
+                if (state === 'off') {
+                    console.log('Bluetooth is disabled on iOS - please enable it manually');
+                    return false;
+                }
+                // For other states (including 'unknown'), proceed with connection attempt
+                console.log('iOS Bluetooth state unclear, proceeding with connection attempt');
+                return true;
             }
         } catch (error) {
             console.error('Bluetooth state check failed:', error);
