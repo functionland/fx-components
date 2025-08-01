@@ -60,6 +60,7 @@
       "enterPasswordFor": "Enter Password for",
       "searching": "Searching Wi-Fi Network",
       "selectNetwork": "Select Wi-Fi Network",
+      "noNetworksFound": "We could not find the available WiFi, please use the button to manually enter the WiFi information.",
       "back": "Back",
       "next": "Next"
     },

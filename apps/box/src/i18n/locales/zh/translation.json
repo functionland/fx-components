@@ -60,6 +60,7 @@
     "enterPasswordFor": "输入密码为",
     "searching": "正在搜索 Wi-Fi 网络",
     "selectNetwork": "选择 Wi-Fi 网络",
+    "noNetworksFound": "我们找不到可用的WiFi，请使用按钮手动输入WiFi信息。",
     "back": "返回",
     "next": "下一步"
   },

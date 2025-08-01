@@ -15,6 +15,7 @@ import {
 } from '@functionland/component-library';
 import { FlatList, PermissionsAndroid, Platform } from 'react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
+import { useTranslation } from 'react-i18next';
 import { WifiDeviceItem } from './components/WifiDeviceItem';
 import { InputWifiPasswordModal } from './modals/InputWifiPasswordModal';
 import {
@@ -32,6 +33,7 @@ const ItemSeparatorComponent = () => {
 };
 
 export const ConnectToWifiScreen = () => {
+  const { t } = useTranslation();
   const navigation = useInitialSetupNavigation();
   const rootNavigation = useRootNavigation();
   const inputWifiPasswordModalRef = useRef<FxBottomSheetModalMethods>(null);
@@ -139,7 +141,7 @@ export const ConnectToWifiScreen = () => {
         </FxBox>
         <FxBox flex={1}>
           <FxText variant="h300" marginBottom="12">
-            Connect to Wi-Fi
+            {t('connectToWifi.title')}
           </FxText>
           <FxButton
             variant={enabledHiddenNetwork ? 'inverted' : undefined}
@@ -147,8 +149,8 @@ export const ConnectToWifiScreen = () => {
             onPress={() => setEnableHiddenNetwork(!enabledHiddenNetwork)}
           >
             {enabledHiddenNetwork
-              ? 'Show Network Names'
-              : 'Manually Enter Wifi Name'}
+              ? t('connectToWifi.showNetworks')
+              : t('connectToWifi.manualEntry')}
           </FxButton>
           {enabledHiddenNetwork && (
             <FxBox>
@@ -157,14 +159,14 @@ export const ConnectToWifiScreen = () => {
                 value={selectedSsid}
                 onChange={(e) => setSelectedSsid(e.nativeEvent.text)}
                 onSubmitEditing={() => handleSelectedWifiDevice(selectedSsid)}
-                placeholder="Enter Wifi Name"
+                placeholder={t('connectToWifi.enterWifiName')}
               />
               <FxButton
                 onPress={() => {
                   handleSelectedWifiDevice(selectedSsid);
                 }}
               >
-                Enter Password {selectedSsid ? 'for' : ''} {selectedSsid}
+                {t('connectToWifi.enterPasswordFor')} {selectedSsid}
               </FxButton>
             </FxBox>
           )}
@@ -174,7 +176,7 @@ export const ConnectToWifiScreen = () => {
                 <FxBox flexDirection="row" alignItems="center" marginBottom="8">
                   <FxLoadingSpinner />
                   <FxText variant="bodySmallRegular" marginLeft="4">
-                    Searching Wi-Fi Network
+                    {t('connectToWifi.searching')}
                   </FxText>
                 </FxBox>
               ) : (
@@ -184,7 +186,7 @@ export const ConnectToWifiScreen = () => {
                     marginBottom="8"
                     paddingEnd="8"
                   >
-                    Select Wi-Fi Network
+                    {t('connectToWifi.selectNetwork')}
                   </FxText>
                   <FxRefreshIcon
                     color="white"
@@ -199,18 +201,35 @@ export const ConnectToWifiScreen = () => {
                 borderRadius="s"
                 paddingHorizontal="16"
               >
-                <FlatList
-                  data={networks?.data}
-                  keyExtractor={(item) => item}
-                  ItemSeparatorComponent={() => <ItemSeparatorComponent />}
-                  renderItem={({ item }) => (
-                    <WifiDeviceItem
-                      ssid={item}
-                      connected={item === connectedSsid}
-                      setSelectedWifiDevice={handleSelectedWifiDevice}
-                    />
-                  )}
-                />
+                {networks?.data?.length === 0 && !loading ? (
+                  <FxBox
+                    flex={1}
+                    justifyContent="center"
+                    alignItems="center"
+                    paddingHorizontal="16"
+                  >
+                    <FxText
+                      variant="bodySmallRegular"
+                      textAlign="center"
+                      color="content2"
+                    >
+                      {t('connectToWifi.noNetworksFound')}
+                    </FxText>
+                  </FxBox>
+                ) : (
+                  <FlatList
+                    data={networks?.data}
+                    keyExtractor={(item) => item}
+                    ItemSeparatorComponent={() => <ItemSeparatorComponent />}
+                    renderItem={({ item }) => (
+                      <WifiDeviceItem
+                        ssid={item}
+                        connected={item === connectedSsid}
+                        setSelectedWifiDevice={handleSelectedWifiDevice}
+                      />
+                    )}
+                  />
+                )}
               </FxBox>
             </>
           )}
@@ -227,14 +246,14 @@ export const ConnectToWifiScreen = () => {
             marginRight="12"
             onPress={handleBack}
           >
-            Back
+            {t('connectToWifi.back')}
           </FxButton>
           <FxButton
             paddingHorizontal="40"
             onPress={handleNext}
             disabled={!connectedSsid}
           >
-            Next
+            {t('connectToWifi.next')}
           </FxButton>
         </FxBox>
       </Container>
