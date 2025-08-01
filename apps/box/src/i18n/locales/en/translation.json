@@ -39,6 +39,7 @@
     "connectToBlox": {
       "title": "Connect to Blox",
       "checking": "Checking connection...",
+      "checkingConnection": "Checking connection...",
       "connected": "Connected",
       "failed": "Unable to connect to Hotspot",
       "notConnected": "Not Connected",
@@ -57,6 +58,7 @@
       "manualEntry": "Manually Enter Wifi Name",
       "showNetworks": "Show Network Names",
       "enterWifiName": "Enter Wifi Name",
+      "caseSensitiveWarning": "Case Sensitive",
       "enterPasswordFor": "Enter Password for",
       "searching": "Searching Wi-Fi Network",
       "selectNetwork": "Select Wi-Fi Network",

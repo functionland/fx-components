@@ -39,6 +39,7 @@
   "connectToBlox": {
     "title": "连接到 Blox",
     "checking": "正在检查连接...",
+    "checkingConnection": "正在检查连接...",
     "connected": "已连接",
     "failed": "无法连接到热点",
     "notConnected": "未连接",
@@ -57,6 +58,7 @@
     "manualEntry": "手动输入 Wifi 名称",
     "showNetworks": "显示网络名称",
     "enterWifiName": "输入 Wifi 名称",
+    "caseSensitiveWarning": "区分大小写",
     "enterPasswordFor": "输入密码为",
     "searching": "正在搜索 Wi-Fi 网络",
     "selectNetwork": "选择 Wi-Fi 网络",
