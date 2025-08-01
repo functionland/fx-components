@@ -256,10 +256,21 @@ export const BluetoothCommandsScreen = () => {
         alignItems="center"
       >
         <SmallHeaderText>Bluetooth commands</SmallHeaderText>
-        <FxPlugIcon
-          color={currentPeripheral ? 'greenBase' : 'greenBase'}
+        <FxPressableOpacity
           onPress={() => !runningCommand && !isConnecting && connectViaBLE()}
-        />
+          disabled={runningCommand || isConnecting}
+          style={{
+            padding: 8, // Larger touch target for iOS
+            borderRadius: 8,
+            backgroundColor: runningCommand || isConnecting ? 'rgba(0,0,0,0.1)' : 'transparent',
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} // iOS touch target expansion
+        >
+          <FxPlugIcon
+            color={currentPeripheral ? 'greenBase' : 'greenBase'}
+            size={24} // Ensure consistent size
+          />
+        </FxPressableOpacity>
       </FxBox>
       {!currentPeripheral?.id ? (
         <FxBox flex={1} justifyContent="center" alignItems="center">
