@@ -382,7 +382,31 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
       resetContractsConnectedNotification();
     }
     
-    // Smart automatic initialization when safe (only when wallet is connected AND on correct network)
+    // Check if we should show the switch button (same logic as WalletNotification)
+    const shouldShowSwitchButton = account && provider && selectedChain && !isOnCorrectNetwork;
+    
+    // If switch button should be shown, DO NOT perform any contract operations
+    if (shouldShowSwitchButton) {
+      console.log('Network switch required - preventing all contract operations until user switches network');
+      // Clear any existing timeout
+      if (initializationTimeoutRef.current) {
+        clearTimeout(initializationTimeoutRef.current);
+      }
+      // Set state to indicate network switch is required
+      if (!state.error || !state.error.includes('NETWORK_SWITCH_REQUIRED')) {
+        setState(prev => ({
+          ...prev,
+          isInitialized: false,
+          isInitializing: false,
+          error: 'NETWORK_SWITCH_REQUIRED: Please use the notification to switch networks',
+          contractService: null,
+          connectedAccount: null,
+        }));
+      }
+      return;
+    }
+    
+    // Only attempt initialization when wallet is connected AND on correct network
     const needsInitialization = account && provider && selectedChain && isOnCorrectNetwork && !state.isInitializing && !state.isInitialized && initializedChainRef.current !== selectedChain;
     
     if (needsInitialization) {
@@ -393,8 +417,14 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
         clearTimeout(initializationTimeoutRef.current);
       }
       
-      // Debounce initialization attempts
-      initializationTimeoutRef.current = setTimeout(() => {
+      // Debounce initialization attempts with longer delay to allow network state sync
+      initializationTimeoutRef.current = setTimeout(async () => {
+        // Double-check network state before initialization to prevent race conditions
+        if (!isOnCorrectNetwork) {
+          console.log('Network state not synchronized yet, skipping initialization');
+          return;
+        }
+        
         // Try safe initialization first (no network switching)
         initializeContracts(selectedChain, { allowNetworkSwitch: false })
           .catch((error: any) => {
@@ -422,7 +452,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
               }));
             }
           });
-      }, 500); // 500ms debounce
+      }, 1500); // 1500ms debounce to allow network state sync
     }
   }, [account, provider, selectedChain, isOnCorrectNetwork, state.isInitialized, state.isInitializing]);
 

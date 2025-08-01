@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usePoolOperations } from './useContractIntegration';
+import { useWalletNetwork } from './useWalletNetwork';
 import {
   PoolInfo,
   UserPoolInfo,
@@ -33,6 +34,7 @@ export interface PoolsState {
 export const usePools = () => {
   const poolOperations = usePoolOperations();
   const { contractService, connectedAccount, isReady } = poolOperations;
+  const { isOnCorrectNetwork } = useWalletNetwork();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
 
@@ -94,8 +96,8 @@ export const usePools = () => {
       connectedAccount
     );
 
-    if (!isReady || !contractService || !connectedAccount) {
-      console.log('loadPools: Prerequisites not met');
+    if (!isReady || !contractService || !connectedAccount || !isOnCorrectNetwork) {
+      console.log('loadPools: Prerequisites not met - isReady:', isReady, 'contractService:', !!contractService, 'connectedAccount:', !!connectedAccount, 'isOnCorrectNetwork:', isOnCorrectNetwork);
       setState((prev) => ({
         ...prev,
         enableInteraction: false,
@@ -442,19 +444,19 @@ export const usePools = () => {
     [poolOperations, loadPools]
   );
 
-  // Load pools when contract is ready
+  // Load pools when contract is ready AND on correct network
   useEffect(() => {
-    if (isReady) {
+    if (isReady && isOnCorrectNetwork) {
       loadPools();
     }
-  }, [isReady, loadPools]);
+  }, [isReady, isOnCorrectNetwork, loadPools]);
 
-  // Refresh pools when account changes
+  // Refresh pools when account changes AND on correct network
   useEffect(() => {
-    if (connectedAccount && isReady) {
+    if (connectedAccount && isReady && isOnCorrectNetwork) {
       loadPools();
     }
-  }, [connectedAccount, isReady, loadPools]);
+  }, [connectedAccount, isReady, isOnCorrectNetwork, loadPools]);
 
   return {
     ...state,

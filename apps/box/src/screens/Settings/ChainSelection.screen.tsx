@@ -4,6 +4,7 @@ import { useWalletConnection } from '../../hooks/useWalletConnection';
 import { useContractIntegration } from '../../hooks/useContractIntegration';
 import { useSDK } from '@metamask/sdk-react';
 import { useWalletNetwork } from '../../hooks/useWalletNetwork';
+import { WalletNotification } from '../../components/WalletNotification';
 import {
   FxBox,
   FxButton,
@@ -59,38 +60,16 @@ export const ChainSelectionScreen = () => {
       return;
     }
 
-    // If wallet is connected, we need to handle chain switching properly
+    // Always just update the setting - no automatic MetaMask opening
+    setSelectedChain(chain);
+    
     if (connected && provider) {
-      setSwitching(true);
-      try {
-        // First update the settings store
-        setSelectedChain(chain);
-
-        // Then trigger chain switch in MetaMask and contracts
-        await switchChain(chain);
-
-        queueToast({
-          type: 'success',
-          title: 'Chain Updated',
-          message: `Successfully switched to ${CHAIN_DISPLAY_NAMES[chain]}`,
-        });
-      } catch (error: any) {
-        console.error('Chain switch error:', error);
-
-        // If chain switch failed, revert the settings
-        // Don't revert here, let user try again or reconnect manually
-
-        queueToast({
-          type: 'error',
-          title: 'Chain Switch Failed',
-          message: error.message || 'Failed to switch chains. You may need to reconnect your wallet.',
-        });
-      } finally {
-        setSwitching(false);
-      }
+      queueToast({
+        type: 'success',
+        title: 'Chain Updated',
+        message: `Switched to ${CHAIN_DISPLAY_NAMES[chain]}. Use the notification below to connect your wallet to this network.`,
+      });
     } else {
-      // If wallet not connected, just update the setting
-      setSelectedChain(chain);
       queueToast({
         type: 'success',
         title: 'Chain Updated',
@@ -170,6 +149,9 @@ export const ChainSelectionScreen = () => {
             </FxButton>
           )}
         </FxBox>
+        
+        {/* Wallet Notification for user-initiated network switching */}
+        <WalletNotification compact={true} />
         
         <FxBox marginTop="24">
           <FxText variant="bodyMediumRegular" marginBottom="16">

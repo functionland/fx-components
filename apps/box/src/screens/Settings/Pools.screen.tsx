@@ -756,8 +756,8 @@ export const PoolsScreen = () => {
             )}
           </FxBox>
 
-          {/* Wallet Connection and Network Notification */}
-          <WalletNotification compact={false} />
+          {/* Wallet Connection and Network Notification - Disabled to prevent flicker */}
+          {/* <WalletNotification compact={false} hideOnLoading={poolsLoading || refreshing} /> */}
 
           <FxBox flex={1}>
             <FxHeader

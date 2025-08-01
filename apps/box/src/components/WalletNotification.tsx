@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FxBox, FxText, FxButton, FxSpacer } from '@functionland/component-library';
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { useWalletNetwork } from '../hooks/useWalletNetwork';
@@ -11,12 +11,14 @@ interface WalletNotificationProps {
   onDismiss?: () => void;
   compact?: boolean;
   showOnCorrectState?: boolean; // Show even when wallet is properly connected/on correct network
+  hideOnLoading?: boolean; // Hide during external loading states (e.g., pools loading)
 }
 
 export const WalletNotification: React.FC<WalletNotificationProps> = ({
   onDismiss,
   compact = false,
   showOnCorrectState = false,
+  hideOnLoading = true,
 }) => {
   const { connected, connectWallet, connecting } = useWalletConnection();
   const { 
@@ -26,14 +28,54 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
     targetNetworkName,
     selectedChain 
   } = useWalletNetwork();
-  const { initializeContracts } = useContractIntegration();
+  const { initializeContracts, isInitializing } = useContractIntegration();
   const { account } = useSDK();
   const [isLoading, setIsLoading] = useState(false);
+  const [showAfterDelay, setShowAfterDelay] = useState(false);
+  const [postLoadingDelay, setPostLoadingDelay] = useState(false);
+
+  // Add delay before showing connect wallet notification to prevent flicker
+  useEffect(() => {
+    if (!connected || !account) {
+      // Start timer to show connect notification after delay
+      const timer = setTimeout(() => {
+        setShowAfterDelay(true);
+      }, 1500); // 1.5 second delay
+      
+      return () => clearTimeout(timer);
+    } else {
+      // Wallet is connected, show immediately
+      setShowAfterDelay(true);
+    }
+  }, [connected, account]);
+
+  // Don't show notification during contract initialization to prevent flicker
+  const isContractInitializing = isInitializing || false;
+
+  // Add stabilization period to prevent flicker during rapid state changes
+  useEffect(() => {
+    if (hideOnLoading) {
+      // Set delay whenever there are any loading/initialization states
+      if (isContractInitializing || isSwitchingNetwork || connecting) {
+        setPostLoadingDelay(true);
+      } else {
+        // Add stabilization delay after loading states clear
+        const timer = setTimeout(() => {
+          setPostLoadingDelay(false);
+        }, 1500); // 1.5 second stabilization period
+        
+        return () => clearTimeout(timer);
+      }
+    } else {
+      setPostLoadingDelay(false);
+    }
+  }, [hideOnLoading, isContractInitializing, isSwitchingNetwork, connecting]);
 
   // Determine what type of notification to show
   const getNotificationType = (): WalletNotificationType => {
     if (!connected || !account) {
-      return 'connect';
+      // Only show connect notification after delay
+      return showAfterDelay ? 'connect' : 'hidden';
     }
     if (!isOnCorrectNetwork) {
       return 'network';
@@ -45,6 +87,11 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
 
   // Don't show if everything is correct and showOnCorrectState is false
   if (notificationType === 'hidden' && !showOnCorrectState) {
+    return null;
+  }
+
+  // Don't show during contract initialization or post-loading delay to prevent flicker
+  if ((isContractInitializing || postLoadingDelay) && hideOnLoading) {
     return null;
   }
 
