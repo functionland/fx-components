@@ -10,7 +10,7 @@ import React from 'react';
 import { SettingsMenu } from '../../components/SettingsList';
 import { HeaderText } from '../../components/Text';
 import Version from '../../components/Version';
-import { Alert } from 'react-native';
+import { Alert, ScrollView } from 'react-native';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Routes } from '../../navigation/navigationConfig';
 import { useLogger, useRootNavigation } from '../../hooks';
@@ -52,7 +52,16 @@ export const SettingsScreen = () => {
   };
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
-      <FxBox paddingHorizontal="20" paddingVertical="12">
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={{ 
+          flexGrow: 1,
+          paddingHorizontal: 20,
+          paddingVertical: 12,
+          paddingBottom: 20
+        }}
+        showsVerticalScrollIndicator={false}
+      >
         <HeaderText>Settings</HeaderText>
         <SettingsMenu />
         <FxHorizontalRule marginVertical="16" />
@@ -60,7 +69,7 @@ export const SettingsScreen = () => {
           Log out
         </FxButton>
         <Version marginTop="16" />
-      </FxBox>
+      </ScrollView>
     </FxSafeAreaBox>
   );
 };
