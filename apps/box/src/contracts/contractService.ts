@@ -1093,7 +1093,12 @@ export class ContractService {
         throw new Error('Raw provider or request method not available');
       }
       
-      const txHash = await rawProvider.request({
+      // Add timeout to handle user interaction in MetaMask
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Transaction request timeout after 60 seconds - user may have cancelled or MetaMask is not responding')), 60000);
+      });
+      
+      const transactionPromise = rawProvider.request({
         method: 'eth_sendTransaction',
         params: [{
           from: await this.signer.getAddress(),
@@ -1102,6 +1107,9 @@ export class ContractService {
           data: data,
         }],
       });
+      
+      console.log('⏰ claimRewardsForPeer: Waiting for user to approve transaction in MetaMask...');
+      const txHash = await Promise.race([transactionPromise, timeoutPromise]);
       
       console.log('✅ claimRewardsForPeer: Transaction sent successfully!', { txHash });
       
