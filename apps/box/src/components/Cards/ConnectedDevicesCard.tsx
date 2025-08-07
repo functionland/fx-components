@@ -20,6 +20,7 @@ import { EmptyCard } from './EmptyCard';
 import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 import { TDevice, EDeviceStatus, mockHub } from '../../api/hub';
 import { ActivityIndicator, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { fxblox } from '@functionland/react-native-fula';
 import { FlashingCircle } from '../../components';
 
@@ -44,6 +45,7 @@ export const DeviceCard = ({
     data;
   const { queueToast } = useToast();
   const { colors } = useFxTheme();
+  const { t } = useTranslation();
   return (
     <FxCard
       {...rest}
@@ -68,11 +70,11 @@ export const DeviceCard = ({
         ))}
       </FxBox>
       <FxCard.Row>
-        <FxCard.Row.Title>Capacity</FxCard.Row.Title>
+        <FxCard.Row.Title>{t('connectedDevicesCard.capacity')}</FxCard.Row.Title>
         <FxCard.Row.Data>{convertByteToCapacityUnit(capacity)}</FxCard.Row.Data>
       </FxCard.Row>
       <FxCard.Row>
-        <FxCard.Row.Title>Stored Files</FxCard.Row.Title>
+        <FxCard.Row.Title>{t('connectedDevicesCard.storedFiles')}</FxCard.Row.Title>
         <FxCard.Row.Data>
           {convertByteToCapacityUnit(parseInt(folderInfo?.fula, 10)) +
             ' (' +
@@ -81,25 +83,25 @@ export const DeviceCard = ({
         </FxCard.Row.Data>
       </FxCard.Row>
       <FxCard.Row>
-        <FxCard.Row.Title>Other Data</FxCard.Row.Title>
+        <FxCard.Row.Title>{t('connectedDevicesCard.otherData')}</FxCard.Row.Title>
         <FxCard.Row.Data>
           {convertByteToCapacityUnit(parseInt(folderInfo?.chain, 10))}
         </FxCard.Row.Data>
       </FxCard.Row>
       {used != undefined && (
         <FxCard.Row>
-          <FxCard.Row.Title>Used</FxCard.Row.Title>
+          <FxCard.Row.Title>{t('connectedDevicesCard.used')}</FxCard.Row.Title>
           <FxCard.Row.Data>{convertByteToCapacityUnit(used)}</FxCard.Row.Data>
         </FxCard.Row>
       )}
       {free != undefined && (
         <FxCard.Row>
-          <FxCard.Row.Title>Free</FxCard.Row.Title>
+          <FxCard.Row.Title>{t('connectedDevicesCard.free')}</FxCard.Row.Title>
           <FxCard.Row.Data>{convertByteToCapacityUnit(free)}</FxCard.Row.Data>
         </FxCard.Row>
       )}
       <FxCard.Row>
-        <FxCard.Row.Title>Status</FxCard.Row.Title>
+        <FxCard.Row.Title>{t('connectedDevicesCard.status')}</FxCard.Row.Title>
         <FxBox flexDirection="row" alignItems="center">
           <FxCard.Row.Data
             color={
@@ -115,11 +117,11 @@ export const DeviceCard = ({
       </FxCard.Row>
       {showEject && (
         <FxButton disabled={status === EDeviceStatus.BackingUp}>
-          Eject Device
+          {t('connectedDevicesCard.ejectDevice')}
         </FxButton>
       )}
       {children}
-      <FxBottomSheetModal ref={bottomSheetRef} title="Device Actions">
+      <FxBottomSheetModal ref={bottomSheetRef} title={t('connectedDevicesCard.deviceActions')}>
         <FxBox
           height={200}
           justifyContent="center"
@@ -138,32 +140,30 @@ export const DeviceCard = ({
             <FlashingCircle offInterval={0} color="green" />
           </FxBox>
           <FxText>
-            Your blox turns purple for 2 minutes and then reboots automatically.
-            Please do not disturb the format process
+            {t('connectedDevicesCard.formatWarning')}
           </FxText>
           <FxButton
             onPress={() => {
               Alert.alert(
-                'Format All Blox Partitions!',
-                `Are you sure want to format all connected external blox partitions?`,
+                t('connectedDevicesCard.formatAllPartitions'),
+                t('connectedDevicesCard.formatConfirmation'),
                 [
                   {
-                    text: 'Yes',
+                    text: t('connectedDevicesCard.yes'),
                     onPress: () => {
                       fxblox.partition().then(() => {
                         console.log('partition sent');
                         queueToast({
                           type: 'success',
-                          title: 'Request Sent',
-                          message:
-                            'The partition request is sent and blox LED turns purple. Please wait 5 minutes as your blox restarts after partitioning',
+                          title: t('connectedDevicesCard.requestSent'),
+                          message: t('connectedDevicesCard.partitionRequestMessage'),
                         });
                       });
                     },
                     style: 'destructive',
                   },
                   {
-                    text: 'No',
+                    text: t('connectedDevicesCard.no'),
                     style: 'cancel',
                   },
                 ]
@@ -173,7 +173,7 @@ export const DeviceCard = ({
             paddingHorizontal="16"
             iconLeft={<FxTrashIcon />}
           >
-            Format
+            {t('connectedDevicesCard.format')}
           </FxButton>
         </FxBox>
       </FxBottomSheetModal>
@@ -190,11 +190,12 @@ export const ConnectedDevicesCard = ({
   showCardHeader = true,
   data,
 }: TConnectedDevicesCard) => {
+  const { t } = useTranslation();
   return (
     <>
-      {showCardHeader && <CardHeader>Connected Devices</CardHeader>}
+      {showCardHeader && <CardHeader>{t('connectedDevicesCard.title')}</CardHeader>}
       {mockHub.length === 0 ? (
-        <EmptyCard placeholder="No connected devices" />
+        <EmptyCard placeholder={t('connectedDevicesCard.noConnectedDevices')} />
       ) : (
         <CardCarousel
           data={data}

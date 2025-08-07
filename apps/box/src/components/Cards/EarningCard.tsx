@@ -10,6 +10,7 @@ import {
   useToast,
 } from '@functionland/component-library';
 import { ActivityIndicator, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useFulaBalance, useFormattedFulaBalance } from '../../hooks/useFulaBalance';
 import { useClaimableTokens } from '../../hooks/useClaimableTokens';
 
@@ -26,6 +27,7 @@ export const EarningCard = ({
 }: EarningCardProps) => {
   const { colors } = useFxTheme();
   const { queueToast } = useToast();
+  const { t } = useTranslation();
 
   // Use the formatted balance hook to get balance data
   const balanceData = useFormattedFulaBalance();
@@ -67,14 +69,14 @@ export const EarningCard = ({
         await sdk?.connect();
         queueToast({
           type: 'success',
-          title: 'Wallet Connected',
-          message: 'MetaMask wallet connected successfully',
+          title: t('earningCard.walletConnected'),
+          message: t('earningCard.walletConnectedMessage'),
         });
       } catch (e: any) {
         queueToast({
           type: 'error',
-          title: 'Wallet Connection Failed',
-          message: typeof e === 'object' && 'message' in e ? e.message : 'Failed to connect wallet',
+          title: t('earningCard.walletConnectionFailed'),
+          message: typeof e === 'object' && 'message' in e ? e.message : t('earningCard.walletConnectionFailedMessage'),
         });
         return;
       }
@@ -90,16 +92,16 @@ export const EarningCard = ({
       await claimTokens();
       queueToast({
         type: 'success',
-        title: 'Rewards Claimed',
-        message: `Successfully claimed ${formattedTotalUnclaimed} tokens`,
+        title: t('earningCard.rewardsClaimed'),
+        message: t('earningCard.rewardsClaimedMessage', { amount: formattedTotalUnclaimed }),
       });
       // Refresh balance after claiming
       refreshBalance();
     } catch (error: any) {
       queueToast({
         type: 'error',
-        title: 'Claim Failed',
-        message: typeof error === 'object' && 'message' in error ? error.message : 'Failed to claim tokens',
+        title: t('earningCard.claimFailed'),
+        message: typeof error === 'object' && 'message' in error ? error.message : t('earningCard.claimFailedMessage'),
       });
     }
   };
@@ -107,7 +109,7 @@ export const EarningCard = ({
   return (
     <FxCard {...rest}>
       <FxBox flexDirection="row" justifyContent="space-between">
-        <FxCard.Title marginBottom="8">Rewards</FxCard.Title>
+        <FxCard.Title marginBottom="8">{t('earningCard.title')}</FxCard.Title>
         {(loading || balanceLoading) ? (
           <ActivityIndicator />
         ) : (
@@ -119,11 +121,11 @@ export const EarningCard = ({
         )}
       </FxBox>
       <FxCard.Row>
-        <FxCard.Row.Title>Total {tokenSymbol}</FxCard.Row.Title>
+        <FxCard.Row.Title>{t('earningCard.totalInWallet', { tokenSymbol })}</FxCard.Row.Title>
         <FxCard.Row.Data>
           <FxBox style={styles.totalFulaContainer}>
             {balanceError ? (
-              <FxText>Error loading balance</FxText>
+              <FxText>{t('earningCard.errorLoadingBalance')}</FxText>
             ) : (
               <FxText style={styles.totalFula}>{formattedBalance}</FxText>
             )}
@@ -132,11 +134,11 @@ export const EarningCard = ({
       </FxCard.Row>
 
       <FxCard.Row>
-        <FxCard.Row.Title>Claimable Rewards</FxCard.Row.Title>
+        <FxCard.Row.Title>{t('earningCard.claimableRewards')}</FxCard.Row.Title>
         <FxCard.Row.Data>
           <FxBox style={styles.totalFulaContainer}>
             {claimableError ? (
-              <FxText>Error loading rewards</FxText>
+              <FxText>{t('earningCard.errorLoadingRewards')}</FxText>
             ) : (
               <FxText style={styles.totalFula}>
                 {formattedTotalUnclaimed} {tokenSymbol}
@@ -147,7 +149,7 @@ export const EarningCard = ({
       </FxCard.Row>
 
       <FxCard.Row>
-        <FxCard.Row.Title>Mining Rewards</FxCard.Row.Title>
+        <FxCard.Row.Title>{t('earningCard.miningRewards')}</FxCard.Row.Title>
         <FxCard.Row.Data>
           <FxBox style={styles.totalFulaContainer}>
             <FxText style={styles.totalFula}>
@@ -158,7 +160,7 @@ export const EarningCard = ({
       </FxCard.Row>
 
       <FxCard.Row>
-        <FxCard.Row.Title>Storage Rewards</FxCard.Row.Title>
+        <FxCard.Row.Title>{t('earningCard.storageRewards')}</FxCard.Row.Title>
         <FxCard.Row.Data>
           <FxBox style={styles.totalFulaContainer}>
             <FxText style={styles.totalFula}>
@@ -169,7 +171,7 @@ export const EarningCard = ({
       </FxCard.Row>
 
       <FxCard.Row>
-        <FxCard.Row.Title>Last Claimed</FxCard.Row.Title>
+        <FxCard.Row.Title>{t('earningCard.lastClaimed')}</FxCard.Row.Title>
         <FxCard.Row.Data>
           <FxBox style={styles.totalFulaContainer}>
             <FxText style={styles.totalFula}>
@@ -185,7 +187,7 @@ export const EarningCard = ({
             onPress={handleClaimTokens}
             disabled={claimableLoading || !canClaim}
           >
-            {claimableLoading ? 'Claiming...' : 'Claim Rewards'}
+            {claimableLoading ? t('earningCard.claiming') : t('earningCard.claimRewards')}
           </FxButton>
         </FxBox>
       )}
