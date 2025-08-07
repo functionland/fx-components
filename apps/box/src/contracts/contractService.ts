@@ -863,19 +863,97 @@ export class ContractService {
     totalUnclaimed: string;
   }> {
     try {
-      if (!this.rewardEngineContract) throw new Error('Contract not initialized');
+      console.log('🔍 getUnclaimedRewards: Starting with params:', { account, peerId, poolId, chain: this.chain });
+      
+      if (!this.readOnlyProvider) {
+        console.error('❌ getUnclaimedRewards: Read-only provider not initialized!');
+        throw new Error('Read-only provider not initialized');
+      }
+
+      const chainConfig = getChainConfigByName(this.chain);
+      console.log('✅ getUnclaimedRewards: Using read-only provider approach');
+      console.log('🔗 getUnclaimedRewards: Contract address:', chainConfig.contracts.rewardEngine);
+      console.log('🔗 getUnclaimedRewards: RPC URL:', chainConfig.rpcUrl);
+
+      // Create read-only contract instance for this call
+      const readOnlyRewardContract = new ethers.Contract(
+        chainConfig.contracts.rewardEngine,
+        REWARD_ENGINE_ABI,
+        this.readOnlyProvider
+      );
 
       // Convert peerId to bytes32 format for contract call
       const peerIdBytes32 = await peerIdToBytes32(peerId);
-      console.log('getUnclaimedRewards: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+      console.log('🔄 getUnclaimedRewards: Converted peerId to bytes32', { peerId, peerIdBytes32 });
 
-      const result = await this.rewardEngineContract.getUnclaimedRewards(account, peerIdBytes32, poolId);
-      return {
-        unclaimedMining: ethers.utils.formatEther(result.unclaimedMining),
-        unclaimedStorage: ethers.utils.formatEther(result.unclaimedStorage),
-        totalUnclaimed: ethers.utils.formatEther(result.totalUnclaimed),
+      console.log('📞 getUnclaimedRewards: Calling contract with params:', {
+        account,
+        peerIdBytes32,
+        poolId: poolId.toString(),
+        contractAddress: chainConfig.contracts.rewardEngine
+      });
+
+      console.log('⏳ getUnclaimedRewards: Making read-only contract call...');
+      console.log('🔧 getUnclaimedRewards: Final call parameters:', {
+        account,
+        peerIdBytes32,
+        peerIdBytes32Type: typeof peerIdBytes32,
+        poolId,
+        poolIdType: typeof poolId
+      });
+      
+      // Ensure poolId is a number for the contract call
+      const poolIdNumber = parseInt(poolId.toString(), 10);
+      
+      const result = await readOnlyRewardContract.getUnclaimedRewards(account, peerIdBytes32, poolIdNumber);
+      
+      console.log('📥 getUnclaimedRewards: Raw contract result:', result);
+      console.log('📥 getUnclaimedRewards: Result type:', typeof result);
+      console.log('📥 getUnclaimedRewards: Result keys:', Object.keys(result || {}));
+      console.log('📥 getUnclaimedRewards: Raw result details:', {
+        unclaimedMining: result?.unclaimedMining?.toString(),
+        unclaimedStorage: result?.unclaimedStorage?.toString(),
+        totalUnclaimed: result?.totalUnclaimed?.toString(),
+        resultLength: Array.isArray(result) ? result.length : 'not array',
+        result0: Array.isArray(result) ? result[0]?.toString() : 'not array',
+        result1: Array.isArray(result) ? result[1]?.toString() : 'not array',
+        result2: Array.isArray(result) ? result[2]?.toString() : 'not array'
+      });
+
+      // Handle different possible response formats
+      let unclaimedMining, unclaimedStorage, totalUnclaimed;
+      
+      if (Array.isArray(result)) {
+        // If result is an array (tuple response)
+        console.log('📊 getUnclaimedRewards: Processing array response');
+        [unclaimedMining, unclaimedStorage, totalUnclaimed] = result;
+      } else if (result && typeof result === 'object') {
+        // If result is an object with named properties
+        console.log('📊 getUnclaimedRewards: Processing object response');
+        unclaimedMining = result.unclaimedMining;
+        unclaimedStorage = result.unclaimedStorage;
+        totalUnclaimed = result.totalUnclaimed;
+      } else {
+        console.error('❌ getUnclaimedRewards: Unexpected result format:', result);
+        throw new Error('Unexpected contract response format');
+      }
+
+      console.log('📊 getUnclaimedRewards: Extracted values:', {
+        unclaimedMining: unclaimedMining?.toString(),
+        unclaimedStorage: unclaimedStorage?.toString(),
+        totalUnclaimed: totalUnclaimed?.toString()
+      });
+
+      const formattedResult = {
+        unclaimedMining: ethers.utils.formatEther(unclaimedMining || 0),
+        unclaimedStorage: ethers.utils.formatEther(unclaimedStorage || 0),
+        totalUnclaimed: ethers.utils.formatEther(totalUnclaimed || 0),
       };
+      
+      console.log('✨ getUnclaimedRewards: Formatted result:', formattedResult);
+      return formattedResult;
     } catch (error) {
+      console.error('❌ getUnclaimedRewards: Error occurred:', error);
       throw this.handleError(error);
     }
   }
@@ -886,17 +964,63 @@ export class ContractService {
     timeSinceLastClaim: number;
   }> {
     try {
-      if (!this.rewardEngineContract) throw new Error('Contract not initialized');
+      console.log('🔍 getClaimedRewardsInfo: Starting with params:', { account, peerId, poolId, chain: this.chain });
+      
+      if (!this.readOnlyProvider) {
+        console.error('❌ getClaimedRewardsInfo: Read-only provider not initialized!');
+        throw new Error('Read-only provider not initialized');
+      }
+
+      const chainConfig = getChainConfigByName(this.chain);
+      console.log('✅ getClaimedRewardsInfo: Using read-only provider approach');
+      console.log('🔗 getClaimedRewardsInfo: Contract address:', chainConfig.contracts.rewardEngine);
+      console.log('🔗 getClaimedRewardsInfo: RPC URL:', chainConfig.rpcUrl);
+
+      // Create read-only contract instance for this call
+      const readOnlyRewardContract = new ethers.Contract(
+        chainConfig.contracts.rewardEngine,
+        REWARD_ENGINE_ABI,
+        this.readOnlyProvider
+      );
 
       // Convert peerId to bytes32 format for contract call
       const peerIdBytes32 = await peerIdToBytes32(peerId);
-      console.log('getClaimedRewardsInfo: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+      console.log('🔄 getClaimedRewardsInfo: Converted peerId to bytes32', { peerId, peerIdBytes32 });
 
-      const result = await this.rewardEngineContract.getClaimedRewardsInfo(account, peerIdBytes32, poolId);
-      return {
+      console.log('📞 getClaimedRewardsInfo: Calling contract with params:', {
+        account,
+        peerIdBytes32,
+        poolId: poolId.toString(),
+        contractAddress: chainConfig.contracts.rewardEngine
+      });
+
+      console.log('⏳ getClaimedRewardsInfo: Making read-only contract call...');
+      console.log('🔧 getClaimedRewardsInfo: Final call parameters:', {
+        account,
+        peerIdBytes32,
+        peerIdBytes32Type: typeof peerIdBytes32,
+        poolId,
+        poolIdType: typeof poolId
+      });
+      
+      // Ensure poolId is a number for the contract call
+      const poolIdNumber = parseInt(poolId.toString(), 10);
+      
+      const result = await readOnlyRewardContract.getClaimedRewardsInfo(account, peerIdBytes32, poolIdNumber);
+      
+      console.log('📥 getClaimedRewardsInfo: Raw contract result:', result);
+      console.log('📥 getClaimedRewardsInfo: Raw result details:', {
+        lastClaimedTimestamp: result.lastClaimedTimestamp?.toString(),
+        timeSinceLastClaim: result.timeSinceLastClaim?.toString()
+      });
+
+      const formattedResult = {
         lastClaimedTimestamp: result.lastClaimedTimestamp.toNumber(),
         timeSinceLastClaim: result.timeSinceLastClaim.toNumber(),
       };
+      
+      console.log('✨ getClaimedRewardsInfo: Formatted result:', formattedResult);
+      return formattedResult;
     } catch (error) {
       throw this.handleError(error);
     }
@@ -905,18 +1029,112 @@ export class ContractService {
   // Claim rewards for a peerId and poolId using RewardEngine
   async claimRewardsForPeer(peerId: string, poolId: string): Promise<void> {
     try {
-      if (!this.rewardEngineContract) throw new Error('Contract not initialized');
+      console.log('🚀 claimRewardsForPeer: Starting claim process', { peerId, poolId });
+      
+      if (!this.rewardEngineContract) {
+        console.error('❌ claimRewardsForPeer: Contract not initialized');
+        throw new Error('Contract not initialized');
+      }
+      
+      console.log('✅ claimRewardsForPeer: Contract is initialized');
+      console.log('🔍 claimRewardsForPeer: Contract details:', {
+        address: this.rewardEngineContract.address,
+        signer: !!this.rewardEngineContract.signer,
+        provider: !!this.rewardEngineContract.provider
+      });
 
       // Convert peerId to bytes32 format for contract call
       const peerIdBytes32 = await peerIdToBytes32(peerId);
-      console.log('claimRewardsForPeer: Converted peerId to bytes32', { peerId, peerIdBytes32 });
-
-      const tx = await this.rewardEngineContract.claimRewards(peerIdBytes32, poolId, {
-        gasLimit: METHOD_GAS_LIMITS.claimRewards,
+      console.log('🔄 claimRewardsForPeer: Converted peerId to bytes32', { peerId, peerIdBytes32 });
+      
+      console.log('📋 claimRewardsForPeer: Transaction parameters:', {
+        peerIdBytes32,
+        poolId,
+        gasLimit: METHOD_GAS_LIMITS.claimRewards
       });
-
-      await tx.wait();
+      
+      console.log('🔗 claimRewardsForPeer: About to call contract.claimRewards...');
+      
+      if (!this.signer) {
+        console.error('❌ claimRewardsForPeer: Signer not available');
+        throw new Error('Signer not available');
+      }
+      
+      const chainConfig = getChainConfigByName(this.chain);
+      if (!chainConfig) {
+        throw new Error(`Invalid chain configuration for ${this.chain}`);
+      }
+      
+      // Clean up any existing MetaMask listeners before transaction
+      try {
+        const metamaskProvider = this.provider!.provider as any;
+        if (metamaskProvider && typeof metamaskProvider.removeAllListeners === 'function') {
+          console.log('🧹 claimRewardsForPeer: Cleaning up existing MetaMask listeners');
+          metamaskProvider.removeAllListeners();
+        }
+      } catch (cleanupError) {
+        console.warn('⚠️ claimRewardsForPeer: Failed to cleanup MetaMask listeners:', cleanupError);
+      }
+      
+      // Use direct provider request like leavePool does
+      const gasHex = ethers.utils.hexlify(METHOD_GAS_LIMITS.claimRewards);
+      const rewardEngineAddress = chainConfig.contracts.rewardEngine;
+      const iface = this.rewardEngineContract.interface;
+      
+      console.log('🔧 claimRewardsForPeer: Encoding function data...');
+      const data = iface.encodeFunctionData(
+        "claimRewards(bytes32,uint32)",
+        [peerIdBytes32, Number(poolId)]
+      );
+      
+      console.log('📡 claimRewardsForPeer: Sending transaction via provider request...');
+      const rawProvider = this.provider!.provider;
+      if (!rawProvider || !rawProvider.request) {
+        throw new Error('Raw provider or request method not available');
+      }
+      
+      const txHash = await rawProvider.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: await this.signer.getAddress(),
+          to: rewardEngineAddress,
+          gas: gasHex,
+          data: data,
+        }],
+      });
+      
+      console.log('✅ claimRewardsForPeer: Transaction sent successfully!', { txHash });
+      
+      // Wait for transaction confirmation
+      console.log('⏳ claimRewardsForPeer: Waiting for transaction confirmation...');
+      const tx = await this.provider!.getTransaction(txHash);
+      if (!tx) {
+        throw new Error('Transaction not found');
+      }
+      
+      const receipt = await tx.wait();
+      
+      console.log('✅ claimRewardsForPeer: Transaction sent successfully!', {
+        hash: tx.hash,
+        from: tx.from,
+        to: tx.to,
+        gasLimit: tx.gasLimit?.toString(),
+        gasPrice: tx.gasPrice?.toString()
+      });
+      
+      console.log('🎉 claimRewardsForPeer: Transaction confirmed!', {
+        blockNumber: receipt.blockNumber,
+        gasUsed: receipt.gasUsed?.toString(),
+        status: receipt.status
+      });
     } catch (error) {
+      console.error('💥 claimRewardsForPeer: Error occurred:', error);
+      console.error('💥 claimRewardsForPeer: Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        code: (error as any)?.code,
+        reason: (error as any)?.reason,
+        stack: error instanceof Error ? error.stack : undefined
+      });
       throw this.handleError(error);
     }
   }
