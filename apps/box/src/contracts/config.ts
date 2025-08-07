@@ -138,7 +138,7 @@ export const METHOD_GAS_LIMITS = {
   leavePool: 150000,
   cancelJoinRequest: 100000,
   voteJoinRequest: 120000,
-  claimRewards: 180000,
+  claimRewards: 500000, // Increased from 180000 to handle token transfers
   createPool: 250000,
 } as const;
 
