@@ -125,14 +125,18 @@ export const BloxInteractionImproved = ({
         alignItems="center"
         justifyContent="center"
       >
+        {/* Tower Icon - Separate touch target */}
         <FxPressableOpacity
           onPress={() => currentBloxPeerId && onBloxPress?.(currentBloxPeerId)}
           alignItems="center"
+          paddingVertical="8"
         >
           <Icon />
-          
-          {/* Blox Name with Dropdown Arrow */}
-          <FxBox flexDirection="row" alignItems="center" marginTop="12">
+        </FxPressableOpacity>
+        
+        {/* Blox Name with Dropdown Arrow - Larger touch target with more spacing */}
+        <FxBox alignItems="center" marginTop="16">
+          <FxBox flexDirection="row" alignItems="center">
             <FxText variant="bodyLargeRegular" marginRight="8">
               {currentBlox?.title || 'Unknown Blox'}
             </FxText>
@@ -142,6 +146,8 @@ export const BloxInteractionImproved = ({
                 onPress={showBloxSelection}
                 disabled={isBloxSwitching}
                 opacity={isBloxSwitching ? 0.5 : 1}
+                padding="8"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <FxChevronDownIcon
                   width={16}
@@ -151,14 +157,17 @@ export const BloxInteractionImproved = ({
               </FxPressableOpacity>
             )}
           </FxBox>
-          
-          {/* Connection Status */}
+        </FxBox>
+        
+        {/* Connection Status - Larger touch target with more spacing */}
+        <FxBox alignItems="center" marginTop="20">
           <FxPressableOpacity
             flexDirection="row"
             alignItems="center"
-            paddingVertical="4"
+            paddingVertical="8"
+            paddingHorizontal="12"
             onPress={onConnectionPress}
-            marginTop="8"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <CircleFilledIcon
               color={getStatusColor()}
@@ -179,7 +188,7 @@ export const BloxInteractionImproved = ({
               fill={colors.content1}
             />
           </FxPressableOpacity>
-        </FxPressableOpacity>
+        </FxBox>
       </FxBox>
 
       {/* Blox Selection Bottom Sheet */}
