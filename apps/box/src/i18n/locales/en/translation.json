@@ -200,5 +200,11 @@
       "insufficientFundsMessage": "You don't have enough funds to complete this transaction",
       "networkError": "Network Error",
       "networkErrorMessage": "Network connection issue. Please check your connection and try again."
+    },
+    "currentBloxIndicator": {
+      "noBloxSelected": "No Blox Selected",
+      "connected": "Connected",
+      "checking": "Checking",
+      "disconnected": "Disconnected"
     }
   }

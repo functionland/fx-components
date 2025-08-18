@@ -23,6 +23,7 @@ import { useLogger, useRootNavigation } from '../../../hooks';
 import { copyToClipboard } from '../../../utils/clipboard';
 import { BleManagerWrapper } from '../../../utils/ble';
 import { EConnectionStatus } from '../../../models';
+import { CurrentBloxIndicator } from '../../../components';
 
 export const BluetoothCommandsScreen = () => {
   const rootNavigation = useRootNavigation();
@@ -249,6 +250,11 @@ export const BluetoothCommandsScreen = () => {
       <FxPressableOpacity onPress={() => rootNavigation.pop()}>
         <FxArrowLeftIcon color="content1" />
       </FxPressableOpacity>
+      {/* Current Blox Indicator */}
+      <FxBox marginTop="16" marginBottom="16">
+        <CurrentBloxIndicator compact={true} showConnectionStatus={true} />
+      </FxBox>
+
       <FxBox
         marginTop="16"
         flexDirection="row"

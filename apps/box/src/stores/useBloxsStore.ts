@@ -31,6 +31,7 @@ interface BloxsActionSlice {
   updateFolderSizeInfo: (peerId: string, info: TBloxFolderSize) => void;
   reset: () => void;
   setCurrentBloxPeerId: (peerId: string) => void;
+  switchToBlox: (peerId: string) => Promise<boolean>;
 
   /**
    * Remote actions
@@ -285,6 +286,78 @@ const createModeSlice: StateCreator<
           bloxsConnectionStatus: {
             ...currentBloxsConnectionStatus,
             [currentBloxPeerId]: 'DISCONNECTED',
+          },
+        });
+        return false;
+      }
+    },
+    switchToBlox: async (peerId: string) => {
+      const { currentBloxPeerId, bloxsConnectionStatus } = get();
+      
+      // If already on this Blox, no need to switch
+      if (currentBloxPeerId === peerId) {
+        console.log('Already connected to this Blox:', peerId);
+        return true;
+      }
+
+      console.log('Switching from Blox:', currentBloxPeerId, 'to:', peerId);
+      
+      try {
+        // Set switching status for new Blox
+        set({
+          bloxsConnectionStatus: {
+            ...bloxsConnectionStatus,
+            [peerId]: 'CHECKING',
+          },
+        });
+
+        // Update current Blox PeerId first
+        set({ currentBloxPeerId: peerId });
+
+        // Get user credentials for libp2p reconnection
+        const userProfileStore = useUserProfileStore.getState();
+        const { password, signiture } = userProfileStore;
+
+        if (password && signiture) {
+          // Import Helper dynamically to avoid circular dependency
+          const { Helper } = await import('../utils');
+          
+          // Re-initialize Fula with new Blox PeerId to ensure proper libp2p connection
+          console.log('Re-initializing Fula connection for new Blox:', peerId);
+          await Helper.initFula({
+            password,
+            signiture,
+            bloxPeerId: peerId,
+          });
+
+          // Check connection to new Blox
+          const connected = await userProfileStore.checkBloxConnection();
+          
+          set({
+            bloxsConnectionStatus: {
+              ...get().bloxsConnectionStatus,
+              [peerId]: connected ? 'CONNECTED' : 'DISCONNECTED',
+            },
+          });
+
+          console.log('Blox switch completed. Connected:', connected);
+          return connected;
+        } else {
+          console.error('Missing credentials for Blox switch');
+          set({
+            bloxsConnectionStatus: {
+              ...get().bloxsConnectionStatus,
+              [peerId]: 'DISCONNECTED',
+            },
+          });
+          return false;
+        }
+      } catch (error) {
+        console.error('Failed to switch to Blox:', peerId, error);
+        set({
+          bloxsConnectionStatus: {
+            ...get().bloxsConnectionStatus,
+            [peerId]: 'DISCONNECTED',
           },
         });
         return false;

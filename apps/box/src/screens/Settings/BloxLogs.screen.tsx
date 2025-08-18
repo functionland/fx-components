@@ -19,6 +19,7 @@ import { useLogger } from '../../hooks';
 import { ActivityIndicator } from 'react-native';
 import { copyToClipboard } from '../../utils/clipboard';
 import { usePluginsStore } from '../../stores/usePluginsStore';
+import { CurrentBloxIndicator } from '../../components';
 
 export const BloxLogsScreen = () => {
   const logger = useLogger();
@@ -107,6 +108,12 @@ export const BloxLogsScreen = () => {
       justifyContent="space-between"
     >
       <SubHeaderText>Blox Logs</SubHeaderText>
+      
+      {/* Current Blox Indicator */}
+      <FxBox marginBottom="16">
+        <CurrentBloxIndicator compact={true} showConnectionStatus={true} />
+      </FxBox>
+
       <FxBox
         marginHorizontal="0"
         flexDirection="row"

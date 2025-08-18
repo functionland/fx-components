@@ -200,5 +200,11 @@
     "insufficientFundsMessage": "您没有足够的资金完成此交易",
     "networkError": "网络错误",
     "networkErrorMessage": "网络连接问题。请检查您的连接并重试。"
+  },
+  "currentBloxIndicator": {
+    "noBloxSelected": "未选择Blox",
+    "connected": "已连接",
+    "checking": "检查中",
+    "disconnected": "已断开"
   }
 }

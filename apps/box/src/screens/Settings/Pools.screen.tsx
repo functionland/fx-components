@@ -29,6 +29,7 @@ import { useTranslation } from 'react-i18next';
 import { useSDK } from '@metamask/sdk-react';
 import { useWalletNetwork } from '../../hooks/useWalletNetwork';
 import { WalletNotification } from '../../components/WalletNotification';
+import { CurrentBloxIndicator } from '../../components';
 
 // --- Add this union type for FlatList items ---
 type PoolListItem =
@@ -754,6 +755,11 @@ export const PoolsScreen = () => {
                 Account: {connectedAccount.slice(0, 6)}...{connectedAccount.slice(-4)}
               </FxText>
             )}
+          </FxBox>
+
+          {/* Current Blox Indicator */}
+          <FxBox marginBottom="16">
+            <CurrentBloxIndicator compact={true} showConnectionStatus={true} />
           </FxBox>
 
           {/* Wallet Connection and Network Notification - Disabled to prevent flicker */}

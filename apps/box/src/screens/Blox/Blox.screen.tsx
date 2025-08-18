@@ -21,7 +21,7 @@ import { TasksCard } from '../../components/Cards/TasksCard';
 import { EarningCard } from '../../components/Cards/EarningCard';
 
 import { BloxHeader } from './components/BloxHeader';
-import { BloxInteraction } from './components/BloxInteraction';
+import { BloxInteractionImproved } from './components/BloxInteractionImproved';
 import { BloxInteractionModal } from './modals/BloxInteractionModal';
 import { EDeviceStatus } from '../../api/hub';
 import { EBloxInteractionType, TBloxInteraction } from '../../models';
@@ -191,16 +191,6 @@ export const BloxScreen = () => {
 
   const showProfileModal = () => {
     profileBottomSheetRef.current.present();
-  };
-  const handleOnBloxChanged = (index: number) => {
-    try {
-      const blox = bloxInteractions[index];
-      updateBloxsStore({
-        currentBloxPeerId: blox.peerId,
-      });
-    } catch (error) {
-      logger.logError('handleOnBloxChanged', error);
-    }
   };
   const handleOnConnectionOptionSelect = async (
     type: ConnectionOptionsType
@@ -431,15 +421,13 @@ export const BloxScreen = () => {
       />
       <ScrollView>
         <FxBox paddingVertical="20" paddingHorizontal="20">
-          <BloxInteraction
+          <BloxInteractionImproved
             bloxs={bloxInteractions}
             selectedMode={selectedMode}
-            //setSelectedMode={setSelectedMode}
-            onBloxChange={handleOnBloxChanged}
             onConnectionPress={() =>
-              connectionOptionsSheetRef.current.present()
+              connectionOptionsSheetRef.current?.present()
             }
-            onBloxPress={() => bloxInfoBottomSheetRef.current.present()}
+            onBloxPress={() => bloxInfoBottomSheetRef.current?.present()}
           />
           <FxSpacer height={16} />
           

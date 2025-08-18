@@ -43,7 +43,7 @@ export const BloxHeader = ({ selectedMode, onChangeMode, onAvatarPress }: TBloxH
       <FxBox flexDirection="row" alignItems="center">
         <FxPressableOpacity 
           onPress={() => navigation.navigate(Routes.InitialSetup, {
-            screen: Routes.ConnectToBlox,
+            screen: Routes.LinkPassword,
           })}
           marginRight="12"
         >
