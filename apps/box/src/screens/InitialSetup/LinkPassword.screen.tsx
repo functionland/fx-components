@@ -118,14 +118,52 @@ export const LinkPasswordScreen = () => {
             },
         });
 
-        // Get provider and remove any existing listeners
+        // Get provider
         const provider = await sdk?.getProvider();
-        provider?.removeAllListeners();
+        if (!provider) {
+          throw new Error('Provider not available');
+        }
 
-        signature = (await sdk?.connectAndSign({ msg })) as string;
+        console.log('Current connection status:', { connected, account });
+
+        // Connect to wallet first - this will open MetaMask
+        console.log('Attempting to connect to wallet...');
+        const accounts = await sdk?.connect();
+        console.log('Connect response:', accounts);
+
+        // Wait a moment for state to update
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Get the current account from the provider
+        const currentAccounts = await provider.request?.({
+          method: 'eth_accounts',
+        }) as string[];
+        
+        console.log('Current accounts from provider:', currentAccounts);
+        
+        if (!currentAccounts || currentAccounts.length === 0) {
+          throw new Error('No account connected after wallet connection');
+        }
+
+        const connectedAccount = currentAccounts[0];
+        console.log('Using account for signing:', connectedAccount);
+        console.log('Message to sign:', msg);
+
+        // Convert message to hex for compatibility
+        const msgHex = '0x' + Buffer.from(msg).toString('hex');
+        
+        // Use provider.request directly for personal_sign
+        console.log('Sending personal_sign request...');
+        signature = (await provider.request?.({
+          method: 'personal_sign',
+          params: [msgHex, connectedAccount],
+        })) as string;
+
+        console.log('Signature received:', signature);
         resolveSigned();
         return signature;
     } catch (error) {
+        console.error('personalSign error:', error);
         throw error;
     } finally {
         notifee.stopForegroundService();
