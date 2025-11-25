@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSDK } from '@metamask/sdk-react';
 import { useToast } from '@functionland/component-library';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useWalletNetwork } from './useWalletNetwork';
 import { getContractService, ContractService, resetContractService } from '../contracts/contractService';
 import { SupportedChain } from '../contracts/types';
@@ -57,8 +58,12 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
   const { isOnCorrectNetwork } = useWalletNetwork();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const setSelectedChain = useSettingsStore((state) => state.setSelectedChain);
+  const manualSignatureWalletAddress = useUserProfileStore((state) => state.manualSignatureWalletAddress);
   const initializedChainRef = useRef<SupportedChain | null>(null);
   const showConnectedNotification = options?.showConnectedNotification ?? false;
+  
+  // Use MetaMask account if available, otherwise fallback to manually signed wallet address
+  const effectiveAccount = account || manualSignatureWalletAddress;
 
   const [state, setState] = useState<ContractIntegrationState>({
     isInitialized: false,
@@ -75,10 +80,10 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
   const lastInitAttemptRef = useRef<number>(0);
 
   const initializeContracts = useCallback(async (chain: SupportedChain, options: { allowNetworkSwitch?: boolean } = {}) => {
-    console.log('initializeContracts called for chain:', chain, 'provider:', !!provider, 'account:', account);
+    console.log('initializeContracts called for chain:', chain, 'provider:', !!provider, 'account:', account, 'effectiveAccount:', effectiveAccount);
 
-    if (!provider || !account) {
-      console.log('Missing provider or account, cannot initialize contracts');
+    if (!provider || !effectiveAccount) {
+      console.log('Missing provider or effective account, cannot initialize contracts');
       setState(prev => ({
         ...prev,
         isInitialized: false,
@@ -339,15 +344,16 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
   useEffect(() => {
     console.log('Contract integration useEffect triggered:', {
       account: !!account,
+      effectiveAccount: !!effectiveAccount,
       provider: !!provider,
       selectedChain,
       isInitialized: state.isInitialized,
       isInitializing: state.isInitializing
     });
 
-    // Clear state when wallet disconnects
-    if (!account || !provider) {
-      console.log('Clearing contract state - no account or provider');
+    // Clear state when wallet disconnects (both MetaMask and manual signature)
+    if (!effectiveAccount || !provider) {
+      console.log('Clearing contract state - no effective account or provider');
       setState({
         isInitialized: false,
         isInitializing: false,
@@ -383,6 +389,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
     }
     
     // Check if we should show the switch button (same logic as WalletNotification)
+    // Only check if MetaMask is connected (not for manual signature fallback)
     const shouldShowSwitchButton = account && provider && selectedChain && !isOnCorrectNetwork;
     
     // If switch button should be shown, DO NOT perform any contract operations
@@ -407,7 +414,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
     }
     
     // Only attempt initialization when wallet is connected AND on correct network
-    const needsInitialization = account && provider && selectedChain && isOnCorrectNetwork && !state.isInitializing && !state.isInitialized && initializedChainRef.current !== selectedChain;
+    const needsInitialization = effectiveAccount && provider && selectedChain && isOnCorrectNetwork && !state.isInitializing && !state.isInitialized && initializedChainRef.current !== selectedChain;
     
     if (needsInitialization) {
       console.log('Wallet is connected and on correct network - attempting automatic contract initialization for chain:', selectedChain);
@@ -454,7 +461,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
           });
       }, 1500); // 1500ms debounce to allow network state sync
     }
-  }, [account, provider, selectedChain, isOnCorrectNetwork, state.isInitialized, state.isInitializing]);
+  }, [account, effectiveAccount, provider, selectedChain, isOnCorrectNetwork, state.isInitialized, state.isInitializing]);
 
   // Cleanup timeout on unmount
   useEffect(() => {

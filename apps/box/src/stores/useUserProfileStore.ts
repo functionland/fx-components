@@ -474,7 +474,8 @@ getEarnings: async (account?: string) => {
                   throw new Error('Internet is not connected.');
                 }
               } catch (error) {
-                console.error('Network check failed:', error.message);
+                const errorMessage = error instanceof Error ? error.message : (typeof error === 'string' ? error : 'Network check failed');
+                console.error('Network check failed:', errorMessage);
                 set({ bloxConnectionStatus: 'NO INTERNET' });
                 return false;
               }

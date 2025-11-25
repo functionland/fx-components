@@ -4,6 +4,7 @@ import { useWalletConnection } from '../hooks/useWalletConnection';
 import { useWalletNetwork } from '../hooks/useWalletNetwork';
 import { useContractIntegration } from '../hooks/useContractIntegration';
 import { useSDK } from '@metamask/sdk-react';
+import { useUserProfileStore } from '../stores/useUserProfileStore';
 
 export type WalletNotificationType = 'connect' | 'network' | 'hidden';
 
@@ -30,13 +31,17 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
   } = useWalletNetwork();
   const { initializeContracts, isInitializing } = useContractIntegration();
   const { account } = useSDK();
+  const manualSignatureWalletAddress = useUserProfileStore((state) => state.manualSignatureWalletAddress);
   const [isLoading, setIsLoading] = useState(false);
   const [showAfterDelay, setShowAfterDelay] = useState(false);
   const [postLoadingDelay, setPostLoadingDelay] = useState(false);
 
+  // Determine if we have any account (MetaMask or manual signature)
+  const hasAnyAccount = connected && account || manualSignatureWalletAddress;
+
   // Add delay before showing connect wallet notification to prevent flicker
   useEffect(() => {
-    if (!connected || !account) {
+    if (!hasAnyAccount) {
       // Start timer to show connect notification after delay
       const timer = setTimeout(() => {
         setShowAfterDelay(true);
@@ -47,7 +52,7 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
       // Wallet is connected, show immediately
       setShowAfterDelay(true);
     }
-  }, [connected, account]);
+  }, [hasAnyAccount]);
 
   // Don't show notification during contract initialization to prevent flicker
   const isContractInitializing = isInitializing || false;
@@ -73,14 +78,22 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
 
   // Determine what type of notification to show
   const getNotificationType = (): WalletNotificationType => {
-    if (!connected || !account) {
-      // Only show connect notification after delay
-      return showAfterDelay ? 'connect' : 'hidden';
+    // If MetaMask is connected, check network
+    if (connected && account) {
+      if (!isOnCorrectNetwork) {
+        return 'network';
+      }
+      return 'hidden';
     }
-    if (!isOnCorrectNetwork) {
-      return 'network';
+    
+    // If MetaMask is not connected but we have a stored wallet address, don't show connect notification
+    // (user is using manual signature, so MetaMask connection is optional)
+    if (manualSignatureWalletAddress) {
+      return 'hidden';
     }
-    return 'hidden';
+    
+    // No account at all, show connect notification after delay
+    return showAfterDelay ? 'connect' : 'hidden';
   };
 
   const notificationType = getNotificationType();

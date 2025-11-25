@@ -58,10 +58,11 @@ export const useWalletNetwork = () => {
       return isCorrect;
     } catch (error: any) {
       console.error('Network check failed:', error);
+      const errorMessage = error?.message || (typeof error === 'string' ? error : 'Network check failed');
       setState(prev => ({
         ...prev,
         isCheckingNetwork: false,
-        networkError: error.message,
+        networkError: errorMessage,
         lastNetworkCheck: Date.now(),
       }));
       return false;
