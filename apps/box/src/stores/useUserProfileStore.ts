@@ -24,6 +24,7 @@ interface UserProfileActions {
   setKeyChainValue: (service: KeyChain.Service, value: string) => Promise<void>;
   loadAllCredentials: () => Promise<void>;
   setWalletId: (walletId: string, clearSigniture?: boolean) => Promise<void>;
+  setManualSignatureWalletAddress: (address: string) => void;
   setAppPeerId: (peerId: string | undefined) => void;
   setBloxPeerIds: (peerIds: string[] | undefined) => void;
   createAccount: ({ seed }: { seed: string }) => Promise<TAccount>;
@@ -54,6 +55,10 @@ export interface UserProfileSlice {
    */
   signiture?: string | undefined;
   address?: string | undefined;
+  /**
+   * manualSignatureWalletAddress is the wallet address entered by user when signing manually
+   */
+  manualSignatureWalletAddress?: string | undefined;
   fulaPeerId?: string | undefined;
   fulaRoodCID?: string | undefined;
   appPeerId?: string | undefined;
@@ -82,6 +87,7 @@ const initialState: UserProfileSlice = {
   signiture: undefined,
   password: undefined,
   address: undefined,
+  manualSignatureWalletAddress: undefined,
   walletId: undefined,
   fulaReinitCount: 0,
   useLocalIp: 'scan',
@@ -282,6 +288,11 @@ const createUserProfileSlice: StateCreator<
             walletId,
           });
         }
+      },
+      setManualSignatureWalletAddress: (address) => {
+        set({
+          manualSignatureWalletAddress: address,
+        });
       },
       setAppPeerId: (peerId) => {
         set({
@@ -592,6 +603,7 @@ getEarnings: async (account?: string) => {
       accounts: state.accounts,
       activeAccount: state.activeAccount,
       fulaReinitCount: state.fulaReinitCount,
+      manualSignatureWalletAddress: state.manualSignatureWalletAddress,
     }),
     migrate: async (persistedState, version) => {
       const { setState } = useBloxsStore;

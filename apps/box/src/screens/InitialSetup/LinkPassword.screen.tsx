@@ -19,7 +19,7 @@ import { Routes } from '../../navigation/navigationConfig';
 import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, ScrollView, Linking } from 'react-native';
 import { useSDK } from '@metamask/sdk-react';
 import notifee from '@notifee/react-native';
 import { useTranslation } from 'react-i18next'; // Import for translations
@@ -38,10 +38,18 @@ export const LinkPasswordScreen = () => {
   const [passwordInput, setPasswordInput] = useState('');
   const [manualSignature, setManualSignature] = useState(false);
   const [mSig, setMSig] = useState('');
+  const [walletAddressInput, setWalletAddressInput] = useState('');
   const [identityReset, setIdentityReset] = useState(false);
-  const [setKeyChainValue, signiture, password, setWalletId] = useUserProfileStore(
-    (state) => [state.setKeyChainValue, state.signiture, state.password, state.setWalletId]
+  const [setKeyChainValue, signiture, password, setWalletId, setManualSignatureWalletAddress, manualSignatureWalletAddress] = useUserProfileStore(
+    (state) => [state.setKeyChainValue, state.signiture, state.password, state.setWalletId, state.setManualSignatureWalletAddress, state.manualSignatureWalletAddress]
   );
+
+  // Initialize wallet address from store on mount
+  useEffect(() => {
+    if (manualSignatureWalletAddress) {
+      setWalletAddressInput(manualSignatureWalletAddress);
+    }
+  }, [manualSignatureWalletAddress]);
 
   // Computed value to determine if we have an identity (either cached or fresh)
   const hasIdentity = useMemo(() => {
@@ -265,11 +273,33 @@ export const LinkPasswordScreen = () => {
       autoHideDuration: 3000,
     });
   };
+
+  const handleOpenSignaturePortal = () => {
+    // Save wallet address to store before opening browser
+    if (walletAddressInput) {
+      setManualSignatureWalletAddress(walletAddressInput);
+    }
+    Linking.openURL('https://fxblox.fx.land');
+  };
+
+  const handleManualSignatureButtonPress = () => {
+    if (manualSignature && mSig) {
+      // Mode 3: User has entered signature, submit
+      setSignatureData(mSig);
+    } else if (manualSignature) {
+      // Mode 2: User clicked button, now show signature field and open URL
+      handleOpenSignaturePortal();
+    } else {
+      // Mode 1: User enters password, show signature field
+      setManualSignature(true);
+    }
+  };
+
   return (
     <FxSafeAreaBox flex={1} paddingHorizontal="20" paddingVertical="16">
       <FxProgressBar progress={40} />
-      <FxBox flex={1} justifyContent="space-between" paddingVertical="80">
-        <FxBox>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+        <FxBox paddingVertical="20">
           <FxText variant="h300" textAlign="center">
             {t('linkPassword.title')}
           </FxText>
@@ -284,22 +314,37 @@ export const LinkPasswordScreen = () => {
             </FxBox>
           )}
         </FxBox>
-        <FxBox>
-          {/* Only show password input and checkboxes when NO existing identity is found */}
-          {!(password && signiture) && (
-            <>
-              {!linking ? (
+
+        {/* Only show password input and checkboxes when NO existing identity is found */}
+        {!(password && signiture) && (
+          <FxBox paddingVertical="20">
+            {!linking ? (
+              <FxTextInput
+                caption={t('linkPassword.password')}
+                autoFocus
+                secureTextEntry
+                value={passwordInput}
+                onChangeText={setPasswordInput}
+              />
+            ) : (
+              <ActivityIndicator />
+            )}
+
+            {/* Wallet Address field - only show when using manual signature */}
+            {!linking && manualSignature && (
+              <FxBox marginTop="16">
                 <FxTextInput
-                  caption={t('linkPassword.password')}
-                  autoFocus
-                  secureTextEntry
-                  value={passwordInput}
-                  onChangeText={setPasswordInput}
+                  caption={t('linkPassword.walletAddress')}
+                  placeholder="0x..."
+                  value={walletAddressInput}
+                  onChangeText={setWalletAddressInput}
                 />
-              ) : (
-                <ActivityIndicator />
-              )}
-              {!linking && manualSignature ? (
+              </FxBox>
+            )}
+
+            {/* Signature field - only show when using manual signature */}
+            {!linking && manualSignature && (
+              <FxBox marginTop="16">
                 <FxTextInput
                   caption={t('linkPassword.signature')}
                   autoFocus
@@ -307,30 +352,32 @@ export const LinkPasswordScreen = () => {
                   value={mSig}
                   onChangeText={setMSig}
                 />
-              ) : (
-                <></>
-              )}
-              <FxBox>
-                <FxText
-                  variant="bodyMediumRegular"
-                  color="warningBase"
-                  textAlign="center"
-                  paddingBottom="20"
-                >
-                  {t('linkPassword.warning')}
-                </FxText>
-                <FxRadioButton.Group
-                  value={iKnow ? [1] : []}
-                  onValueChange={(val: any) =>
-                    setIKnow(val && val[0] === 1 ? true : false)
-                  }
-                >
-                  <FxRadioButtonWithLabel
-                    paddingVertical="8"
-                    label={t('linkPassword.passwordRisk')}
-                    value={1}
-                  />
-                </FxRadioButton.Group>
+              </FxBox>
+            )}
+
+            <FxBox marginTop="20">
+              <FxText
+                variant="bodyMediumRegular"
+                color="warningBase"
+                textAlign="center"
+                paddingBottom="20"
+              >
+                {t('linkPassword.warning')}
+              </FxText>
+              <FxRadioButton.Group
+                value={iKnow ? [1] : []}
+                onValueChange={(val: any) =>
+                  setIKnow(val && val[0] === 1 ? true : false)
+                }
+              >
+                <FxRadioButtonWithLabel
+                  paddingVertical="8"
+                  label={t('linkPassword.passwordRisk')}
+                  value={1}
+                />
+              </FxRadioButton.Group>
+              {/* Only show metamask checkbox when NOT using manual signature */}
+              {!manualSignature && (
                 <FxRadioButton.Group
                   value={metamaskOpen ? [1] : []}
                   onValueChange={(val: any) =>
@@ -343,12 +390,13 @@ export const LinkPasswordScreen = () => {
                     value={1}
                   />
                 </FxRadioButton.Group>
-              </FxBox>
-            </>
-          )}
-        </FxBox>
+              )}
+            </FxBox>
+          </FxBox>
+        )}
 
-        <FxBox>
+        {/* Buttons section */}
+        <FxBox paddingVertical="20">
           {password && signiture ? (
             <>
               <FxButton
@@ -392,51 +440,54 @@ export const LinkPasswordScreen = () => {
               </FxButton>
             </>
           ) : (
-          <FxBox>
-            <FxButton
-              size="large"
-              disabled={!passwordInput || !iKnow || !metamaskOpen}
-              onPress={
-                provider
-                  ? linking
-                    ? disconnectWallet
-                    : handleLinkPassword
-                  : () => {}
-              }
-            >
-              {provider ? (
-                linking ? (
-                  t('linkPassword.cancel')
-                ) : (
-                  t('linkPassword.signWithMetamask')
-                )
-              ) : (
-                <ActivityIndicator />
+            <FxBox>
+              {/* MetaMask signing button - only show when NOT in manual signature mode */}
+              {!manualSignature && (
+                <>
+                  <FxButton
+                    size="large"
+                    disabled={!passwordInput || !iKnow || !metamaskOpen}
+                    onPress={
+                      provider
+                        ? linking
+                          ? disconnectWallet
+                          : handleLinkPassword
+                        : () => {}
+                    }
+                  >
+                    {provider ? (
+                      linking ? (
+                        t('linkPassword.cancel')
+                      ) : (
+                        t('linkPassword.signWithMetamask')
+                      )
+                    ) : (
+                      <ActivityIndicator />
+                    )}
+                  </FxButton>
+                  <FxSpacer height={10} />
+                </>
               )}
-            </FxButton>
-            <FxSpacer height={10} />
-            <FxButton
-              size="large"
-              disabled={!passwordInput || !iKnow}
-              onPress={() => {
-                if (manualSignature && mSig) {
-                  setSignatureData(mSig);
-                } else {
-                  setManualSignature(true);
+
+              {/* Manual signature button - changes based on state */}
+              <FxButton
+                size="large"
+                disabled={
+                  !passwordInput || !iKnow || (manualSignature && (!mSig || !walletAddressInput))
                 }
-              }}
-              variant="inverted"
-            >
-              {manualSignature
-                ? mSig !== ''
-                  ? t('linkPassword.submit')
-                  : t('linkPassword.signManually')
-                : t('linkPassword.signManually')}
-            </FxButton>
-          </FxBox>
+                onPress={handleManualSignatureButtonPress}
+                variant="inverted"
+              >
+                {manualSignature
+                  ? mSig !== ''
+                    ? t('linkPassword.submit')
+                    : t('linkPassword.getSignatureManually')
+                  : t('linkPassword.signManually')}
+              </FxButton>
+            </FxBox>
           )}
         </FxBox>
-      </FxBox>
+      </ScrollView>
     </FxSafeAreaBox>
   );
 };

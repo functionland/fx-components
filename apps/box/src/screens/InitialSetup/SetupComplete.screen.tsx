@@ -459,18 +459,30 @@ export const SetupCompleteScreen = ({ route }: Props) => {
         {currentBloxPeerId &&
           internetStatus === 'CONNECTED' &&
           setupStatus === 'NOTCOMPLETED' && (
-            <FxButton
-              variant="inverted"
-              marginBottom="16"
-              size="large"
-              onPress={() => {
-                setBloxReachOutTryCount(0);
-                handleTryReachBlox();
-              }}
-            >
-              {t('setupComplete.checkConnection')}
-            </FxButton>
+            <>
+              <FxButton
+                variant="inverted"
+                marginBottom="16"
+                size="large"
+                onPress={() => {
+                  setBloxReachOutTryCount(0);
+                  handleTryReachBlox();
+                }}
+              >
+                {t('setupComplete.checkConnection')}
+              </FxButton>
+              <FxSpacer height={15} />
+              <FxButton
+                variant="inverted"
+                marginBottom="16"
+                size="large"
+                onPress={handleHome}
+              >
+                {t('setupComplete.home')}
+              </FxButton>
+            </>
           )}
+          
         {setupStatus === 'ERROR' && (
           <>
             <FlashingCircle color="red" interval={2} />
