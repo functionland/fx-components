@@ -63,8 +63,13 @@
     "searching": "正在搜索 Wi-Fi 网络",
     "selectNetwork": "选择 Wi-Fi 网络",
     "noNetworksFound": "我们找不到可用的WiFi，请使用按钮手动输入WiFi信息。",
+    "useLAN": "使用有线 LAN",
+    "lanTitle": "通过有线 LAN 连接",
+    "lanInstructions": "请将 LAN 电缆连接到 FxBlox 底部的端口，完成后点击继续",
     "back": "返回",
-    "next": "下一步"
+    "next": "下一步",
+    "continue": "继续",
+    "cancel": "取消"
   },
   "setBloxAuthorizer": {
     "title": "设置 Blox 所有者",

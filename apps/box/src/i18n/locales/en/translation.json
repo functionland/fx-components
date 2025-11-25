@@ -63,8 +63,13 @@
       "searching": "Searching Wi-Fi Network",
       "selectNetwork": "Select Wi-Fi Network",
       "noNetworksFound": "We could not find the available WiFi, please use the button to manually enter the WiFi information.",
+      "useLAN": "Use Wired LAN",
+      "lanTitle": "Connect via Wired LAN",
+      "lanInstructions": "Please connect the LAN Cable to the bottom port of your FxBlox now and click continue when done",
       "back": "Back",
-      "next": "Next"
+      "next": "Next",
+      "continue": "Continue",
+      "cancel": "Cancel"
     },
     "setBloxAuthorizer": {
       "title": "Set Blox Owner",

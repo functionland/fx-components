@@ -13,7 +13,7 @@ import {
   FxTextInput,
   FxKeyboardAwareScrollView,
 } from '@functionland/component-library';
-import { FlatList, PermissionsAndroid, Platform } from 'react-native';
+import { FlatList, PermissionsAndroid, Platform, Alert } from 'react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { useTranslation } from 'react-i18next';
 import { WifiDeviceItem } from './components/WifiDeviceItem';
@@ -123,6 +123,27 @@ export const ConnectToWifiScreen = () => {
     inputWifiPasswordModalRef?.current?.close();
     setConnectedSsid(ssid);
     handleNext();
+  };
+
+  const handleUseLAN = () => {
+    Alert.alert(
+      t('connectToWifi.lanTitle'),
+      t('connectToWifi.lanInstructions'),
+      [
+        {
+          text: t('connectToWifi.cancel'),
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: t('connectToWifi.continue'),
+          onPress: () => {
+            setConnectedSsid('LAN');
+            handleNext();
+          },
+        },
+      ]
+    );
   };
   const Container = enabledHiddenNetwork ? FxKeyboardAwareScrollView : FxBox;
   return (
@@ -241,6 +262,15 @@ export const ConnectToWifiScreen = () => {
               </FxBox>
             </>
           )}
+        </FxBox>
+        <FxBox marginTop="16">
+          <FxButton
+            variant="inverted"
+            paddingVertical="8"
+            onPress={handleUseLAN}
+          >
+            {t('connectToWifi.useLAN')}
+          </FxButton>
         </FxBox>
         <FxBox
           flexDirection="row"
