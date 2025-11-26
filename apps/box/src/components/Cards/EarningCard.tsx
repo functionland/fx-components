@@ -13,6 +13,7 @@ import { ActivityIndicator, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFulaBalance, useFormattedFulaBalance } from '../../hooks/useFulaBalance';
 import { useClaimableTokens } from '../../hooks/useClaimableTokens';
+import { useUserProfileStore } from '../../stores/useUserProfileStore';
 
 type EarningCardProps = React.ComponentProps<typeof FxBox> & {
   data: { totalFula: string };
@@ -44,6 +45,11 @@ export const EarningCard = ({
   // MetaMask SDK for wallet connection
   const { sdk, account, connecting } = useSDK();
 
+  // Get manual wallet address
+  const manualSignatureWalletAddress = useUserProfileStore(
+    (state) => state.manualSignatureWalletAddress
+  );
+
   // Use claimable rewards hook
   const {
     totalUnclaimed,
@@ -64,7 +70,8 @@ export const EarningCard = ({
 
   // Handler for refresh icon click
   const handleRefresh = async () => {
-    if (!account) {
+    // Only try to connect MetaMask if no account is available (neither MetaMask nor manual signature)
+    if (!account && !manualSignatureWalletAddress) {
       try {
         await sdk?.connect();
         queueToast({

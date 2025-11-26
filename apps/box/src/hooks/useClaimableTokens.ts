@@ -2,6 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useContractIntegration } from './useContractIntegration';
 import { useBloxsStore } from '../stores/useBloxsStore';
 import { usePools } from './usePools';
+import { useUserProfileStore } from '../stores/useUserProfileStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
+import { ethers } from 'ethers';
+import { getChainConfigByName } from '../contracts/config';
+import { REWARD_ENGINE_ABI } from '../contracts/abis';
+import { peerIdToBytes32 } from '../utils/peerIdConversion';
 
 export interface ClaimableRewardsState {
   unclaimedMining: string;
@@ -18,6 +24,10 @@ export const useClaimableTokens = () => {
   const { contractService, isReady, connectedAccount } = useContractIntegration();
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
   const { userPoolId } = usePools();
+  const manualSignatureWalletAddress = useUserProfileStore(
+    (state) => state.manualSignatureWalletAddress
+  );
+  const selectedChain = useSettingsStore((state) => state.selectedChain);
 
   const [state, setState] = useState<ClaimableRewardsState>({
     unclaimedMining: '0',
@@ -30,17 +40,22 @@ export const useClaimableTokens = () => {
     canClaim: false,
   });
 
+  // Determine effective account (MetaMask or manual signature)
+  const effectiveAccount = connectedAccount || manualSignatureWalletAddress;
+  const useReadOnlyService = !isReady && !!manualSignatureWalletAddress;
+
   const fetchClaimableTokens = useCallback(async () => {
     console.log('🚀 useClaimableTokens: fetchClaimableTokens called');
     console.log('🔍 useClaimableTokens: Dependencies check:', {
       contractService: !!contractService,
       isReady,
       currentBloxPeerId,
-      connectedAccount,
-      userPoolId
+      effectiveAccount,
+      userPoolId,
+      useReadOnlyService,
     });
     
-    if (!contractService || !isReady || !currentBloxPeerId || !connectedAccount || !userPoolId) {
+    if (!currentBloxPeerId || !effectiveAccount || !userPoolId) {
       console.log('⚠️ useClaimableTokens: Missing dependencies, resetting state to zeros');
       setState(prev => ({
         ...prev,
@@ -60,34 +75,70 @@ export const useClaimableTokens = () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      console.log('📞 useClaimableTokens: Calling getUnclaimedRewards with params:', {
-        account: connectedAccount,
-        peerId: currentBloxPeerId,
-        poolId: userPoolId
-      });
-      
-      // Get unclaimed rewards
-      const unclaimedRewards = await contractService.getUnclaimedRewards(
-        connectedAccount,
-        currentBloxPeerId,
-        userPoolId
-      );
+      let unclaimedRewards: any;
+      let claimedInfo: any;
+
+      if (contractService && isReady) {
+        // Use contractService when MetaMask is connected
+        console.log('📞 useClaimableTokens: Using contractService (MetaMask connected)');
+        
+        unclaimedRewards = await contractService.getUnclaimedRewards(
+          effectiveAccount,
+          currentBloxPeerId,
+          userPoolId
+        );
+        
+        claimedInfo = await contractService.getClaimedRewardsInfo(
+          effectiveAccount,
+          currentBloxPeerId,
+          userPoolId
+        );
+      } else if (useReadOnlyService) {
+        // Use RPC provider when MetaMask is not connected
+        console.log('📞 useClaimableTokens: Using RPC provider (manual signature fallback)');
+        
+        const chainConfig = getChainConfigByName(selectedChain);
+        const readOnlyProvider = new ethers.providers.JsonRpcProvider(chainConfig.rpcUrl);
+        const rewardContract = new ethers.Contract(
+          chainConfig.contracts.rewardEngine,
+          REWARD_ENGINE_ABI,
+          readOnlyProvider
+        );
+
+        const peerIdBytes32 = await peerIdToBytes32(currentBloxPeerId);
+        
+        // Get unclaimed rewards
+        const [unclaimedMining, unclaimedStorage] = await rewardContract.getUnclaimedRewards(
+          effectiveAccount,
+          peerIdBytes32,
+          userPoolId
+        );
+        
+        unclaimedRewards = {
+          unclaimedMining: ethers.utils.formatEther(unclaimedMining),
+          unclaimedStorage: ethers.utils.formatEther(unclaimedStorage),
+          totalUnclaimed: ethers.utils.formatEther(unclaimedMining.add(unclaimedStorage)),
+        };
+
+        // Get claimed rewards info
+        const [lastClaimedTimestamp] = await rewardContract.getClaimedRewardsInfo(
+          effectiveAccount,
+          peerIdBytes32,
+          userPoolId
+        );
+        
+        const now = Math.floor(Date.now() / 1000);
+        const timeSinceLastClaim = Math.max(0, now - lastClaimedTimestamp.toNumber());
+        
+        claimedInfo = {
+          lastClaimedTimestamp: lastClaimedTimestamp.toNumber(),
+          timeSinceLastClaim,
+        };
+      } else {
+        throw new Error('No service available for fetching rewards');
+      }
       
       console.log('📥 useClaimableTokens: getUnclaimedRewards response:', unclaimedRewards);
-
-      console.log('📞 useClaimableTokens: Calling getClaimedRewardsInfo with params:', {
-        account: connectedAccount,
-        peerId: currentBloxPeerId,
-        poolId: userPoolId
-      });
-      
-      // Get claimed rewards info
-      const claimedInfo = await contractService.getClaimedRewardsInfo(
-        connectedAccount,
-        currentBloxPeerId,
-        userPoolId
-      );
-      
       console.log('📥 useClaimableTokens: getClaimedRewardsInfo response:', claimedInfo);
 
       const canClaim = parseFloat(unclaimedRewards.totalUnclaimed) > 0;
@@ -137,7 +188,7 @@ export const useClaimableTokens = () => {
         canClaim: false,
       });
     }
-  }, [contractService, isReady, currentBloxPeerId, connectedAccount, userPoolId]);
+  }, [contractService, isReady, currentBloxPeerId, effectiveAccount, userPoolId, useReadOnlyService, selectedChain]);
 
   const claimTokens = useCallback(async () => {
     if (!contractService || !isReady || !currentBloxPeerId || !userPoolId || !state.canClaim) {

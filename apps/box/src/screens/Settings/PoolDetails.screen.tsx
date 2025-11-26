@@ -12,7 +12,7 @@ import {
   FxPoolIcon,
 } from '@functionland/component-library';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { usePools } from '../../hooks/usePools';
+import { usePoolsWithFallback } from '../../hooks/usePoolsWithFallback';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { CHAIN_DISPLAY_NAMES } from '../../contracts/config';
 import MyLoader from '../../components/ContentLoader';
@@ -41,7 +41,7 @@ export const PoolDetailsScreen = () => {
     userMemberPools,
     leavePoolViaAPI,
     joinPoolViaAPI,
-  } = usePools();
+  } = usePoolsWithFallback();
 
   const selectedChain = useSettingsStore((state) => state.selectedChain);
 

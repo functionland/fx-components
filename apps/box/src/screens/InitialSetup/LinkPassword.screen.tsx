@@ -285,6 +285,11 @@ export const LinkPasswordScreen = () => {
   const handleManualSignatureButtonPress = () => {
     if (manualSignature && mSig) {
       // Mode 3: User has entered signature, submit
+      // Save wallet address to store before submitting
+      if (walletAddressInput) {
+        console.log('Saving wallet address:', walletAddressInput);
+        setManualSignatureWalletAddress(walletAddressInput);
+      }
       setSignatureData(mSig);
     } else if (manualSignature) {
       // Mode 2: User clicked button, now show signature field and open URL

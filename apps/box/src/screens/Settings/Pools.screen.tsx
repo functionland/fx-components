@@ -13,7 +13,7 @@ import {
   FxProgressBar,
 } from '@functionland/component-library';
 import { PoolCard } from '../../components/Cards/PoolCard';
-import { usePools } from '../../hooks/usePools';
+import { usePoolsWithFallback } from '../../hooks/usePoolsWithFallback';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useBloxsStore } from '../../stores/useBloxsStore';
 import { usePoolsStore } from '../../stores/usePoolsStore';
@@ -48,7 +48,7 @@ export const PoolsScreen = () => {
   const logger = useLogger();
   const { queueToast } = useToast();
   const navigation = useNavigation();
-  // Use new contract-based pools hook
+  // Use new pools hook with fallback support for manual signature users
   const {
     pools,
     loading: poolsLoading,
@@ -68,7 +68,7 @@ export const PoolsScreen = () => {
     userIsMemberOfAnyPool,
     userMemberPools,
     userActiveRequests,
-  } = usePools();
+  } = usePoolsWithFallback();
 
   // Get Blox join pool method from store
   const joinPoolBlox = usePoolsStore((state) => state.joinPool);
@@ -105,16 +105,17 @@ export const PoolsScreen = () => {
     if (refreshing) {
       reloading();
     }
-  }, [refreshing, contractReady]);
+  }, [refreshing]);
 
-  // Load pools when component mounts and contract is ready
+  // Load pools when component mounts and we have an account (MetaMask or fallback)
   useEffect(() => {
     console.log('useEffect triggered - contractReady:', contractReady, 'refreshing:', refreshing, 'connectedAccount:', connectedAccount);
-    if (contractReady && !refreshing && connectedAccount) {
-      console.log('Contract ready, loading pools...');
+    // Load pools if we have an account (either from MetaMask or manual signature fallback)
+    if (!refreshing && connectedAccount) {
+      console.log('Loading pools...');
       setRefreshing(true);
     }
-  }, [contractReady, connectedAccount]);
+  }, [connectedAccount]);
 
   // Debug effect to log pools state changes
   useEffect(() => {
@@ -157,11 +158,11 @@ export const PoolsScreen = () => {
   // Enhanced join pool with two-step process
   const wrappedJoinPoolViaAPI = async (poolID: string, poolName: string) => {
     try {
-      if (!contractReady) {
+      if (!connectedAccount) {
         queueToast({
           type: 'error',
-          title: 'Contract Not Ready',
-          message: 'Please connect your wallet and wait for contract initialization',
+          title: 'Wallet Not Connected',
+          message: 'Please connect your wallet or sign manually',
         });
         return;
       }
@@ -192,8 +193,8 @@ export const PoolsScreen = () => {
           },
         ]
       );
-    } catch (e) {
-      handlePoolActionErrors('Error joining pool', e.toString());
+    } catch (e: any) {
+      handlePoolActionErrors('Error joining pool', e?.toString?.() || 'Unknown error');
     }
   };
 
@@ -643,7 +644,7 @@ export const PoolsScreen = () => {
       console.log('  - enableInteraction:', enableInteraction);
       console.log('  - hasInitialLoadCompleted:', hasInitialLoadCompleted);
 
-      if (contractReady && connectedAccount) {
+      if (connectedAccount) {
         console.log('✅ Prerequisites met, calling loadPools...');
         await loadPools();
         console.log('✅ Pools loaded, count:', pools.length);
@@ -657,7 +658,7 @@ export const PoolsScreen = () => {
           setHasInitialLoadCompleted(true);
         }
       } else {
-        console.log('❌ Cannot load pools - prerequisites not met:');
+        console.log('❌ Cannot load pools - no connected account');
         console.log('  - contractReady:', contractReady);
         console.log('  - connectedAccount:', connectedAccount);
 
@@ -666,18 +667,18 @@ export const PoolsScreen = () => {
         if (hasInitialLoadCompleted) {
           queueToast({
             type: 'warning',
-            title: 'Not Ready',
-            message: 'Please connect your wallet and wait for contract initialization',
+            title: 'Wallet Not Connected',
+            message: 'Please connect your wallet or sign manually to view pools',
           });
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       setIsError(true);
       console.error('Error getting pools: ', e);
       queueToast({
         type: 'error',
         title: 'Error getting pools',
-        message: e.toString(),
+        message: e?.toString?.() || 'Unknown error',
       });
       logger.logError('Pools::reloading', e);
       // Mark initial load as completed even on error

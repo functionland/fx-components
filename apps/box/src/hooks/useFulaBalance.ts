@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useContractIntegration } from './useContractIntegration';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { ethers } from 'ethers';
 import { getChainConfigByName } from '../contracts/config';
 import { FULA_TOKEN_ABI } from '../contracts/abis';
@@ -31,9 +32,12 @@ export const useFulaBalance = (account?: string) => {
   const { connectedAccount } = useContractIntegration();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const { account: metamaskAccount } = useSDK();
+  const manualSignatureWalletAddress = useUserProfileStore(
+    (state) => state.manualSignatureWalletAddress
+  );
 
   const loadBalance = useCallback(async () => {
-    const targetAccount = account || metamaskAccount || connectedAccount;
+    const targetAccount = account || metamaskAccount || connectedAccount || manualSignatureWalletAddress;
     if (!targetAccount) {
       setState(prev => ({ ...prev, error: 'No account available' }));
       return;
@@ -89,7 +93,7 @@ export const useFulaBalance = (account?: string) => {
         error: errorMessage,
       }));
     }
-  }, [selectedChain, account, metamaskAccount, connectedAccount]);
+  }, [selectedChain, account, metamaskAccount, connectedAccount, manualSignatureWalletAddress]);
 
   const refreshBalance = useCallback(() => {
     loadBalance();
@@ -97,21 +101,21 @@ export const useFulaBalance = (account?: string) => {
 
   // Load balance when dependencies change
   useEffect(() => {
-    if (account || metamaskAccount || connectedAccount) {
+    if (account || metamaskAccount || connectedAccount || manualSignatureWalletAddress) {
       loadBalance();
     }
-  }, [selectedChain, account, metamaskAccount, connectedAccount, loadBalance]);
+  }, [account, metamaskAccount, connectedAccount, manualSignatureWalletAddress, loadBalance]);
 
   // Auto-refresh balance every 30 seconds
   useEffect(() => {
-    if (!(account || metamaskAccount || connectedAccount)) return;
+    if (!(account || metamaskAccount || connectedAccount || manualSignatureWalletAddress)) return;
 
     const interval = setInterval(() => {
       loadBalance();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [account, metamaskAccount, connectedAccount, loadBalance]);
+  }, [account, metamaskAccount, connectedAccount, manualSignatureWalletAddress, loadBalance]);
 
   return {
     ...state,

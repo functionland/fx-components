@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useWalletConnection } from '../../hooks/useWalletConnection';
 import { useContractIntegration } from '../../hooks/useContractIntegration';
 import { useSDK } from '@metamask/sdk-react';
 import { useWalletNetwork } from '../../hooks/useWalletNetwork';
 import { WalletNotification } from '../../components/WalletNotification';
+import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import {
   FxBox,
   FxButton,
@@ -25,6 +26,8 @@ export const ChainSelectionScreen = () => {
   const [authCode, setAuthCode] = useState('');
   const [showAuthInput, setShowAuthInput] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const [isEditingWalletAddress, setIsEditingWalletAddress] = useState(false);
+  const [walletAddressInput, setWalletAddressInput] = useState('');
 
   // Wallet connection
   const { connected, account, connecting, connectWallet, disconnectWallet } = useWalletConnection();
@@ -38,8 +41,18 @@ export const ChainSelectionScreen = () => {
   // Network switching functionality
   const { ensureCorrectNetworkConnection } = useWalletNetwork();
 
+  // User profile for manual wallet address
+  const [manualSignatureWalletAddress, setManualSignatureWalletAddress] = useUserProfileStore(
+    (state) => [state.manualSignatureWalletAddress, state.setManualSignatureWalletAddress]
+  );
 
-  
+  // Initialize wallet address input from store
+  useEffect(() => {
+    if (manualSignatureWalletAddress) {
+      setWalletAddressInput(manualSignatureWalletAddress);
+    }
+  }, [manualSignatureWalletAddress]);
+
   const [
     selectedChain,
     baseAuthorized,
@@ -149,6 +162,112 @@ export const ChainSelectionScreen = () => {
             </FxButton>
           )}
         </FxBox>
+
+        {/* Wallet Account Display/Edit Section */}
+        <FxBox
+          marginTop="16"
+          padding="16"
+          backgroundColor="backgroundSecondary"
+          borderRadius="m"
+          marginBottom="16"
+        >
+          <FxBox flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom="12">
+            <FxText variant="bodyMediumRegular">
+              Wallet Account
+            </FxText>
+            {!connected && (
+              <FxButton
+                variant="inverted"
+                onPress={() => setIsEditingWalletAddress(!isEditingWalletAddress)}
+              >
+                {isEditingWalletAddress ? 'Cancel' : 'Edit'}
+              </FxButton>
+            )}
+          </FxBox>
+
+          {/* Display Mode - MetaMask Connected (Read-only) */}
+          {connected && account && (
+            <FxBox>
+              <FxText variant="bodyXSRegular" color="content2" marginBottom="4">
+                Connected via MetaMask
+              </FxText>
+              <FxText variant="bodySmallRegular" numberOfLines={1} ellipsizeMode="middle">
+                {account}
+              </FxText>
+            </FxBox>
+          )}
+
+          {/* Display Mode - Manual Signature Stored (Read-only) */}
+          {!connected && manualSignatureWalletAddress && !isEditingWalletAddress && (
+            <FxBox>
+              <FxText variant="bodyXSRegular" color="content2" marginBottom="4">
+                Manual Signature Wallet
+              </FxText>
+              <FxText variant="bodySmallRegular" numberOfLines={1} ellipsizeMode="middle">
+                {manualSignatureWalletAddress}
+              </FxText>
+            </FxBox>
+          )}
+
+          {/* Display Mode - No Account */}
+          {!connected && !manualSignatureWalletAddress && !isEditingWalletAddress && (
+            <FxBox>
+              <FxText variant="bodyXSRegular" color="content2">
+                No wallet connected. Connect MetaMask or enter a wallet address manually.
+              </FxText>
+            </FxBox>
+          )}
+
+          {/* Edit Mode - Manual Wallet Address Input */}
+          {!connected && isEditingWalletAddress && (
+            <FxBox>
+              <FxTextInput
+                placeholder="0x..."
+                caption="Wallet Address"
+                value={walletAddressInput}
+                onChangeText={setWalletAddressInput}
+                marginBottom="12"
+              />
+              <FxBox flexDirection="row" justifyContent="space-between">
+                <FxButton
+                  variant="inverted"
+                  onPress={() => {
+                    setIsEditingWalletAddress(false);
+                    setWalletAddressInput(manualSignatureWalletAddress || '');
+                  }}
+                  flex={1}
+                  marginRight="8"
+                >
+                  Cancel
+                </FxButton>
+                <FxButton
+                  onPress={() => {
+                    if (walletAddressInput && walletAddressInput.startsWith('0x')) {
+                      setManualSignatureWalletAddress(walletAddressInput);
+                      setIsEditingWalletAddress(false);
+                      queueToast({
+                        type: 'success',
+                        title: 'Wallet Address Saved',
+                        message: 'Your wallet address has been saved',
+                      });
+                    } else {
+                      queueToast({
+                        type: 'error',
+                        title: 'Invalid Address',
+                        message: 'Please enter a valid Ethereum address starting with 0x',
+                      });
+                    }
+                  }}
+                  flex={1}
+                  marginLeft="8"
+                  disabled={!walletAddressInput || !walletAddressInput.startsWith('0x')}
+                >
+                  Save
+                </FxButton>
+              </FxBox>
+            </FxBox>
+          )}
+        </FxBox>
         
         {/* Wallet Notification for user-initiated network switching */}
         <WalletNotification compact={true} />
@@ -161,7 +280,7 @@ export const ChainSelectionScreen = () => {
           {/* Chain Selection Radio Group */}
           <FxRadioButton.Group
             value={selectedChain}
-            onValueChange={(val) => handleChainSelection(val as SupportedChain)}
+            onValueChange={(val: any) => handleChainSelection(val as SupportedChain)}
           >
             {/* SKALE Option */}
             <FxBox
