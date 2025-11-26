@@ -451,23 +451,20 @@ export const LinkPasswordScreen = () => {
                 <>
                   <FxButton
                     size="large"
-                    disabled={!passwordInput || !iKnow || !metamaskOpen}
+                    disabled={!passwordInput || !iKnow || !metamaskOpen || !provider}
                     onPress={
-                      provider
-                        ? linking
-                          ? disconnectWallet
-                          : handleLinkPassword
-                        : () => {}
+                      linking
+                        ? disconnectWallet
+                        : handleLinkPassword
                     }
                   >
-                    {provider ? (
-                      linking ? (
-                        t('linkPassword.cancel')
-                      ) : (
-                        t('linkPassword.signWithMetamask')
-                      )
+                    {linking ? (
+                      <>
+                        <ActivityIndicator />
+                        <FxText marginLeft="8">{t('linkPassword.cancel')}</FxText>
+                      </>
                     ) : (
-                      <ActivityIndicator />
+                      t('linkPassword.signWithMetamask')
                     )}
                   </FxButton>
                   <FxSpacer height={10} />

@@ -9,7 +9,7 @@ import {
   FxButton,
   useToast,
 } from '@functionland/component-library';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, Linking } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFulaBalance, useFormattedFulaBalance } from '../../hooks/useFulaBalance';
 import { useClaimableTokens } from '../../hooks/useClaimableTokens';
@@ -93,22 +93,15 @@ export const EarningCard = ({
     onRefreshPress?.();
   };
 
-  // Handler for claiming tokens
-  const handleClaimTokens = async () => {
+  // Handler for opening claim web portal
+  const handleOpenClaimPortal = async () => {
     try {
-      await claimTokens();
-      queueToast({
-        type: 'success',
-        title: t('earningCard.rewardsClaimed'),
-        message: t('earningCard.rewardsClaimedMessage', { amount: formattedTotalUnclaimed }),
-      });
-      // Refresh balance after claiming
-      refreshBalance();
+      await Linking.openURL('https://claim-web.fula.network');
     } catch (error: any) {
       queueToast({
         type: 'error',
         title: t('earningCard.claimFailed'),
-        message: typeof error === 'object' && 'message' in error ? error.message : t('earningCard.claimFailedMessage'),
+        message: 'Unable to open claim portal',
       });
     }
   };
@@ -188,13 +181,12 @@ export const EarningCard = ({
         </FxCard.Row.Data>
       </FxCard.Row>
 
-      {canClaim && (
+      {(account || manualSignatureWalletAddress) && (
         <FxBox marginTop="12">
           <FxButton
-            onPress={handleClaimTokens}
-            disabled={claimableLoading || !canClaim}
+            onPress={handleOpenClaimPortal}
           >
-            {claimableLoading ? t('earningCard.claiming') : t('earningCard.claimRewards')}
+            {t('earningCard.claimRewards')}
           </FxButton>
         </FxBox>
       )}

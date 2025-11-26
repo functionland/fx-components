@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { usePools } from './usePools';
+import { usePoolsWithFallback } from './usePoolsWithFallback';
 import { useWalletConnection } from './useWalletConnection';
+import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { Routes } from '../navigation/navigationConfig';
 
 export interface Task {
@@ -23,8 +24,11 @@ export interface TasksState {
 export const useTasksLogic = () => {
   const { t } = useTranslation('tasks');
   const navigation = useNavigation();
-  const { userIsMemberOfAnyPool, userActiveRequests } = usePools();
+  const { userIsMemberOfAnyPool, userActiveRequests } = usePoolsWithFallback();
   const { connected, connectWallet } = useWalletConnection();
+  const manualSignatureWalletAddress = useUserProfileStore(
+    (state) => state.manualSignatureWalletAddress
+  );
 
   const [state, setState] = useState<TasksState>({
     tasks: [],
@@ -46,20 +50,23 @@ export const useTasksLogic = () => {
     userActiveRequests.length > 0 &&
     userActiveRequests[0] !== '0';
 
+  // Determine if wallet is connected (either MetaMask or manual signature)
+  const hasWallet = connected || !!manualSignatureWalletAddress;
+
   // Generate tasks based on current state
   const generateTasks = useCallback((): Task[] => {
     const tasks: Task[] = [
       {
         id: 'connect-wallet',
         title: t('connectWallet'),
-        route: connected ? undefined : connectWallet,
-        isCompleted: connected,
+        route: hasWallet ? undefined : connectWallet,
+        isCompleted: hasWallet,
       },
       {
         id: 'join-pool',
         title: hasPendingRequest ? t('joinPoolPending') : t('joinPool'),
         route:
-          connected && !userIsMemberOfAnyPool && !hasPendingRequest
+          hasWallet && !userIsMemberOfAnyPool && !hasPendingRequest
             ? handleNavigateToPools
             : undefined,
         isCompleted: userIsMemberOfAnyPool,
@@ -70,7 +77,7 @@ export const useTasksLogic = () => {
     return tasks;
   }, [
     t,
-    connected,
+    hasWallet,
     userIsMemberOfAnyPool,
     hasPendingRequest,
     connectWallet,

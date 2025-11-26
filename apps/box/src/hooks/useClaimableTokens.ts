@@ -41,7 +41,8 @@ export const useClaimableTokens = () => {
   });
 
   // Determine effective account (MetaMask or manual signature)
-  const effectiveAccount = connectedAccount || manualSignatureWalletAddress;
+  // When MetaMask is ready, use connectedAccount. Otherwise use manual signature as fallback.
+  const effectiveAccount = isReady ? connectedAccount : (connectedAccount || manualSignatureWalletAddress);
   const useReadOnlyService = !isReady && !!manualSignatureWalletAddress;
 
   const fetchClaimableTokens = useCallback(async () => {
@@ -165,9 +166,14 @@ export const useClaimableTokens = () => {
       console.error('Error fetching claimable rewards:', error);
 
       let errorMessage = 'Failed to fetch claimable rewards';
+      let shouldShowError = true;
 
-      // Handle specific network errors
-      if (error.message?.includes('underlying network changed')) {
+      // Handle specific errors
+      if (error.message?.includes('NotPoolMember') || error.errorName === 'NotPoolMember') {
+        // User is not a member of the pool - show 0 rewards without error
+        console.log('⚠️ Account is not a member of the pool, showing 0 rewards');
+        shouldShowError = false;
+      } else if (error.message?.includes('underlying network changed')) {
         errorMessage = 'Network changed during operation. Please refresh and try again.';
       } else if (error.message?.includes('timeout')) {
         errorMessage = 'Request timed out. Please try again.';
@@ -184,7 +190,7 @@ export const useClaimableTokens = () => {
         lastClaimedTimestamp: 0,
         timeSinceLastClaim: 0,
         loading: false,
-        error: errorMessage,
+        error: shouldShowError ? errorMessage : null,
         canClaim: false,
       });
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
+import { Alert, ScrollView } from 'react-native';
 import { useWalletConnection } from '../../hooks/useWalletConnection';
 import { useContractIntegration } from '../../hooks/useContractIntegration';
 import { useSDK } from '@metamask/sdk-react';
@@ -134,8 +134,9 @@ export const ChainSelectionScreen = () => {
 
   return (
     <FxSafeAreaBox flex={1} edges={['top']}>
-      <FxBox paddingHorizontal="20" paddingVertical="12">
-        <FxHeader title="Chain Selection" />
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={true}>
+        <FxBox paddingHorizontal="20" paddingVertical="12">
+          <FxHeader title="Chain Selection" />
 
         {/* Wallet Connect/Disconnect Button */}
         <FxBox marginTop="16" marginBottom="8" flexDirection="row" alignItems="center">
@@ -153,6 +154,10 @@ export const ChainSelectionScreen = () => {
                 {account}
               </FxText>
             </>
+          ) : manualSignatureWalletAddress ? (
+            <FxText variant="bodyXSRegular" color="content2">
+              Manual wallet stored
+            </FxText>
           ) : (
             <FxButton
               onPress={connectWallet}
@@ -175,7 +180,7 @@ export const ChainSelectionScreen = () => {
             <FxText variant="bodyMediumRegular">
               Wallet Account
             </FxText>
-            {!connected && (
+            {!account && (
               <FxButton
                 variant="inverted"
                 onPress={() => setIsEditingWalletAddress(!isEditingWalletAddress)}
@@ -186,7 +191,7 @@ export const ChainSelectionScreen = () => {
           </FxBox>
 
           {/* Display Mode - MetaMask Connected (Read-only) */}
-          {connected && account && (
+          {account && (
             <FxBox>
               <FxText variant="bodyXSRegular" color="content2" marginBottom="4">
                 Connected via MetaMask
@@ -198,7 +203,7 @@ export const ChainSelectionScreen = () => {
           )}
 
           {/* Display Mode - Manual Signature Stored (Read-only) */}
-          {!connected && manualSignatureWalletAddress && !isEditingWalletAddress && (
+          {!account && manualSignatureWalletAddress && !isEditingWalletAddress && (
             <FxBox>
               <FxText variant="bodyXSRegular" color="content2" marginBottom="4">
                 Manual Signature Wallet
@@ -210,7 +215,7 @@ export const ChainSelectionScreen = () => {
           )}
 
           {/* Display Mode - No Account */}
-          {!connected && !manualSignatureWalletAddress && !isEditingWalletAddress && (
+          {!account && !manualSignatureWalletAddress && !isEditingWalletAddress && (
             <FxBox>
               <FxText variant="bodyXSRegular" color="content2">
                 No wallet connected. Connect MetaMask or enter a wallet address manually.
@@ -219,7 +224,7 @@ export const ChainSelectionScreen = () => {
           )}
 
           {/* Edit Mode - Manual Wallet Address Input */}
-          {!connected && isEditingWalletAddress && (
+          {!account && isEditingWalletAddress && (
             <FxBox>
               <FxTextInput
                 placeholder="0x..."
@@ -398,7 +403,8 @@ export const ChainSelectionScreen = () => {
             </FxText>
           </FxBox>
         </FxBox>
-      </FxBox>
+        </FxBox>
+      </ScrollView>
     </FxSafeAreaBox>
   );
 };

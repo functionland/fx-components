@@ -492,7 +492,7 @@ export const BloxScreen = () => {
         ref={bloxInfoBottomSheetRef}
         bloxInfo={bloxs[currentBloxPeerId]}
         onBloxRemovePress={handleOnBloxRemovePress}
-        onRestToHotspotPress={handleOnResetToHotspotPress}
+        onResetToHotspotPress={handleOnResetToHotspotPress}
         onRebootBloxPress={handleOnRebootBloxPress}
         onClearCachePress={handleOnClearCachePress}
         resetingBloxHotspot={resetingBloxHotspot}

@@ -59,7 +59,8 @@ export const usePoolsWithFallback = () => {
 
   // Determine which account to use and which service to use
   const effectiveAccount = metamaskAccount || manualSignatureWalletAddress;
-  const useReadOnlyService = !connected && !!manualSignatureWalletAddress;
+  // Use read-only service when MetaMask account is not available but manual signature wallet is
+  const useReadOnlyService = !metamaskAccount && !!manualSignatureWalletAddress;
 
   console.log('usePoolsWithFallback state:', {
     hasHydrated,
