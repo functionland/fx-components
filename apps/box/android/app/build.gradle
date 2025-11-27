@@ -82,8 +82,8 @@ android {
         applicationId "land.fx.blox"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 245
-        versionName "2.2.0"
+        versionCode 246
+        versionName "2.2.1"
         // buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
              
         testBuildType System.getProperty('testBuildType', 'debug')

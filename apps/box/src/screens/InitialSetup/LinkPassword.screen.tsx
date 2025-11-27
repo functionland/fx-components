@@ -475,7 +475,7 @@ export const LinkPasswordScreen = () => {
               <FxButton
                 size="large"
                 disabled={
-                  !passwordInput || !iKnow || (manualSignature && (!mSig || !walletAddressInput))
+                  !passwordInput || !iKnow || (manualSignature && !!mSig && !walletAddressInput)
                 }
                 onPress={handleManualSignatureButtonPress}
                 variant="inverted"
