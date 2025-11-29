@@ -33,7 +33,7 @@
       "reconnectExisting": "Reconnect to existing blox",
       "bluetoothCommands": "Bluetooth commands",
       "skipManualSetup": "Skip to manual setup",
-      "existingIdentity": "Existing Identity Found",
+      "existingIdentity": "Generated Identity",
       "continueWithExisting": "Continue",
       "clearCachedData": "Reset Identity",
       "cachedDataCleared": "Identity has been reset successfully"

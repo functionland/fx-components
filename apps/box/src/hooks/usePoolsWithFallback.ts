@@ -57,10 +57,8 @@ export const usePoolsWithFallback = () => {
     userActiveRequests: [],
   });
 
-  // Determine which account to use and which service to use
+  // Determine which account to use - always use RPC service for read operations
   const effectiveAccount = metamaskAccount || manualSignatureWalletAddress;
-  // Use read-only service when MetaMask account is not available but manual signature wallet is
-  const useReadOnlyService = !metamaskAccount && !!manualSignatureWalletAddress;
 
   console.log('usePoolsWithFallback state:', {
     hasHydrated,
@@ -68,17 +66,14 @@ export const usePoolsWithFallback = () => {
     manualSignatureWalletAddress,
     connected,
     effectiveAccount,
-    useReadOnlyService,
   });
 
   /**
-   * Check user membership using either contractService or poolReadService
+   * Check user membership using direct RPC calls via poolReadService
    */
   const checkUserMembership = useCallback(async () => {
     console.log('checkUserMembership', {
-      useReadOnlyService,
       effectiveAccount,
-      contractService: !!contractService,
     });
 
     if (!effectiveAccount) {
@@ -90,37 +85,17 @@ export const usePoolsWithFallback = () => {
     }
 
     try {
-      if (useReadOnlyService) {
-        // Use read-only service when MetaMask is not connected
-        const poolReadService = getPoolReadService(selectedChain);
-        const userPoolInfo = await poolReadService.getUserPoolInfo(
-          effectiveAccount,
-          currentBloxPeerId
-        );
-
-        return {
-          isMemberOfAnyPool: userPoolInfo.poolId !== '0' && userPoolInfo.poolId !== '',
-          memberPools: userPoolInfo.poolId !== '0' && userPoolInfo.poolId !== '' ? [userPoolInfo.poolId] : [],
-          activeRequests: userPoolInfo.requestPoolId !== '0' && userPoolInfo.requestPoolId !== '' ? [userPoolInfo.requestPoolId] : [],
-        };
-      } else if (isReady && contractService && connected) {
-        // Use contract service when MetaMask is connected
-        const { poolId, requestPoolId } = await contractService.getUserPool(
-          effectiveAccount,
-          currentBloxPeerId
-        );
-
-        return {
-          isMemberOfAnyPool: poolId !== '0' && poolId !== '',
-          memberPools: poolId !== '0' && poolId !== '' ? [poolId] : [],
-          activeRequests: requestPoolId !== '0' && requestPoolId !== '' ? [requestPoolId] : [],
-        };
-      }
+      // Always use read-only service for reliable direct RPC calls
+      const poolReadService = getPoolReadService(selectedChain);
+      const userPoolInfo = await poolReadService.getUserPoolInfo(
+        effectiveAccount,
+        currentBloxPeerId
+      );
 
       return {
-        isMemberOfAnyPool: false,
-        memberPools: [],
-        activeRequests: [],
+        isMemberOfAnyPool: userPoolInfo.poolId !== '0' && userPoolInfo.poolId !== '',
+        memberPools: userPoolInfo.poolId !== '0' && userPoolInfo.poolId !== '' ? [userPoolInfo.poolId] : [],
+        activeRequests: userPoolInfo.requestPoolId !== '0' && userPoolInfo.requestPoolId !== '' ? [userPoolInfo.requestPoolId] : [],
       };
     } catch (error) {
       console.error('Error checking user membership:', error);
@@ -130,43 +105,25 @@ export const usePoolsWithFallback = () => {
         activeRequests: [],
       };
     }
-  }, [useReadOnlyService, effectiveAccount, contractService, isReady, connected, selectedChain, currentBloxPeerId]);
+  }, [effectiveAccount, selectedChain, currentBloxPeerId]);
 
   /**
-   * Load pools using either contractService or poolReadService
+   * Load pools using direct RPC calls via poolReadService
    */
   const loadPools = useCallback(async () => {
     console.log('loadPools called', {
-      useReadOnlyService,
       effectiveAccount,
-      isReady,
-      contractService: !!contractService,
-      isOnCorrectNetwork,
     });
 
-    // If using read-only service, we don't need to check network or contract readiness
-    if (!useReadOnlyService) {
-      // For MetaMask-connected flow, require all prerequisites
-      if (!isReady || !contractService || !effectiveAccount || !isOnCorrectNetwork) {
-        console.log('loadPools: Prerequisites not met for contract service');
-        setState((prev) => ({
-          ...prev,
-          enableInteraction: false,
-          loading: false,
-        }));
-        return;
-      }
-    } else {
-      // For read-only service, only need effective account
-      if (!effectiveAccount) {
-        console.log('loadPools: No effective account available');
-        setState((prev) => ({
-          ...prev,
-          enableInteraction: false,
-          loading: false,
-        }));
-        return;
-      }
+    // For read-only RPC service, only need effective account
+    if (!effectiveAccount) {
+      console.log('loadPools: No effective account available');
+      setState((prev) => ({
+        ...prev,
+        enableInteraction: false,
+        loading: false,
+      }));
+      return;
     }
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
@@ -175,18 +132,10 @@ export const usePoolsWithFallback = () => {
       console.log('🔍 loadPools: Starting...');
       console.log('🔍 effectiveAccount:', effectiveAccount);
       console.log('🔍 currentBloxPeerId:', currentBloxPeerId);
-      console.log('🔍 useReadOnlyService:', useReadOnlyService);
 
-      let poolList: PoolInfo[];
-
-      if (useReadOnlyService) {
-        // Use read-only service
-        const poolReadService = getPoolReadService(selectedChain);
-        poolList = await poolReadService.listPools(0, 25);
-      } else {
-        // Use contract service
-        poolList = await contractService!.listPools(0, 25);
-      }
+      // Always use read-only service for reliable direct RPC calls
+      const poolReadService = getPoolReadService(selectedChain);
+      const poolList: PoolInfo[] = await poolReadService.listPools(0, 25);
 
       console.log('🔍 Pools received:', poolList?.length);
 
@@ -213,18 +162,12 @@ export const usePoolsWithFallback = () => {
 
       try {
         console.log('🔍 Getting user pool info...');
-        if (useReadOnlyService) {
-          const poolReadService = getPoolReadService(selectedChain);
-          userPool = await poolReadService.getUserPoolInfo(
-            effectiveAccount,
-            currentBloxPeerId
-          );
-        } else {
-          userPool = await contractService!.getUserPool(
-            effectiveAccount,
-            currentBloxPeerId
-          );
-        }
+        // Always use read-only service for reliable direct RPC calls
+        const poolReadService = getPoolReadService(selectedChain);
+        userPool = await poolReadService.getUserPoolInfo(
+          effectiveAccount,
+          currentBloxPeerId
+        );
 
         console.log('🔍 User pool result:', userPool);
 
@@ -235,19 +178,12 @@ export const usePoolsWithFallback = () => {
         } else if (userPool && userPool.requestPoolId !== '0') {
           poolIdOfInterest = userPool.requestPoolId;
           try {
-            let joinRequestInfo;
-            if (useReadOnlyService) {
-              const poolReadService = getPoolReadService(selectedChain);
-              joinRequestInfo = await poolReadService.getJoinRequest(
-                userPool.requestPoolId,
-                effectiveAccount
-              );
-            } else {
-              joinRequestInfo = await contractService!.getJoinRequest(
-                userPool.requestPoolId,
-                effectiveAccount
-              );
-            }
+            // Always use read-only service for reliable direct RPC calls
+            const poolReadService = getPoolReadService(selectedChain);
+            const joinRequestInfo = await poolReadService.getJoinRequest(
+              userPool.requestPoolId,
+              effectiveAccount
+            );
             console.log('Join request info:', joinRequestInfo);
             numVotes = joinRequestInfo.positive_votes + joinRequestInfo.negative_votes;
             requested = true;
@@ -314,7 +250,7 @@ export const usePoolsWithFallback = () => {
         enableInteraction: false,
       }));
     }
-  }, [useReadOnlyService, effectiveAccount, isReady, contractService, isOnCorrectNetwork, selectedChain, currentBloxPeerId, checkUserMembership]);
+  }, [effectiveAccount, selectedChain, currentBloxPeerId, checkUserMembership]);
 
   /**
    * Join pool via API - works with both MetaMask and manual signature
@@ -460,29 +396,12 @@ export const usePoolsWithFallback = () => {
     [effectiveAccount, currentBloxPeerId, selectedChain, loadPools]
   );
 
-  // Load pools when conditions are met
-  useEffect(() => {
-    if (useReadOnlyService) {
-      // For read-only service, load when we have effective account
-      if (effectiveAccount) {
-        loadPools();
-      }
-    } else {
-      // For contract service, load when contract is ready and on correct network
-      if (isReady && isOnCorrectNetwork) {
-        loadPools();
-      }
-    }
-  }, [useReadOnlyService, effectiveAccount, isReady, isOnCorrectNetwork, loadPools]);
-
-  // Refresh pools when account changes
+  // Load pools when we have an effective account
   useEffect(() => {
     if (effectiveAccount) {
-      if (useReadOnlyService || (isReady && isOnCorrectNetwork)) {
-        loadPools();
-      }
+      loadPools();
     }
-  }, [effectiveAccount, useReadOnlyService, isReady, isOnCorrectNetwork, loadPools]);
+  }, [effectiveAccount, loadPools]);
 
   return {
     ...state,
