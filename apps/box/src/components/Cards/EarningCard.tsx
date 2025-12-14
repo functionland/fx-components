@@ -103,16 +103,17 @@ export const EarningCard = ({
   const handleOpenClaimPortal = async () => {
     try {
       // Build the claim URL with network and peerId parameters
-      const claimBaseUrl = 'https://claim-web.fula.network';
+      // MetaMask deep link expects domain without protocol (no https://)
+      const claimDomain = 'claim-web.fula.network';
       const params = new URLSearchParams();
       params.append('network', selectedChain);
       if (currentBloxPeerId) {
         params.append('peerId', currentBloxPeerId);
       }
-      const claimUrl = `${claimBaseUrl}?${params.toString()}`;
       
-      // Wrap in MetaMask deep link to open in MetaMask browser
-      const metamaskDeepLink = `https://metamask.app.link/dapp/${encodeURIComponent(claimUrl)}`;
+      // MetaMask deep link format: https://metamask.app.link/dapp/{domain}?{params}
+      // Do NOT URL encode - MetaMask expects raw URL after /dapp/
+      const metamaskDeepLink = `https://metamask.app.link/dapp/${claimDomain}?${params.toString()}`;
       
       await Linking.openURL(metamaskDeepLink);
     } catch (error: any) {
