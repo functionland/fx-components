@@ -14,6 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { useFulaBalance, useFormattedFulaBalance } from '../../hooks/useFulaBalance';
 import { useClaimableTokens } from '../../hooks/useClaimableTokens';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
+import { useSettingsStore } from '../../stores/useSettingsStore';
+import { useBloxsStore } from '../../stores/useBloxsStore';
 
 type EarningCardProps = React.ComponentProps<typeof FxBox> & {
   data: { totalFula: string };
@@ -49,6 +51,10 @@ export const EarningCard = ({
   const manualSignatureWalletAddress = useUserProfileStore(
     (state) => state.manualSignatureWalletAddress
   );
+
+  // Get selected chain and current Blox peerId for claim portal
+  const selectedChain = useSettingsStore((state) => state.selectedChain);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
 
   // Use claimable rewards hook
   const {
@@ -93,10 +99,22 @@ export const EarningCard = ({
     onRefreshPress?.();
   };
 
-  // Handler for opening claim web portal
+  // Handler for opening claim web portal in MetaMask browser
   const handleOpenClaimPortal = async () => {
     try {
-      await Linking.openURL('https://claim-web.fula.network');
+      // Build the claim URL with network and peerId parameters
+      const claimBaseUrl = 'https://claim-web.fula.network';
+      const params = new URLSearchParams();
+      params.append('network', selectedChain);
+      if (currentBloxPeerId) {
+        params.append('peerId', currentBloxPeerId);
+      }
+      const claimUrl = `${claimBaseUrl}?${params.toString()}`;
+      
+      // Wrap in MetaMask deep link to open in MetaMask browser
+      const metamaskDeepLink = `https://metamask.app.link/dapp/${encodeURIComponent(claimUrl)}`;
+      
+      await Linking.openURL(metamaskDeepLink);
     } catch (error: any) {
       queueToast({
         type: 'error',
