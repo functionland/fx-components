@@ -9,6 +9,24 @@ jobs:
   deploy-android:
     runs-on: ubuntu-latest
     steps:
+    - name: Free Disk Space
+      run: |
+        echo "Disk space before cleanup:"
+        df -h
+        # Remove unused software to free up space
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android/sdk/ndk
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /opt/hostedtoolcache/CodeQL
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf /usr/share/swift
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        # Remove Docker images
+        sudo docker image prune --all --force || true
+        # Clean apt cache
+        sudo apt-get clean
+        echo "Disk space after cleanup:"
+        df -h
     - uses: actions/checkout@v4
     - name: Setup Node.js
       uses: actions/setup-node@v3
@@ -53,11 +71,14 @@ jobs:
       run: |
         cd ${{ github.workspace }}/apps/box/android
         chmod +x gradlew
-        ./gradlew bundleRelease -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/apps/box/android/app/signingKey.jks -Pandroid.injected.signing.store.password=$KEY_STORE_PASSWORD -Pandroid.injected.signing.key.alias=$KEY_ALIAS -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+        # Clean before build to ensure fresh state
+        ./gradlew clean
+        ./gradlew bundleRelease -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/apps/box/android/app/signingKey.jks -Pandroid.injected.signing.store.password=$KEY_STORE_PASSWORD -Pandroid.injected.signing.key.alias=$KEY_ALIAS -Pandroid.injected.signing.key.password=$KEY_PASSWORD --no-daemon
       env:
         KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError"'
     
     - name: List Directory
       run: ls -la ${{ github.workspace }}/apps/box/android/app/build/outputs/bundle/release
