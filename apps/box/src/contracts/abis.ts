@@ -3888,6 +3888,35 @@ export const REWARD_ENGINE_ABI = [
         "type": "uint32"
       }
     ],
+    "name": "calculateEligibleMiningRewardsV2",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "eligibleRewards",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "peerId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "poolId",
+        "type": "uint32"
+      }
+    ],
     "name": "calculateEligibleStorageRewards",
     "outputs": [
       {
@@ -3926,6 +3955,47 @@ export const REWARD_ENGINE_ABI = [
       }
     ],
     "name": "claimRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "peerId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "poolId",
+        "type": "uint32"
+      }
+    ],
+    "name": "claimRewardsV2",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "peerId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "poolId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxPeriods",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimRewardsWithLimitV2",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -4072,6 +4142,84 @@ export const REWARD_ENGINE_ABI = [
       {
         "internalType": "uint256",
         "name": "timeSinceLastClaim",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "peerId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "poolId",
+        "type": "uint32"
+      }
+    ],
+    "name": "getClaimStatusV2",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalUnclaimedPeriods",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "defaultPeriodsPerClaim",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxPeriodsPerClaim",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "estimatedClaimsNeeded",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "hasMoreToClaim",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "getRewardStatistics",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalClaimed",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalDistributed",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "claimPercentage",
         "type": "uint256"
       }
     ],

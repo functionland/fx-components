@@ -1081,9 +1081,9 @@ export class ContractService {
       const rewardEngineAddress = chainConfig.contracts.rewardEngine;
       const iface = this.rewardEngineContract.interface;
       
-      console.log('🔧 claimRewardsForPeer: Encoding function data...');
+      console.log('🔧 claimRewardsForPeer: Encoding function data for claimRewardsV2...');
       const data = iface.encodeFunctionData(
-        "claimRewards(bytes32,uint32)",
+        "claimRewardsV2(bytes32,uint32)",
         [peerIdBytes32, Number(poolId)]
       );
       
@@ -1172,56 +1172,51 @@ export class ContractService {
   }
 
   // Reward Methods
+  // DEPRECATED: Use claimRewardsForPeer(peerId, poolId) instead - V2 contract requires peerId
   async claimRewards(poolId: string): Promise<void> {
-    try {
-      if (!this.rewardEngineContract) throw new Error('Contract not initialized');
-      
-      const tx = await this.rewardEngineContract.claimRewards(poolId, {
-        gasLimit: METHOD_GAS_LIMITS.claimRewards,
-      });
-      
-      await tx.wait();
-    } catch (error) {
-      throw this.handleError(error);
-    }
+    console.warn('claimRewards(poolId) is DEPRECATED. Use claimRewardsForPeer(peerId, poolId) instead.');
+    throw new Error('claimRewards(poolId) is deprecated in V2 contract. Use claimRewardsForPeer(peerId, poolId) instead.');
   }
 
+  // DEPRECATED: getRewards does not exist in V2 contract
+  // Use getUnclaimedRewards(account, peerId, poolId) or getClaimedRewardsInfo(account, peerId, poolId) instead
   async getRewards(account: string, poolId: string): Promise<RewardInfo> {
-    try {
-      if (!this.rewardEngineContract) throw new Error('Contract not initialized');
-      
-      const reward = await this.rewardEngineContract.getRewards(account, poolId);
-      return {
-        account: reward.account,
-        poolId: reward.poolId.toString(),
-        amount: ethers.utils.formatEther(reward.amount),
-        lastClaimEpoch: reward.lastClaimEpoch.toNumber(),
-      };
-    } catch (error) {
-      throw this.handleError(error);
-    }
+    console.warn('getRewards is DEPRECATED and not available in V2 contract. Use getUnclaimedRewards or getClaimedRewardsInfo instead.');
+    // Return empty/default values for backward compatibility
+    return {
+      account: account,
+      poolId: poolId,
+      amount: '0',
+      lastClaimEpoch: 0,
+    };
   }
 
+  // Get total rewards claimed by an account using V2 getRewardStatistics
   async getTotalRewards(account: string): Promise<string> {
     try {
-      if (!this.rewardEngineContract) throw new Error('Contract not initialized');
+      if (!this.readOnlyProvider) throw new Error('Read-only provider not initialized');
       
-      const total = await this.rewardEngineContract.getTotalRewards(account);
-      return ethers.utils.formatEther(total);
+      const chainConfig = getChainConfigByName(this.chain);
+      const readOnlyRewardContract = new ethers.Contract(
+        chainConfig.contracts.rewardEngine,
+        REWARD_ENGINE_ABI,
+        this.readOnlyProvider
+      );
+      
+      // V2 uses getRewardStatistics which returns (totalClaimed, totalDistributed, claimPercentage)
+      const result = await readOnlyRewardContract.getRewardStatistics(account);
+      return ethers.utils.formatEther(result.totalClaimed || result[0] || 0);
     } catch (error) {
+      console.error('getTotalRewards error:', error);
       throw this.handleError(error);
     }
   }
 
+  // DEPRECATED: Use getUnclaimedRewards(account, peerId, poolId) instead - V2 requires peerId
   async getClaimableRewards(account: string, poolId: string): Promise<string> {
-    try {
-      if (!this.rewardEngineContract) throw new Error('Contract not initialized');
-      
-      const claimable = await this.rewardEngineContract.getClaimableRewards(account, poolId);
-      return ethers.utils.formatEther(claimable);
-    } catch (error) {
-      throw this.handleError(error);
-    }
+    console.warn('getClaimableRewards(account, poolId) is DEPRECATED. Use getUnclaimedRewards(account, peerId, poolId) instead.');
+    // Return '0' for backward compatibility - callers should migrate to getUnclaimedRewards
+    return '0';
   }
 
   // User Membership Methods
