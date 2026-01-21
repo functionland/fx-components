@@ -19,7 +19,7 @@ import { Routes } from '../../navigation/navigationConfig';
 import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
-import { ActivityIndicator, ScrollView, Linking } from 'react-native';
+import { ActivityIndicator, ScrollView, Linking, Platform, Alert } from 'react-native';
 import { useSDK } from '@metamask/sdk-react';
 import notifee from '@notifee/react-native';
 import { useTranslation } from 'react-i18next'; // Import for translations
@@ -40,6 +40,7 @@ export const LinkPasswordScreen = () => {
   const [mSig, setMSig] = useState('');
   const [walletAddressInput, setWalletAddressInput] = useState('');
   const [identityReset, setIdentityReset] = useState(false);
+  const [appStorageCleared, setAppStorageCleared] = useState(false);
   const setKeyChainValue = useUserProfileStore((state) => state.setKeyChainValue);
   const signiture = useUserProfileStore((state) => state.signiture);
   const password = useUserProfileStore((state) => state.password);
@@ -129,6 +130,23 @@ export const LinkPasswordScreen = () => {
             },
         });
 
+        // Check if SDK connection is in a bad state (terminated/disconnected)
+        // and reset it before attempting to connect
+        const currentStatus = status?.connectionStatus;
+        console.log('Current SDK connection status:', currentStatus);
+
+        if (currentStatus === 'terminated' || currentStatus === 'disconnected' || !connected) {
+          console.log('SDK in bad state, resetting connection...');
+          try {
+            // Disconnect first to clean up any stale state
+            await sdk?.disconnect();
+            // Small delay to let the SDK reset
+            await new Promise(resolve => setTimeout(resolve, 300));
+          } catch (e) {
+            console.log('Reset disconnect error (non-fatal):', e);
+          }
+        }
+
         // Get provider
         const provider = await sdk?.getProvider();
         if (!provider) {
@@ -186,12 +204,20 @@ export const LinkPasswordScreen = () => {
 };
 
 
-  const disconnectWallet = () => {
+  const disconnectWallet = async () => {
     notifee.stopForegroundService();
     setLinking(false);
-    sdk?.terminate();
-
-    console.log('sdk terminated');
+    // Use disconnect instead of terminate - terminate makes the SDK unusable
+    // until the app is restarted
+    try {
+      // Clean up provider listeners first
+      const provider = await sdk?.getProvider();
+      provider?.removeAllListeners?.();
+      await sdk?.disconnect();
+      console.log('sdk disconnected');
+    } catch (e) {
+      console.log('sdk disconnect error (non-fatal):', e);
+    }
   };
 
   const logger = useLogger();
@@ -247,7 +273,15 @@ export const LinkPasswordScreen = () => {
         type: 'error',
         autoHideDuration: 3000,
       });
-      setLinking(false);
+      // Reset SDK state on error to allow retry
+      try {
+        const provider = await sdk?.getProvider();
+        provider?.removeAllListeners?.();
+        await sdk?.disconnect();
+        console.log('SDK reset after error');
+      } catch (e) {
+        console.log('SDK reset error (non-fatal):', e);
+      }
     } finally {
       setLinking(false);
     }
@@ -283,6 +317,42 @@ export const LinkPasswordScreen = () => {
       setManualSignatureWalletAddress(walletAddressInput);
     }
     Linking.openURL('https://fxblox.fx.land');
+  };
+
+  const handleClearAppStorage = () => {
+    Alert.alert(
+      t('linkPassword.clearAppStorageTitle'),
+      t('linkPassword.clearAppStorageMessage'),
+      [
+        {
+          text: t('linkPassword.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('linkPassword.openSettings'),
+          onPress: async () => {
+            try {
+              if (Platform.OS === 'android') {
+                // Open app details settings on Android
+                await Linking.openSettings();
+              } else {
+                // Open app settings on iOS
+                await Linking.openSettings();
+              }
+              // Mark as cleared after user returns (they may or may not have cleared)
+              setAppStorageCleared(true);
+            } catch (error) {
+              console.error('Failed to open settings:', error);
+              queueToast({
+                type: 'error',
+                message: t('linkPassword.failedToOpenSettings'),
+                autoHideDuration: 3000,
+              });
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleManualSignatureButtonPress = () => {
@@ -326,6 +396,29 @@ export const LinkPasswordScreen = () => {
         {/* Only show password input and checkboxes when NO existing identity is found */}
         {!(password && signiture) && (
           <FxBox paddingVertical="20">
+            {/* Clear App Storage warning and button - shown when no saved identity */}
+            {!appStorageCleared && (
+              <FxBox marginBottom="20" padding="16" backgroundColor="backgroundSecondary" borderRadius="m">
+                <FxText variant="bodyMediumRegular" textAlign="center" color="warningBase" marginBottom="12">
+                  {t('linkPassword.clearStorageWarning')}
+                </FxText>
+                <FxButton
+                  variant="inverted"
+                  size="large"
+                  onPress={handleClearAppStorage}
+                >
+                  {t('linkPassword.clearAppStorage')}
+                </FxButton>
+              </FxBox>
+            )}
+            {appStorageCleared && (
+              <FxBox marginBottom="20" padding="12" backgroundColor="greenBase" borderRadius="m">
+                <FxText variant="bodySmallRegular" textAlign="center" color="white">
+                  {t('linkPassword.storageCleared')}
+                </FxText>
+              </FxBox>
+            )}
+
             {!linking ? (
               <FxTextInput
                 caption={t('linkPassword.password')}

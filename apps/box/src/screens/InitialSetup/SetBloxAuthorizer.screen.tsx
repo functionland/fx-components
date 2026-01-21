@@ -475,8 +475,11 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
             onRefreshPress={refetch_bloxProperties}
             loading={loading_bloxProperties}
           >
-            {data_bloxProperties?.data?.bloxFreeSpace?.size !== 0 &&
-              showFormatDiskButton && (
+  {/* Only show Format Disk button when storage size is invalid (0, NaN, undefined) */}
+            {showFormatDiskButton &&
+              (!data_bloxProperties?.data?.bloxFreeSpace?.size ||
+                data_bloxProperties?.data?.bloxFreeSpace?.size === 0 ||
+                isNaN(data_bloxProperties?.data?.bloxFreeSpace?.size)) && (
                 <FxButton
                   onPress={loading_bloxFormatDisk ? null : handleFormatDisk}
                 >

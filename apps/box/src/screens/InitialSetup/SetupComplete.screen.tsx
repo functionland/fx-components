@@ -53,20 +53,16 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   const [offInterval, setOffInterval] = useState(500);
   const [towerColor, setTowerColor] = useState('lightblue');
   const [isHeaderStatus200, setIsHeaderStatus200] = useState(false);
-  const [password, signiture, fulaIsReady, setFulaIsReady] =
-    useUserProfileStore((state) => [
-      state.password,
-      state.signiture,
-      state.fulaIsReady,
-      state.setFulaIsReady,
-    ]);
+  // Use individual selectors to avoid React 19 useSyncExternalStore infinite loop
+  const password = useUserProfileStore((state) => state.password);
+  const signiture = useUserProfileStore((state) => state.signiture);
+  const fulaIsReady = useUserProfileStore((state) => state.fulaIsReady);
+  const setFulaIsReady = useUserProfileStore((state) => state.setFulaIsReady);
 
-  const [currentBloxPeerId, bloxsConnectionStatus, checkBloxConnection] =
-    useBloxsStore((state) => [
-      state.currentBloxPeerId, // currentBloxPeerId could be undefined when user skip setAuthorizer step with any reason
-      state.bloxsConnectionStatus,
-      state.checkBloxConnection,
-    ]);
+  // currentBloxPeerId could be undefined when user skip setAuthorizer step with any reason
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
+  const checkBloxConnection = useBloxsStore((state) => state.checkBloxConnection);
   const { queueToast } = useToast();
   const logger = useLogger();
   const inetInfo = useNetInfo();

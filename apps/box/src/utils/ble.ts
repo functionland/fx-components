@@ -1,10 +1,7 @@
 import BleManager, { Peripheral } from 'react-native-ble-manager';
-import { NativeEventEmitter, NativeModules, Platform, PermissionsAndroid } from 'react-native';
+import { Platform, PermissionsAndroid } from 'react-native';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { EConnectionStatus } from '../models';
-
-const BleManagerModule = NativeModules.BleManager;
-const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 export interface ChunkedResponse {
     type?: 'ble_header' | 'ble_chunk';
@@ -34,24 +31,24 @@ export class ResponseAssembler {
     }
 
     private setupBleListener() {
-        this.bleListener = bleManagerEmitter.addListener(
-            'BleManagerDidUpdateValueForCharacteristic',
-            async ({ value, characteristic }) => {
+        // Use new event API for react-native 0.76+
+        this.bleListener = BleManager.onDidUpdateValueForCharacteristic(
+            ({ value, characteristic }) => {
                 console.log('BLE response received:', { characteristic, value });
                 if (!this.currentCommand) return;
-    
+
                 // Convert array of numbers to string
-                const stringValue = String.fromCharCode.apply(null, value);
+                const stringValue = String.fromCharCode.apply(null, value as number[]);
                 console.log('Converted response:', stringValue);
-                
-                const response = await this.handleResponse(stringValue);
-                
-                if (response) {
-                    if (this.commandResolve) {
-                        this.commandResolve(response);
-                        this.cleanupCommand();
+
+                this.handleResponse(stringValue).then((response) => {
+                    if (response) {
+                        if (this.commandResolve) {
+                            this.commandResolve(response);
+                            this.cleanupCommand();
+                        }
                     }
-                }
+                });
             }
         );
     }
@@ -358,10 +355,12 @@ export class BleManagerWrapper extends ResponseAssembler {
     public async connect(): Promise<boolean> {
         try {
             console.log('ble.connect called');
-            await BleManager.start({ 
+            console.log('[BLE] Initializing BleManager...');
+            await BleManager.start({
                 showAlert: false,
                 forceLegacy: true  // Add this for iOS stability
             });
+            console.log('[BLE] BleManager initialized successfully');
     
             const bluetoothReady = await this.checkAndEnableBluetooth();
             if (!bluetoothReady) return false;
@@ -399,38 +398,51 @@ export class BleManagerWrapper extends ResponseAssembler {
                     timestamp: number;
                 }> = [];
     
-                const SCAN_DURATION = Platform.OS === 'ios' ? 5000 : 5000; // Longer scan for iOS
-                
-                const discoveryListener = bleManagerEmitter.addListener(
-                    'BleManagerDiscoverPeripheral',
-                    (peripheral) => {
-                        if (peripheral.name === this.DEVICE_NAME || 
-                            peripheral.name === this.DEVICE_NAME2) {
-                            // On iOS, only add if not already discovered
-                            if (!discoveredDevices.some(d => d.peripheral === peripheral.id)) {
-                                discoveredDevices.push({
-                                    peripheral: peripheral.id,
-                                    rssi: peripheral.rssi,
-                                    timestamp: Date.now(),
-                                });
-                            }
+                const SCAN_DURATION = Platform.OS === 'ios' ? 10000 : 10000; // 10 second scan
+
+                // Use new event API for react-native 0.76+
+                const discoveryListener = BleManager.onDiscoverPeripheral((peripheral) => {
+                    // Log all discovered peripherals for debugging
+                    console.log('[BLE] Discovered peripheral:', {
+                        name: peripheral.name,
+                        id: peripheral.id,
+                        rssi: peripheral.rssi,
+                    });
+
+                    // Check if name matches (also check for partial match or localName)
+                    const deviceName = peripheral.name || (peripheral as any).localName || '';
+                    const isTargetDevice =
+                        deviceName === this.DEVICE_NAME ||
+                        deviceName === this.DEVICE_NAME2 ||
+                        deviceName.toLowerCase().includes('fulatower') ||
+                        deviceName.toLowerCase().includes('fxblox');
+
+                    if (isTargetDevice) {
+                        console.log('[BLE] Found target device:', deviceName);
+                        // On iOS, only add if not already discovered
+                        if (!discoveredDevices.some(d => d.peripheral === peripheral.id)) {
+                            discoveredDevices.push({
+                                peripheral: peripheral.id,
+                                rssi: peripheral.rssi,
+                                timestamp: Date.now(),
+                            });
                         }
                     }
-                );
-    
+                });
+
                 // Add connection state listener for iOS
-                const connectListener = Platform.OS === 'ios' ? 
-                    bleManagerEmitter.addListener(
-                        'BleManagerConnectPeripheral',
-                        () => console.log('Connection successful')
-                    ) : null;
-    
-                const disconnectListener = Platform.OS === 'ios' ? 
-                    bleManagerEmitter.addListener(
-                        'BleManagerDisconnectPeripheral',
-                        () => console.log('Device disconnected')
-                    ) : null;
-    
+                const connectListener = Platform.OS === 'ios'
+                    ? BleManager.onConnectPeripheral(() => console.log('[BLE] Connection successful'))
+                    : null;
+
+                const disconnectListener = Platform.OS === 'ios'
+                    ? BleManager.onDisconnectPeripheral(() => console.log('[BLE] Device disconnected'))
+                    : null;
+
+                // Add scan stop listener
+                const stopScanListener = BleManager.onStopScan(() => console.log('[BLE] Native scan stopped'));
+
+                console.log('[BLE] Starting scan for', SCAN_DURATION / 1000, 'seconds...');
                 BleManager.scan({
                     serviceUUIDs: [],
                     seconds: SCAN_DURATION / 1000, // convert ms to seconds
@@ -440,19 +452,23 @@ export class BleManagerWrapper extends ResponseAssembler {
                         console.log('Scanning...');
                     })
                     .catch((err) => {
-                        console.error('Scan failed', err);
+                        console.error('[BLE] Scan failed', err);
                         discoveryListener.remove();
                         connectListener?.remove();
                         disconnectListener?.remove();
+                        stopScanListener.remove();
                         resolve(false);
                     });
     
                 setTimeout(async () => {
+                    console.log('[BLE] Scan complete. Found', discoveredDevices.length, 'target devices');
                     discoveryListener.remove();
                     connectListener?.remove();
                     disconnectListener?.remove();
-    
+                    stopScanListener.remove();
+
                     if (discoveredDevices.length === 0) {
+                        console.log('[BLE] No matching devices found');
                         resolve(false);
                         return;
                     }

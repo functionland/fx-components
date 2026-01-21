@@ -1,7 +1,7 @@
 import React from 'react';
 import { FxSvgProps } from '../svg/svg';
 import { FxLoadingSpinnerIcon } from '../icons/icons';
-import {
+import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -25,7 +25,12 @@ const FxLoadingSpinner = (props: FxSvgProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <FxLoadingSpinnerIcon color="primary" {...props} style={animation} />;
+  // Wrap SVG in Animated.View for transform animation to avoid react-native-svg G component issues
+  return (
+    <Animated.View style={animation}>
+      <FxLoadingSpinnerIcon color="primary" {...props} />
+    </Animated.View>
+  );
 };
 
 export { FxLoadingSpinner };

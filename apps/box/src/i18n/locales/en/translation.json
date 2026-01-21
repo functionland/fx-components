@@ -36,7 +36,14 @@
       "existingIdentity": "Generated Identity",
       "continueWithExisting": "Continue",
       "clearCachedData": "Reset Identity",
-      "cachedDataCleared": "Identity has been reset successfully"
+      "cachedDataCleared": "Identity has been reset successfully",
+      "clearStorageWarning": "If you previously used this app with different credentials, you may need to clear app storage to avoid decryption errors.",
+      "clearAppStorage": "Clear App Storage",
+      "clearAppStorageTitle": "Clear App Storage",
+      "clearAppStorageMessage": "This will open app settings. Tap 'Storage' then 'Clear Data' to remove cached identity. The app will restart after clearing.",
+      "openSettings": "Open Settings",
+      "failedToOpenSettings": "Failed to open settings",
+      "storageCleared": "Storage cleared - you can now create a new identity"
     },
     "connectToBlox": {
       "title": "Connect to Blox",

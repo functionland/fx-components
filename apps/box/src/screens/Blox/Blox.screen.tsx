@@ -112,8 +112,14 @@ export const BloxScreen = () => {
     () => folderSizeInfo?.[currentBloxPeerId],
     [folderSizeInfo, currentBloxPeerId]
   );
-  divisionSplit.value =
-    bloxsSpaceInfo?.[currentBloxPeerId]?.used_percentage || 0;
+
+  // Update divisionSplit shared value when bloxsSpaceInfo changes
+  // Must be in useEffect to avoid writing to shared value during render
+  useEffect(() => {
+    divisionSplit.value =
+      bloxsSpaceInfo?.[currentBloxPeerId]?.used_percentage || 0;
+  }, [bloxsSpaceInfo, currentBloxPeerId, divisionSplit]);
+
   useEffect(() => {
     if (fulaIsReady && !screenIsLoaded) {
       setScreenIsLoaded(true);
