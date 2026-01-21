@@ -31,9 +31,8 @@
 		085055072BBBC42500DC68DD /* hermes.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 085055062BBBC42500DC68DD /* hermes.xcframework */; };
 		08DD2E8C2BBB827C00679714 /* libresolv.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 08DD2E8B2BBB827B00679714 /* libresolv.9.tbd */; };
 		08E2A8AD2BBCCCDE00175916 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 08E2A8AC2BBCCCDE00175916 /* GoogleService-Info.plist */; };
-		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
+		13B07FBC1A68108700A75B9A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		A125ED883B03AB97B7CE9BEC /* libPods-Box-BoxTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 599DF4ABBE40198D8D997BB7 /* libPods-Box-BoxTests.a */; };
 		DCF9A94CCA6137C198E7DEFD /* libPods-Box.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E1215CB9125E1D6A1C5BC027 /* libPods-Box.a */; };
@@ -79,11 +78,9 @@
 		08DD2E8B2BBB827B00679714 /* libresolv.9.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.9.tbd; path = usr/lib/libresolv.9.tbd; sourceTree = SDKROOT; };
 		08E2A8AC2BBCCCDE00175916 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* Box.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Box.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = Box/AppDelegate.h; sourceTree = "<group>"; };
-		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = Box/AppDelegate.mm; sourceTree = "<group>"; };
+		13B07FB01A68108700A75B9A /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Box/AppDelegate.swift; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Box/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Box/Info.plist; sourceTree = "<group>"; };
-		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = Box/main.m; sourceTree = "<group>"; };
 		3231C1D42229C42196EDC9E8 /* Pods-Box.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Box.release.xcconfig"; path = "Target Support Files/Pods-Box/Pods-Box.release.xcconfig"; sourceTree = "<group>"; };
 		35B51CDD322A0E0EBDCB0097 /* Pods-Box.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Box.debug.xcconfig"; path = "Target Support Files/Pods-Box/Pods-Box.debug.xcconfig"; sourceTree = "<group>"; };
 		4F9579F97A91C2547C683293 /* Pods-Box-BoxTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Box-BoxTests.debug.xcconfig"; path = "Target Support Files/Pods-Box-BoxTests/Pods-Box-BoxTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -168,13 +165,11 @@
 			children = (
 				8081E0DE2D0A6C150012264C /* BoxDebug.entitlements */,
 				808CCD122D0A413F004223DD /* BoxRelease.entitlements */,
-				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
-				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
+				13B07FB01A68108700A75B9A /* AppDelegate.swift */,
 				080469C32BBCE2350045A7C0 /* AppIcon.appiconset */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
-				13B07FB71A68108700A75B9A /* main.m */,
 			);
 			name = Box;
 			sourceTree = "<group>";
@@ -569,8 +564,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
-				13B07FC11A68108700A75B9A /* main.m in Sources */,
+				13B07FBC1A68108700A75B9A /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

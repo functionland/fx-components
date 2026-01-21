@@ -201,7 +201,8 @@ export const BloxScreen = () => {
         if (fulaIsReady) {
           try {
             console.log('checking blox connection');
-            checkBloxConnection();
+            // Use more retries when user explicitly clicks Retry
+            checkBloxConnection(5, 10);
           } catch (error) {
             logger.logError(
               'handleOnConnectionOptionSelect:checkBloxConnection',

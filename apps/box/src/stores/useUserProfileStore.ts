@@ -71,6 +71,7 @@ export interface UserProfileSlice {
   bloxConnectionStatus: BloxConectionStatus;
   fulaReinitCount: number;
   useLocalIp: string | undefined;
+  lastFulaReinitTime: number;
 }
 // define the initial state
 const initialState: UserProfileSlice = {
@@ -91,6 +92,7 @@ const initialState: UserProfileSlice = {
   walletId: undefined,
   fulaReinitCount: 0,
   useLocalIp: 'scan',
+  lastFulaReinitTime: 0,
 };
 const createUserProfileSlice: StateCreator<
   UserProfileSlice & UserProfileActions,
@@ -449,8 +451,8 @@ getEarnings: async (account?: string) => {
         });
       },
       checkBloxConnection: async (
-        maxTries = 1,
-        waitBetweenRetries = 5
+        maxTries = 5,
+        waitBetweenRetries = 15
       ): Promise<boolean> => {
         const delay = (seconds: number) =>
           new Promise((resolve) => setTimeout(resolve, seconds * 1000));
@@ -509,6 +511,7 @@ getEarnings: async (account?: string) => {
               return attemptConnection(attempt + 1); // Increment attempt and retry
             } else {
               handleMaxRetriesReached();
+              set({ bloxConnectionStatus: 'DISCONNECTED' });
               return false;
             }
           } catch (error) {
@@ -524,6 +527,18 @@ getEarnings: async (account?: string) => {
         };
 
         const handleMaxRetriesReached = () => {
+          const lastReinitTime = get().lastFulaReinitTime || 0;
+          const now = Date.now();
+
+          // Don't reinit more than once per 2 minutes (120000ms)
+          if (now - lastReinitTime < 120000) {
+            console.log('Skipping reinit - cooldown active (2 min cooldown)');
+            set({ bloxConnectionStatus: 'DISCONNECTED' });
+            return;
+          }
+
+          set({ lastFulaReinitTime: now });
+
           const currentLocalIp = get().useLocalIp;
 
           if (

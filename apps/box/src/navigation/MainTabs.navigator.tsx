@@ -172,7 +172,9 @@ export const MainTabsNavigator = () => {
           bloxAddr: bloxAddr,
           bloxPeerId: currentBloxPeerId,
         })
-          .then(() => {
+          .then(async () => {
+            // Wait for libp2p to establish relay connections before marking ready
+            await new Promise(resolve => setTimeout(resolve, 5000));
             setFulaIsReady(true);
           })
           .catch(() => {
