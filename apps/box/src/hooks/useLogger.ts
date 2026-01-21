@@ -5,10 +5,8 @@ import { generateUniqueId } from '../utils/helper';
 import { useSettingsStore } from '../stores';
 
 export function useLogger() {
-    const [debugMode, setDebugMode] = useSettingsStore((state) => [
-        state.debugMode,
-        state.setDebugMode
-    ]);
+    const debugMode = useSettingsStore((state) => state.debugMode);
+    const setDebugMode = useSettingsStore((state) => state.setDebugMode);
     const [isDebugModeEnable, setIsDebugModeEnable] = useState(false)
 
     useEffect(() => {

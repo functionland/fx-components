@@ -39,13 +39,11 @@ const AddDAppModal = React.forwardRef<
     accountId: form?.accountId,
   });
 
-  const [bloxs, currentBloxPeerId, updateBloxStore] = useBloxsStore((state) => [
-    state.bloxs,
-    state.currentBloxPeerId,
-    state.update,
-  ]);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const updateBloxStore = useBloxsStore((state) => state.update);
 
-  const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
+  const fulaIsReady = useUserProfileStore((state) => state.fulaIsReady);
 
   //Update the form
   useEffect(() => {

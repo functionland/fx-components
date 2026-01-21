@@ -81,11 +81,9 @@ export const BloxSelectionBottomSheet = forwardRef<
 >(({ onBloxSelect }, ref) => {
   const { colors } = useFxTheme();
   
-  const [bloxs, currentBloxPeerId, bloxsConnectionStatus] = useBloxsStore((state) => [
-    state.bloxs,
-    state.currentBloxPeerId,
-    state.bloxsConnectionStatus,
-  ]);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
 
   const bloxList = Object.values(bloxs || {});
 

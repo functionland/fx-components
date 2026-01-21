@@ -27,7 +27,7 @@ export const BloxLogsScreen = () => {
   const [log, setLog] = React.useState<string>('');
   const [tailCount, setTailCount] = React.useState<string>('50');
   const [loadingLogs, setLoadingLogs] = React.useState<boolean>(false);
-  const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
+  const fulaIsReady = useUserProfileStore((state) => state.fulaIsReady);
   const [showOtherInput, setShowOtherInput] = React.useState<boolean>(false);
   const { queueToast } = useToast();
   const { colors } = useFxTheme();

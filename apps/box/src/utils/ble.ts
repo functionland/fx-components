@@ -1,5 +1,4 @@
 import BleManager, { Peripheral } from 'react-native-ble-manager';
-import BleManagerEmitter from 'react-native-ble-manager';
 import { NativeEventEmitter, NativeModules, Platform, PermissionsAndroid } from 'react-native';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { EConnectionStatus } from '../models';
@@ -35,7 +34,7 @@ export class ResponseAssembler {
     }
 
     private setupBleListener() {
-        this.bleListener = BleManagerEmitter.addListener(
+        this.bleListener = bleManagerEmitter.addListener(
             'BleManagerDidUpdateValueForCharacteristic',
             async ({ value, characteristic }) => {
                 console.log('BLE response received:', { characteristic, value });
@@ -432,7 +431,11 @@ export class BleManagerWrapper extends ResponseAssembler {
                         () => console.log('Device disconnected')
                     ) : null;
     
-                BleManager.scan([], SCAN_DURATION, Platform.OS === 'ios' ? false : true)
+                BleManager.scan({
+                    serviceUUIDs: [],
+                    seconds: SCAN_DURATION / 1000, // convert ms to seconds
+                    allowDuplicates: Platform.OS !== 'ios',
+                })
                     .then(() => {
                         console.log('Scanning...');
                     })

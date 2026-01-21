@@ -40,9 +40,12 @@ export const LinkPasswordScreen = () => {
   const [mSig, setMSig] = useState('');
   const [walletAddressInput, setWalletAddressInput] = useState('');
   const [identityReset, setIdentityReset] = useState(false);
-  const [setKeyChainValue, signiture, password, setWalletId, setManualSignatureWalletAddress, manualSignatureWalletAddress] = useUserProfileStore(
-    (state) => [state.setKeyChainValue, state.signiture, state.password, state.setWalletId, state.setManualSignatureWalletAddress, state.manualSignatureWalletAddress]
-  );
+  const setKeyChainValue = useUserProfileStore((state) => state.setKeyChainValue);
+  const signiture = useUserProfileStore((state) => state.signiture);
+  const password = useUserProfileStore((state) => state.password);
+  const setWalletId = useUserProfileStore((state) => state.setWalletId);
+  const setManualSignatureWalletAddress = useUserProfileStore((state) => state.setManualSignatureWalletAddress);
+  const manualSignatureWalletAddress = useUserProfileStore((state) => state.manualSignatureWalletAddress);
 
   // Initialize wallet address from store on mount
   useEffect(() => {

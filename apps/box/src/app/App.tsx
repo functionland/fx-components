@@ -29,7 +29,7 @@ import {
 } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useSettingsStore } from '../stores';
+import { useColorMode, useSettingsStore } from '../stores';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useLogger } from '../hooks';
 import { COMM_SERVER_URL, INFURA_API_KEY } from '../utils/walletConnectConifg';
@@ -168,11 +168,11 @@ const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const App = () => {
-  const mode = useSettingsStore().getMode();
+  const mode = useColorMode();
   const theme = fullTheme[mode];
-  const [loadAllCredentials] = useUserProfileStore((state) => [
-    state.loadAllCredentials,
-  ]);
+  const loadAllCredentials = useUserProfileStore(
+    (state) => state.loadAllCredentials
+  );
 
   useEffect(() => {
     loadAllCredentials();
@@ -204,7 +204,7 @@ export const App = () => {
 };
 const AppContent = () => {
   const appState = useRef(AppState.currentState);
-  const [debugMode] = useSettingsStore((state) => [state.debugMode]);
+  const debugMode = useSettingsStore((state) => state.debugMode);
   const { isDebugModeEnable } = useLogger();
 
   useEffect(() => {

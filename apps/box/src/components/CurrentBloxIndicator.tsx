@@ -20,11 +20,9 @@ export const CurrentBloxIndicator = ({
   const { colors } = useFxTheme();
   const { t } = useTranslation();
   
-  const [bloxs, currentBloxPeerId, bloxsConnectionStatus] = useBloxsStore((state) => [
-    state.bloxs,
-    state.currentBloxPeerId,
-    state.bloxsConnectionStatus,
-  ]);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
 
   const currentBlox = currentBloxPeerId ? bloxs[currentBloxPeerId] : null;
   const connectionStatus = currentBloxPeerId ? bloxsConnectionStatus[currentBloxPeerId] : undefined;

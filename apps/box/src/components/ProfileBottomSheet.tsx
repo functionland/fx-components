@@ -34,10 +34,8 @@ export const ProfileBottomSheet = React.forwardRef<
   FxBottomSheetModalMethods,
   ProfileBottomSheetProps
 >((_, ref) => {
-  const [accounts, createAccount] = useUserProfileStore((state) => [
-    state.accounts,
-    state.createAccount,
-  ]);
+  const accounts = useUserProfileStore((state) => state.accounts);
+  const createAccount = useUserProfileStore((state) => state.createAccount);
   console.log('########################################################');
   const addAccountModalRef = useRef<FxBottomSheetModalMethods>(null);
   const { queueToast } = useToast();

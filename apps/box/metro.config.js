@@ -4,6 +4,26 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const defaultConfig = getDefaultConfig(__dirname);
 const { assetExts, sourceExts } = defaultConfig.resolver;
 
+// Node.js polyfills for React Native
+const nodeLibs = require('node-libs-react-native');
+
+// Handle node: protocol imports by stripping the prefix
+const nodeProtocolPolyfills = {
+  'node:crypto': nodeLibs.crypto,
+  'node:stream': nodeLibs.stream,
+  'node:buffer': nodeLibs.buffer,
+  'node:util': nodeLibs.util,
+  'node:events': nodeLibs.events,
+  'node:path': nodeLibs.path,
+  'node:os': nodeLibs.os,
+  'node:url': nodeLibs.url,
+  'node:assert': nodeLibs.assert,
+  'node:http': nodeLibs.http,
+  'node:https': nodeLibs.https,
+  'node:zlib': nodeLibs.zlib,
+  'node:process': nodeLibs.process,
+};
+
 /**
  * Metro configuration
  * https://reactnative.dev/docs/metro
@@ -21,10 +41,27 @@ const customConfig = {
     }),
   },
   resolver: {
-    extraNodeModules: require('node-libs-react-native'),
+    extraNodeModules: {
+      ...nodeLibs,
+      ...nodeProtocolPolyfills,
+    },
     assetExts: assetExts.filter((ext) => ext !== 'svg'),
     sourceExts: [...sourceExts, 'svg'],
     resolverMainFields: ['sbmodern', 'react-native', 'browser', 'main'],
+    resolveRequest: (context, moduleName, platform) => {
+      // Handle node: protocol imports
+      if (moduleName.startsWith('node:')) {
+        const strippedName = moduleName.slice(5); // Remove 'node:' prefix
+        const polyfill = nodeLibs[strippedName];
+        if (polyfill) {
+          return context.resolveRequest(context, polyfill, platform);
+        }
+        // If no polyfill available, try resolving without the prefix
+        return context.resolveRequest(context, strippedName, platform);
+      }
+      // Default resolution
+      return context.resolveRequest(context, moduleName, platform);
+    },
   },
 };
 

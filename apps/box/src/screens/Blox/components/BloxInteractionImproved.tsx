@@ -33,16 +33,12 @@ export const BloxInteractionImproved = ({
   const { queueToast } = useToast();
   const [isBloxSwitching, setIsBloxSwitching] = useState(false);
   
-  const { colorScheme } = useSettingsStore((store) => ({
-    colorScheme: store.colorScheme,
-  }));
+  const colorScheme = useSettingsStore((store) => store.colorScheme);
   const { colors } = useFxTheme();
 
-  const [bloxsConnectionStatus, currentBloxPeerId, switchToBlox] = useBloxsStore((state) => [
-    state.bloxsConnectionStatus,
-    state.currentBloxPeerId,
-    state.switchToBlox,
-  ]);
+  const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const switchToBlox = useBloxsStore((state) => state.switchToBlox);
 
   // Find current Blox
   const currentBlox = bloxs.find(blox => blox.peerId === currentBloxPeerId);

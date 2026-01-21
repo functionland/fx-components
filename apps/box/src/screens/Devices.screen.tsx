@@ -16,20 +16,12 @@ export const DevicesScreen = () => {
   const [isList, setIsList] = useState<boolean>(false);
   const [loadingBloxSpace, setLoadingBloxSpace] = useState(false);
   const logger = useLogger();
-  const [
-    bloxsSpaceInfo,
-    folderSizeInfo,
-    currentBloxPeerId,
-    getBloxSpace,
-    getFolderSize,
-  ] = useBloxsStore((state) => [
-    state.bloxsSpaceInfo,
-    state.folderSizeInfo,
-    state.currentBloxPeerId,
-    state.getBloxSpace,
-    state.getFolderSize,
-  ]);
-  const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
+  const bloxsSpaceInfo = useBloxsStore((state) => state.bloxsSpaceInfo);
+  const folderSizeInfo = useBloxsStore((state) => state.folderSizeInfo);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const getBloxSpace = useBloxsStore((state) => state.getBloxSpace);
+  const getFolderSize = useBloxsStore((state) => state.getFolderSize);
+  const fulaIsReady = useUserProfileStore((state) => state.fulaIsReady);
   const currentBloxSpaceInfo = useMemo(
     () => bloxsSpaceInfo?.[currentBloxPeerId],
     [bloxsSpaceInfo, currentBloxPeerId]

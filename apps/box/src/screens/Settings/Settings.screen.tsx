@@ -16,7 +16,7 @@ import { Routes } from '../../navigation/navigationConfig';
 import { useLogger, useRootNavigation } from '../../hooks';
 
 export const SettingsScreen = () => {
-  const [reset] = useUserProfileStore((state) => [state.reset]);
+  const reset = useUserProfileStore((state) => state.reset);
   const rootNavigation = useRootNavigation();
   const { logError } = useLogger();
   const handleLogout = () => {

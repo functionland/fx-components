@@ -20,6 +20,7 @@ import {
 import { ActivityIndicator, FlatList, ListRenderItem, StyleSheet } from 'react-native';
 import { SmallHeaderText, SubHeaderText } from '../../components/Text';
 import Zeroconf from 'react-native-zeroconf';
+import { NativeModules } from 'react-native';
 import { MDNSBloxService, TBloxProperty } from '../../models';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Helper } from '../../utils';
@@ -36,6 +37,13 @@ type DicoveryDeviceType = {
   hardwareId: string;
 };
 
+// Check if native module is available
+const isZeroconfAvailable = !!NativeModules.RNZeroconf;
+console.log('[Zeroconf] Native module available:', isZeroconfAvailable);
+if (!isZeroconfAvailable) {
+  console.error('[Zeroconf] RNZeroconf native module is not available. Make sure the library is properly linked.');
+}
+
 const zeroconf = new Zeroconf();
 export const ConnectToExistingBloxScreen = () => {
   const { t, i18n } = useTranslation(); // Add translation hook
@@ -48,49 +56,59 @@ export const ConnectToExistingBloxScreen = () => {
   const logger = useLogger();
   const rootNavigation = useRootNavigation();
 
-  const [appPeerId, setAppPeerId, signiture, password] = useUserProfileStore(
-    (state) => [
-      state.appPeerId,
-      state.setAppPeerId,
-      state.signiture,
-      state.password,
-    ]
-  );
-  const [
-    bloxs = {},
-    bloxsPropertyInfo = {},
-    addBlox,
-    removeBlox,
-    updateBloxStore,
-  ] = useBloxsStore((state) => [
-    state.bloxs,
-    state.bloxsPropertyInfo,
-    state.addBlox,
-    state.removeBlox,
-    state.update,
-  ]);
+  const appPeerId = useUserProfileStore((state) => state.appPeerId);
+  const setAppPeerId = useUserProfileStore((state) => state.setAppPeerId);
+  const signiture = useUserProfileStore((state) => state.signiture);
+  const password = useUserProfileStore((state) => state.password);
+  const bloxs = useBloxsStore((state) => state.bloxs) ?? {};
+  const bloxsPropertyInfo = useBloxsStore((state) => state.bloxsPropertyInfo) ?? {};
+  const addBlox = useBloxsStore((state) => state.addBlox);
+  const removeBlox = useBloxsStore((state) => state.removeBlox);
+  const updateBloxStore = useBloxsStore((state) => state.update);
   
   // Fixed this line - the correct useState syntax with type
   const [checkboxState, setCheckboxState] = React.useState<Record<string, boolean>>({});
 
-  let uniqueDevices = new Map();
+  // Use useRef to persist uniqueDevices across renders
+  const uniqueDevicesRef = useRef(new Map());
+
   useEffect(() => {
+    console.log('[Zeroconf] Setting up event listeners...');
+
     zeroconf.on('start', () => {
+      console.log('[Zeroconf] Scan started');
       setScanning(true);
       setData([]);
-      uniqueDevices = new Map();
+      uniqueDevicesRef.current = new Map();
       clearTimeout(mDnsTimer.current);
+      // Increase timeout to 15 seconds to allow more time for device discovery
       mDnsTimer.current = setTimeout(() => {
+        console.log('[Zeroconf] Scan timeout - stopping');
         zeroconf.stop();
-        setScanning(false);
-      }, 6000);
-      console.log('The scan has started.\n\r');
+        // Don't set scanning to false here - let the stop event handle it
+        // This allows late-arriving resolved events to still be processed
+      }, 15000);
     });
+
+    zeroconf.on('stop', () => {
+      console.log('[Zeroconf] Scan stopped');
+      // Add a small delay before setting scanning to false
+      // to allow any pending resolved events to be processed
+      setTimeout(() => {
+        setScanning(false);
+      }, 1000);
+    });
+
+    zeroconf.on('found', (name: string) => {
+      console.log('[Zeroconf] Service found:', name);
+    });
+
     zeroconf.on('resolved', (resolved: MDNSBloxService) => {
+      console.log('[Zeroconf] Service resolved:', resolved);
       // Check if the hardwareId has already been seen
-      if (!uniqueDevices.has(resolved.txt?.hardwareID)) {
+      if (!uniqueDevicesRef.current.has(resolved.txt?.hardwareID)) {
         // If it's a new hardwareId, add to the Map and update state
-        uniqueDevices.set(resolved.txt?.hardwareID, true);
+        uniqueDevicesRef.current.set(resolved.txt?.hardwareID, true);
         setData((prev) => [
           resolved,
           ...prev.filter(
@@ -98,8 +116,14 @@ export const ConnectToExistingBloxScreen = () => {
           ),
         ]); // This also ensures to remove any previously added duplicate
       }
-      console.log('The scan has resolved.\n\r', resolved);
     });
+
+    zeroconf.on('error', (error: Error) => {
+      console.log('[Zeroconf] Error:', error);
+      logger.logError('Zeroconf error', error);
+      setScanning(false);
+    });
+
     if (!appPeerId) {
       generateAppPeerId();
     }
@@ -107,8 +131,12 @@ export const ConnectToExistingBloxScreen = () => {
 
     // Cleanup function to remove event listeners
     return () => {
-      zeroconf.removeAllListeners('start');
-      zeroconf.removeAllListeners('resolved');
+      console.log('[Zeroconf] Cleaning up listeners');
+      zeroconf.removeAllListeners?.('start');
+      zeroconf.removeAllListeners?.('stop');
+      zeroconf.removeAllListeners?.('found');
+      zeroconf.removeAllListeners?.('resolved');
+      zeroconf.removeAllListeners?.('error');
     };
   }, []);
 
@@ -151,8 +179,14 @@ export const ConnectToExistingBloxScreen = () => {
   };
 
   const scanMDNS = () => {
-    zeroconf.stop();
-    zeroconf.scan('fulatower', 'tcp', 'local.');
+    console.log('[Zeroconf] Starting mDNS scan for _fulatower._tcp.local.');
+    try {
+      zeroconf.stop();
+      zeroconf.scan('fulatower', 'tcp', 'local.');
+    } catch (error) {
+      console.log('[Zeroconf] Error starting scan:', error);
+      logger.logError('Zeroconf scan error', error);
+    }
   };
 
   const addBloxs = () => {
@@ -304,6 +338,25 @@ export const ConnectToExistingBloxScreen = () => {
       <SubHeaderText marginTop="4" variant="bodySmallLight">
         {t('connectToExistingBlox.selectBloxs')}
       </SubHeaderText>
+      {!isZeroconfAvailable && (
+        <FxBox marginTop="8" padding="12" backgroundColor="errorBase" borderRadius="s">
+          <FxText color="white">Network discovery module not available</FxText>
+        </FxBox>
+      )}
+      {scanning && (
+        <FxBox marginTop="8">
+          <FxText variant="bodySmallRegular" color="content2">
+            Scanning network for Blox devices...
+          </FxText>
+        </FxBox>
+      )}
+      {!scanning && data.length === 0 && (
+        <FxBox marginTop="8">
+          <FxText variant="bodySmallRegular" color="content2">
+            No devices found. Make sure your Blox is powered on and connected to the same network.
+          </FxText>
+        </FxBox>
+      )}
       <FxSpacer height={16} />
       <FxRadioButton.Group
         value={Object.keys(checkboxState)}

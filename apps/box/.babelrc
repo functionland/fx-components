@@ -3,6 +3,8 @@
     ["module:@react-native/babel-preset", { "useTransformReactJSXExperimental": true }]
   ],
   "plugins": [
+    "@babel/plugin-transform-export-namespace-from",
+    "@babel/plugin-transform-class-static-block",
     [
       "@babel/plugin-transform-react-jsx",
       {

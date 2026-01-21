@@ -55,29 +55,17 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [skipCode, setSkipCode] = useState('');
 
-  const [setAppPeerId, signiture, password] = useUserProfileStore((state) => [
-    state.setAppPeerId,
-    state.signiture,
-    state.password,
-  ]);
+  const setAppPeerId = useUserProfileStore((state) => state.setAppPeerId);
+  const signiture = useUserProfileStore((state) => state.signiture);
+  const password = useUserProfileStore((state) => state.password);
 
-  const [
-    bloxs = {},
-    currentBloxPeerId,
-    updateBloxsStore,
-    addBlox,
-    removeBlox,
-    updateBloxPropertyInfo,
-    updateBloxSpaceInfo,
-  ] = useBloxsStore((state) => [
-    state.bloxs,
-    state.currentBloxPeerId,
-    state.update,
-    state.addBlox,
-    state.removeBlox,
-    state.updateBloxPropertyInfo,
-    state.updateBloxSpaceInfo,
-  ]);
+  const bloxs = useBloxsStore((state) => state.bloxs) ?? {};
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const updateBloxsStore = useBloxsStore((state) => state.update);
+  const addBlox = useBloxsStore((state) => state.addBlox);
+  const removeBlox = useBloxsStore((state) => state.removeBlox);
+  const updateBloxPropertyInfo = useBloxsStore((state) => state.updateBloxPropertyInfo);
+  const updateBloxSpaceInfo = useBloxsStore((state) => state.updateBloxSpaceInfo);
 
   const bloxsArray = Object.values(bloxs as Record<string, { name: string }>);
   const existingNames = bloxsArray.map((b) => b.name);

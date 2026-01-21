@@ -14,9 +14,7 @@ export const WelcomeScreen = () => {
   const { t } = useTranslation();
 
   const { toggleDebugMode } = useLogger()
-  const { colorScheme } = useSettingsStore((store) => ({
-    colorScheme: store.colorScheme,
-  }));
+  const colorScheme = useSettingsStore((store) => store.colorScheme);
 
 
   const handleToggleDebugMode = () => {

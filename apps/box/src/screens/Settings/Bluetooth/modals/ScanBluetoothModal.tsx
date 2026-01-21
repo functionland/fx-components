@@ -124,7 +124,10 @@ const ScanBluetoothModal = React.forwardRef<
       setPeripherals(new Map());
       setConnectedPeripherals(new Map());
       setScanning(true);
-      await BleManager.scan([], SECONDS_TO_SCAN_FOR, ALLOW_DUPLICATES, {
+      await BleManager.scan({
+        serviceUUIDs: [],
+        seconds: SECONDS_TO_SCAN_FOR,
+        allowDuplicates: ALLOW_DUPLICATES,
         matchMode: BleScanMatchMode.Sticky,
         scanMode: BleScanMode.LowLatency,
         callbackType: BleScanCallbackType.AllMatches,

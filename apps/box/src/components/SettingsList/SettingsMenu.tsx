@@ -6,7 +6,7 @@ import {
 } from '../../navigation/navigationConfig';
 import { SettingMenuItem } from './SettingMenuItem';
 import { useNavigation } from '@react-navigation/native';
-import { useSettingsStore } from '../../stores';
+import { useSettingsStore, useColorMode } from '../../stores';
 import { CHAIN_DISPLAY_NAMES } from '../../contracts/config';
 
 export const SettingsMenu = () => {
@@ -14,7 +14,7 @@ export const SettingsMenu = () => {
     useNavigation<SettingsStackNavigationProps<Routes.Settings>>();
   const rootNavigation = useNavigation();
 
-  const mode = useSettingsStore().getMode();
+  const mode = useColorMode();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
 
   // Add app component gallery in development mode
