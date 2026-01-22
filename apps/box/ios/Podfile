@@ -1,4 +1,7 @@
-use_modular_headers!
+# Enable modular headers only for specific dependencies
+pod 'GoogleUtilities', :modular_headers => true
+pod 'GoogleDataTransport', :modular_headers => true
+pod 'nanopb', :modular_headers => true
 
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',

@@ -317,3 +317,4 @@ Pods
 /.yarn
 /apps/box/android/app/.cxx
 /apps/box/android/.kotlin
+apps/box/ios/.xcode.env.local
