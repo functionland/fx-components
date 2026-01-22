@@ -8,7 +8,16 @@
       "Bash(npx nx run:*)",
       "Bash(npm view:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx babel:*)"
+      "Bash(npx babel:*)",
+      "Bash(node -e:*)",
+      "Bash(node --no-warnings --eval:*)",
+      "Bash(node --eval:*)",
+      "Bash(cmd.exe /c \"node --no-warnings --eval \"\"require\\(''expo-modules-autolinking''\\)\"\" generate-package-list --platform android\")",
+      "Bash(cmd.exe /c \"node --no-warnings --eval \"\"require\\(''expo-modules-autolinking''\\)\"\" generate-package-list --platform android --target /tmp/test.json\")",
+      "Bash(node:*)",
+      "Bash(npx expo install:*)",
+      "Bash(yarn install)",
+      "Bash(find:*)"
     ]
   }
 }

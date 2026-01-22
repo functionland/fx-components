@@ -5,6 +5,7 @@
   "plugins": [
     "@babel/plugin-transform-export-namespace-from",
     "@babel/plugin-transform-class-static-block",
+    "babel-plugin-transform-import-meta",
     [
       "@babel/plugin-transform-react-jsx",
       {
