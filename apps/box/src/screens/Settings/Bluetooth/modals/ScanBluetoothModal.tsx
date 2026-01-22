@@ -11,8 +11,6 @@ import {
 import {
   ActivityIndicator,
   FlatList,
-  NativeEventEmitter,
-  NativeModules,
   PermissionsAndroid,
   Permission,
   Platform,
@@ -29,8 +27,6 @@ import { request, PERMISSIONS } from 'react-native-permissions';
 
 const SECONDS_TO_SCAN_FOR = 5;
 const ALLOW_DUPLICATES = false;
-const BleManagerModule = NativeModules.BleManager;
-const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 const requestIOSBluetoothPermission = async () => {
   if (Platform.OS === 'ios') {
@@ -58,18 +54,22 @@ const ScanBluetoothModal = React.forwardRef<
 
   useEffect(() => {
     startBluetooth();
-    const listeners = [
-      bleManagerEmitter.addListener(
-        'BleManagerDiscoverPeripheral',
-        handleDiscoverPeripheral
-      ),
-      bleManagerEmitter.addListener('BleManagerStopScan', handleStopScan),
-    ];
+
+    // Use new event API for react-native 0.76+
+    const discoverListener = BleManager.onDiscoverPeripheral((peripheral) => {
+      console.log('[BLE] Discovered peripheral:', peripheral.name, peripheral.id);
+      handleDiscoverPeripheral(peripheral);
+    });
+
+    const stopScanListener = BleManager.onStopScan(() => {
+      console.log('[BLE] Scan stopped');
+      handleStopScan();
+    });
+
     return () => {
       console.debug('[app] main component unmounting. Removing listeners...');
-      for (const listener of listeners) {
-        listener.remove();
-      }
+      discoverListener.remove();
+      stopScanListener.remove();
     };
   }, []);
 
@@ -124,7 +124,10 @@ const ScanBluetoothModal = React.forwardRef<
       setPeripherals(new Map());
       setConnectedPeripherals(new Map());
       setScanning(true);
-      await BleManager.scan([], SECONDS_TO_SCAN_FOR, ALLOW_DUPLICATES, {
+      await BleManager.scan({
+        serviceUUIDs: [],
+        seconds: SECONDS_TO_SCAN_FOR,
+        allowDuplicates: ALLOW_DUPLICATES,
         matchMode: BleScanMatchMode.Sticky,
         scanMode: BleScanMode.LowLatency,
         callbackType: BleScanCallbackType.AllMatches,
@@ -138,8 +141,11 @@ const ScanBluetoothModal = React.forwardRef<
     if (!peripheral.name) {
       peripheral.name = 'NO NAME';
     }
-    if (peripheral?.name.includes?.('fulatower'))
+    // Match both 'fulatower' and 'fxblox' device names (case-insensitive)
+    const deviceName = peripheral?.name?.toLowerCase() || '';
+    if (deviceName.includes('fulatower') || deviceName.includes('fxblox')) {
       addOrUpdatePeripheral(peripheral.id, peripheral);
+    }
   };
   const handleConnectToPeripheral = async (item: Peripheral) => {
     try {

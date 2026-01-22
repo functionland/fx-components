@@ -1,16 +1,12 @@
 import { FxBox, FxReanimatedBox } from '@functionland/component-library';
 import React from 'react';
 import {
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withDecay,
 } from 'react-native-reanimated';
 import { Logo } from './Icons';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { clamp, withBouncing } from 'react-native-redash';
 
 /**
@@ -43,46 +39,42 @@ export const AnimatedLogo = () => {
     return [low, high];
   };
 
-  const onGestureEvent = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    {
-      offsetX: number;
-      offsetY: number;
-    }
-  >({
-    onStart: (_, ctx) => {
-      ctx.offsetX = translateX.value;
-      ctx.offsetY = translateY.value;
-    },
-    onActive: (event, ctx) => {
+  const offsetX = useSharedValue(0);
+  const offsetY = useSharedValue(0);
+
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      offsetX.value = translateX.value;
+      offsetY.value = translateY.value;
+    })
+    .onUpdate((event) => {
       translateX.value = clamp(
-        ctx.offsetX + event.translationX,
+        offsetX.value + event.translationX,
         boundsX.value.low,
         boundsX.value.high
       );
       translateY.value = clamp(
-        ctx.offsetY + event.translationY,
+        offsetY.value + event.translationY,
         boundsY.value.low,
         boundsY.value.high
       );
-    },
-    onEnd: ({ velocityX, velocityY }) => {
+    })
+    .onEnd((event) => {
       translateX.value = withBouncing(
         withDecay({
-          velocity: velocityX,
+          velocity: event.velocityX,
         }),
         boundsX.value.low,
         boundsX.value.high
       );
       translateY.value = withBouncing(
         withDecay({
-          velocity: velocityY,
+          velocity: event.velocityY,
         }),
         boundsY.value.low,
         boundsY.value.high
       );
-    },
-  });
+    });
   const panStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -132,11 +124,11 @@ export const AnimatedLogo = () => {
         boundsY.value = { low: yBounds[0], high: yBounds[1] };
       }}
     >
-      <PanGestureHandler onGestureEvent={onGestureEvent}>
+      <GestureDetector gesture={panGesture}>
         <FxReanimatedBox style={panStyle}>
           <Logo color="greenBase" />
         </FxReanimatedBox>
-      </PanGestureHandler>
+      </GestureDetector>
     </FxBox>
   );
 };

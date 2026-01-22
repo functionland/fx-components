@@ -42,9 +42,8 @@ export const ChainSelectionScreen = () => {
   const { ensureCorrectNetworkConnection } = useWalletNetwork();
 
   // User profile for manual wallet address
-  const [manualSignatureWalletAddress, setManualSignatureWalletAddress] = useUserProfileStore(
-    (state) => [state.manualSignatureWalletAddress, state.setManualSignatureWalletAddress]
-  );
+  const manualSignatureWalletAddress = useUserProfileStore((state) => state.manualSignatureWalletAddress);
+  const setManualSignatureWalletAddress = useUserProfileStore((state) => state.setManualSignatureWalletAddress);
 
   // Initialize wallet address input from store
   useEffect(() => {
@@ -53,19 +52,11 @@ export const ChainSelectionScreen = () => {
     }
   }, [manualSignatureWalletAddress]);
 
-  const [
-    selectedChain,
-    baseAuthorized,
-    setSelectedChain,
-    authorizeBase,
-    resetBaseAuthorization,
-  ] = useSettingsStore((state) => [
-    state.selectedChain,
-    state.baseAuthorized,
-    state.setSelectedChain,
-    state.authorizeBase,
-    state.resetBaseAuthorization,
-  ]);
+  const selectedChain = useSettingsStore((state) => state.selectedChain);
+  const baseAuthorized = useSettingsStore((state) => state.baseAuthorized);
+  const setSelectedChain = useSettingsStore((state) => state.setSelectedChain);
+  const authorizeBase = useSettingsStore((state) => state.authorizeBase);
+  const resetBaseAuthorization = useSettingsStore((state) => state.resetBaseAuthorization);
 
   const handleChainSelection = async (chain: SupportedChain) => {
     if (chain === 'base' && !baseAuthorized) {

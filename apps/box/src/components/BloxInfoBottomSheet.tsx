@@ -41,9 +41,7 @@ export const BloxInfoBottomSheet = React.forwardRef<
     ref
   ) => {
     const theme = useFxTheme();
-    const [bloxsPropertyInfo] = useBloxsStore((state) => [
-      state.bloxsPropertyInfo,
-    ]);
+    const bloxsPropertyInfo = useBloxsStore((state) => state.bloxsPropertyInfo);
     const bloxPropertyInfo = bloxsPropertyInfo[bloxInfo?.peerId];
     return (
       <FxBottomSheetModal ref={ref}>

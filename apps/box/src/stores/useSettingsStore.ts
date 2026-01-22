@@ -20,11 +20,6 @@ interface ChainSettings {
 interface ModeSlice extends ChainSettings {
   _hasHydrated: boolean;
   setHasHydrated: (isHydrated: boolean) => void;
-  /**
-   * Only use in Functional Components, under the hood its using a hooks to get your system
-   * @returns 'light' or 'dark'
-   */
-  getMode: () => ColorScheme;
   isAuto: boolean;
   colorScheme: ColorScheme;
   debugMode?: {
@@ -80,11 +75,6 @@ const createModeSlice: StateCreator<
     setColorScheme: (colorScheme: ColorScheme) =>
       set(() => ({ colorScheme: colorScheme })),
     toggleIsAuto: () => set((state) => ({ isAuto: !state.isAuto })),
-    getMode: () => {
-      const { isAuto, colorScheme } = get();
-      const systemColorScheme = useColorScheme(); // eslint-disable-line react-hooks/rules-of-hooks
-      return isAuto ? systemColorScheme : colorScheme;
-    },
     setDebugMode: (uniqueId, endDate) => {
       set({
         debugMode: {
@@ -140,3 +130,15 @@ const createModeSlice: StateCreator<
 export const useSettingsStore = create<ModeSlice>()((...a) => ({
   ...createModeSlice(...a),
 }));
+
+/**
+ * Custom hook to get the current color mode.
+ * Uses the system color scheme when isAuto is true, otherwise uses the stored colorScheme.
+ * @returns 'light' or 'dark'
+ */
+export const useColorMode = (): ColorScheme => {
+  const systemColorScheme = useColorScheme();
+  const isAuto = useSettingsStore((state) => state.isAuto);
+  const colorScheme = useSettingsStore((state) => state.colorScheme);
+  return isAuto ? (systemColorScheme ?? 'dark') : colorScheme;
+};

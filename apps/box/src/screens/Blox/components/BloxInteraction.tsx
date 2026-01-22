@@ -43,18 +43,13 @@ export const BloxInteraction = ({
   onBloxPress,
 }: TBloxInteractionProps) => {
   const carouselRef = useRef<ICarouselInstance>(null);
-  const { colorScheme } = useSettingsStore((store) => ({
-    colorScheme: store.colorScheme,
-  }));
+  const colorScheme = useSettingsStore((store) => store.colorScheme);
   const { colors } = useFxTheme();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const [bloxsConnectionStatus, currentBloxPeerId, setCurrentBloxPeerId] =
-    useBloxsStore((state) => [
-      state.bloxsConnectionStatus,
-      state.currentBloxPeerId,
-      state.setCurrentBloxPeerId,
-    ]);
+  const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const setCurrentBloxPeerId = useBloxsStore((state) => state.setCurrentBloxPeerId);
 
   // useEffect(() => {
   //   if (fulaIsReady && currentBloxPeerId) {

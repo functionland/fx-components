@@ -36,15 +36,11 @@ export const ConnectedDAppsScreen = ({ route }: Props) => {
   const clearDAppDataModalRef = useRef<FxBottomSheetModalMethods>(null);
   const [selectedDApp, setSelectedDApp] = useCallbackState<TDApp>(null);
   const [addAppForm, setAddAppForm] = useState<AddAppForm | undefined>();
-  const [connectedDApps, setAuth, addOrUpdateDApp] = useDAppsStore((state) => [
-    state.connectedDApps,
-    state.setAuth,
-    state.addOrUpdateDApp,
-  ]);
-  const [bloxs, currentBloxPeerId] = useBloxsStore((state) => [
-    state.bloxs,
-    state.currentBloxPeerId,
-  ]);
+  const connectedDApps = useDAppsStore((state) => state.connectedDApps);
+  const setAuth = useDAppsStore((state) => state.setAuth);
+  const addOrUpdateDApp = useDAppsStore((state) => state.addOrUpdateDApp);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
   const { queueToast } = useToast();
   const currentBlox = useMemo(
     () => bloxs[currentBloxPeerId],

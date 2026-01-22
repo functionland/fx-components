@@ -9,14 +9,10 @@ import { FxBox } from '@functionland/component-library';
 import { ActivityIndicator } from 'react-native';
 
 export const RootNavigator = () => {
-  const [_hasHydrated, appPeerId] = useUserProfileStore((state) => [
-    state._hasHydrated,
-    state.appPeerId,
-  ]);
-  const [_hasHydrated_bloxs, bloxs = {}] = useBloxsStore((state) => [
-    state._hasHydrated,
-    state.bloxs,
-  ]);
+  const _hasHydrated = useUserProfileStore((state) => state._hasHydrated);
+  const appPeerId = useUserProfileStore((state) => state.appPeerId);
+  const _hasHydrated_bloxs = useBloxsStore((state) => state._hasHydrated);
+  const bloxs = useBloxsStore((state) => state.bloxs) ?? {};
   const [initialRoute, setInitialRoute] = useState(undefined);
   useEffect(() => {
     if (_hasHydrated && _hasHydrated_bloxs && !initialRoute) {

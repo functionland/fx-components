@@ -43,8 +43,6 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>metamask</string>
@@ -53,6 +51,10 @@
 		<string>rainbow</string>
 		<string>zerion</string>
 	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>15.0</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>
@@ -71,22 +73,22 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>LSMinimumSystemVersion</key>
-	<string>15.0</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Looking for local mDNS/Bonjour services to find the iOT device over local wifi</string>
-	<key>NSBonjourServices</key>
-	<array>
-	<string>_fulatower._tcp</string>
-	</array>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This app uses Bluetooth to connect to nearby devices for setting up the hardware iOT device locally without wifi.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>This app uses Bluetooth to connect to nearby devices for setting up the hardware iOT device locally without wifi.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app requires location access to find nearby devices through zeroconf</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_fulatower._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Looking for local mDNS/Bonjour services to find the iOT device over local wifi</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>This app uses Bluetooth to discover and connect to nearby IoT devices. Location access is required for Bluetooth scanning on iOS.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app requires location access to find nearby devices through zeroconf</string>
+	<key>RCTNewArchEnabled</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

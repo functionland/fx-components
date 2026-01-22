@@ -1,19 +1,16 @@
 {
   "presets": [
-    [
-      "module:metro-react-native-babel-preset",
-      { "useTransformReactJSXExperimental": true }
-    ]
+    ["module:@react-native/babel-preset", { "useTransformReactJSXExperimental": true }]
   ],
   "plugins": [
+    "@babel/plugin-transform-export-namespace-from",
+    "@babel/plugin-transform-class-static-block",
     [
       "@babel/plugin-transform-react-jsx",
       {
         "runtime": "automatic"
       }
     ],
-    "@babel/plugin-transform-class-static-block",
-    "react-native-reanimated/plugin",
-    ["@babel/plugin-proposal-export-namespace-from"]
+    "react-native-reanimated/plugin"
   ]
 }

@@ -9,17 +9,18 @@
     "skipLibCheck": true,
     "declaration": true,
     "strict": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["jest"]
   },
   "files": ["../../node_modules/@nx/react-native/typings/svg.d.ts"],
-  "include": [],
+  "include": ["**/*.ts", "**/*.tsx"],
   "references": [
     {
-      "path": "./tsconfig.app.json",
+      "path": "./tsconfig.app.json"
     },
     {
-      "path": "./tsconfig.spec.json",
+      "path": "./tsconfig.spec.json"
     }
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "**/Pods"]
 }

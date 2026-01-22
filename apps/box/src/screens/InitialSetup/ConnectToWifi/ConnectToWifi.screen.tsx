@@ -41,7 +41,7 @@ export const ConnectToWifiScreen = () => {
   const [connectedSsid, setConnectedSsid] = useState<string>(null);
   const [enabledHiddenNetwork, setEnableHiddenNetwork] =
     React.useState<boolean>(false);
-  const [appPeerId] = useUserProfileStore((state) => [state.appPeerId]);
+  const appPeerId = useUserProfileStore((state) => state.appPeerId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [networks, setNetworks] = useState({ data: [] });

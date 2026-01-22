@@ -48,28 +48,17 @@ import { MDNSBloxService } from '../models';
 
 export const MainTabsNavigator = () => {
   const theme = useFxTheme();
-  const [
-    password,
-    signiture,
-    setFulaIsReady,
-    fulaIsReady,
-    fulaReinitCount,
-    setFulaReinitCount,
-    useLocalIp,
-    setUseLocalIp,
-  ] = useUserProfileStore((state) => [
-    state.password,
-    state.signiture,
-    state.setFulaIsReady,
-    state.fulaIsReady,
-    state.fulaReinitCount,
-    state.setFulaReinitCount,
-    state.useLocalIp,
-    state.setUseLocalIp,
-  ]);
-  const [bloxs, currentBloxPeerId, updateBloxsStore] = useBloxsStore(
-    (state) => [state.bloxs, state.currentBloxPeerId, state.update]
-  );
+  const password = useUserProfileStore((state) => state.password);
+  const signiture = useUserProfileStore((state) => state.signiture);
+  const setFulaIsReady = useUserProfileStore((state) => state.setFulaIsReady);
+  const fulaIsReady = useUserProfileStore((state) => state.fulaIsReady);
+  const fulaReinitCount = useUserProfileStore((state) => state.fulaReinitCount);
+  const setFulaReinitCount = useUserProfileStore((state) => state.setFulaReinitCount);
+  const useLocalIp = useUserProfileStore((state) => state.useLocalIp);
+  const setUseLocalIp = useUserProfileStore((state) => state.setUseLocalIp);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const updateBloxsStore = useBloxsStore((state) => state.update);
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
   const logger = useLogger();
   const zeroconf = new Zeroconf();
@@ -172,7 +161,9 @@ export const MainTabsNavigator = () => {
           bloxAddr: bloxAddr,
           bloxPeerId: currentBloxPeerId,
         })
-          .then(() => {
+          .then(async () => {
+            // Wait for libp2p to establish relay connections before marking ready
+            await new Promise(resolve => setTimeout(resolve, 5000));
             setFulaIsReady(true);
           })
           .catch(() => {

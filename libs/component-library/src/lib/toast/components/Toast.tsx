@@ -7,8 +7,8 @@ import {
   withTiming,
   runOnJS,
   interpolate,
-  useAnimatedGestureHandler,
 } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { useInterval } from '../hooks';
 import type {
@@ -26,11 +26,6 @@ import {
 } from '../../icons/icons';
 import BaseToast from './BaseToast';
 import { FxReanimatedBox } from '../../box/box';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-
-interface GestureContext {
-  startY?: number;
-}
 
 const defaultComponentsConfig: ToastComponentsConfig = {
   success: (props: BaseToastProps) => (
@@ -99,24 +94,25 @@ const ToasterInternal: React.FC = () => {
     setIsInteracting(bool);
   };
 
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx: GestureContext) => {
-      ctx.startY = translationY.value;
+  const startY = useSharedValue(0);
+
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      startY.value = translationY.value;
       runOnJS(updateInteracting)(true);
-    },
-    onActive: (event, ctx: GestureContext) => {
+    })
+    .onUpdate((event) => {
       translationY.value = Math.min(
-        ctx.startY! + event.translationY,
+        startY.value + event.translationY,
         openY + 20
       );
-    },
-    onEnd: (event) => {
+    })
+    .onEnd((event) => {
       translationY.value = withTiming(hiddenY, {
         duration: interpolate(-event.velocityY, [0, 2000], [500, 0]),
       });
       runOnJS(updateInteracting)(false);
-    },
-  });
+    });
 
   const transitionDuration =
     currentToast?.transitionDuration ?? defaults.transitionDuration;
@@ -195,14 +191,14 @@ const ToasterInternal: React.FC = () => {
   };
 
   return (
-    <PanGestureHandler onGestureEvent={gestureHandler}>
+    <GestureDetector gesture={panGesture}>
       <FxReanimatedBox
         onLayout={onLayout}
         style={[s.toastBox, reanimatedStyle]}
       >
         {renderContent()}
       </FxReanimatedBox>
-    </PanGestureHandler>
+    </GestureDetector>
   );
 };
 

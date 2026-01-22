@@ -67,21 +67,12 @@ export const BloxScreen = () => {
   );
   const navigation = useNavigation();
   const logger = useLogger();
-  const [
-    earnings,
-    getEarnings,
-    fulaIsReady,
-    checkFulaReadiness,
-    password,
-    signiture,
-  ] = useUserProfileStore((state) => [
-    state.earnings,
-    state.getEarnings,
-    state.fulaIsReady,
-    state.checkFulaReadiness,
-    state.password,
-    state.signiture,
-  ]);
+  const earnings = useUserProfileStore((state) => state.earnings);
+  const getEarnings = useUserProfileStore((state) => state.getEarnings);
+  const fulaIsReady = useUserProfileStore((state) => state.fulaIsReady);
+  const checkFulaReadiness = useUserProfileStore((state) => state.checkFulaReadiness);
+  const password = useUserProfileStore((state) => state.password);
+  const signiture = useUserProfileStore((state) => state.signiture);
 
   // Get wallet address from MetaMask SDK
   const { account } = useSDK();
@@ -89,34 +80,19 @@ export const BloxScreen = () => {
   // Initialize contract integration with notification enabled (only for Blox screen)
   useContractIntegration({ showConnectedNotification: true });
 
-  const [
-    bloxs,
-    bloxsSpaceInfo,
-    folderSizeInfo,
-    currentBloxPeerId,
-    bloxsConnectionStatus,
-    checkBloxConnection,
-    getBloxSpace,
-    getFolderSize,
-    removeBlox,
-    updateBloxsStore,
-  ] = useBloxsStore((state) => [
-    state.bloxs,
-    state.bloxsSpaceInfo,
-    state.folderSizeInfo,
-    state.currentBloxPeerId,
-    state.bloxsConnectionStatus,
-    state.checkBloxConnection,
-    state.getBloxSpace,
-    state.getFolderSize,
-    state.removeBlox,
-    state.update,
-  ]);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  const bloxsSpaceInfo = useBloxsStore((state) => state.bloxsSpaceInfo);
+  const folderSizeInfo = useBloxsStore((state) => state.folderSizeInfo);
+  const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
+  const checkBloxConnection = useBloxsStore((state) => state.checkBloxConnection);
+  const getBloxSpace = useBloxsStore((state) => state.getBloxSpace);
+  const getFolderSize = useBloxsStore((state) => state.getFolderSize);
+  const removeBlox = useBloxsStore((state) => state.removeBlox);
+  const updateBloxsStore = useBloxsStore((state) => state.update);
 
-  const [pools, getPools] = usePoolsStore((state) => [
-    state.pools,
-    state.getPools,
-  ]);
+  const pools = usePoolsStore((state) => state.pools);
+  const getPools = usePoolsStore((state) => state.getPools);
 
   const bloxInteractions = Object.values(bloxs || {}).map<TBloxInteraction>(
     (blox) => ({
@@ -136,8 +112,14 @@ export const BloxScreen = () => {
     () => folderSizeInfo?.[currentBloxPeerId],
     [folderSizeInfo, currentBloxPeerId]
   );
-  divisionSplit.value =
-    bloxsSpaceInfo?.[currentBloxPeerId]?.used_percentage || 0;
+
+  // Update divisionSplit shared value when bloxsSpaceInfo changes
+  // Must be in useEffect to avoid writing to shared value during render
+  useEffect(() => {
+    divisionSplit.value =
+      bloxsSpaceInfo?.[currentBloxPeerId]?.used_percentage || 0;
+  }, [bloxsSpaceInfo, currentBloxPeerId, divisionSplit]);
+
   useEffect(() => {
     if (fulaIsReady && !screenIsLoaded) {
       setScreenIsLoaded(true);
@@ -201,7 +183,8 @@ export const BloxScreen = () => {
         if (fulaIsReady) {
           try {
             console.log('checking blox connection');
-            checkBloxConnection();
+            // Use more retries when user explicitly clicks Retry
+            checkBloxConnection(5, 10);
           } catch (error) {
             logger.logError(
               'handleOnConnectionOptionSelect:checkBloxConnection',

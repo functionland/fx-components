@@ -102,10 +102,8 @@ export const PluginScreen = () => {
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [installStatus, setInstallStatus] = useState('');
   const [connectionReady, setConnectionReady] = useState(false);
-  const [fulaIsReady] = useUserProfileStore((state) => [state.fulaIsReady]);
-  const [checkBloxConnection] = useBloxsStore((state) => [
-    state.checkBloxConnection,
-  ]);
+  const fulaIsReady = useUserProfileStore((state) => state.fulaIsReady);
+  const checkBloxConnection = useBloxsStore((state) => state.checkBloxConnection);
   const [revealedValues, setRevealedValues] = useState<Record<string, boolean>>(
     {}
   );

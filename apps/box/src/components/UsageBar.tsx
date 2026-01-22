@@ -5,16 +5,13 @@ import {
 } from '@functionland/component-library';
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import {
   runOnJS,
   SharedValue,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useDerivedValue,
+  useSharedValue,
 } from 'react-native-reanimated';
 import { clamp } from 'react-native-redash';
 
@@ -110,33 +107,29 @@ export const UsageBar = ({
     };
   }, [boundsX, usageFirst, usageSecond]);
 
-  const onGestureEvent = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    {
-      offsetX: number;
-    }
-  >({
-    onStart: (_, ctx) => {
-      ctx.offsetX = dividerX.value;
+  const offsetX = useSharedValue(0);
+
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      offsetX.value = dividerX.value;
       runOnJS(editStartHandler)();
-    },
-    onActive: (event, ctx) => {
+    })
+    .onUpdate((event) => {
       const percentage = clamp(
-        toPercentage(ctx.offsetX + event.translationX, boundsX),
+        toPercentage(offsetX.value + event.translationX, boundsX),
         clampBoundaries.value.low,
         clampBoundaries.value.high
       );
       divisionPercent.value = percentage;
-    },
-    onEnd: (event, ctx) => {
+    })
+    .onEnd((event) => {
       const percentage = clamp(
-        toPercentage(ctx.offsetX + event.translationX, boundsX),
+        toPercentage(offsetX.value + event.translationX, boundsX),
         clampBoundaries.value.low,
         clampBoundaries.value.high
       );
       runOnJS(editEndHandler)(percentage);
-    },
-  });
+    });
 
   const panStyle = useAnimatedStyle(() => ({
     transform: [
@@ -170,7 +163,7 @@ export const UsageBar = ({
       }}
     >
       {isEditable && (
-        <PanGestureHandler onGestureEvent={onGestureEvent}>
+        <GestureDetector gesture={panGesture}>
           <FxReanimatedBox
             zIndex="foreground"
             position="absolute"
@@ -179,7 +172,7 @@ export const UsageBar = ({
             height={TOUCHABLE_HEIGHT}
             style={[panStyle, { marginTop: HEIGHT - TOUCHABLE_HEIGHT }]}
           />
-        </PanGestureHandler>
+        </GestureDetector>
       )}
       <FxReanimatedBox
         style={poolUsageStyle}

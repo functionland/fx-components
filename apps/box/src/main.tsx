@@ -16,4 +16,9 @@ if (typeof fetch === 'undefined') {
 
 AppRegistry.registerComponent('Box', () => App);
 
-LogBox.ignoreLogs(['Require cycle: ../../node_modules/']);
+LogBox.ignoreLogs([
+  'Require cycle: ../../node_modules/',
+  "MetaMask: 'ethereum._metamask' exposes non-standard",
+  'InteractionManager has been deprecated',
+  'Sender: Failed to send batch',
+]);

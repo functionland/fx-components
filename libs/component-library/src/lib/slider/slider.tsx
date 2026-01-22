@@ -4,13 +4,9 @@ import { FxTheme } from '../theme/theme';
 import { SliderProps } from '@react-native-community/slider';
 import { FxBox, FxReanimatedBox } from '../box/box';
 import { StyleSheet, ViewProps, ViewStyle } from 'react-native';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import {
   runOnJS,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -76,19 +72,16 @@ const FxSlider = ({
     if (onValueChange) onValueChange(val);
   };
 
-  const onGestureEvent = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    {
-      offsetX: number;
-    }
-  >({
-    onStart: (_, ctx) => {
-      ctx.offsetX = translateX.value;
+  const offsetX = useSharedValue(0);
+
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      offsetX.value = translateX.value;
       labelOpacity.value = 1;
-    },
-    onActive: (event, ctx) => {
+    })
+    .onUpdate((event) => {
       _translateX.value = clamp(
-        ctx.offsetX + event.translationX,
+        offsetX.value + event.translationX,
         boundsX.value.low,
         boundsX.value.high
       );
@@ -104,9 +97,10 @@ const FxSlider = ({
       );
 
       runOnJS(activePanHandler)(_value);
-    },
-    onEnd: () => (labelOpacity.value = 0),
-  });
+    })
+    .onEnd(() => {
+      labelOpacity.value = 0;
+    });
 
   const positionerStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
@@ -141,7 +135,7 @@ const FxSlider = ({
       {...rest}
     >
       <Track style={trackStyle} />
-      <PanGestureHandler onGestureEvent={onGestureEvent}>
+      <GestureDetector gesture={panGesture}>
         <FxReanimatedBox position="absolute" style={positionerStyle}>
           <Label
             style={[labelStyle, styles.label]}
@@ -154,7 +148,7 @@ const FxSlider = ({
           />
           <Thumb />
         </FxReanimatedBox>
-      </PanGestureHandler>
+      </GestureDetector>
     </FxBox>
   );
 };

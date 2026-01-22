@@ -50,10 +50,8 @@ const LanguageSelector = () => {
 };
 
 const SelectMode = () => {
-  const { colorScheme, setColorScheme } = useSettingsStore((store) => ({
-    colorScheme: store.colorScheme,
-    setColorScheme: store.setColorScheme,
-  }));
+  const colorScheme = useSettingsStore((store) => store.colorScheme);
+  const setColorScheme = useSettingsStore((store) => store.setColorScheme);
   return (
     <FxRadioButton.Group
       onValueChange={(newValue: ColorScheme) => setColorScheme(newValue)}
@@ -96,10 +94,8 @@ const ColorSchemeSelector = ({
 };
 
 const AutomaticSwitch = () => {
-  const { isAuto, toggleIsAuto } = useSettingsStore((store) => ({
-    isAuto: store.isAuto,
-    toggleIsAuto: store.toggleIsAuto,
-  }));
+  const isAuto = useSettingsStore((store) => store.isAuto);
+  const toggleIsAuto = useSettingsStore((store) => store.toggleIsAuto);
 
   return (
     <FxBox

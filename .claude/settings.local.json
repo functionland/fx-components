@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(grep:*)",
+      "Bash(git checkout:*)",
+      "Bash(xargs:*)",
+      "Bash(npx nx run:*)",
+      "Bash(npm view:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx babel:*)"
+    ]
+  }
+}

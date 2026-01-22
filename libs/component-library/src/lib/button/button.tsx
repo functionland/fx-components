@@ -108,7 +108,7 @@ const FxButton = ({
         {icon ? (
           <>{renderIcon(icon)}</>
         ) : (
-          <FxButtonText size={size} type={type}>
+          <FxButtonText size={size} type={type} textAlign="center">
             {children}
           </FxButtonText>
         )}
