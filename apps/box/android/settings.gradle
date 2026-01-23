@@ -12,14 +12,11 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
 
 rootProject.name = 'Box'
 
-// Include the react-native-gradle-plugin for dependency resolution by other included builds (e.g., expo-module-gradle-plugin)
+// Include the react-native-gradle-plugin for dependency resolution by other included builds
 includeBuild("../node_modules/@react-native/gradle-plugin") {
     dependencySubstitution {
         substitute(module("com.facebook.react:react-native-gradle-plugin")).using(project(":"))
     }
 }
-
-apply from: new File(["node", "--print", "require.resolve('expo/package.json')"].execute(null, rootDir).text.trim(), "../scripts/autolinking.gradle")
-useExpoModules()
 
 include ':app'

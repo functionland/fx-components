@@ -17,7 +17,11 @@
       "Bash(node:*)",
       "Bash(npx expo install:*)",
       "Bash(yarn install)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(java:*)",
+      "Bash(./gradlew --stop)",
+      "Bash(./gradlew:*)"
     ]
   }
 }
