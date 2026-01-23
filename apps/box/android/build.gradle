@@ -2,12 +2,12 @@
 
 buildscript {
     ext {
+        buildToolsVersion = "36.0.0"
         minSdkVersion = 26
-        compileSdkVersion = 35
-        targetSdkVersion = 35
+        compileSdkVersion = 36
+        targetSdkVersion = 36
         ndkVersion = "27.1.12297006"
-        kotlinVersion = "2.0.21"
-        agpVersion = "8.9.0"
+        kotlinVersion = "2.1.20"
     }
     repositories {
         google()
@@ -15,7 +15,7 @@ buildscript {
         maven { url 'https://jitpack.io' }
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:${agpVersion}")
+        classpath("com.android.tools.build:gradle")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
         // Add the dependency for the Google services Gradle plugin
         classpath 'com.google.gms:google-services:4.4.2'
