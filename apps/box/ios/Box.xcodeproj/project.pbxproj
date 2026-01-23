@@ -10,7 +10,6 @@
 		00E356F31AD99517003FC87E /* BoxTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* BoxTests.m */; };
 		080469C42BBCE2350045A7C0 /* Contents.json in Resources */ = {isa = PBXBuildFile; fileRef = 080469AF2BBCE2350045A7C0 /* Contents.json */; };
 		080469C52BBCE2350045A7C0 /* Icon-App-20x20@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = 080469B02BBCE2350045A7C0 /* Icon-App-20x20@1x.png */; };
-		080469C62BBCE2350045A7C0 /* Icon-App-20x20@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = 080469B12BBCE2350045A7C0 /* Icon-App-20x20@1x.png */; };
 		080469C72BBCE2350045A7C0 /* Icon-App-20x20@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 080469B22BBCE2350045A7C0 /* Icon-App-20x20@2x.png */; };
 		080469C82BBCE2350045A7C0 /* Icon-App-20x20@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 080469B32BBCE2350045A7C0 /* Icon-App-20x20@3x.png */; };
 		080469C92BBCE2350045A7C0 /* Icon-App-29x29@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = 080469B42BBCE2350045A7C0 /* Icon-App-29x29@1x.png */; };
@@ -288,7 +287,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1530;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					00E356ED1AD99517003FC87E = {
 						CreatedOnToolsVersion = 6.2;
@@ -349,7 +348,6 @@
 				080469D72BBCE2350045A7C0 /* ItunesArtwork@2x.png in Resources */,
 				080469CC2BBCE2350045A7C0 /* Icon-App-40x40@1x.png in Resources */,
 				080469D02BBCE2350045A7C0 /* Icon-App-60x60@3x.png in Resources */,
-				080469C62BBCE2350045A7C0 /* Icon-App-20x20@1x.png in Resources */,
 				080469CE2BBCE2350045A7C0 /* Icon-App-40x40@3x.png in Resources */,
 				080469CD2BBCE2350045A7C0 /* Icon-App-40x40@2x.png in Resources */,
 				080469C92BBCE2350045A7C0 /* Icon-App-29x29@1x.png in Resources */,
@@ -585,7 +583,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4F9579F97A91C2547C683293 /* Pods-Box-BoxTests.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -618,7 +615,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E887E04B01BD89F258757CD2 /* Pods-Box-BoxTests.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
 				INFOPLIST_FILE = BoxTests/Info.plist;
@@ -724,6 +720,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -807,6 +804,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -876,6 +874,7 @@
 				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};

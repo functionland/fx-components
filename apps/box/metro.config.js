@@ -41,6 +41,7 @@ const customConfig = {
     }),
   },
   resolver: {
+    unstable_conditionNames: ['require', 'react-native'],
     extraNodeModules: {
       ...nodeLibs,
       ...nodeProtocolPolyfills,
