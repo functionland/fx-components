@@ -42,7 +42,7 @@ PODS:
     - nanopb (~> 3.30910.0)
     - PromisesSwift (~> 2.1)
   - fmt (11.0.2)
-  - Fula (1.55.15)
+  - Fula (1.55.16)
   - glog (0.3.5)
   - GoogleDataTransport (10.1.0):
     - nanopb (~> 3.30910.0)
@@ -2023,7 +2023,7 @@ PODS:
     - DoubleConversion
     - fast_float
     - fmt
-    - Fula (~> 1.55.15)
+    - Fula (~> 1.55.16)
     - glog
     - hermes-engine
     - RCT-Folly

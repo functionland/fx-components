@@ -3069,9 +3069,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@functionland/react-native-fula@npm:1.55.18":
-  version: 1.55.18
-  resolution: "@functionland/react-native-fula@npm:1.55.18"
+"@functionland/react-native-fula@npm:1.55.20":
+  version: 1.55.20
+  resolution: "@functionland/react-native-fula@npm:1.55.20"
   dependencies:
     "@polkadot/api": ^15.0.1
     "@polkadot/keyring": ^13.2.3
@@ -3086,7 +3086,7 @@ __metadata:
     "@babel/preset-env": ^7.1.6
     react: "*"
     react-native: 0.73.11
-  checksum: b143da9ebb77bcf521ff35f3e57e284d4b65fc9f3cbbf4b2834788a83aa0d115708e3211bf52c2be3499eb9ff86c520ee0c1cb14a776de870cfeb8b0a0f8c82f
+  checksum: 4d59d573104ebe4125bafa261ebdaa1439e87b83cc14ce480246dcd5c8268642c0b85ba372de1ce7282b1bbc509bb2d1ff34be3b397466c0b457d42c5fb0057e
   languageName: node
   linkType: hard
 
@@ -13854,7 +13854,7 @@ __metadata:
     "@babel/preset-env": ^7.27.2
     "@ethersproject/shims": ^5.7.0
     "@functionland/fula-sec": ^2.0.0
-    "@functionland/react-native-fula": 1.55.18
+    "@functionland/react-native-fula": 1.55.20
     "@gorhom/bottom-sheet": ^5.2.8
     "@metamask/sdk": ^0.34.0
     "@metamask/sdk-react": ^0.33.1

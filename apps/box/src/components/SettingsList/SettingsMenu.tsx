@@ -65,11 +65,12 @@ export const SettingsMenu = () => {
           screen: Routes.BluetoothCommands,
         }),
     },
-    {
-      name: 'Blox logs',
-      detail: null,
-      onPress: () => navigation.navigate(Routes.BloxLogs),
-    },
+    // Temporarily hidden - Docker API version mismatch issue
+    // {
+    //   name: 'Blox logs',
+    //   detail: null,
+    //   onPress: () => navigation.navigate(Routes.BloxLogs),
+    // },
     {
       name: 'About',
       detail: null,
