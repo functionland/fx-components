@@ -130,12 +130,8 @@ android {
 
             proguardFile "${rootProject.projectDir}/../node_modules/detox/android/detox/proguard-rules-app.pro"
 
-            /* Add the firebaseCrashlytics extension (by default,
-            * it's disabled to improve build speeds) and set
-            * nativeSymbolUploadEnabled to true along with a pointer to native libs. */
             firebaseCrashlytics {
-                nativeSymbolUploadEnabled true
-                unstrippedNativeLibsDir 'build/intermediates/merged_native_libs/release/out/lib'
+                nativeSymbolUploadEnabled false
             }
         }
     }
