@@ -10,7 +10,7 @@ import {
 } from '@functionland/component-library';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../constants/layout';
 import { DynamicIcon } from '../components';
-import { useMainTabsNavigation, useRootNavigation } from '../hooks';
+import { useRootNavigation } from '../hooks';
 import { Routes } from '../navigation/navigationConfig';
 import { usePluginsStore } from '../stores/usePluginsStore'; // Import the plugins store
 import { SvgUri } from 'react-native-svg';
@@ -29,7 +29,6 @@ export const GlobalBottomSheet = React.forwardRef<
   FxBottomSheetModalMethods,
   GlobalBottomSheetProps
 >((_, ref) => {
-  const navigation = useMainTabsNavigation();
   const navigationRoot = useRootNavigation();
   const theme = useFxTheme();
   const itemWidth = (SCREEN_WIDTH - APP_HORIZONTAL_PADDING * 2) / 4;
@@ -65,7 +64,7 @@ export const GlobalBottomSheet = React.forwardRef<
             paddingVertical="4"
             onPress={() => {
               _.closeBottomSheet();
-              navigation.navigate(Routes.PluginTab, { name: plugin.name });
+              navigationRoot.navigate(Routes.MainTabs, { screen: Routes.PluginTab, params: { name: plugin.name } });
             }}
           >
             {plugin['icon-path'] ? (

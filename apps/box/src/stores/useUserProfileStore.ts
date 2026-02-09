@@ -73,6 +73,9 @@ export interface UserProfileSlice {
   useLocalIp: string | undefined;
   lastFulaReinitTime: number;
 }
+// Generation counter for cancelling stale checkBloxConnection calls
+let connectionCheckGeneration = 0;
+
 // define the initial state
 const initialState: UserProfileSlice = {
   _hasHydrated: false,
@@ -454,10 +457,23 @@ getEarnings: async (account?: string) => {
         maxTries = 5,
         waitBetweenRetries = 15
       ): Promise<boolean> => {
+        // Increment generation to cancel any in-flight connection checks
+        const myGeneration = ++connectionCheckGeneration;
+
         const delay = (seconds: number) =>
           new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
+        const isCancelled = () => {
+          if (connectionCheckGeneration !== myGeneration) {
+            console.log('checkBloxConnection cancelled (generation changed)');
+            return true;
+          }
+          return false;
+        };
+
         const attemptConnection = async (attempt: number): Promise<boolean> => {
+          if (isCancelled()) return false;
+
           console.log('checkBloxConnection attempt ' + attempt);
 
           try {
@@ -484,6 +500,8 @@ getEarnings: async (account?: string) => {
             }
             console.log('NetInfo check done');
 
+            if (isCancelled()) return false;
+
             // Check Fula readiness
             const { fulaIsReady } = get();
             if (!fulaIsReady) {
@@ -497,6 +515,9 @@ getEarnings: async (account?: string) => {
             console.log(
               `checkBloxConnection attempt ${attempt}, connected: ${connected}`
             );
+
+            if (isCancelled()) return false;
+
             if (connected) {
               set({ bloxConnectionStatus: 'CONNECTED' });
               return true; // Connection successful
@@ -508,6 +529,7 @@ getEarnings: async (account?: string) => {
                 `Attempt ${attempt} failed, retrying after ${waitBetweenRetries} seconds...`
               );
               await delay(waitBetweenRetries);
+              if (isCancelled()) return false;
               return attemptConnection(attempt + 1); // Increment attempt and retry
             } else {
               handleMaxRetriesReached();

@@ -122,7 +122,9 @@ export const initFula = async ({
         reject(error); // Reject with the error on failure
       } finally {
         console.log('Resetting initFulaPromise');
-        cleanupInitFula(); // Use cleanup function
+        // Delay cleanup by one microtick so concurrent awaiters see the
+        // resolved/rejected promise rather than null
+        await Promise.resolve().then(() => cleanupInitFula());
       }
     })(); // Immediately invoke the async function inside the executor
   });

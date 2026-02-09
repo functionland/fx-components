@@ -38,7 +38,7 @@ interface BloxsActionSlice {
    */
   getBloxSpace: (updateStore?: boolean) => Promise<TBloxFreeSpace>;
   getFolderSize: (updateStore?: boolean) => Promise<TBloxFolderSize>;
-  checkBloxConnection: () => Promise<boolean>;
+  checkBloxConnection: (maxTries?: number, waitBetweenRetries?: number) => Promise<boolean>;
 }
 interface BloxsModel {
   _hasHydrated: boolean;
@@ -50,6 +50,8 @@ interface BloxsModel {
   currentBloxPeerId?: string;
   isChainSynced: boolean;
   syncProgress: number;
+  /** Transient flag: set to 'switch' during switchToBlox to prevent double initFula */
+  _initFulaSource: 'switch' | null;
 }
 export interface BloxsModelSlice extends BloxsModel, BloxsActionSlice {}
 const inittalState: BloxsModel = {
@@ -61,6 +63,7 @@ const inittalState: BloxsModel = {
   currentBloxPeerId: undefined,
   isChainSynced: false,
   syncProgress: 0,
+  _initFulaSource: null,
 };
 
 const createModeSlice: StateCreator<
@@ -256,7 +259,7 @@ const createModeSlice: StateCreator<
         },
       });
     },
-    checkBloxConnection: async () => {
+    checkBloxConnection: async (maxTries?: number, waitBetweenRetries?: number) => {
       const {
         bloxsConnectionStatus: currentBloxsConnectionStatus,
         currentBloxPeerId,
@@ -272,7 +275,7 @@ const createModeSlice: StateCreator<
         console.log('Geting blox connection status');
         const connected = await useUserProfileStore
           .getState()
-          .checkBloxConnection();
+          .checkBloxConnection(maxTries, waitBetweenRetries);
 
         set({
           bloxsConnectionStatus: {
@@ -293,7 +296,7 @@ const createModeSlice: StateCreator<
     },
     switchToBlox: async (peerId: string) => {
       const { currentBloxPeerId, bloxsConnectionStatus } = get();
-      
+
       // If already on this Blox, no need to switch
       if (currentBloxPeerId === peerId) {
         console.log('Already connected to this Blox:', peerId);
@@ -301,8 +304,13 @@ const createModeSlice: StateCreator<
       }
 
       console.log('Switching from Blox:', currentBloxPeerId, 'to:', peerId);
-      
+
       try {
+        const setFulaIsReady = useUserProfileStore.getState().setFulaIsReady;
+
+        // Mark fula as not ready during switch
+        setFulaIsReady(false);
+
         // Set switching status for new Blox
         set({
           bloxsConnectionStatus: {
@@ -311,7 +319,10 @@ const createModeSlice: StateCreator<
           },
         });
 
-        // Update current Blox PeerId first
+        // Set flag BEFORE changing currentBloxPeerId so MainTabs skips redundant initFula
+        set({ _initFulaSource: 'switch' });
+
+        // Update current Blox PeerId
         set({ currentBloxPeerId: peerId });
 
         // Get user credentials for libp2p reconnection
@@ -321,7 +332,7 @@ const createModeSlice: StateCreator<
         if (password && signiture) {
           // Import Helper dynamically to avoid circular dependency
           const { Helper } = await import('../utils');
-          
+
           // Re-initialize Fula with new Blox PeerId to ensure proper libp2p connection
           console.log('Re-initializing Fula connection for new Blox:', peerId);
           await Helper.initFula({
@@ -330,9 +341,13 @@ const createModeSlice: StateCreator<
             bloxPeerId: peerId,
           });
 
+          // Wait for libp2p to establish relay connections before marking ready
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          setFulaIsReady(true);
+
           // Check connection to new Blox
           const connected = await userProfileStore.checkBloxConnection();
-          
+
           set({
             bloxsConnectionStatus: {
               ...get().bloxsConnectionStatus,
@@ -344,6 +359,7 @@ const createModeSlice: StateCreator<
           return connected;
         } else {
           console.error('Missing credentials for Blox switch');
+          setFulaIsReady(false);
           set({
             bloxsConnectionStatus: {
               ...get().bloxsConnectionStatus,
@@ -354,6 +370,7 @@ const createModeSlice: StateCreator<
         }
       } catch (error) {
         console.error('Failed to switch to Blox:', peerId, error);
+        useUserProfileStore.getState().setFulaIsReady(false);
         set({
           bloxsConnectionStatus: {
             ...get().bloxsConnectionStatus,

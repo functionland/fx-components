@@ -64,6 +64,7 @@ export const MainTabsNavigator = () => {
   const zeroconf = new Zeroconf();
   const mDnsTimer = useRef<NodeJS.Timeout>();
   const [scanning, setScanning] = useState(false);
+  const isInitialMount = useRef(true);
 
   const openGlobalBottomSheet = () => {
     globalBottomSheetRef.current?.present();
@@ -137,6 +138,25 @@ export const MainTabsNavigator = () => {
 
   useEffect(() => {
     if (password && signiture && currentBloxPeerId) {
+      // If switchToBlox already handled initFula, skip to avoid double init
+      const bloxsState = useBloxsStore.getState();
+      if (bloxsState._initFulaSource === 'switch') {
+        console.log('MainTabs: skipping initFula — already handled by switchToBlox');
+        useBloxsStore.setState({ _initFulaSource: null });
+        return;
+      }
+
+      // On initial mount, skip if fula is already initialized (e.g., from SetupComplete)
+      // This prevents a redundant shutdown+reinit cycle that crashes the native library
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        const currentFulaIsReady = useUserProfileStore.getState().fulaIsReady;
+        if (currentFulaIsReady) {
+          console.log('MainTabs: skipping initFula on mount — fula is already ready');
+          return;
+        }
+      }
+
       let bloxAddr = '';
       setFulaIsReady(false);
       logger.log('MainTabsNavigator:intiFula', {

@@ -123,9 +123,16 @@ export const BloxScreen = () => {
   useEffect(() => {
     if (fulaIsReady && !screenIsLoaded) {
       setScreenIsLoaded(true);
-      updateBloxSpace();
-      updateFulaEarnings();
-      checkBloxConnection();
+      // Chain operations sequentially to avoid concurrent fula lock conflicts
+      (async () => {
+        try {
+          await checkBloxConnection();
+          await updateBloxSpace();
+          await updateFulaEarnings();
+        } catch (error) {
+          console.log('BloxScreen: sequential load error', error);
+        }
+      })();
     } else if (fulaIsReady && !bloxsConnectionStatus[currentBloxPeerId]) {
       checkBloxConnection();
     }
