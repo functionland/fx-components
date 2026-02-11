@@ -142,6 +142,9 @@ const createModeSlice: StateCreator<
      */
     getBloxSpace: async (updateStore = true) => {
       try {
+        // Wait for any in-progress fula init to complete before calling native APIs
+        const { Helper } = await import('../utils');
+        await Helper.waitForFulaInit();
         await fula.isReady(false);
         const { bloxsSpaceInfo, currentBloxPeerId } = get();
         let bloxSpace = await blockchain.bloxFreeSpace();
@@ -175,6 +178,9 @@ const createModeSlice: StateCreator<
     getFolderSize: async (updateStore = true) => {
       try {
         console.log('getFolderSize');
+        // Wait for any in-progress fula init to complete before calling native APIs
+        const { Helper } = await import('../utils');
+        await Helper.waitForFulaInit();
         await fula.isReady(false);
         const { folderSizeInfo, currentBloxPeerId } = get();
         let folderSizeInfo_tmp: TBloxFolderSize = {

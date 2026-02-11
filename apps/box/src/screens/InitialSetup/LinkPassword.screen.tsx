@@ -41,6 +41,7 @@ export const LinkPasswordScreen = () => {
   const [walletAddressInput, setWalletAddressInput] = useState('');
   const [identityReset, setIdentityReset] = useState(false);
   const [appStorageCleared, setAppStorageCleared] = useState(false);
+  const cancelledRef = React.useRef(false);
   const setKeyChainValue = useUserProfileStore((state) => state.setKeyChainValue);
   const signiture = useUserProfileStore((state) => state.signiture);
   const password = useUserProfileStore((state) => state.password);
@@ -108,8 +109,7 @@ export const LinkPasswordScreen = () => {
       resolveSigned = resolve;
     });
 
-    // Create an AbortController for cleanup
-    const abortController = new AbortController();
+    cancelledRef.current = false;
 
     try {
         notifee.registerForegroundService(() => signed);
@@ -130,46 +130,44 @@ export const LinkPasswordScreen = () => {
             },
         });
 
-        // Check if SDK connection is in a bad state (terminated/disconnected)
-        // and reset it before attempting to connect
-        const currentStatus = status?.connectionStatus;
-        console.log('Current SDK connection status:', currentStatus);
+        // Always disconnect and reconnect fresh to avoid stale connection state
+        console.log('Cleaning up previous SDK connection before signing...');
+        try {
+          await sdk?.disconnect();
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (e) {
+          console.log('Pre-sign disconnect error (non-fatal):', e);
+        }
 
-        if (currentStatus === 'terminated' || currentStatus === 'disconnected' || !connected) {
-          console.log('SDK in bad state, resetting connection...');
-          try {
-            // Disconnect first to clean up any stale state
-            await sdk?.disconnect();
-            // Small delay to let the SDK reset
-            await new Promise(resolve => setTimeout(resolve, 300));
-          } catch (e) {
-            console.log('Reset disconnect error (non-fatal):', e);
-          }
+        if (cancelledRef.current) {
+          throw new Error('Cancelled by user');
         }
 
         // Get provider
-        const provider = await sdk?.getProvider();
-        if (!provider) {
+        const currentProvider = await sdk?.getProvider();
+        if (!currentProvider) {
           throw new Error('Provider not available');
         }
-
-        console.log('Current connection status:', { connected, account });
 
         // Connect to wallet first - this will open MetaMask
         console.log('Attempting to connect to wallet...');
         const accounts = await sdk?.connect();
         console.log('Connect response:', accounts);
 
+        if (cancelledRef.current) {
+          throw new Error('Cancelled by user');
+        }
+
         // Wait a moment for state to update
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // Get the current account from the provider
-        const currentAccounts = await provider.request?.({
+        const currentAccounts = await currentProvider.request?.({
           method: 'eth_accounts',
         }) as string[];
-        
+
         console.log('Current accounts from provider:', currentAccounts);
-        
+
         if (!currentAccounts || currentAccounts.length === 0) {
           throw new Error('No account connected after wallet connection');
         }
@@ -180,41 +178,44 @@ export const LinkPasswordScreen = () => {
 
         // Convert message to hex for compatibility
         const msgHex = '0x' + Buffer.from(msg).toString('hex');
-        
+
+        if (cancelledRef.current) {
+          throw new Error('Cancelled by user');
+        }
+
         // Use provider.request directly for personal_sign
         console.log('Sending personal_sign request...');
-        signature = (await provider.request?.({
+        signature = (await currentProvider.request?.({
           method: 'personal_sign',
           params: [msgHex, connectedAccount],
         })) as string;
+
+        if (cancelledRef.current) {
+          throw new Error('Cancelled by user');
+        }
 
         console.log('Signature received:', signature);
         resolveSigned();
         return signature;
     } catch (error) {
         console.error('personalSign error:', error);
+        resolveSigned(); // Always resolve the foreground service promise to allow cleanup
         throw error;
     } finally {
         notifee.stopForegroundService();
-        abortController.abort();
-        // Clean up any remaining listeners
-        const provider = await sdk?.getProvider();
-        provider?.removeAllListeners();
     }
 };
 
 
   const disconnectWallet = async () => {
+    // Signal the in-progress personalSign to stop at the next checkpoint
+    cancelledRef.current = true;
     notifee.stopForegroundService();
     setLinking(false);
-    // Use disconnect instead of terminate - terminate makes the SDK unusable
-    // until the app is restarted
+    // Disconnect the SDK so the next connect() starts fresh
     try {
-      // Clean up provider listeners first
-      const provider = await sdk?.getProvider();
-      provider?.removeAllListeners?.();
       await sdk?.disconnect();
-      console.log('sdk disconnected');
+      console.log('sdk disconnected for retry');
     } catch (e) {
       console.log('sdk disconnect error (non-fatal):', e);
     }
@@ -275,8 +276,6 @@ export const LinkPasswordScreen = () => {
       });
       // Reset SDK state on error to allow retry
       try {
-        const provider = await sdk?.getProvider();
-        provider?.removeAllListeners?.();
         await sdk?.disconnect();
         console.log('SDK reset after error');
       } catch (e) {

@@ -16,6 +16,7 @@ import { useClaimableTokens } from '../../hooks/useClaimableTokens';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useBloxsStore } from '../../stores/useBloxsStore';
+import { copyToClipboard } from '../../utils/clipboard';
 
 type EarningCardProps = React.ComponentProps<typeof FxBox> & {
   data: { totalFula: string };
@@ -55,6 +56,12 @@ export const EarningCard = ({
   // Get selected chain and current Blox peerId for claim portal
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+
+  // Determine connected wallet address (MetaMask or manual signature, empty string if neither)
+  const walletAddress = account || manualSignatureWalletAddress || '';
+  const walletDisplay = walletAddress
+    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+    : '';
 
   // Use claimable rewards hook
   const {
@@ -99,22 +106,25 @@ export const EarningCard = ({
     onRefreshPress?.();
   };
 
+  // Build the claim URL with network, peerId, and wallet parameters
+  const buildClaimUrl = () => {
+    const claimDomain = 'claim-web.fula.network';
+    const params = new URLSearchParams();
+    params.append('network', selectedChain);
+    if (currentBloxPeerId) {
+      params.append('peerId', currentBloxPeerId);
+    }
+    if (walletAddress) {
+      params.append('wallet', walletAddress);
+    }
+    return { claimDomain, queryString: params.toString() };
+  };
+
   // Handler for opening claim web portal in MetaMask browser
   const handleOpenClaimPortal = async () => {
     try {
-      // Build the claim URL with network and peerId parameters
-      // MetaMask deep link expects domain without protocol (no https://)
-      const claimDomain = 'claim-web.fula.network';
-      const params = new URLSearchParams();
-      params.append('network', selectedChain);
-      if (currentBloxPeerId) {
-        params.append('peerId', currentBloxPeerId);
-      }
-      
-      // MetaMask deep link format: https://metamask.app.link/dapp/{domain}?{params}
-      // Do NOT URL encode - MetaMask expects raw URL after /dapp/
-      const metamaskDeepLink = `https://metamask.app.link/dapp/${claimDomain}?${params.toString()}`;
-      
+      const { claimDomain, queryString } = buildClaimUrl();
+      const metamaskDeepLink = `https://metamask.app.link/dapp/${claimDomain}?${queryString}`;
       await Linking.openURL(metamaskDeepLink);
     } catch (error: any) {
       queueToast({
@@ -123,6 +133,18 @@ export const EarningCard = ({
         message: 'Unable to open claim portal',
       });
     }
+  };
+
+  // Handler for copying claim link to clipboard
+  const handleCopyClaimLink = () => {
+    const { claimDomain, queryString } = buildClaimUrl();
+    const claimLink = `https://${claimDomain}?${queryString}`;
+    copyToClipboard(claimLink);
+    queueToast({
+      type: 'success',
+      title: t('earningCard.linkCopied'),
+      message: claimLink,
+    });
   };
 
   return (
@@ -200,15 +222,27 @@ export const EarningCard = ({
         </FxCard.Row.Data>
       </FxCard.Row>
 
-      {(account || manualSignatureWalletAddress) && (
-        <FxBox marginTop="12">
-          <FxButton
-            onPress={handleOpenClaimPortal}
-          >
-            {t('earningCard.claimRewards')}
-          </FxButton>
-        </FxBox>
-      )}
+      {walletDisplay ? (
+        <FxCard.Row>
+          <FxCard.Row.Title>{t('earningCard.wallet')}</FxCard.Row.Title>
+          <FxCard.Row.Data>
+            <FxText>{walletDisplay}</FxText>
+          </FxCard.Row.Data>
+        </FxCard.Row>
+      ) : null}
+
+      <FxBox marginTop="12">
+        <FxButton onPress={handleOpenClaimPortal}>
+          {t('earningCard.claimRewards')}
+        </FxButton>
+        <FxButton
+          variant="inverted"
+          marginTop="8"
+          onPress={handleCopyClaimLink}
+        >
+          {t('earningCard.copyClaimLink')}
+        </FxButton>
+      </FxBox>
     </FxCard>
   );
 };

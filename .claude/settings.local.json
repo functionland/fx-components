@@ -21,7 +21,19 @@
       "Bash(./gradlew clean:*)",
       "Bash(java:*)",
       "Bash(./gradlew --stop)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(ls:*)",
+      "Bash(tree:*)",
+      "Bash(npm ls:*)",
+      "Bash(while pgrep -f \"yarn install\")",
+      "Bash(do sleep 5)",
+      "Bash(done)",
+      "Bash(yarn list:*)",
+      "Bash(yarn why:*)",
+      "Bash(python3:*)",
+      "WebFetch(domain:mvnrepository.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:firebase.google.com)"
     ]
   }
 }

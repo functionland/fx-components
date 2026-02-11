@@ -229,8 +229,10 @@ export const PluginScreen = () => {
 
   useEffect(() => {
     fetchPluginInfo();
-    listActivePlugins();
-  }, [name, listActivePlugins, installStatus, connectionReady]);
+    if (fulaIsReady) {
+      listActivePlugins();
+    }
+  }, [name, listActivePlugins, installStatus, connectionReady, fulaIsReady]);
 
   useEffect(() => {
     console.log('useEffect called');

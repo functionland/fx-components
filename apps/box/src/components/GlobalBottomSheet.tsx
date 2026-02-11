@@ -13,6 +13,7 @@ import { DynamicIcon } from '../components';
 import { useRootNavigation } from '../hooks';
 import { Routes } from '../navigation/navigationConfig';
 import { usePluginsStore } from '../stores/usePluginsStore'; // Import the plugins store
+import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { SvgUri } from 'react-native-svg';
 
 type Plugin = {
@@ -34,6 +35,7 @@ export const GlobalBottomSheet = React.forwardRef<
   const itemWidth = (SCREEN_WIDTH - APP_HORIZONTAL_PADDING * 2) / 4;
   const [plugins, setPlugins] = useState<Plugin[]>([]);
   const { listActivePlugins, activePlugins } = usePluginsStore(); // Use the plugins store
+  const fulaIsReady = useUserProfileStore((state) => state.fulaIsReady);
 
   useEffect(() => {
     // Fetch available plugins
@@ -44,11 +46,13 @@ export const GlobalBottomSheet = React.forwardRef<
       .then((data: Plugin[]) => setPlugins(data))
       .catch((error) => console.error('Error fetching plugins:', error));
 
-    // Fetch active plugins
-    listActivePlugins().catch((error) =>
-      console.error('Error fetching active plugins:', error)
-    );
-  }, [listActivePlugins]);
+    // Fetch active plugins only when fula is ready
+    if (fulaIsReady) {
+      listActivePlugins().catch((error) =>
+        console.error('Error fetching active plugins:', error)
+      );
+    }
+  }, [listActivePlugins, fulaIsReady]);
 
   return (
     <FxBottomSheetModal ref={ref}>

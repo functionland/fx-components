@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { useSDK } from '@metamask/sdk-react';
 import { useToast } from '@functionland/component-library';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -53,7 +54,13 @@ export const useWalletNetwork = () => {
         isOnCorrectNetwork: isCorrect,
         isCheckingNetwork: false,
         lastNetworkCheck: Date.now(),
+        // Clear any prior error when chain is now correct
+        ...(isCorrect ? { networkError: null } : {}),
       }));
+
+      if (isCorrect && !state.isOnCorrectNetwork) {
+        console.log('Network is now on correct chain:', selectedChain);
+      }
 
       return isCorrect;
     } catch (error: any) {
@@ -106,6 +113,14 @@ export const useWalletNetwork = () => {
             autoHideDuration: 4000,
           });
         }
+      } else if (result.action === 'pending') {
+        // MetaMask SDK timed out – don't show error, let AppState listener detect outcome
+        console.log('Network switch pending – will be detected by AppState listener');
+        setState(prev => ({
+          ...prev,
+          isSwitchingNetwork: false,
+          // Don't set networkError – this isn't a failure, just a timeout
+        }));
       } else {
         setState(prev => ({
           ...prev,
@@ -172,6 +187,36 @@ export const useWalletNetwork = () => {
       checkNetwork();
     }
   }, [connected, provider, selectedChain, checkNetwork]);
+
+  // Re-check network when app returns to foreground.
+  // MetaMask mobile SDK can take several seconds to report the new chain
+  // after a switch, so we poll a few times with increasing delays.
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const pollTimersRef = useRef<NodeJS.Timeout[]>([]);
+  useEffect(() => {
+    if (!connected || !provider) return;
+
+    const handleAppState = (nextState: AppStateStatus) => {
+      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+        console.log('App returned to foreground – polling network state');
+        // Clear any existing poll timers
+        pollTimersRef.current.forEach(clearTimeout);
+        pollTimersRef.current = [];
+        // Poll at 1s, 3s, 6s after foregrounding
+        [1000, 3000, 6000].forEach((delay) => {
+          const t = setTimeout(() => checkNetwork(), delay);
+          pollTimersRef.current.push(t);
+        });
+      }
+      appStateRef.current = nextState;
+    };
+
+    const sub = AppState.addEventListener('change', handleAppState);
+    return () => {
+      sub.remove();
+      pollTimersRef.current.forEach(clearTimeout);
+    };
+  }, [connected, provider, checkNetwork]);
 
   // Listen for network changes in MetaMask
   useEffect(() => {

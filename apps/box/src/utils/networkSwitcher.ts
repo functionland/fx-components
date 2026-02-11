@@ -5,13 +5,35 @@ import { baseChainParams, skaleChainParams, baseChainId, skaleChainId } from './
 export interface NetworkSwitchResult {
   success: boolean;
   error?: string;
-  action?: 'switched' | 'added_and_switched' | 'already_connected';
+  action?: 'switched' | 'added_and_switched' | 'already_connected' | 'pending';
 }
 
 /**
+ * Race an RPC request against a timeout.
+ * MetaMask Mobile SDK often hangs forever when the app goes to background,
+ * so we cap how long we wait.
+ */
+const rpcWithTimeout = <T>(
+  promise: Promise<T>,
+  ms: number,
+  label: string
+): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`TIMEOUT:${label}`)), ms)
+    ),
+  ]);
+
+const RPC_TIMEOUT = 15000; // 15 seconds – enough for in-app approval, short enough to not block
+
+/**
  * Automatically ensures MetaMask is connected to the specified network.
- * If the network doesn't exist in MetaMask, it will be added.
- * If it exists but isn't active, it will be switched to.
+ *
+ * Because MetaMask Mobile SDK promises can hang indefinitely when the
+ * user is sent to the MetaMask app, every RPC call is wrapped with a
+ * timeout. On timeout we return action:'pending' and let the caller's
+ * AppState / chainChanged listeners detect the actual outcome.
  */
 export const ensureCorrectNetwork = async (
   provider: any,
@@ -23,109 +45,131 @@ export const ensureCorrectNetwork = async (
 
   try {
     const web3Provider = (provider as any).provider || provider;
-    
-    // Get target chain configuration
+
     const targetChainConfig = getChainConfig(targetChain);
     if (!targetChainConfig) {
       return { success: false, error: `Unsupported chain: ${targetChain}` };
     }
 
     // Check current network
-    const currentChainId = await web3Provider.request({
-      method: 'eth_chainId'
-    });
+    let currentChainId: string;
+    try {
+      currentChainId = await rpcWithTimeout(
+        web3Provider.request({ method: 'eth_chainId' }),
+        5000,
+        'eth_chainId'
+      );
+    } catch {
+      // Can't even read current chain – return pending so UI retries later
+      return { success: false, action: 'pending' };
+    }
 
     console.log(`Current chain: ${currentChainId}, Target chain: ${targetChainConfig.chainId}`);
 
-    // If already on correct network, no action needed
     if (currentChainId === targetChainConfig.chainId) {
       return { success: true, action: 'already_connected' };
     }
 
-    // For SKALE (custom network), directly try to add it first
-    // This reduces the double-popup issue
-    if (targetChain === 'skale') {
-      console.log('SKALE network detected - attempting to add directly to avoid double popup');
-      try {
-        await web3Provider.request({
-          method: 'wallet_addEthereumChain',
-          params: [targetChainConfig],
-        });
-        
-        console.log(`Successfully added and switched to ${targetChain}`);
-        return { success: true, action: 'added_and_switched' };
-      } catch (addError: any) {
-        // If add failed because network already exists, try to switch
-        if (addError.code === -32602 || addError.message?.includes('already exists')) {
-          console.log('SKALE network already exists, trying to switch...');
-          try {
-            await web3Provider.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: targetChainConfig.chainId }],
-            });
-            
-            console.log(`Successfully switched to ${targetChain}`);
-            return { success: true, action: 'switched' };
-          } catch (switchError: any) {
-            console.error('Failed to switch to existing SKALE network:', switchError);
-            return { 
-              success: false, 
-              error: `Failed to switch to ${targetChain}: ${switchError.message}` 
-            };
-          }
-        } else {
-          console.error('Failed to add SKALE network:', addError);
-          return { 
-            success: false, 
-            error: `Failed to add ${targetChain} network: ${addError.message}` 
-          };
-        }
-      }
-    }
-
-    // For other networks (like Base), try switch first, then add if needed
+    // --- Step 1: Try wallet_switchEthereumChain ---
     try {
-      await web3Provider.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: targetChainConfig.chainId }],
-      });
-      
-      console.log(`Successfully switched to ${targetChain}`);
+      console.log(`Attempting wallet_switchEthereumChain to ${targetChain} (${targetChainConfig.chainId})`);
+      await rpcWithTimeout(
+        web3Provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: targetChainConfig.chainId }],
+        }),
+        RPC_TIMEOUT,
+        'wallet_switchEthereumChain'
+      );
+      console.log(`wallet_switchEthereumChain resolved for ${targetChain}`);
       return { success: true, action: 'switched' };
     } catch (switchError: any) {
-      console.log('Switch failed, checking if network needs to be added:', switchError);
-      
-      // If switch failed because network doesn't exist (error code 4902), add it
-      if (switchError.code === 4902 || switchError.message?.includes('Unrecognized chain ID')) {
-        try {
-          await web3Provider.request({
-            method: 'wallet_addEthereumChain',
-            params: [targetChainConfig],
-          });
-          
-          console.log(`Successfully added and switched to ${targetChain}`);
-          return { success: true, action: 'added_and_switched' };
-        } catch (addError: any) {
-          console.error('Failed to add network:', addError);
-          return { 
-            success: false, 
-            error: `Failed to add ${targetChain} network: ${addError.message}` 
-          };
-        }
-      } else {
-        // Other switch errors (user rejected, etc.)
-        console.error('Failed to switch network:', switchError);
-        return { 
-          success: false, 
-          error: `Failed to switch to ${targetChain}: ${switchError.message}` 
+      if (switchError.message?.startsWith('TIMEOUT:')) {
+        // MetaMask opened but promise hung – let AppState listener detect the outcome
+        console.log('wallet_switchEthereumChain timed out – returning pending');
+        return { success: false, action: 'pending' };
+      }
+
+      console.log('wallet_switchEthereumChain failed:', switchError?.code, switchError?.message);
+
+      const needsAdd =
+        switchError.code === 4902 ||
+        switchError.code === -32603 ||
+        switchError.message?.includes('Unrecognized chain ID') ||
+        switchError.message?.includes('wallet_addEthereumChain');
+
+      if (!needsAdd) {
+        return {
+          success: false,
+          error: `Failed to switch to ${targetChain}: ${switchError.message}`,
         };
       }
     }
+
+    // --- Step 2: Chain unknown – add it ---
+    try {
+      console.log(`Attempting wallet_addEthereumChain for ${targetChain}`);
+      await rpcWithTimeout(
+        web3Provider.request({
+          method: 'wallet_addEthereumChain',
+          params: [targetChainConfig],
+        }),
+        RPC_TIMEOUT,
+        'wallet_addEthereumChain'
+      );
+      console.log(`wallet_addEthereumChain resolved for ${targetChain}`);
+    } catch (addError: any) {
+      if (addError.message?.startsWith('TIMEOUT:')) {
+        console.log('wallet_addEthereumChain timed out – returning pending');
+        return { success: false, action: 'pending' };
+      }
+      console.error('Failed to add network:', addError);
+      return {
+        success: false,
+        error: `Failed to add ${targetChain} network: ${addError.message}`,
+      };
+    }
+
+    // --- Step 3: Verify chain after add ---
+    try {
+      const newChainId = await rpcWithTimeout(
+        web3Provider.request({ method: 'eth_chainId' }),
+        5000,
+        'eth_chainId (post-add)'
+      );
+      console.log(`After add, current chain: ${newChainId}, target: ${targetChainConfig.chainId}`);
+
+      if (newChainId === targetChainConfig.chainId) {
+        return { success: true, action: 'added_and_switched' };
+      }
+
+      // Added but not switched – try explicit switch
+      console.log('Chain added but not switched, calling wallet_switchEthereumChain');
+      await rpcWithTimeout(
+        web3Provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: targetChainConfig.chainId }],
+        }),
+        RPC_TIMEOUT,
+        'wallet_switchEthereumChain (post-add)'
+      );
+      return { success: true, action: 'added_and_switched' };
+    } catch (err: any) {
+      if (err.message?.startsWith('TIMEOUT:')) {
+        console.log('Post-add switch timed out – returning pending');
+        return { success: false, action: 'pending' };
+      }
+      console.error('Failed to switch after adding network:', err);
+      return {
+        success: false,
+        error: `Network added but failed to switch to ${targetChain}: ${err.message}`,
+      };
+    }
   } catch (error: any) {
     console.error('Network switch error:', error);
-    return { 
-      success: false, 
-      error: `Network operation failed: ${error.message}` 
+    return {
+      success: false,
+      error: `Network operation failed: ${error.message}`,
     };
   }
 };

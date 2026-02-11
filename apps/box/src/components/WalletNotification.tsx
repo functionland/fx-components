@@ -118,10 +118,18 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
 
   const handleNetworkSwitch = async () => {
     try {
-      // Use the existing network switching functionality
-      await ensureCorrectNetworkConnection();
+      setIsLoading(true);
+      const result = await ensureCorrectNetworkConnection();
+      // If the switch came back as pending (MetaMask didn't switch),
+      // the AppState foreground listener in useWalletNetwork will
+      // re-check and update isOnCorrectNetwork automatically.
+      if (!result.success) {
+        console.log('Network switch result:', result);
+      }
     } catch (error) {
       console.error('Network switch failed:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 

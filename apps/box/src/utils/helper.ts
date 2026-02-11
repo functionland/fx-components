@@ -132,6 +132,16 @@ export const initFula = async ({
   return initFulaPromise;
 };
 
+export const waitForFulaInit = async (): Promise<void> => {
+  if (initFulaPromise) {
+    try {
+      await initFulaPromise;
+    } catch {
+      // Ignore errors - we just need to wait for init to complete
+    }
+  }
+};
+
 export const generateUniqueId = () => {
   const timestamp = Date.now();
   const randomNum = Math.random() * Math.pow(10, 18);

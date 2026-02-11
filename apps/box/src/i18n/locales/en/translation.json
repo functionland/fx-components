@@ -174,7 +174,10 @@
       "rewardsClaimed": "Rewards Claimed",
       "rewardsClaimedMessage": "Successfully claimed {{amount}} tokens",
       "claimFailed": "Claim Failed",
-      "claimFailedMessage": "Failed to claim tokens"
+      "claimFailedMessage": "Failed to claim tokens",
+      "wallet": "Wallet",
+      "copyClaimLink": "Copy Claim Link",
+      "linkCopied": "Link Copied"
     },
     "connectedDevicesCard": {
       "title": "Connected Devices",
