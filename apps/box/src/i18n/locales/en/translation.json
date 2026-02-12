@@ -19,12 +19,12 @@
       "walletAddress": "Wallet Address",
       "warning": "Make sure to safeguard this password and the chain you used, it's the key to decrypt your data from new devices",
       "passwordRisk": "I understand the risk of losing my password",
-      "metamaskOpen": "I already opened Metamask app before clicking Sign",
+      "walletOpen": "I already opened my Wallet app before clicking Sign",
       "connectingWallet": "Connecting Wallet...",
       "walletConnectionInProgress": "Wallet connection in progress, click to move back to the app",
       "error": "Error",
       "unableToSignWallet": "Unable to sign the wallet address!",
-      "signWithMetamask": "Sign with MetaMask",
+      "signWithWallet": "Sign with Wallet",
       "cancel": "Cancel",
       "signManually": "Sign Manually",
       "getSignatureManually": "Get Signature Manually",
@@ -145,7 +145,12 @@
         "checking": "Checking...",
         "alreadyExist": "Already exist",
         "addSelectedBloxs": "Add selected blox(s)",
-        "generateAppPeerIdError": "ConnectToExistingBloxScreen:generateAppPeerId: "
+        "generateAppPeerIdError": "ConnectToExistingBloxScreen:generateAppPeerId: ",
+        "peerIdCopied": "Peer ID copied to clipboard",
+        "peerIdMismatchTitle": "Peer ID Mismatch",
+        "peerIdMismatchBrief": "This Blox is authorized by a different identity.",
+        "peerIdMismatchHelp": "This Blox's authorizer Peer ID doesn't match your app's Peer ID. You can use the Reset command in Bluetooth Commands to reset the Blox and redo the setup to regain access.\n\nYou can claim your earned tokens at any time after the reset, but you will need the current Blox Peer ID as it may change. Copy it before resetting.",
+        "goToBluetoothCommands": "Go to Bluetooth Commands (to Reset)"
     },
     "checkConnection": {
       "verifyingConnectionWith": "Verifying connection with {{ssid}}",
@@ -168,7 +173,7 @@
       "errorLoadingBalance": "Error loading balance",
       "errorLoadingRewards": "Error loading rewards",
       "walletConnected": "Wallet Connected",
-      "walletConnectedMessage": "MetaMask wallet connected successfully",
+      "walletConnectedMessage": "Wallet connected successfully",
       "walletConnectionFailed": "Wallet Connection Failed",
       "walletConnectionFailedMessage": "Failed to connect wallet",
       "rewardsClaimed": "Rewards Claimed",
@@ -177,7 +182,9 @@
       "claimFailedMessage": "Failed to claim tokens",
       "wallet": "Wallet",
       "copyClaimLink": "Copy Claim Link",
-      "linkCopied": "Link Copied"
+      "linkCopied": "Link Copied",
+      "openInWalletInstructions": "The claim link has been copied to your clipboard. Open your wallet app, go to the browser/explore section, and paste the URL to claim your rewards.",
+      "gotIt": "Got It"
     },
     "connectedDevicesCard": {
       "title": "Connected Devices",
@@ -223,5 +230,10 @@
       "connected": "Connected",
       "checking": "Checking",
       "disconnected": "Disconnected"
+    },
+    "bleDeviceSelection": {
+      "title": "Select Blox Device",
+      "subtitle": "Multiple Blox devices found nearby. Select the one you want to connect to.",
+      "signal": "Signal"
     }
   }

@@ -335,8 +335,8 @@ const createUserProfileSlice: StateCreator<
       },
 /**
  * Fetches the FULA token balance for the specified account address.
- * If no address is provided, attempts to get the connected account (may trigger MetaMask).
- * Use this to avoid unnecessary MetaMask popups by passing the known wallet address.
+ * If no address is provided, attempts to get the connected account.
+ * Pass the known wallet address to avoid unnecessary wallet prompts.
  * @param account Optional wallet address to fetch balance for.
  */
 getEarnings: async (account?: string) => {

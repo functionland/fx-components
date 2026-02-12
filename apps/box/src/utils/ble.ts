@@ -3,6 +3,11 @@ import { Platform, PermissionsAndroid } from 'react-native';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { EConnectionStatus } from '../models';
 
+export type DiscoveredDevice = {
+    peripheral: Peripheral;
+    rssi: number;
+};
+
 export interface ChunkedResponse {
     type?: 'ble_header' | 'ble_chunk';
     index?: number;
@@ -352,7 +357,9 @@ export class BleManagerWrapper extends ResponseAssembler {
     }
     
 
-    public async connect(): Promise<boolean> {
+    public async connect(options?: {
+        onMultipleDevicesFound?: (devices: DiscoveredDevice[]) => Promise<string | null>;
+    }): Promise<boolean> {
         try {
             console.log('ble.connect called');
             console.log('[BLE] Initializing BleManager...');
@@ -368,9 +375,10 @@ export class BleManagerWrapper extends ResponseAssembler {
             
             // Check existing connections
             const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
-            const existingDevice = connectedPeripherals.find(
-                device => device.name === this.DEVICE_NAME || device.name === this.DEVICE_NAME2
-            );
+            const existingDevice = connectedPeripherals.find(device => {
+                const name = (device.name || '').toLowerCase();
+                return name.includes('fulatower') || name.includes('fxblox');
+            });
             
             if (existingDevice) {
                 // On iOS, verify connection is still valid
@@ -392,11 +400,7 @@ export class BleManagerWrapper extends ResponseAssembler {
             }
     
             return new Promise((resolve) => {
-                const discoveredDevices: Array<{
-                    peripheral: string;
-                    rssi: number;
-                    timestamp: number;
-                }> = [];
+                const discoveredDevices: DiscoveredDevice[] = [];
     
                 const SCAN_DURATION = Platform.OS === 'ios' ? 10000 : 10000; // 10 second scan
 
@@ -420,11 +424,10 @@ export class BleManagerWrapper extends ResponseAssembler {
                     if (isTargetDevice) {
                         console.log('[BLE] Found target device:', deviceName);
                         // On iOS, only add if not already discovered
-                        if (!discoveredDevices.some(d => d.peripheral === peripheral.id)) {
+                        if (!discoveredDevices.some(d => d.peripheral.id === peripheral.id)) {
                             discoveredDevices.push({
-                                peripheral: peripheral.id,
+                                peripheral: peripheral,
                                 rssi: peripheral.rssi,
-                                timestamp: Date.now(),
                             });
                         }
                     }
@@ -472,23 +475,47 @@ export class BleManagerWrapper extends ResponseAssembler {
                         resolve(false);
                         return;
                     }
-    
-                    const strongestDevice = discoveredDevices
-                        .sort((a, b) => b.rssi - a.rssi)[0];
-    
+
+                    let targetPeripheralId: string;
+
+                    if (discoveredDevices.length === 1) {
+                        // Single device: auto-connect (same as before)
+                        targetPeripheralId = discoveredDevices[0].peripheral.id;
+                    } else if (options?.onMultipleDevicesFound) {
+                        // Multiple devices: sort and ask the caller
+                        const sorted = [...discoveredDevices].sort((a, b) => {
+                            const nameA = (a.peripheral.name || '').toLowerCase();
+                            const nameB = (b.peripheral.name || '').toLowerCase();
+                            const aIsPlainOrNew = nameA === 'fulatower' || nameA === 'fxblox-rk1' || nameA.endsWith('_new');
+                            const bIsPlainOrNew = nameB === 'fulatower' || nameB === 'fxblox-rk1' || nameB.endsWith('_new');
+                            if (aIsPlainOrNew && !bIsPlainOrNew) return -1;
+                            if (!aIsPlainOrNew && bIsPlainOrNew) return 1;
+                            return b.rssi - a.rssi; // secondary sort by signal strength
+                        });
+                        const selectedId = await options.onMultipleDevicesFound(sorted);
+                        if (!selectedId) {
+                            resolve(false);
+                            return;
+                        }
+                        targetPeripheralId = selectedId;
+                    } else {
+                        // Multiple devices, no callback: strongest RSSI (backward compat)
+                        targetPeripheralId = discoveredDevices.sort((a, b) => b.rssi - a.rssi)[0].peripheral.id;
+                    }
+
                     try {
                         console.log('ble connection is starting');
-                        console.log({strongestDevice});
-                        
+                        console.log({targetPeripheralId});
+
                         if (Platform.OS === 'ios') {
                             await new Promise(resolve => setTimeout(resolve, 2000));
                         }
-                        
-                        await BleManager.connect(strongestDevice.peripheral);
+
+                        await BleManager.connect(targetPeripheralId);
                         console.log('connected to ble');
                         await new Promise(resolve => setTimeout(resolve, 5000));
                         console.log('retrieveServices started');
-                        await BleManager.retrieveServices(strongestDevice.peripheral);
+                        await BleManager.retrieveServices(targetPeripheralId);
                         console.log('retrieveServices done');
                         resolve(true);
                     } catch (error) {

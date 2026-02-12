@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import { useSDK } from '@metamask/sdk-react';
 import {
   PoolInfo,
   UserPoolInfo,
@@ -29,176 +28,16 @@ export class ContractService {
     this.readOnlyProvider = new ethers.providers.JsonRpcProvider(chainConfig.rpcUrl);
   }
 
-  async initialize(provider: any, options: { allowNetworkSwitch?: boolean } = {}): Promise<void> {
-    const { allowNetworkSwitch = true } = options;
+  async initialize(provider: any): Promise<void> {
     try {
-      // Handle MetaMask provider
+      // Handle EIP-1193 provider (from AppKit's useProvider or direct)
       const web3Provider = provider.provider || provider;
       this.provider = new ethers.providers.Web3Provider(web3Provider);
       this.signer = this.provider.getSigner();
 
       const chainConfig = getChainConfigByName(this.chain);
 
-      // Verify we're on the correct chain - request fresh chain ID from MetaMask
-      console.log('ContractService: Requesting fresh chainId from MetaMask for verification...');
-      const rawProvider = this.provider.provider || this.provider;
-      const currentChainIdHex = await rawProvider?.request?.({ method: 'eth_chainId' }) || '0x0';
-      const currentChainId = parseInt(currentChainIdHex, 16);
-      const expectedChainId = parseInt(chainConfig.chainId, 16);
-
-      console.log(`Chain verification: current=${currentChainId}, expected=${expectedChainId}, chainName=${this.chain}`);
-      console.log(`Chain verification hex: current=${currentChainIdHex}, expected=${chainConfig.chainId}`);
-
-      if (currentChainId !== expectedChainId) {
-        console.log(`ContractService: Chain mismatch detected - current: ${currentChainId}, expected: ${expectedChainId} (${chainConfig.name})`);
-        
-        if (!allowNetworkSwitch) {
-          console.log('ContractService: Network switch not allowed, throwing error for user-initiated handling');
-          throw new Error(`NETWORK_SWITCH_REQUIRED: MetaMask is on chain ${currentChainId} but app requires ${expectedChainId} (${chainConfig.name})`);
-        }
-        
-        // Check if the current chain is supported
-        const currentChainConfig = getChainConfig(currentChainIdHex);
-        const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
-          key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === currentChainIdHex
-        ) as SupportedChain;
-
-        if (currentChainConfig && currentChainName) {
-          console.log(`ContractService: User is on ${CHAIN_DISPLAY_NAMES[currentChainName]} but app requires ${chainConfig.name}`);
-          if (typeof (globalThis as any).queueToast === 'function') {
-            (globalThis as any).queueToast({
-              type: 'info',
-              title: 'Network Switch Required',
-              message: `Switching from ${CHAIN_DISPLAY_NAMES[currentChainName]} to ${chainConfig.name} as selected in app settings.`,
-            });
-          }
-        }
-
-        // Attempt chain switch when allowed
-        console.log(`ContractService: Attempting to switch to ${chainConfig.name} (${chainConfig.chainId})`);
-        try {
-          console.log(`ContractService: Sending wallet_switchEthereumChain request with chainId: ${chainConfig.chainId}`);
-          console.log(`ContractService: Request params:`, { chainId: chainConfig.chainId });
-          
-          const switchResult = await web3Provider.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: chainConfig.chainId }],
-          });
-          
-          console.log(`ContractService: Chain switch request completed with result:`, switchResult);
-          console.log(`ContractService: MetaMask should now be prompting user to switch to ${chainConfig.name}`);
-          
-          // Add a small delay to allow MetaMask to process the request
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-          // Wait longer and retry verification multiple times for chain switch to complete
-          console.log(`ContractService: Waiting for chain switch to complete...`);
-          
-          let verificationAttempts = 0;
-          const maxVerificationAttempts = 5;
-          let chainSwitchSuccessful = false;
-          
-          while (verificationAttempts < maxVerificationAttempts && !chainSwitchSuccessful) {
-            verificationAttempts++;
-            console.log(`ContractService: Chain switch verification attempt ${verificationAttempts}/${maxVerificationAttempts}`);
-            
-            // Wait progressively longer between attempts
-            const waitTime = 2000 + (verificationAttempts * 1000); // 2s, 3s, 4s, 5s, 6s
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            
-            try {
-              const newNetwork = await this.provider.getNetwork();
-              console.log(`ContractService: Verification attempt ${verificationAttempts} - current chainId: ${newNetwork.chainId}, expected: ${expectedChainId}`);
-              
-              if (newNetwork.chainId === expectedChainId) {
-                console.log(`ContractService: Chain switch verified successfully on attempt ${verificationAttempts}`);
-                chainSwitchSuccessful = true;
-                break;
-              } else {
-                console.log(`ContractService: Chain switch not yet complete on attempt ${verificationAttempts}. Current: ${newNetwork.chainId}, Expected: ${expectedChainId}`);
-              }
-            } catch (verificationError) {
-              console.warn(`ContractService: Network verification attempt ${verificationAttempts} failed:`, verificationError);
-            }
-          }
-          
-          if (!chainSwitchSuccessful) {
-            console.error(`ContractService: Chain switch verification failed after ${maxVerificationAttempts} attempts`);
-            throw new Error(`Chain switch was not completed after ${maxVerificationAttempts} verification attempts. Please manually switch to ${chainConfig.name} in MetaMask.`);
-          }
-        } catch (switchError: any) {
-          console.error(`ContractService: Chain switch failed:`, switchError);
-          console.error(`ContractService: Error details - code: ${switchError.code}, message: ${switchError.message}`);
-          
-          // Handle user rejection (code 4001) gracefully
-          if (switchError.code === 4001) {
-            console.log(`ContractService: User rejected chain switch request`);
-            if (typeof globalThis.queueToast === 'function') {
-              globalThis.queueToast({
-                type: 'warning',
-                title: 'Chain Switch Cancelled',
-                message: `Please switch to ${chainConfig.name} network in MetaMask to use this feature.`,
-              });
-            }
-            throw new Error(`Please switch to ${chainConfig.name} network to continue`);
-          }
-          
-          // Handle case where MetaMask doesn't respond or request fails silently
-          if (!switchError.code || switchError.code === -32603) {
-            console.warn(`ContractService: Chain switch request may have failed silently or MetaMask didn't respond properly`);
-            console.warn(`ContractService: This might indicate MetaMask is not showing the chain switch prompt`);
-            
-            if (typeof globalThis.queueToast === 'function') {
-              globalThis.queueToast({
-                type: 'warning',
-                title: 'Chain Switch Issue',
-                message: `MetaMask may not be responding. Please manually switch to ${chainConfig.name} network in MetaMask.`,
-              });
-            }
-          }
-
-          // If chain doesn't exist, try to add it
-          if (switchError.code === 4902) {
-            try {
-              await web3Provider.request({
-                method: 'wallet_addEthereumChain',
-                params: [{
-                  chainId: chainConfig.chainId,
-                  chainName: chainConfig.name,
-                  rpcUrls: [chainConfig.rpcUrl],
-                  blockExplorerUrls: [chainConfig.blockExplorer],
-                  nativeCurrency: {
-                    name: this.chain === 'skale' ? 'sFUEL' : 'ETH',
-                    symbol: this.chain === 'skale' ? 'sFUEL' : 'ETH',
-                    decimals: 18,
-                  },
-                }],
-              });
-            } catch (addError: any) {
-              if (typeof globalThis.queueToast === 'function') {
-                globalThis.queueToast({
-                  type: 'error',
-                  title: 'Failed to Add Network',
-                  message: `Could not add ${chainConfig.name} to MetaMask. Please add it manually.`,
-                });
-              }
-              throw new Error(`Failed to add ${chainConfig.name} to MetaMask`);
-            }
-          } else {
-            // Other errors
-            if (typeof globalThis.queueToast === 'function') {
-              globalThis.queueToast({
-                type: 'error',
-                title: 'Chain Switch Failed',
-                message: `Could not switch to ${chainConfig.name}. Please switch manually in MetaMask.`,
-              });
-            }
-            throw new Error(`Please switch to ${chainConfig.name} network`);
-          }
-        }
-      }
-
-      // Initialize contracts
+      // Initialize contracts — chain switching is handled by AppKit at the UI level
       this.poolStorageContract = new ethers.Contract(
         chainConfig.contracts.poolStorage,
         POOL_STORAGE_ABI,
@@ -218,94 +57,6 @@ export class ContractService {
       );
     } catch (error) {
       throw this.handleError(error);
-    }
-  }
-
-  async switchChain(newChain: SupportedChain): Promise<void> {
-    console.log(`ContractService: switchChain called - switching from ${this.chain} to ${newChain}`);
-    
-    if (!this.provider) {
-      console.error('ContractService: switchChain called but no provider available');
-      throw new Error('No provider available for chain switching');
-    }
-
-    const chainConfig = getChainConfigByName(newChain);
-    console.log(`ContractService: Target chain config:`, chainConfig);
-
-    try {
-      // Get current network to check if switch is needed
-      const currentNetwork = await this.provider.getNetwork();
-      const expectedChainId = parseInt(chainConfig.chainId, 16);
-      
-      console.log(`ContractService: Current chainId: ${currentNetwork.chainId}, Target chainId: ${expectedChainId}`);
-      
-      if (currentNetwork.chainId === expectedChainId) {
-        console.log(`ContractService: Already on target chain ${newChain}, updating internal state only`);
-        this.chain = newChain;
-        await this.initialize(this.provider.provider, { allowNetworkSwitch: false });
-        return;
-      }
-
-      // Request MetaMask to switch to the target chain
-      console.log(`ContractService: Requesting MetaMask to switch to ${chainConfig.name} (${chainConfig.chainId})`);
-      
-      const web3Provider = this.provider.provider;
-      await web3Provider.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: chainConfig.chainId }],
-      });
-      
-      console.log(`ContractService: Chain switch request sent to MetaMask`);
-      
-      // Wait for the switch to complete and verify
-      let verificationAttempts = 0;
-      const maxVerificationAttempts = 5;
-      let chainSwitchSuccessful = false;
-      
-      while (verificationAttempts < maxVerificationAttempts && !chainSwitchSuccessful) {
-        verificationAttempts++;
-        console.log(`ContractService: Chain switch verification attempt ${verificationAttempts}/${maxVerificationAttempts}`);
-        
-        // Wait progressively longer between attempts
-        const waitTime = 2000 + (verificationAttempts * 1000);
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-        
-        try {
-          const newNetwork = await this.provider.getNetwork();
-          console.log(`ContractService: Verification attempt ${verificationAttempts} - current chainId: ${newNetwork.chainId}, expected: ${expectedChainId}`);
-          
-          if (newNetwork.chainId === expectedChainId) {
-            console.log(`ContractService: Chain switch verified successfully on attempt ${verificationAttempts}`);
-            chainSwitchSuccessful = true;
-            break;
-          }
-        } catch (verificationError) {
-          console.warn(`ContractService: Network verification attempt ${verificationAttempts} failed:`, verificationError);
-        }
-      }
-      
-      if (!chainSwitchSuccessful) {
-        console.error(`ContractService: Chain switch verification failed after ${maxVerificationAttempts} attempts`);
-        throw new Error(`Chain switch was not completed. Please manually switch to ${chainConfig.name} in MetaMask.`);
-      }
-      
-      // Update internal state and reinitialize with the new chain
-      this.chain = newChain;
-      await this.initialize(this.provider.provider, { allowNetworkSwitch: false });
-      
-      console.log(`ContractService: Successfully switched to ${newChain} and reinitialized`);
-      
-    } catch (error: any) {
-      console.error(`ContractService: switchChain failed:`, error);
-      
-      // Handle user rejection gracefully
-      if (error.code === 4001) {
-        console.log(`ContractService: User rejected chain switch request`);
-        throw new Error(`Chain switch cancelled by user`);
-      }
-      
-      // Re-throw other errors
-      throw error;
     }
   }
 
@@ -450,18 +201,7 @@ export class ContractService {
         }
 
         console.log("leavePool: Sending actual transaction");
-        
-        // Clean up any existing MetaMask listeners before transaction
-        try {
-          const metamaskProvider = this.provider!.provider as any;
-          if (metamaskProvider && typeof metamaskProvider.removeAllListeners === 'function') {
-            console.log('leavePool: Cleaning up existing MetaMask listeners');
-            metamaskProvider.removeAllListeners();
-          }
-        } catch (cleanupError) {
-          console.warn('leavePool: Failed to cleanup MetaMask listeners:', cleanupError);
-        }
-        
+
         const gasHex = ethers.utils.hexlify(150_000); 
         const txHash = await this.provider!.provider.request({
           method: 'eth_sendTransaction',
@@ -494,17 +234,6 @@ export class ContractService {
     } catch (error) {
       console.error('leavePool: Error occurred', error);
       throw this.handleError(error);
-    } finally {
-      // Always clean up MetaMask listeners after transaction
-      try {
-        const metamaskProvider = this.provider?.provider as any;
-        if (metamaskProvider && typeof metamaskProvider.removeAllListeners === 'function') {
-          console.log('leavePool: Final cleanup of MetaMask listeners');
-          metamaskProvider.removeAllListeners();
-        }
-      } catch (finalCleanupError) {
-        console.warn('leavePool: Failed to perform final MetaMask cleanup:', finalCleanupError);
-      }
     }
   }
 
@@ -1065,17 +794,6 @@ export class ContractService {
         throw new Error(`Invalid chain configuration for ${this.chain}`);
       }
       
-      // Clean up any existing MetaMask listeners before transaction
-      try {
-        const metamaskProvider = this.provider!.provider as any;
-        if (metamaskProvider && typeof metamaskProvider.removeAllListeners === 'function') {
-          console.log('🧹 claimRewardsForPeer: Cleaning up existing MetaMask listeners');
-          metamaskProvider.removeAllListeners();
-        }
-      } catch (cleanupError) {
-        console.warn('⚠️ claimRewardsForPeer: Failed to cleanup MetaMask listeners:', cleanupError);
-      }
-      
       // Use direct provider request like leavePool does
       const gasHex = ethers.utils.hexlify(METHOD_GAS_LIMITS.claimRewards);
       const rewardEngineAddress = chainConfig.contracts.rewardEngine;
@@ -1092,13 +810,8 @@ export class ContractService {
       if (!rawProvider || !rawProvider.request) {
         throw new Error('Raw provider or request method not available');
       }
-      
-      // Add timeout to handle user interaction in MetaMask
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Transaction request timeout after 60 seconds - user may have cancelled or MetaMask is not responding')), 60000);
-      });
-      
-      const transactionPromise = rawProvider.request({
+
+      const txHash = await rawProvider.request({
         method: 'eth_sendTransaction',
         params: [{
           from: await this.signer.getAddress(),
@@ -1107,9 +820,6 @@ export class ContractService {
           data: data,
         }],
       });
-      
-      console.log('⏰ claimRewardsForPeer: Waiting for user to approve transaction in MetaMask...');
-      const txHash = await Promise.race([transactionPromise, timeoutPromise]);
       
       console.log('✅ claimRewardsForPeer: Transaction sent successfully!', { txHash });
       
@@ -1510,22 +1220,3 @@ export const resetContractService = (): void => {
   contractServiceInstance = null;
 };
 
-// Hook to use contract service with MetaMask
-export const useContractService = () => {
-  const { provider } = useSDK();
-
-  const initializeService = async (chain: SupportedChain): Promise<ContractService> => {
-    if (!provider) {
-      throw new Error('MetaMask not connected');
-    }
-
-    const service = getContractService(chain);
-    await service.initialize(provider);
-    return service;
-  };
-
-  return {
-    initializeService,
-    getService: getContractService,
-  };
-};

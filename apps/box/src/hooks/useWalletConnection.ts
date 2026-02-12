@@ -1,18 +1,18 @@
 import { useCallback } from 'react';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from './useWallet';
 import { useToast } from '@functionland/component-library';
 
 export const useWalletConnection = () => {
   const { queueToast } = useToast();
-  const { sdk, connected, account, connecting, error } = useSDK();
+  const { connected, account, connecting, open, disconnect } = useWallet();
 
   const connectWallet = useCallback(async () => {
     try {
-      await sdk?.connect();
+      await open({ view: 'Connect' });
       queueToast({
         type: 'success',
         title: 'Wallet Connected',
-        message: 'MetaMask wallet connected successfully',
+        message: 'Wallet connected successfully',
       });
     } catch (e: any) {
       queueToast({
@@ -21,15 +21,15 @@ export const useWalletConnection = () => {
         message: typeof e === 'object' && 'message' in e ? e.message : 'Failed to connect wallet',
       });
     }
-  }, [sdk, queueToast]);
+  }, [open, queueToast]);
 
   const disconnectWallet = useCallback(async () => {
     try {
-      await sdk?.disconnect();
+      await disconnect();
       queueToast({
         type: 'info',
         title: 'Wallet Disconnected',
-        message: 'MetaMask wallet disconnected',
+        message: 'Wallet disconnected',
       });
     } catch (e: any) {
       queueToast({
@@ -38,13 +38,13 @@ export const useWalletConnection = () => {
         message: typeof e === 'object' && 'message' in e ? e.message : 'Failed to disconnect wallet',
       });
     }
-  }, [sdk, queueToast]);
+  }, [disconnect, queueToast]);
 
   return {
     connected,
     account,
     connecting,
-    error,
+    error: null,
     connectWallet,
     disconnectWallet,
   };

@@ -18,7 +18,8 @@ AppRegistry.registerComponent('Box', () => App);
 
 LogBox.ignoreLogs([
   'Require cycle: ../../node_modules/',
-  "MetaMask: 'ethereum._metamask' exposes non-standard",
   'InteractionManager has been deprecated',
   'Sender: Failed to send batch',
+  'No matching key. session',
+  "session topic doesn't exist",
 ]);

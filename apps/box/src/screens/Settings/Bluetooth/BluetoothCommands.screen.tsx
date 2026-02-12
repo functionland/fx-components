@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Alert, ActivityIndicator, Modal } from 'react-native';
+import { Alert, ActivityIndicator, Modal, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   FxArrowLeftIcon,
   FxLoadingSpinner,
@@ -16,14 +17,41 @@ import {
   useFxTheme,
   FxButton,
   FxTextInput,
+  FxBottomSheetModalMethods,
 } from '@functionland/component-library';
 import BleManager, { Peripheral } from 'react-native-ble-manager';
 import { SmallHeaderText } from '../../../components/Text';
 import { useLogger, useRootNavigation } from '../../../hooks';
 import { copyToClipboard } from '../../../utils/clipboard';
-import { BleManagerWrapper } from '../../../utils/ble';
+import { BleManagerWrapper, DiscoveredDevice } from '../../../utils/ble';
 import { EConnectionStatus } from '../../../models';
-import { CurrentBloxIndicator } from '../../../components';
+import { BleDeviceSelectionBottomSheet, CurrentBloxIndicator } from '../../../components';
+
+const styles = StyleSheet.create({
+  hintBubble: {
+    position: 'absolute',
+    top: 48,
+    right: 0,
+    width: 220,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    borderRadius: 8,
+    padding: 12,
+    zIndex: 10,
+  },
+  hintArrow: {
+    position: 'absolute',
+    top: -8,
+    right: 16,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'rgba(0,0,0,0.85)',
+  },
+});
 
 export const BluetoothCommandsScreen = () => {
   const rootNavigation = useRootNavigation();
@@ -38,6 +66,29 @@ export const BluetoothCommandsScreen = () => {
   const [isCodeModalVisible, setIsCodeModalVisible] = useState(false);
   const [securityCode, setSecurityCode] = useState('');
   const [pendingCommand, setPendingCommand] = useState<string | null>(null);
+  const [showConnectHint, setShowConnectHint] = useState(false);
+  const [discoveredDevices, setDiscoveredDevices] = useState<DiscoveredDevice[]>([]);
+  const deviceSelectionResolverRef = useRef<((id: string | null) => void) | null>(null);
+  const bottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
+
+  const handleMultipleDevicesFound = (devices: DiscoveredDevice[]): Promise<string | null> => {
+    return new Promise((resolve) => {
+      deviceSelectionResolverRef.current = resolve;
+      setDiscoveredDevices(devices);
+      bottomSheetRef.current?.present();
+    });
+  };
+
+  const handleDeviceSelect = (peripheralId: string) => {
+    bottomSheetRef.current?.close();
+    deviceSelectionResolverRef.current?.(peripheralId);
+    deviceSelectionResolverRef.current = null;
+  };
+
+  const handleDeviceSelectionDismiss = () => {
+    deviceSelectionResolverRef.current?.(null);
+    deviceSelectionResolverRef.current = null;
+  };
 
   type CommandButton = {
     label: string;
@@ -133,7 +184,9 @@ export const BluetoothCommandsScreen = () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       console.log('BluetoothCommands: Calling bleManager.connect()...');
-      const connected = await bleManager.connect();
+      const connected = await bleManager.connect({
+        onMultipleDevicesFound: handleMultipleDevicesFound,
+      });
       console.log('BluetoothCommands: bleManager.connect() result:', connected);
       
       const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
@@ -238,6 +291,21 @@ export const BluetoothCommandsScreen = () => {
     return formatted;
   };
 
+  // Show first-time connect hint
+  const HINT_KEY = 'bluetooth_commands_hint_seen';
+  useEffect(() => {
+    AsyncStorage.getItem(HINT_KEY).then((val) => {
+      if (!val) {
+        setShowConnectHint(true);
+      }
+    });
+  }, []);
+
+  const dismissHint = () => {
+    setShowConnectHint(false);
+    AsyncStorage.setItem(HINT_KEY, 'true');
+  };
+
   // Clean up BLE connection on unmount
   useEffect(() => {
     return () => {
@@ -262,20 +330,38 @@ export const BluetoothCommandsScreen = () => {
         alignItems="center"
       >
         <SmallHeaderText>Bluetooth commands</SmallHeaderText>
-        <FxPressableOpacity
-          onPress={() => !runningCommand && !isConnecting && connectViaBLE()}
-          disabled={runningCommand || isConnecting}
-          style={{
-            padding: 8, // Larger touch target for iOS
-            borderRadius: 8,
-            backgroundColor: runningCommand || isConnecting ? 'rgba(0,0,0,0.1)' : 'transparent',
-          }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} // iOS touch target expansion
-        >
-          <FxPlugIcon
-            color={currentPeripheral ? 'greenBase' : 'greenBase'}
-          />
-        </FxPressableOpacity>
+        <FxBox>
+          <FxPressableOpacity
+            onPress={() => {
+              if (showConnectHint) dismissHint();
+              if (!runningCommand && !isConnecting) connectViaBLE();
+            }}
+            disabled={runningCommand || isConnecting}
+            style={{
+              padding: 8,
+              borderRadius: 8,
+              backgroundColor: runningCommand || isConnecting ? 'rgba(0,0,0,0.1)' : 'transparent',
+              borderWidth: showConnectHint ? 2 : 0,
+              borderColor: showConnectHint ? colors.greenBase : 'transparent',
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <FxPlugIcon
+              color={currentPeripheral ? 'greenBase' : 'greenBase'}
+            />
+          </FxPressableOpacity>
+          {showConnectHint && (
+            <FxPressableOpacity
+              onPress={dismissHint}
+              style={styles.hintBubble}
+            >
+              <FxText variant="bodySmallRegular" color="backgroundPrimary">
+                Click on this icon to connect to your FxBlox and after connection you will see the available commands
+              </FxText>
+              <FxBox style={styles.hintArrow} />
+            </FxPressableOpacity>
+          )}
+        </FxBox>
       </FxBox>
       {!currentPeripheral?.id ? (
         <FxBox flex={1} justifyContent="center" alignItems="center">
@@ -420,6 +506,12 @@ export const BluetoothCommandsScreen = () => {
           </FxBox>
         </FxBox>
       </Modal>
+      <BleDeviceSelectionBottomSheet
+        ref={bottomSheetRef}
+        devices={discoveredDevices}
+        onSelect={handleDeviceSelect}
+        onDismiss={handleDeviceSelectionDismiss}
+      />
     </FxSafeAreaBox>
   );
 };

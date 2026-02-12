@@ -26,7 +26,7 @@ import { Routes } from '../../navigation/navigationConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import notifee from '@notifee/react-native';
 import { useTranslation } from 'react-i18next';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from '../../hooks/useWallet';
 import { useWalletNetwork } from '../../hooks/useWalletNetwork';
 import { WalletNotification } from '../../components/WalletNotification';
 import { CurrentBloxIndicator } from '../../components';
@@ -38,7 +38,7 @@ type PoolListItem =
 
 export const PoolsScreen = () => {
   const { t } = useTranslation();
-  const { sdk } = useSDK(); // Add MetaMask SDK access for provider cleanup
+  const { provider: walletProvider } = useWallet();
   const [isList, setIsList] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState(true);
@@ -107,10 +107,10 @@ export const PoolsScreen = () => {
     }
   }, [refreshing]);
 
-  // Load pools when component mounts and we have an account (MetaMask or fallback)
+  // Load pools when component mounts and we have an account (wallet or fallback)
   useEffect(() => {
     console.log('useEffect triggered - contractReady:', contractReady, 'refreshing:', refreshing, 'connectedAccount:', connectedAccount);
-    // Load pools if we have an account (either from MetaMask or manual signature fallback)
+    // Load pools if we have an account (either from wallet or manual signature fallback)
     if (!refreshing && connectedAccount) {
       console.log('Loading pools...');
       setRefreshing(true);
@@ -333,7 +333,7 @@ export const PoolsScreen = () => {
       // Don't set refreshing=true here! It triggers immediate pool reload
       console.log('wrappedJoinPool: Starting join pool transaction...');
       
-      // Ensure MetaMask is on the correct network before transaction
+      // Ensure wallet is on the correct network before transaction
       const result = await withCorrectNetwork(async () => {
         return await joinPool(poolID.toString());
       });
@@ -484,17 +484,6 @@ export const PoolsScreen = () => {
 
       console.log('wrappedLeavePool: Starting leave pool transaction...', { poolID });
       
-      // Clean up any existing MetaMask listeners/requests before transaction (prevents stale popups)
-      try {
-        const provider = await sdk?.getProvider();
-        if (provider && typeof provider.removeAllListeners === 'function') {
-          console.log('wrappedLeavePool: Cleaning up existing MetaMask listeners');
-          provider.removeAllListeners();
-        }
-      } catch (cleanupError) {
-        console.warn('wrappedLeavePool: Failed to cleanup MetaMask listeners:', cleanupError);
-      }
-      
       // Show initial feedback toast
       queueToast({
         type: 'info',
@@ -503,7 +492,7 @@ export const PoolsScreen = () => {
         autoHideDuration: 3000,
       });
 
-      // Ensure MetaMask is on the correct network before transaction
+      // Ensure wallet is on the correct network before transaction
       const result = await withCorrectNetwork(async () => {
         return await leavePool(poolID.toString());
       });
@@ -583,16 +572,6 @@ export const PoolsScreen = () => {
         }
       }
       
-      // Always clean up MetaMask listeners after transaction (prevents stale requests)
-      try {
-        const provider = await sdk?.getProvider();
-        if (provider && typeof provider.removeAllListeners === 'function') {
-          console.log('wrappedLeavePool: Final cleanup of MetaMask listeners');
-          provider.removeAllListeners();
-        }
-      } catch (finalCleanupError) {
-        console.warn('wrappedLeavePool: Failed to perform final MetaMask cleanup:', finalCleanupError);
-      }
     }
   };
 

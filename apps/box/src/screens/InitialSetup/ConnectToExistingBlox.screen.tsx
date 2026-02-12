@@ -15,16 +15,19 @@ import {
   FxExclamationIcon,
   FxPressableOpacity,
   FxArrowLeftIcon,
+  FxCopyIcon,
+  FxInfoIcon,
   useFxTheme,
 } from '@functionland/component-library';
-import { ActivityIndicator, FlatList, ListRenderItem, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, ListRenderItem, StyleSheet } from 'react-native';
 import { SmallHeaderText, SubHeaderText } from '../../components/Text';
 import Zeroconf from 'react-native-zeroconf';
 import { NativeModules } from 'react-native';
 import { MDNSBloxService, TBloxProperty } from '../../models';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Helper } from '../../utils';
-import { useLogger, useRootNavigation } from '../../hooks';
+import { useLogger, useRootNavigation, useInitialSetupNavigation } from '../../hooks';
+import { copyToClipboard } from '../../utils/clipboard';
 import { useBloxsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
 import { useTranslation } from 'react-i18next'; // Import for translations
@@ -55,6 +58,7 @@ export const ConnectToExistingBloxScreen = () => {
   const mDnsTimer = useRef<NodeJS.Timeout>();
   const logger = useLogger();
   const rootNavigation = useRootNavigation();
+  const navigation = useInitialSetupNavigation();
 
   const appPeerId = useUserProfileStore((state) => state.appPeerId);
   const setAppPeerId = useUserProfileStore((state) => state.setAppPeerId);
@@ -275,7 +279,17 @@ export const ConnectToExistingBloxScreen = () => {
             )}
           </FxText>
           <FxText variant="bodySmallSemibold">{t('connectToExistingBlox.peerId')}:</FxText>
-          <FxText variant="bodySmallLight">{item.txt?.bloxPeerIdString}</FxText>
+          <FxBox flexDirection="row" alignItems="center">
+            <FxText variant="bodySmallLight" flex={1}>{item.txt?.bloxPeerIdString}</FxText>
+            {item.txt?.bloxPeerIdString && item.txt?.bloxPeerIdString !== 'NA' && (
+              <FxPressableOpacity onPress={() => {
+                copyToClipboard(item.txt?.bloxPeerIdString);
+                queueToast.showToast({ type: 'success', message: t('connectToExistingBlox.peerIdCopied') });
+              }}>
+                <FxCopyIcon width={16} height={16} fill={colors.content3} />
+              </FxPressableOpacity>
+            )}
+          </FxBox>
           <FxText variant="bodySmallSemibold">{t('connectToExistingBlox.hardwareId')}:</FxText>
           <FxText variant="bodySmallLight">{item.txt?.hardwareID}</FxText>
           <FxBox flexDirection="row">
@@ -311,10 +325,34 @@ export const ConnectToExistingBloxScreen = () => {
               </FxTag>
             )}
           </FxBox>
+          {appPeerId && !authorized && item.txt?.authorizer && item.txt?.authorizer !== '' && (
+            <FxBox marginTop="8">
+              <FxBox flexDirection="row" alignItems="center" marginBottom="8">
+                <FxPressableOpacity onPress={() => {
+                  Alert.alert(
+                    t('connectToExistingBlox.peerIdMismatchTitle'),
+                    t('connectToExistingBlox.peerIdMismatchHelp')
+                  );
+                }}>
+                  <FxInfoIcon width={20} height={20} color="warningBase" />
+                </FxPressableOpacity>
+                <FxText variant="bodySmallLight" color="content2" marginStart="8" flex={1}>
+                  {t('connectToExistingBlox.peerIdMismatchBrief')}
+                </FxText>
+              </FxBox>
+              <FxButton
+                size="defaults"
+                variant="inverted"
+                onPress={() => navigation.navigate(Routes.BluetoothCommands)}
+              >
+                {t('connectToExistingBlox.goToBluetoothCommands')}
+              </FxButton>
+            </FxBox>
+          )}
         </FxCard>
       );
     },
-    [bloxs, appPeerId, t]
+    [bloxs, appPeerId, t, colors, navigation]
   );
   
   return (

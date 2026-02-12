@@ -8,3 +8,4 @@ export * from './BloxInfoBottomSheet';
 export * from './BloxSelectionBottomSheet';
 export * from './FlashingCircle';
 export * from './FlashingTower';
+export * from './BleDeviceSelectionBottomSheet';

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Alert, ScrollView } from 'react-native';
 import { useWalletConnection } from '../../hooks/useWalletConnection';
 import { useContractIntegration } from '../../hooks/useContractIntegration';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from '../../hooks/useWallet';
 import { useWalletNetwork } from '../../hooks/useWalletNetwork';
 import { WalletNotification } from '../../components/WalletNotification';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
@@ -35,8 +35,8 @@ export const ChainSelectionScreen = () => {
   // Contract integration for chain switching (no notification)
   const { switchChain } = useContractIntegration({ showConnectedNotification: false });
 
-  // MetaMask SDK for direct provider access
-  const { provider } = useSDK();
+  // Wallet provider access
+  const { provider } = useWallet();
 
   // Network switching functionality
   const { ensureCorrectNetworkConnection } = useWalletNetwork();
@@ -64,7 +64,7 @@ export const ChainSelectionScreen = () => {
       return;
     }
 
-    // Always just update the setting - no automatic MetaMask opening
+    // Always just update the setting - no automatic wallet opening
     setSelectedChain(chain);
     
     if (connected && provider) {
@@ -181,11 +181,11 @@ export const ChainSelectionScreen = () => {
             )}
           </FxBox>
 
-          {/* Display Mode - MetaMask Connected (Read-only) */}
+          {/* Display Mode - Wallet Connected (Read-only) */}
           {account && (
             <FxBox>
               <FxText variant="bodyXSRegular" color="content2" marginBottom="4">
-                Connected via MetaMask
+                Connected via Wallet
               </FxText>
               <FxText variant="bodySmallRegular" numberOfLines={1} ellipsizeMode="middle">
                 {account}
@@ -209,7 +209,7 @@ export const ChainSelectionScreen = () => {
           {!account && !manualSignatureWalletAddress && !isEditingWalletAddress && (
             <FxBox>
               <FxText variant="bodyXSRegular" color="content2">
-                No wallet connected. Connect MetaMask or enter a wallet address manually.
+                No wallet connected. Connect a wallet or enter a wallet address manually.
               </FxText>
             </FxBox>
           )}

@@ -40,8 +40,8 @@ export const useClaimableTokens = () => {
     canClaim: false,
   });
 
-  // Determine effective account (MetaMask or manual signature)
-  // When MetaMask is ready, use connectedAccount. Otherwise use manual signature as fallback.
+  // Determine effective account (wallet or manual signature)
+  // When wallet is ready, use connectedAccount. Otherwise use manual signature as fallback.
   const effectiveAccount = isReady ? connectedAccount : (connectedAccount || manualSignatureWalletAddress);
   const useReadOnlyService = !isReady && !!manualSignatureWalletAddress;
 
@@ -80,8 +80,8 @@ export const useClaimableTokens = () => {
       let claimedInfo: any;
 
       if (contractService && isReady) {
-        // Use contractService when MetaMask is connected
-        console.log('📞 useClaimableTokens: Using contractService (MetaMask connected)');
+        // Use contractService when wallet is connected
+        console.log('📞 useClaimableTokens: Using contractService (wallet connected)');
         
         unclaimedRewards = await contractService.getUnclaimedRewards(
           effectiveAccount,
@@ -95,7 +95,7 @@ export const useClaimableTokens = () => {
           userPoolId
         );
       } else if (useReadOnlyService) {
-        // Use RPC provider when MetaMask is not connected
+        // Use RPC provider when wallet is not connected
         console.log('📞 useClaimableTokens: Using RPC provider (manual signature fallback)');
         
         const chainConfig = getChainConfigByName(selectedChain);

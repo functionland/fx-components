@@ -14,7 +14,7 @@ import { TPool } from '../../models';
 import { useBloxsStore } from '../../stores/useBloxsStore';
 import { usePoolsStore } from '../../stores/usePoolsStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from '../../hooks/useWallet';
 import { PoolApiService } from '../../services/poolApiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -57,7 +57,7 @@ const DetailInfo = ({
   }>({ step1Complete: false, step2Complete: false });
 
   const { queueToast } = useToast();
-  const { account } = useSDK();
+  const { account } = useWallet();
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
   const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
   const selectedChain = useSettingsStore((state) => state.selectedChain);

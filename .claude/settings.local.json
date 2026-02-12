@@ -33,7 +33,11 @@
       "Bash(python3:*)",
       "WebFetch(domain:mvnrepository.com)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:firebase.google.com)"
+      "WebFetch(domain:firebase.google.com)",
+      "WebFetch(domain:docs.reown.com)",
+      "WebFetch(domain:docs.metamask.io)",
+      "WebFetch(domain:developer.trustwallet.com)",
+      "WebFetch(domain:specs.walletconnect.com)"
     ]
   }
 }

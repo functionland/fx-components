@@ -6,8 +6,8 @@ import { peerIdToBytes32, bytes32ToPeerId } from '../utils/peerIdConversion';
 
 /**
  * PoolReadService provides read-only access to pool data using standard RPC endpoints
- * This allows reading pool information without requiring MetaMask connection
- * Perfect for when user has signed manually and MetaMask is not connected
+ * This allows reading pool information without requiring a wallet connection.
+ * Perfect for when user has signed manually and no wallet is connected.
  */
 export class PoolReadService {
   private provider: ethers.providers.JsonRpcProvider | null = null;

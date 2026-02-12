@@ -39,7 +39,7 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
         marginBottom={2}
       >
         <FxText fontSize="sm" color="warning.800">
-          ⚠️ Switch to {targetNetworkName} in MetaMask
+          Switch to {targetNetworkName} in your wallet
         </FxText>
       </FxBox>
     );
@@ -58,7 +58,7 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
         Network Mismatch
       </FxText>
       <FxText fontSize="sm" color="warning.700" marginBottom={3}>
-        Your app is set to {targetNetworkName}, but MetaMask is on a different network. 
+        Your app is set to {targetNetworkName}, but your wallet is on a different network.
         Please switch to {targetNetworkName} to continue.
       </FxText>
       

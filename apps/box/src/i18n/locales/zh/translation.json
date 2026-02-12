@@ -19,12 +19,12 @@
     "walletAddress": "钱包地址",
     "warning": "确保保护好此密码和您使用的链，它是从新设备解密数据的关键",
     "passwordRisk": "我了解丢失密码的风险",
-    "metamaskOpen": "点击签名前我已经打开了 Metamask 应用",
+    "walletOpen": "点击签名前我已经打开了钱包应用",
     "connectingWallet": "正在连接钱包...",
     "walletConnectionInProgress": "钱包连接正在进行中，点击返回应用",
     "error": "错误",
     "unableToSignWallet": "无法签署钱包地址！",
-    "signWithMetamask": "使用 MetaMask 签名",
+    "signWithWallet": "使用钱包签名",
     "cancel": "取消",
     "signManually": "手动签名",
     "getSignatureManually": "手动获取签名",
@@ -138,7 +138,12 @@
       "checking": "检查中...",
       "alreadyExist": "已存在",
       "addSelectedBloxs": "添加选定的 blox",
-      "generateAppPeerIdError": "连接到现有Blox屏幕:生成应用程序对等ID: "
+      "generateAppPeerIdError": "连接到现有Blox屏幕:生成应用程序对等ID: ",
+      "peerIdCopied": "对等 ID 已复制到剪贴板",
+      "peerIdMismatchTitle": "对等 ID 不匹配",
+      "peerIdMismatchBrief": "此 Blox 由不同的身份授权。",
+      "peerIdMismatchHelp": "此 Blox 的授权者对等 ID 与您的应用对等 ID 不匹配。您可以在蓝牙命令中使用重置命令来重置 Blox 并重新设置以重新获得访问权限。\n\n重置后您可以随时领取已获得的代币，但您需要当前的 Blox 对等 ID，因为它可能会更改。请在重置前复制它。",
+      "goToBluetoothCommands": "前往蓝牙命令（重置）"
   },
   "checkConnection": {
     "verifyingConnectionWith": "正在验证与 {{ssid}} 的连接",
@@ -161,13 +166,18 @@
     "errorLoadingBalance": "加载余额时出错",
     "errorLoadingRewards": "加载奖励时出错",
     "walletConnected": "钱包已连接",
-    "walletConnectedMessage": "MetaMask 钱包连接成功",
+    "walletConnectedMessage": "钱包连接成功",
     "walletConnectionFailed": "钱包连接失败",
     "walletConnectionFailedMessage": "连接钱包失败",
     "rewardsClaimed": "奖励已领取",
     "rewardsClaimedMessage": "成功领取 {{amount}} 代币",
     "claimFailed": "领取失败",
-    "claimFailedMessage": "领取代币失败"
+    "claimFailedMessage": "领取代币失败",
+    "wallet": "钱包",
+    "copyClaimLink": "复制领取链接",
+    "linkCopied": "链接已复制",
+    "openInWalletInstructions": "领取链接已复制到剪贴板。请打开您的钱包应用，进入浏览器/探索部分，粘贴网址以领取奖励。",
+    "gotIt": "知道了"
   },
   "connectedDevicesCard": {
     "title": "已连接设备",
@@ -213,5 +223,10 @@
     "connected": "已连接",
     "checking": "检查中",
     "disconnected": "已断开"
+  },
+  "bleDeviceSelection": {
+    "title": "选择 Blox 设备",
+    "subtitle": "附近发现多个 Blox 设备。请选择您要连接的设备。",
+    "signal": "信号"
   }
 }

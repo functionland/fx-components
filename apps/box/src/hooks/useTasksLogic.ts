@@ -50,7 +50,7 @@ export const useTasksLogic = () => {
     userActiveRequests.length > 0 &&
     userActiveRequests[0] !== '0';
 
-  // Determine if wallet is connected (either MetaMask or manual signature)
+  // Determine if wallet is connected (either via AppKit or manual signature)
   const hasWallet = connected || !!manualSignatureWalletAddress;
 
   // Generate tasks based on current state

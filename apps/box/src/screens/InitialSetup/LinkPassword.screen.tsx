@@ -1,5 +1,5 @@
 import '@walletconnect/react-native-compat';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 // @ts-ignore-next-line
 import { HDKEY } from '@functionland/fula-sec';
 import {
@@ -20,18 +20,17 @@ import * as helper from '../../utils/helper';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { KeyChain } from '../../utils';
 import { ActivityIndicator, ScrollView, Linking, Platform, Alert } from 'react-native';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from '../../hooks/useWallet';
 import notifee from '@notifee/react-native';
 import { useTranslation } from 'react-i18next'; // Import for translations
 
 export const LinkPasswordScreen = () => {
   const { t } = useTranslation(); // Add translation hook
   const navigation = useInitialSetupNavigation();
-  const { account, sdk, provider, connected, error, status, rpcHistory } =
-    useSDK();
+  const { account, provider, connected, open, disconnect } = useWallet();
 
   const [iKnow, setIKnow] = useState(false);
-  const [metamaskOpen, setMetamaskOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
   const { queueToast } = useToast();
   const [linking, setLinking] = useState(false);
   const [signatureData, setSignatureData] = useState<string>('');
@@ -42,6 +41,8 @@ export const LinkPasswordScreen = () => {
   const [identityReset, setIdentityReset] = useState(false);
   const [appStorageCleared, setAppStorageCleared] = useState(false);
   const cancelledRef = React.useRef(false);
+  // Track whether we're waiting for wallet connection to auto-sign
+  const awaitingConnectionRef = useRef(false);
   const setKeyChainValue = useUserProfileStore((state) => state.setKeyChainValue);
   const signiture = useUserProfileStore((state) => state.signiture);
   const password = useUserProfileStore((state) => state.password);
@@ -65,47 +66,34 @@ export const LinkPasswordScreen = () => {
   }, [signiture, password, signatureData, identityReset]);
 
   useEffect(() => {
-    console.log('in test useEffect');
-    console.log(
-      JSON.stringify({ error: error, status: status, rpcHistory: rpcHistory })
-    );
-    const response = {
-      status: status,
-      rpcHistory: rpcHistory,
-    };
-    // Check if the connectionStatus is 'linked'
-    if (
-      response?.status?.connectionStatus === 'linked' &&
-      response?.rpcHistory
-    ) {
-      // Get the rpcHistory object's keys and reverse them to start from the end
-      const rpcHistoryKeys = Object.keys(response.rpcHistory).reverse();
-
-      // Iterate over the rpcHistory keys from the end
-      for (const key of rpcHistoryKeys) {
-        const rpcCall = response.rpcHistory[key];
-
-        // Check if result exists, is a string, and starts with '0x'
-        if (
-          rpcCall.result &&
-          typeof rpcCall.result === 'string' &&
-          rpcCall.result.startsWith('0x')
-        ) {
-          setSignatureData(rpcCall.result);
-          break; // Exit the loop after finding the first matching result
-        }
-      }
-    }
-  }, [error, status, rpcHistory]);
-  useEffect(() => {
     console.log('signiture is: ' + signiture + '; password:' + password);
   }, [signiture, password]);
 
+  // Auto-trigger signing once wallet connects after opening the modal
+  useEffect(() => {
+    if (awaitingConnectionRef.current && connected && account && provider) {
+      awaitingConnectionRef.current = false;
+      console.log('Wallet connected after modal, auto-triggering sign...');
+      // Small delay to let AppKit fully settle
+      const timer = setTimeout(() => {
+        handleLinkPassword();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [connected, account, provider]);
+
   const personalSign = async (msg: string) => {
+    // If not connected, open AppKit modal and signal caller to wait
+    if (!connected || !account) {
+      console.log('Wallet not connected, opening AppKit modal...');
+      awaitingConnectionRef.current = true;
+      await open({ view: 'Connect' });
+      return null;
+    }
+
     let signature = '';
     let resolveSigned = () => {};
     const signed = new Promise<void>((resolve) => {
-      console.log({signature});
       resolveSigned = resolve;
     });
 
@@ -130,54 +118,23 @@ export const LinkPasswordScreen = () => {
             },
         });
 
-        // Always disconnect and reconnect fresh to avoid stale connection state
-        console.log('Cleaning up previous SDK connection before signing...');
-        try {
-          await sdk?.disconnect();
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (e) {
-          console.log('Pre-sign disconnect error (non-fatal):', e);
-        }
-
         if (cancelledRef.current) {
           throw new Error('Cancelled by user');
         }
 
-        // Get provider
-        const currentProvider = await sdk?.getProvider();
-        if (!currentProvider) {
+        if (!provider) {
           throw new Error('Provider not available');
         }
 
-        // Connect to wallet first - this will open MetaMask
-        console.log('Attempting to connect to wallet...');
-        const accounts = await sdk?.connect();
-        console.log('Connect response:', accounts);
-
-        if (cancelledRef.current) {
-          throw new Error('Cancelled by user');
-        }
-
-        // Wait a moment for state to update
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Get the current account from the provider
-        const currentAccounts = await currentProvider.request?.({
-          method: 'eth_accounts',
-        }) as string[];
-
-        console.log('Current accounts from provider:', currentAccounts);
-
-        if (!currentAccounts || currentAccounts.length === 0) {
-          throw new Error('No account connected after wallet connection');
-        }
-
-        const connectedAccount = currentAccounts[0];
-        console.log('Using account for signing:', connectedAccount);
+        // Normalize account to lowercase to match old MetaMask SDK behavior
+        // (eth_accounts returned lowercase; AppKit returns checksummed mixed-case)
+        const signingAccount = account!.toLowerCase();
+        console.log('Using account for signing:', signingAccount);
         console.log('Message to sign:', msg);
 
         // Convert message to hex for compatibility
         const msgHex = '0x' + Buffer.from(msg).toString('hex');
+        console.log('Message hex:', msgHex);
 
         if (cancelledRef.current) {
           throw new Error('Cancelled by user');
@@ -185,9 +142,9 @@ export const LinkPasswordScreen = () => {
 
         // Use provider.request directly for personal_sign
         console.log('Sending personal_sign request...');
-        signature = (await currentProvider.request?.({
+        signature = (await provider.request({
           method: 'personal_sign',
-          params: [msgHex, connectedAccount],
+          params: [msgHex, signingAccount],
         })) as string;
 
         if (cancelledRef.current) {
@@ -212,12 +169,12 @@ export const LinkPasswordScreen = () => {
     cancelledRef.current = true;
     notifee.stopForegroundService();
     setLinking(false);
-    // Disconnect the SDK so the next connect() starts fresh
+    // Disconnect wallet so next connect starts fresh
     try {
-      await sdk?.disconnect();
-      console.log('sdk disconnected for retry');
+      await disconnect();
+      console.log('Wallet disconnected for retry');
     } catch (e) {
-      console.log('sdk disconnect error (non-fatal):', e);
+      console.log('Wallet disconnect error (non-fatal):', e);
     }
   };
 
@@ -241,6 +198,7 @@ export const LinkPasswordScreen = () => {
       }
     };
     if (signatureData) {
+      setIdentityReset(false); // Clear reset flag — fresh signature received
       const walletSignature = signatureData.toString();
       console.log('walletSignature', walletSignature);
       setKeys(walletSignature);
@@ -259,8 +217,12 @@ export const LinkPasswordScreen = () => {
       console.log(chainCode);
       console.log('before signing...');
       const sig = await personalSign(chainCode);
-      if (!sig || sig === undefined || sig === null) {
-        throw 'Sign failed';
+      if (!sig) {
+        // personalSign returned null — wallet connect modal was opened.
+        // Signing will auto-trigger once wallet connects (via useEffect below).
+        console.log('Wallet connect modal opened, waiting for connection...');
+        setLinking(false);
+        return;
       }
       console.log('Signature: ', sig);
       setSignatureData(sig);
@@ -274,13 +236,6 @@ export const LinkPasswordScreen = () => {
         type: 'error',
         autoHideDuration: 3000,
       });
-      // Reset SDK state on error to allow retry
-      try {
-        await sdk?.disconnect();
-        console.log('SDK reset after error');
-      } catch (e) {
-        console.log('SDK reset error (non-fatal):', e);
-      }
     } finally {
       setLinking(false);
     }
@@ -303,6 +258,13 @@ export const LinkPasswordScreen = () => {
     // Clear cached signature and password data
     await setWalletId('', true); // true flag clears signature data
     setIdentityReset(true);
+    setSignatureData(''); // Clear so re-sign with same password triggers useEffect
+    // Disconnect wallet so user can connect a different one
+    try {
+      await disconnect();
+    } catch (e) {
+      console.log('Wallet disconnect on reset (non-fatal):', e);
+    }
     queueToast({
       type: 'success',
       message: t('linkPassword.cachedDataCleared'),
@@ -476,17 +438,17 @@ export const LinkPasswordScreen = () => {
                   value={1}
                 />
               </FxRadioButton.Group>
-              {/* Only show metamask checkbox when NOT using manual signature */}
+              {/* Only show wallet checkbox when NOT using manual signature */}
               {!manualSignature && (
                 <FxRadioButton.Group
-                  value={metamaskOpen ? [1] : []}
+                  value={walletOpen ? [1] : []}
                   onValueChange={(val: any) =>
-                    setMetamaskOpen(val && val[0] === 1 ? true : false)
+                    setWalletOpen(val && val[0] === 1 ? true : false)
                   }
                 >
                   <FxRadioButtonWithLabel
                     paddingVertical="8"
-                    label={t('linkPassword.metamaskOpen')}
+                    label={t('linkPassword.walletOpen')}
                     value={1}
                   />
                 </FxRadioButton.Group>
@@ -541,12 +503,12 @@ export const LinkPasswordScreen = () => {
             </>
           ) : (
             <FxBox>
-              {/* MetaMask signing button - only show when NOT in manual signature mode */}
+              {/* Wallet signing button - only show when NOT in manual signature mode */}
               {!manualSignature && (
                 <>
                   <FxButton
                     size="large"
-                    disabled={!passwordInput || !iKnow || !metamaskOpen || !provider}
+                    disabled={!passwordInput || !iKnow || !walletOpen}
                     onPress={
                       linking
                         ? disconnectWallet
@@ -559,7 +521,7 @@ export const LinkPasswordScreen = () => {
                         <FxText marginLeft="8">{t('linkPassword.cancel')}</FxText>
                       </>
                     ) : (
-                      t('linkPassword.signWithMetamask')
+                      t('linkPassword.signWithWallet')
                     )}
                   </FxButton>
                   <FxSpacer height={10} />

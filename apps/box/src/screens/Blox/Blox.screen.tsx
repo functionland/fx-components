@@ -38,7 +38,7 @@ import {
   usePoolsStore,
   useUserProfileStore,
 } from '../../stores';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from '../../hooks/useWallet';
 import { useWalletNetwork } from '../../hooks/useWalletNetwork';
 import { WalletNotification } from '../../components/WalletNotification';
 import { blockchain, fxblox } from '@functionland/react-native-fula';
@@ -74,8 +74,8 @@ export const BloxScreen = () => {
   const password = useUserProfileStore((state) => state.password);
   const signiture = useUserProfileStore((state) => state.signiture);
 
-  // Get wallet address from MetaMask SDK
-  const { account } = useSDK();
+  // Get wallet address
+  const { account } = useWallet();
 
   // Initialize contract integration with notification enabled (only for Blox screen)
   useContractIntegration({ showConnectedNotification: true });
@@ -157,7 +157,7 @@ export const BloxScreen = () => {
     try {
       setLoadingFulaEarnings(true);
       if (fulaIsReady && account) {
-        // Pass MetaMask account address to getEarnings to avoid MetaMask popup
+        // Pass wallet account address to getEarnings to avoid wallet prompt
         const space = await getEarnings(account);
         logger.log('updateFulaEarnings', space);
       }

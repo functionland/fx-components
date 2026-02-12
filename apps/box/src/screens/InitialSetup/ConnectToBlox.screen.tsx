@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   FxBox,
   FxButton,
@@ -7,16 +7,17 @@ import {
   FxSafeAreaBox,
   useToast,
   FxDropdown, // Added for language selector
+  FxBottomSheetModalMethods,
 } from '@functionland/component-library';
 import BleManager from 'react-native-ble-manager';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { EConnectionStatus } from '../../models';
-import { BleManagerWrapper, ResponseAssembler } from '../../utils/ble';
+import { BleManagerWrapper, DiscoveredDevice, ResponseAssembler } from '../../utils/ble';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import axios from 'axios';
 import { API_URL } from '../../api/index';
-import { FlashingCircle, FlashingTower } from '../../components';
+import { BleDeviceSelectionBottomSheet, FlashingCircle, FlashingTower } from '../../components';
 import { useTranslation } from 'react-i18next'; // Import for translations
 
 export const ConnectToBloxScreen = () => {
@@ -43,6 +44,29 @@ export const ConnectToBloxScreen = () => {
   const [connectionStatus, setConnectionStatus] = useState<EConnectionStatus>(
     EConnectionStatus.notConnected
   );
+
+  const [discoveredDevices, setDiscoveredDevices] = useState<DiscoveredDevice[]>([]);
+  const deviceSelectionResolverRef = useRef<((id: string | null) => void) | null>(null);
+  const bottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
+
+  const handleMultipleDevicesFound = (devices: DiscoveredDevice[]): Promise<string | null> => {
+    return new Promise((resolve) => {
+      deviceSelectionResolverRef.current = resolve;
+      setDiscoveredDevices(devices);
+      bottomSheetRef.current?.present();
+    });
+  };
+
+  const handleDeviceSelect = (peripheralId: string) => {
+    bottomSheetRef.current?.close();
+    deviceSelectionResolverRef.current?.(peripheralId);
+    deviceSelectionResolverRef.current = null;
+  };
+
+  const handleDeviceSelectionDismiss = () => {
+    deviceSelectionResolverRef.current?.(null);
+    deviceSelectionResolverRef.current = null;
+  };
 
   // Use translations for connection status strings
   const getConnectionStatusText = (status: EConnectionStatus): string => {
@@ -76,7 +100,9 @@ export const ConnectToBloxScreen = () => {
       }
 
       setConnectionStatus(EConnectionStatus.connecting);
-      const connected = await bleManager.connect();
+      const connected = await bleManager.connect({
+        onMultipleDevicesFound: handleMultipleDevicesFound,
+      });
       setConnectionStatus(
         connected ? EConnectionStatus.connected : EConnectionStatus.failed
       );
@@ -293,6 +319,12 @@ export const ConnectToBloxScreen = () => {
           </FxButton>
         </FxBox>
       </FxBox>
+      <BleDeviceSelectionBottomSheet
+        ref={bottomSheetRef}
+        devices={discoveredDevices}
+        onSelect={handleDeviceSelect}
+        onDismiss={handleDeviceSelectionDismiss}
+      />
     </FxSafeAreaBox>
   );
 };

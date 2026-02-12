@@ -5,7 +5,7 @@ import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { ethers } from 'ethers';
 import { getChainConfigByName } from '../contracts/config';
 import { FULA_TOKEN_ABI } from '../contracts/abis';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from './useWallet';
 
 export interface FulaBalanceState {
   balance: string;
@@ -31,13 +31,13 @@ export const useFulaBalance = (account?: string) => {
 
   const { connectedAccount } = useContractIntegration();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
-  const { account: metamaskAccount } = useSDK();
+  const { account: walletAccount } = useWallet();
   const manualSignatureWalletAddress = useUserProfileStore(
     (state) => state.manualSignatureWalletAddress
   );
 
   const loadBalance = useCallback(async () => {
-    const targetAccount = account || metamaskAccount || connectedAccount || manualSignatureWalletAddress;
+    const targetAccount = account || walletAccount || connectedAccount || manualSignatureWalletAddress;
     if (!targetAccount) {
       setState(prev => ({ ...prev, error: 'No account available' }));
       return;
@@ -93,7 +93,7 @@ export const useFulaBalance = (account?: string) => {
         error: errorMessage,
       }));
     }
-  }, [selectedChain, account, metamaskAccount, connectedAccount, manualSignatureWalletAddress]);
+  }, [selectedChain, account, walletAccount, connectedAccount, manualSignatureWalletAddress]);
 
   const refreshBalance = useCallback(() => {
     loadBalance();
@@ -101,21 +101,21 @@ export const useFulaBalance = (account?: string) => {
 
   // Load balance when dependencies change
   useEffect(() => {
-    if (account || metamaskAccount || connectedAccount || manualSignatureWalletAddress) {
+    if (account || walletAccount || connectedAccount || manualSignatureWalletAddress) {
       loadBalance();
     }
-  }, [account, metamaskAccount, connectedAccount, manualSignatureWalletAddress, loadBalance]);
+  }, [account, walletAccount, connectedAccount, manualSignatureWalletAddress, loadBalance]);
 
   // Auto-refresh balance every 30 seconds
   useEffect(() => {
-    if (!(account || metamaskAccount || connectedAccount || manualSignatureWalletAddress)) return;
+    if (!(account || walletAccount || connectedAccount || manualSignatureWalletAddress)) return;
 
     const interval = setInterval(() => {
       loadBalance();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [account, metamaskAccount, connectedAccount, manualSignatureWalletAddress, loadBalance]);
+  }, [account, walletAccount, connectedAccount, manualSignatureWalletAddress, loadBalance]);
 
   return {
     ...state,

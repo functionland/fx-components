@@ -3,7 +3,7 @@ import { FxBox, FxText, FxButton, FxSpacer } from '@functionland/component-libra
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { useWalletNetwork } from '../hooks/useWalletNetwork';
 import { useContractIntegration } from '../hooks/useContractIntegration';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from '../hooks/useWallet';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 
 export type WalletNotificationType = 'connect' | 'network' | 'hidden';
@@ -30,13 +30,13 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
     selectedChain 
   } = useWalletNetwork();
   const { initializeContracts, isInitializing } = useContractIntegration();
-  const { account } = useSDK();
+  const { account } = useWallet();
   const manualSignatureWalletAddress = useUserProfileStore((state) => state.manualSignatureWalletAddress);
   const [isLoading, setIsLoading] = useState(false);
   const [showAfterDelay, setShowAfterDelay] = useState(false);
   const [postLoadingDelay, setPostLoadingDelay] = useState(false);
 
-  // Determine if we have any account (MetaMask or manual signature)
+  // Determine if we have any account (connected wallet or manual signature)
   const hasAnyAccount = connected && account || manualSignatureWalletAddress;
 
   // Add delay before showing connect wallet notification to prevent flicker
@@ -78,7 +78,7 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
 
   // Determine what type of notification to show
   const getNotificationType = (): WalletNotificationType => {
-    // If MetaMask is connected, check network
+    // If wallet is connected, check network
     if (connected && account) {
       if (!isOnCorrectNetwork) {
         return 'network';
@@ -86,8 +86,8 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
       return 'hidden';
     }
     
-    // If MetaMask is not connected but we have a stored wallet address, don't show connect notification
-    // (user is using manual signature, so MetaMask connection is optional)
+    // If wallet is not connected but we have a stored wallet address, don't show connect notification
+    // (user is using manual signature, so wallet connection is optional)
     if (manualSignatureWalletAddress) {
       return 'hidden';
     }
@@ -120,9 +120,9 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
     try {
       setIsLoading(true);
       const result = await ensureCorrectNetworkConnection();
-      // If the switch came back as pending (MetaMask didn't switch),
-      // the AppState foreground listener in useWalletNetwork will
-      // re-check and update isOnCorrectNetwork automatically.
+      // If the switch came back as pending (wallet didn't switch),
+      // the reactive chainId in useWalletNetwork will
+      // update isOnCorrectNetwork automatically.
       if (!result.success) {
         console.log('Network switch result:', result);
       }
@@ -139,8 +139,8 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
         return {
           icon: '🔗',
           title: 'Connect Your Wallet',
-          message: 'You need to connect your MetaMask wallet to continue with transactions and view your data.',
-          buttonText: 'Connect MetaMask',
+          message: 'You need to connect your wallet to continue with transactions and view your data.',
+          buttonText: 'Connect Wallet',
           buttonAction: handleConnectWallet,
           isLoading: connecting,
           loadingText: 'Connecting...',
@@ -152,10 +152,8 @@ export const WalletNotification: React.FC<WalletNotificationProps> = ({
         return {
           icon: '🔄',
           title: `Switch to ${targetNetworkName}`,
-          message: isSkale 
-            ? `Your app is configured for ${targetNetworkName}, but MetaMask is on a different network. We'll help you add ${targetNetworkName} to MetaMask and switch to it.`
-            : `Your app is configured for ${targetNetworkName}, but MetaMask is on a different network. Please switch to ${targetNetworkName} to continue.`,
-          buttonText: isSkale ? `Add & Switch to ${targetNetworkName}` : `Switch to ${targetNetworkName}`,
+          message: `Your app is configured for ${targetNetworkName}, but your wallet is on a different network. Please switch to ${targetNetworkName} to continue.`,
+          buttonText: `Switch to ${targetNetworkName}`,
           buttonAction: handleNetworkSwitch,
           isLoading: isSwitchingNetwork || isLoading,
           loadingText: isSkale ? 'Adding Network...' : 'Switching...',

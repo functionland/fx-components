@@ -9,7 +9,8 @@
     "@functionland/fula-sec": "*",
     "@functionland/react-native-fula": "*",
     "@gorhom/bottom-sheet": "*",
-    "@metamask/sdk-react": "*",
+    "@reown/appkit-ethers-react-native": "*",
+    "@reown/appkit-react-native": "*",
     "@notifee/react-native": "*",
     "@react-native-async-storage/async-storage": "*",
     "@react-native-clipboard/clipboard": "*",
@@ -38,7 +39,6 @@
     "@visx/scale": "*",
     "@walletconnect/encoding": "*",
     "@walletconnect/react-native-compat": "*",
-    "@web3modal/wagmi-react-native": "*",
     "axios": "*",
     "base-64": "*",
     "big-integer": "*",
@@ -87,9 +87,9 @@
     "text-encoding-polyfill": "*",
     "typescript": "*",
     "viem": "*",
-    "wagmi": "*",
     "whatwg-fetch": "*",
     "zustand": "*",
+    "@web3modal/wagmi-react-native": "*",
     "react-native-randombytes": "*"
   },
   "devDependencies": {

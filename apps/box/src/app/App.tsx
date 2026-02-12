@@ -1,10 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  MetaMaskProvider,
-  SDKConfigProvider,
-  useSDKConfig,
-} from '@metamask/sdk-react';
 import '../i18n';
 
 import { ThemeProvider } from '@shopify/restyle';
@@ -32,16 +26,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useColorMode, useSettingsStore } from '../stores';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useLogger } from '../hooks';
-import { COMM_SERVER_URL, INFURA_API_KEY } from '../utils/walletConnectConifg';
 import { copyToClipboard } from '../utils/clipboard';
 import { fula } from '@functionland/react-native-fula';
-import { Linking } from 'react-native';
-import BackgroundTimer from 'react-native-background-timer';
-
-// TODO how to properly make sure we only try to open link when the app is active?
-// current problem is that sdk declaration is outside of the react scope so I cannot directly verify the state
-// hence usage of a global variable.
-const canOpenLink = true;
+import { AppKitProvider, AppKit } from '@reown/appkit-react-native';
+import { appKit } from '../config/appKitConfig';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -59,114 +47,6 @@ const barStyles = {
   dark: 'light-content',
 } as const;
 
-const openDeeplink = async (link: string, _target?: string) => {
-  console.debug(`App::openDeepLink() ${link}`);
-  if (canOpenLink) {
-    try {
-      if (Platform.OS === 'android') {
-        // On Android, canOpenURL may return false even when app is installed
-        // due to security restrictions, so try opening directly first
-        console.debug(`App::openDeepLink() Android: Attempting to open directly`);
-        await Linking.openURL(link);
-        console.debug(`App::openDeepLink() Android: Successfully opened: ${link}`);
-      } else {
-        // iOS: Check if the URL can be opened (app is installed)
-        const canOpen = await Linking.canOpenURL(link);
-        console.debug(`App::openDeepLink() iOS canOpen: ${canOpen}`);
-        
-        if (canOpen) {
-          await Linking.openURL(link);
-          console.debug(`App::openDeepLink() iOS: Successfully opened: ${link}`);
-        } else {
-          console.warn(`App::openDeepLink() iOS: Cannot open URL: ${link}`);
-          
-          // If it's a MetaMask deep link and can't be opened, try the universal link or App Store
-          if (link.startsWith('metamask://')) {
-            const universalLink = link.replace('metamask://', 'https://metamask.app.link/');
-            console.debug(`App::openDeepLink() iOS: Trying universal link: ${universalLink}`);
-            
-            const canOpenUniversal = await Linking.canOpenURL(universalLink);
-            if (canOpenUniversal) {
-              await Linking.openURL(universalLink);
-            } else {
-              // Fallback to App Store
-              console.debug(`App::openDeepLink() iOS: Opening App Store for MetaMask`);
-              await Linking.openURL('https://apps.apple.com/app/metamask/id1438144202');
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error(`App::openDeepLink() Error opening URL: ${link}`, error);
-      
-      // Only on Android, if direct opening fails, try fallback to Play Store
-      if (Platform.OS === 'android' && link.startsWith('metamask://')) {
-        console.debug(`App::openDeepLink() Android: Opening Play Store for MetaMask`);
-        try {
-          await Linking.openURL('https://play.google.com/store/apps/details?id=io.metamask');
-        } catch (fallbackError) {
-          console.error(`App::openDeepLink() Android: Fallback also failed`, fallbackError);
-        }
-      }
-    }
-  } else {
-    console.debug(
-      'useBlockchainProiver::openDeepLink app is not active - skip link',
-      link
-    );
-  }
-};
-
-const WithSDKConfig = ({ children }: { children: React.ReactNode }) => {
-  const {
-    socketServer,
-    infuraAPIKey,
-    useDeeplink,
-    debug,
-    checkInstallationImmediately,
-  } = useSDKConfig();
-
-  return (
-    <MetaMaskProvider
-      // debug={debug}
-      sdkOptions={{
-        // communicationServerUrl: socketServer,
-        // TODO: change to enableAnalytics when updating the SDK version
-        // enableDebug: true,
-        infuraAPIKey,
-        readonlyRPCMap: {
-          '0x539': process.env.NEXT_PUBLIC_PROVIDER_RPCURL ?? '',
-        },
-        logging: {
-          developerMode: true,
-          plaintext: true,
-        },
-        openDeeplink: openDeeplink,
-        timer: BackgroundTimer,
-        useDeeplink,
-        extensionOnly: false, // Enable mobile app integration
-        checkInstallationImmediately: false, // Prevent auto-opening MetaMask
-        autoConnect: false, // Prevent automatic connection
-        storage: {
-          enabled: true,
-        },
-        dappMetadata: {
-          name: 'fxblox',
-          url: 'https://fx.land',
-          scheme: 'fxblox',
-          iconUrl:
-            'https://ipfs.cloud.fx.land/gateway/bafkreigl4s3qehoblwqglo5zjjjwtzkomxg4i6gygfeqk5s5h33m5iuyra',
-        },
-        i18nOptions: {
-          enabled: true,
-        },
-      }}
-    >
-      {children}
-    </MetaMaskProvider>
-  );
-};
-
 export const App = () => {
   const mode = useColorMode();
   const theme = fullTheme[mode];
@@ -179,26 +59,22 @@ export const App = () => {
   }, [loadAllCredentials]);
   return (
     <GestureHandlerRootView style={styles.flex1}>
-      <SDKConfigProvider
-        initialSocketServer={COMM_SERVER_URL}
-        initialInfuraKey={INFURA_API_KEY}
-      >
-        <WithSDKConfig>
+      <SafeAreaProvider>
+        <AppKitProvider instance={appKit}>
           <ThemeProvider theme={theme}>
             <ToastProvider>
               <StatusBar
                 backgroundColor={theme.colors.backgroundApp}
                 barStyle={barStyles[mode]}
               />
-              <SafeAreaProvider>
-                <BottomSheetModalProvider>
-                  <AppContent />
-                </BottomSheetModalProvider>
-              </SafeAreaProvider>
+              <BottomSheetModalProvider>
+                <AppContent />
+              </BottomSheetModalProvider>
             </ToastProvider>
           </ThemeProvider>
-        </WithSDKConfig>
-      </SDKConfigProvider>
+          <AppKit />
+        </AppKitProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 };
@@ -237,10 +113,6 @@ const AppContent = () => {
       console.log('subscription.remove();');
       subscription.remove();
     };
-    // return () => {
-    //   if (!__DEV__ && isDebugModeEnable) {
-    //   }
-    // }
   }, [isDebugModeEnable]);
   const shareUniqueId = () => {
     Share.share(

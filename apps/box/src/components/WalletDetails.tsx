@@ -18,10 +18,9 @@ import { copyToClipboard } from '../utils/clipboard';
 import { Helper } from '../utils';
 import { BloxIcon, CopyIcon, ExternalLinkIcon } from './Icons';
 import { useBloxsStore } from '../stores';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from '../hooks/useWallet';
 import { chainNames } from '../utils/walletConnectConifg';
 import { fula, blockchain, fxblox } from '@functionland/react-native-fula';
-import { useContractService } from '../contracts/contractService';
 import { useContractIntegration } from '../hooks/useContractIntegration';
 import { CHAIN_DISPLAY_NAMES } from '../contracts/config';
 import { useFulaBalance } from '../hooks/useFulaBalance';
@@ -61,8 +60,7 @@ export const WalletDetails = ({
 
   const getContractRewards = useUserProfileStore((state) => state.getContractRewards);
   const selectedChain = useSettingsStore((state) => state.selectedChain);
-  const { account, chainId, provider, sdk, connected } = useSDK();
-  const { initializeService } = useContractService();
+  const { account, chainId, provider, connected, open } = useWallet();
   const { isInitialized: contractInitialized } = useContractIntegration();
   const { queueToast } = useToast();
   const { colors } = useFxTheme();
@@ -99,25 +97,13 @@ export const WalletDetails = ({
   const calledRef = useRef(false); // Track if retry has already happened
   const connectWallet = useCallback(async () => {
     try {
-      if (sdk) {
-        await sdk.connect();
-        setUserHasExplicitlyConnected(true);
-        queueToast({
-          type: 'success',
-          title: 'Wallet Connected',
-          message: 'MetaMask wallet connected successfully',
-        });
-      } else if (provider) {
-        const accounts = await provider.request({ method: 'eth_requestAccounts' }) as string[];
-        if (accounts && accounts.length > 0) {
-          setUserHasExplicitlyConnected(true);
-          queueToast({
-            type: 'success',
-            title: 'Wallet Connected',
-            message: 'MetaMask wallet connected successfully',
-          });
-        }
-      }
+      await open({ view: 'Connect' });
+      setUserHasExplicitlyConnected(true);
+      queueToast({
+        type: 'success',
+        title: 'Wallet Connected',
+        message: 'Wallet connected successfully',
+      });
     } catch (error: any) {
       console.error('Failed to connect wallet:', error);
       queueToast({
@@ -126,7 +112,7 @@ export const WalletDetails = ({
         message: error.message || 'Failed to connect wallet. Please try again.',
       });
     }
-  }, [sdk, provider, queueToast]);
+  }, [open, queueToast]);
 
   const onRefreshPress = useCallback(async () => {
     calledRef.current = false; // Reset the retry flag

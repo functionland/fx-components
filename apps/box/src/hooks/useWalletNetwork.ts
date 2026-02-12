@@ -1,10 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
-import { useSDK } from '@metamask/sdk-react';
-import { useToast } from '@functionland/component-library';
+import { useCallback } from 'react';
+import { useAccount, useAppKit } from '@reown/appkit-react-native';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import { SupportedChain } from '../contracts/types';
-import { ensureCorrectNetwork, NetworkSwitchResult, getNetworkDisplayName } from '../utils/networkSwitcher';
+import { NetworkSwitchResult, getNetworkDisplayName } from '../utils/networkSwitcher';
+import { baseMainnet, skaleEuropaHub } from '../config/appKitConfig';
 
 export interface WalletNetworkState {
   isOnCorrectNetwork: boolean;
@@ -15,250 +13,61 @@ export interface WalletNetworkState {
 }
 
 /**
- * Hook to manage wallet network state and automatic switching
+ * Hook to manage wallet network state and automatic switching.
+ * With Reown AppKit, chainId is reactive — no polling or event listeners needed.
  */
 export const useWalletNetwork = () => {
-  const { provider, connected, account } = useSDK();
-  const { queueToast } = useToast();
+  const { chainId, isConnected } = useAccount();
+  const { switchNetwork } = useAppKit();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
 
-  const [state, setState] = useState<WalletNetworkState>({
-    isOnCorrectNetwork: false,
+  const targetChainId = selectedChain === 'base' ? 8453 : 2046399126;
+  const isOnCorrectNetwork = isConnected && chainId === targetChainId;
+
+  const checkNetwork = useCallback(async (): Promise<boolean> => {
+    return isOnCorrectNetwork;
+  }, [isOnCorrectNetwork]);
+
+  const ensureCorrectNetworkConnection = useCallback(async (): Promise<NetworkSwitchResult> => {
+    if (!isConnected) {
+      return { success: false, error: 'Wallet not connected' };
+    }
+    if (isOnCorrectNetwork) {
+      return { success: true, action: 'already_connected' };
+    }
+
+    try {
+      const targetNetwork = selectedChain === 'base' ? baseMainnet : skaleEuropaHub;
+      await switchNetwork(targetNetwork);
+      return { success: true, action: 'switched' };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Network switch failed' };
+    }
+  }, [isConnected, isOnCorrectNetwork, selectedChain, switchNetwork]);
+
+  const withCorrectNetwork = useCallback(async <T>(
+    operation: () => Promise<T>,
+    options?: { skipNetworkCheck?: boolean }
+  ): Promise<T> => {
+    const { skipNetworkCheck = false } = options || {};
+
+    if (skipNetworkCheck || !isConnected) {
+      return operation();
+    }
+
+    if (!isOnCorrectNetwork) {
+      throw new Error(`NETWORK_SWITCH_REQUIRED: Please switch to ${getNetworkDisplayName(selectedChain)}`);
+    }
+
+    return operation();
+  }, [isConnected, isOnCorrectNetwork, selectedChain]);
+
+  return {
+    isOnCorrectNetwork,
     isCheckingNetwork: false,
     isSwitchingNetwork: false,
     lastNetworkCheck: null,
     networkError: null,
-  });
-
-  /**
-   * Check if MetaMask is on the correct network
-   */
-  const checkNetwork = useCallback(async (): Promise<boolean> => {
-    if (!provider || !connected) {
-      return false;
-    }
-
-    setState(prev => ({ ...prev, isCheckingNetwork: true, networkError: null }));
-
-    try {
-      const web3Provider = (provider as any).provider || provider;
-      const currentChainId = await web3Provider.request({
-        method: 'eth_chainId'
-      });
-
-      const targetChainId = selectedChain === 'base' ? '0x2105' : '0x79f99296';
-      const isCorrect = currentChainId === targetChainId;
-
-      setState(prev => ({
-        ...prev,
-        isOnCorrectNetwork: isCorrect,
-        isCheckingNetwork: false,
-        lastNetworkCheck: Date.now(),
-        // Clear any prior error when chain is now correct
-        ...(isCorrect ? { networkError: null } : {}),
-      }));
-
-      if (isCorrect && !state.isOnCorrectNetwork) {
-        console.log('Network is now on correct chain:', selectedChain);
-      }
-
-      return isCorrect;
-    } catch (error: any) {
-      console.error('Network check failed:', error);
-      const errorMessage = error?.message || (typeof error === 'string' ? error : 'Network check failed');
-      setState(prev => ({
-        ...prev,
-        isCheckingNetwork: false,
-        networkError: errorMessage,
-        lastNetworkCheck: Date.now(),
-      }));
-      return false;
-    }
-  }, [provider, connected, selectedChain]);
-
-  /**
-   * Ensure MetaMask is on the correct network, switching/adding if necessary
-   */
-  const ensureCorrectNetworkConnection = useCallback(async (): Promise<NetworkSwitchResult> => {
-    if (!provider || !connected) {
-      return { success: false, error: 'Wallet not connected' };
-    }
-
-    setState(prev => ({ ...prev, isSwitchingNetwork: true, networkError: null }));
-
-    try {
-      const result = await ensureCorrectNetwork(provider, selectedChain);
-
-      if (result.success) {
-        setState(prev => ({
-          ...prev,
-          isOnCorrectNetwork: true,
-          isSwitchingNetwork: false,
-          lastNetworkCheck: Date.now(),
-        }));
-
-        // Show appropriate success message
-        if (result.action === 'added_and_switched') {
-          queueToast({
-            type: 'success',
-            title: 'Network Ready',
-            message: `${getNetworkDisplayName(selectedChain)} has been set up in MetaMask. You can now proceed with your transaction.`,
-            autoHideDuration: 5000,
-          });
-        } else if (result.action === 'switched') {
-          queueToast({
-            type: 'success',
-            title: 'Network Ready',
-            message: `MetaMask is now on ${getNetworkDisplayName(selectedChain)}. You can proceed with your transaction.`,
-            autoHideDuration: 4000,
-          });
-        }
-      } else if (result.action === 'pending') {
-        // MetaMask SDK timed out – don't show error, let AppState listener detect outcome
-        console.log('Network switch pending – will be detected by AppState listener');
-        setState(prev => ({
-          ...prev,
-          isSwitchingNetwork: false,
-          // Don't set networkError – this isn't a failure, just a timeout
-        }));
-      } else {
-        setState(prev => ({
-          ...prev,
-          isSwitchingNetwork: false,
-          networkError: result.error || 'Network switch failed',
-        }));
-
-        queueToast({
-          type: 'error',
-          title: 'Network Switch Failed',
-          message: result.error || 'Failed to switch network',
-        });
-      }
-
-      return result;
-    } catch (error: any) {
-      console.error('Network switch error:', error);
-      setState(prev => ({
-        ...prev,
-        isSwitchingNetwork: false,
-        networkError: error.message,
-      }));
-
-      queueToast({
-        type: 'error',
-        title: 'Network Error',
-        message: error.message || 'An unexpected error occurred',
-      });
-
-      return { success: false, error: error.message };
-    }
-  }, [provider, connected, selectedChain, queueToast]);
-
-  /**
-   * Wrapper for wallet operations that checks network but does NOT automatically switch
-   * Instead, it throws an error that can be caught to show user-initiated network switching UI
-   */
-  const withCorrectNetwork = useCallback(async <T>(
-    operation: () => Promise<T>,
-    options?: { skipNetworkCheck?: boolean; showToasts?: boolean }
-  ): Promise<T> => {
-    const { skipNetworkCheck = false, showToasts = true } = options || {};
-
-    // Skip network check if requested or if wallet not connected
-    if (skipNetworkCheck || !connected || !provider) {
-      return operation();
-    }
-
-    // Check if we're on the correct network
-    const isCorrect = await checkNetwork();
-    
-    if (!isCorrect) {
-      // Don't automatically switch - throw error to let UI handle it
-      throw new Error(`NETWORK_SWITCH_REQUIRED: Please switch to ${getNetworkDisplayName(selectedChain)} in MetaMask`);
-    }
-
-    // Execute the operation
-    return operation();
-  }, [checkNetwork, connected, provider, selectedChain]);
-
-  // Auto-check network when wallet connects or selected chain changes
-  useEffect(() => {
-    if (connected && provider) {
-      checkNetwork();
-    }
-  }, [connected, provider, selectedChain, checkNetwork]);
-
-  // Re-check network when app returns to foreground.
-  // MetaMask mobile SDK can take several seconds to report the new chain
-  // after a switch, so we poll a few times with increasing delays.
-  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
-  const pollTimersRef = useRef<NodeJS.Timeout[]>([]);
-  useEffect(() => {
-    if (!connected || !provider) return;
-
-    const handleAppState = (nextState: AppStateStatus) => {
-      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
-        console.log('App returned to foreground – polling network state');
-        // Clear any existing poll timers
-        pollTimersRef.current.forEach(clearTimeout);
-        pollTimersRef.current = [];
-        // Poll at 1s, 3s, 6s after foregrounding
-        [1000, 3000, 6000].forEach((delay) => {
-          const t = setTimeout(() => checkNetwork(), delay);
-          pollTimersRef.current.push(t);
-        });
-      }
-      appStateRef.current = nextState;
-    };
-
-    const sub = AppState.addEventListener('change', handleAppState);
-    return () => {
-      sub.remove();
-      pollTimersRef.current.forEach(clearTimeout);
-    };
-  }, [connected, provider, checkNetwork]);
-
-  // Listen for network changes in MetaMask
-  useEffect(() => {
-    if (!provider) return;
-
-    const web3Provider = provider.provider || provider;
-    
-    const handleChainChanged = (chainId: string) => {
-      console.log('MetaMask chain changed to:', chainId);
-      // Recheck network after a short delay to allow MetaMask to settle
-      setTimeout(() => {
-        checkNetwork();
-      }, 500);
-    };
-
-    const handleAccountsChanged = (accounts: string[]) => {
-      console.log('MetaMask accounts changed:', accounts);
-      if (accounts.length > 0) {
-        // Recheck network when account changes
-        setTimeout(() => {
-          checkNetwork();
-        }, 500);
-      }
-    };
-
-    // Add event listeners
-    if (web3Provider.on) {
-      web3Provider.on('chainChanged', handleChainChanged);
-      web3Provider.on('accountsChanged', handleAccountsChanged);
-    }
-
-    return () => {
-      // Clean up event listeners
-      if (web3Provider.removeListener) {
-        web3Provider.removeListener('chainChanged', handleChainChanged);
-        web3Provider.removeListener('accountsChanged', handleAccountsChanged);
-      }
-    };
-  }, [provider, checkNetwork]);
-
-  return {
-    ...state,
     checkNetwork,
     ensureCorrectNetworkConnection,
     withCorrectNetwork,

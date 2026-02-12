@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { ContractService } from './contractService';
 import { SupportedChain } from './types';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from '../hooks/useWallet';
 import { useToast } from '@functionland/component-library';
 
 interface ContractServiceContextType {
@@ -23,7 +23,7 @@ interface ContractServiceProviderProps {
 }
 
 export const ContractServiceProvider: React.FC<ContractServiceProviderProps> = ({ children }) => {
-  const { provider, account } = useSDK();
+  const { provider, account } = useWallet();
   const { queueToast } = useToast();
   
   const [contractService, setContractService] = useState<ContractService | null>(null);
@@ -80,14 +80,21 @@ export const ContractServiceProvider: React.FC<ContractServiceProviderProps> = (
   }, [provider, account, queueToast]);
 
   const switchChain = useCallback(async (newChain: SupportedChain) => {
-    if (!contractService) {
-      throw new Error('Contract service not initialized');
+    if (!provider || !account) {
+      throw new Error('Provider and account are required');
     }
 
     try {
-      await contractService.switchChain(newChain);
+      // Create new service instance for the new chain
+      const service = new ContractService(newChain);
+      await service.initialize(provider);
+
+      const connectedAcc = await service.getConnectedAccount();
+
+      setContractService(service);
+      setConnectedAccount(connectedAcc);
       setCurrentChain(newChain);
-      
+
       queueToast({
         type: 'success',
         title: 'Chain Switched',
@@ -95,16 +102,16 @@ export const ContractServiceProvider: React.FC<ContractServiceProviderProps> = (
       });
     } catch (error: any) {
       console.error('Chain switch failed:', error);
-      
+
       queueToast({
         type: 'error',
         title: 'Chain Switch Failed',
         message: error.message || 'Failed to switch chains',
       });
-      
+
       throw error;
     }
-  }, [contractService, queueToast]);
+  }, [provider, account, queueToast]);
 
   // Reset service when provider or account changes
   useEffect(() => {

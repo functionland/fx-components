@@ -12,7 +12,7 @@ import { getPoolReadService } from '../services/poolReadService';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useBloxsStore } from '../stores/useBloxsStore';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from './useWallet';
 
 export interface PoolData extends PoolInfo {
   requested: boolean;
@@ -44,7 +44,7 @@ export const usePoolsWithFallback = () => {
     (state) => state.manualSignatureWalletAddress
   );
   const hasHydrated = useUserProfileStore((state) => state._hasHydrated);
-  const { account: metamaskAccount, connected } = useSDK();
+  const { account: walletAccount, connected } = useWallet();
 
   const [state, setState] = useState<PoolsState>({
     pools: [],
@@ -58,11 +58,11 @@ export const usePoolsWithFallback = () => {
   });
 
   // Determine which account to use - always use RPC service for read operations
-  const effectiveAccount = metamaskAccount || manualSignatureWalletAddress;
+  const effectiveAccount = walletAccount || manualSignatureWalletAddress;
 
   console.log('usePoolsWithFallback state:', {
     hasHydrated,
-    metamaskAccount,
+    walletAccount,
     manualSignatureWalletAddress,
     connected,
     effectiveAccount,
@@ -253,7 +253,7 @@ export const usePoolsWithFallback = () => {
   }, [effectiveAccount, selectedChain, currentBloxPeerId, checkUserMembership]);
 
   /**
-   * Join pool via API - works with both MetaMask and manual signature
+   * Join pool via API - works with both connected wallet and manual signature
    */
   const joinPoolViaAPI = useCallback(
     async (
@@ -303,7 +303,7 @@ export const usePoolsWithFallback = () => {
   );
 
   /**
-   * Leave pool via API - works with both MetaMask and manual signature
+   * Leave pool via API - works with both connected wallet and manual signature
    */
   const leavePoolViaAPI = useCallback(
     async (poolId: string): Promise<{ success: boolean; message: string }> => {
@@ -350,7 +350,7 @@ export const usePoolsWithFallback = () => {
   );
 
   /**
-   * Cancel join request via API - works with both MetaMask and manual signature
+   * Cancel join request via API - works with both connected wallet and manual signature
    */
   const cancelJoinRequestViaAPI = useCallback(
     async (poolId: string): Promise<{ success: boolean; message: string }> => {
@@ -410,7 +410,7 @@ export const usePoolsWithFallback = () => {
     connectedAccount: effectiveAccount || poolOperations.connectedAccount,
     loadPools,
     checkUserMembership,
-    // API-based functions that work with both MetaMask and manual signature
+    // API-based functions that work with both connected wallet and manual signature
     joinPoolViaAPI,
     leavePoolViaAPI,
     cancelJoinRequestViaAPI,

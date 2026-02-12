@@ -1,5 +1,6 @@
 import React from 'react';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from '../../hooks/useWallet';
+import { useWalletInfo } from '@reown/appkit-react-native';
 import {
   FxBox,
   FxCard,
@@ -9,7 +10,7 @@ import {
   FxButton,
   useToast,
 } from '@functionland/component-library';
-import { ActivityIndicator, StyleSheet, Linking } from 'react-native';
+import { ActivityIndicator, StyleSheet, Linking, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFulaBalance, useFormattedFulaBalance } from '../../hooks/useFulaBalance';
 import { useClaimableTokens } from '../../hooks/useClaimableTokens';
@@ -45,8 +46,9 @@ export const EarningCard = ({
   // Get refresh function from the base hook
   const { refreshBalance } = useFulaBalance();
 
-  // MetaMask SDK for wallet connection
-  const { sdk, account, connecting } = useSDK();
+  // Wallet connection
+  const { account, connecting, open, connected } = useWallet();
+  const { walletInfo } = useWalletInfo();
 
   // Get manual wallet address
   const manualSignatureWalletAddress = useUserProfileStore(
@@ -57,7 +59,7 @@ export const EarningCard = ({
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
 
-  // Determine connected wallet address (MetaMask or manual signature, empty string if neither)
+  // Determine connected wallet address (connected wallet or manual signature, empty string if neither)
   const walletAddress = account || manualSignatureWalletAddress || '';
   const walletDisplay = walletAddress
     ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
@@ -83,10 +85,10 @@ export const EarningCard = ({
 
   // Handler for refresh icon click
   const handleRefresh = async () => {
-    // Only try to connect MetaMask if no account is available (neither MetaMask nor manual signature)
+    // Only try to connect wallet if no account is available (neither wallet nor manual signature)
     if (!account && !manualSignatureWalletAddress) {
       try {
-        await sdk?.connect();
+        await open({ view: 'Connect' });
         queueToast({
           type: 'success',
           title: t('earningCard.walletConnected'),
@@ -120,12 +122,34 @@ export const EarningCard = ({
     return { claimDomain, queryString: params.toString() };
   };
 
-  // Handler for opening claim web portal in MetaMask browser
+  // Build a deep link URL to open in the connected wallet's dApp browser
+  const buildWalletDappLink = (fullUrl: string): string | null => {
+    if (!connected || !walletInfo?.name) return null;
+    const name = walletInfo.name.toLowerCase();
+    if (name.includes('metamask')) {
+      return `https://metamask.app.link/dapp/${fullUrl.replace(/^https?:\/\//, '')}`;
+    }
+    if (name.includes('trust')) {
+      return `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(fullUrl)}`;
+    }
+    if (name.includes('coinbase')) {
+      return `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(fullUrl)}`;
+    }
+    return null;
+  };
+
+  // Check if we can open the claim URL in the wallet's dApp browser
+  const canOpenInWallet = connected && walletInfo?.name && buildWalletDappLink('https://example.com') !== null;
+
+  // Handler for opening claim web portal in wallet's dApp browser
   const handleOpenClaimPortal = async () => {
     try {
       const { claimDomain, queryString } = buildClaimUrl();
-      const metamaskDeepLink = `https://metamask.app.link/dapp/${claimDomain}?${queryString}`;
-      await Linking.openURL(metamaskDeepLink);
+      const fullUrl = `https://${claimDomain}?${queryString}`;
+      const walletLink = buildWalletDappLink(fullUrl);
+      if (walletLink) {
+        await Linking.openURL(walletLink);
+      }
     } catch (error: any) {
       queueToast({
         type: 'error',
@@ -135,16 +159,16 @@ export const EarningCard = ({
     }
   };
 
-  // Handler for copying claim link to clipboard
+  // Handler for copying claim link and prompting user to open in wallet browser
   const handleCopyClaimLink = () => {
     const { claimDomain, queryString } = buildClaimUrl();
     const claimLink = `https://${claimDomain}?${queryString}`;
     copyToClipboard(claimLink);
-    queueToast({
-      type: 'success',
-      title: t('earningCard.linkCopied'),
-      message: claimLink,
-    });
+    Alert.alert(
+      t('earningCard.linkCopied'),
+      t('earningCard.openInWalletInstructions'),
+      [{ text: t('earningCard.gotIt') }]
+    );
   };
 
   return (
@@ -232,12 +256,14 @@ export const EarningCard = ({
       ) : null}
 
       <FxBox marginTop="12">
-        <FxButton onPress={handleOpenClaimPortal}>
-          {t('earningCard.claimRewards')}
-        </FxButton>
+        {canOpenInWallet && (
+          <FxButton onPress={handleOpenClaimPortal}>
+            {t('earningCard.claimRewards')}
+          </FxButton>
+        )}
         <FxButton
           variant="inverted"
-          marginTop="8"
+          marginTop={canOpenInWallet ? "8" : "0"}
           onPress={handleCopyClaimLink}
         >
           {t('earningCard.copyClaimLink')}

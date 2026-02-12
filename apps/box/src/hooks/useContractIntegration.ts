@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSDK } from '@metamask/sdk-react';
+import { useWallet } from './useWallet';
 import { useToast } from '@functionland/component-library';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
@@ -26,34 +26,8 @@ export interface ContractIntegrationState {
   canRetry: boolean;
 }
 
-// Helper function to detect current chain from MetaMask
-const detectCurrentChain = async (provider: any): Promise<SupportedChain | null> => {
-  try {
-    const web3Provider = provider.provider || provider;
-    
-    // Force a fresh chain ID request instead of relying on cached network info
-    console.log('Requesting fresh chainId from MetaMask...');
-    const currentChainId = await web3Provider.request({
-      method: 'eth_chainId'
-    });
-    
-    console.log('Fresh chainId from MetaMask:', currentChainId);
-    
-    // Find matching supported chain
-    const currentChainName = Object.keys(CONTRACT_ADDRESSES).find(
-      key => CONTRACT_ADDRESSES[key as SupportedChain].chainId === currentChainId
-    ) as SupportedChain;
-
-    console.log('Detected current chain:', currentChainName, 'for chainId:', currentChainId);
-    return currentChainName || null;
-  } catch (error) {
-    console.error('Failed to detect current chain:', error);
-    return null;
-  }
-};
-
 export const useContractIntegration = (options?: { showConnectedNotification?: boolean }) => {
-  const { provider, account } = useSDK();
+  const { provider, account } = useWallet();
   const { queueToast } = useToast();
   const { isOnCorrectNetwork } = useWalletNetwork();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
@@ -62,7 +36,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
   const initializedChainRef = useRef<SupportedChain | null>(null);
   const showConnectedNotification = options?.showConnectedNotification ?? false;
   
-  // Use MetaMask account if available, otherwise fallback to manually signed wallet address
+  // Use wallet account if available, otherwise fallback to manually signed wallet address
   const effectiveAccount = account || manualSignatureWalletAddress;
 
   const [state, setState] = useState<ContractIntegrationState>({
@@ -79,7 +53,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
   const initializationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastInitAttemptRef = useRef<number>(0);
 
-  const initializeContracts = useCallback(async (chain: SupportedChain, options: { allowNetworkSwitch?: boolean } = {}) => {
+  const initializeContracts = useCallback(async (chain: SupportedChain) => {
     console.log('initializeContracts called for chain:', chain, 'provider:', !!provider, 'account:', account, 'effectiveAccount:', effectiveAccount);
 
     if (!provider || !effectiveAccount) {
@@ -113,7 +87,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
       resetContractService();
       const service = getContractService(chain);
       console.log('Initializing contract service...');
-      await service.initialize(provider, options);
+      await service.initialize(provider);
 
       console.log('Getting connected account...');
       const connectedAccount = await service.getConnectedAccount();
@@ -204,20 +178,25 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
   }, [provider, account, queueToast, state.retryCount]);
 
   const switchChain = useCallback(async (newChain: SupportedChain) => {
-    if (state.contractService) {
-      try {
-        await state.contractService.switchChain(newChain);
-        await initializeContracts(newChain);
-      } catch (error: any) {
-        console.error('Chain switch failed:', error);
-        queueToast({
-          type: 'error',
-          title: 'Chain Switch Failed',
-          message: error.message || 'Failed to switch chains',
-        });
-      }
+    try {
+      // Reset and reinitialize for the new chain
+      initializedChainRef.current = null;
+      setState(prev => ({
+        ...prev,
+        isInitialized: false,
+        contractService: null,
+        connectedAccount: null,
+      }));
+      await initializeContracts(newChain);
+    } catch (error: any) {
+      console.error('Chain switch failed:', error);
+      queueToast({
+        type: 'error',
+        title: 'Chain Switch Failed',
+        message: error.message || 'Failed to switch chains',
+      });
     }
-  }, [state.contractService, initializeContracts, queueToast]);
+  }, [initializeContracts, queueToast]);
 
   // Manual retry function
   const retryInitialization = useCallback(() => {
@@ -250,53 +229,6 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
         message: 'Please connect your wallet and initialize contracts first',
       });
       return null;
-    }
-
-    // Verify we're on the correct chain before executing operation
-    try {
-      console.log(`executeContractCall: Verifying chain for ${operationName}...`);
-      const provider = state.contractService.getProvider();
-      const rawProvider = provider?.provider || provider;
-      
-      if (rawProvider && 'request' in rawProvider && typeof rawProvider.request === 'function') {
-        const currentChainIdHex = await rawProvider.request({ method: 'eth_chainId' });
-        const currentChainId = parseInt(currentChainIdHex, 16);
-        
-        // Get expected chain ID from selected chain
-        const chainConfig = getChainConfigByName(selectedChain);
-        if (!chainConfig) {
-          console.error(`executeContractCall: Invalid chain config for ${selectedChain}`);
-          throw new Error(`Invalid chain configuration for ${selectedChain}`);
-        }
-        
-        const expectedChainId = parseInt(chainConfig.chainId, 16);
-        
-        console.log(`executeContractCall: Chain verification for ${operationName}:`, {
-          current: currentChainId,
-          expected: expectedChainId,
-          currentHex: currentChainIdHex,
-          expectedHex: chainConfig.chainId,
-          selectedChain
-        });
-        
-        if (currentChainId !== expectedChainId) {
-          console.log(`executeContractCall: Chain mismatch detected for ${operationName}, forcing re-initialization`);
-          
-          // Force contract re-initialization on correct chain
-          await initializeContracts(selectedChain);
-          
-          // Wait a moment for initialization to complete
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Verify the contract service is now ready
-          if (!state.contractService) {
-            throw new Error('Contract re-initialization failed');
-          }
-        }
-      }
-    } catch (chainError) {
-      console.error(`executeContractCall: Chain verification failed for ${operationName}:`, chainError);
-      // Continue with operation - the contract service will handle chain switching internally
     }
 
     try {
@@ -351,7 +283,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
       isInitializing: state.isInitializing
     });
 
-    // Clear state when wallet disconnects (both MetaMask and manual signature)
+    // Clear state when wallet disconnects (both connected wallet and manual signature)
     if (!effectiveAccount || !provider) {
       console.log('Clearing contract state - no effective account or provider');
       setState({
@@ -389,7 +321,7 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
     }
     
     // Check if we should show the switch button (same logic as WalletNotification)
-    // Only check if MetaMask is connected (not for manual signature fallback)
+    // Only check if wallet is connected (not for manual signature fallback)
     const shouldShowSwitchButton = account && provider && selectedChain && !isOnCorrectNetwork;
     
     // If switch button should be shown, DO NOT perform any contract operations
@@ -415,51 +347,30 @@ export const useContractIntegration = (options?: { showConnectedNotification?: b
     
     // Only attempt initialization when wallet is connected AND on correct network
     const needsInitialization = effectiveAccount && provider && selectedChain && isOnCorrectNetwork && !state.isInitializing && !state.isInitialized && initializedChainRef.current !== selectedChain;
-    
+
     if (needsInitialization) {
       console.log('Wallet is connected and on correct network - attempting automatic contract initialization for chain:', selectedChain);
-      
+
       // Clear any existing timeout
       if (initializationTimeoutRef.current) {
         clearTimeout(initializationTimeoutRef.current);
       }
-      
-      // Debounce initialization attempts with longer delay to allow network state sync
-      initializationTimeoutRef.current = setTimeout(async () => {
-        // Double-check network state before initialization to prevent race conditions
-        if (!isOnCorrectNetwork) {
-          console.log('Network state not synchronized yet, skipping initialization');
-          return;
-        }
-        
-        // Try safe initialization first (no network switching)
-        initializeContracts(selectedChain, { allowNetworkSwitch: false })
+
+      // Debounce initialization attempts
+      initializationTimeoutRef.current = setTimeout(() => {
+        initializeContracts(selectedChain)
           .catch((error: any) => {
-            if (error.message?.includes('NETWORK_SWITCH_REQUIRED')) {
-              console.log('Network switch required - user action needed');
-              // Set error state to trigger WalletNotification component
-              setState(prev => ({
-                ...prev,
-                isInitialized: false,
-                isInitializing: false,
-                error: 'Network switch required',
-                contractService: null,
-                connectedAccount: null,
-              }));
-            } else {
-              console.error('Safe initialization failed with unexpected error:', error);
-              // Handle other initialization errors normally
-              setState(prev => ({
-                ...prev,
-                isInitialized: false,
-                isInitializing: false,
-                error: error.message || 'Contract initialization failed',
-                contractService: null,
-                connectedAccount: null,
-              }));
-            }
+            console.error('Contract initialization failed:', error);
+            setState(prev => ({
+              ...prev,
+              isInitialized: false,
+              isInitializing: false,
+              error: error.message || 'Contract initialization failed',
+              contractService: null,
+              connectedAccount: null,
+            }));
           });
-      }, 1500); // 1500ms debounce to allow network state sync
+      }, 500);
     }
   }, [account, effectiveAccount, provider, selectedChain, isOnCorrectNetwork, state.isInitialized, state.isInitializing]);
 

@@ -26,14 +26,14 @@ export const NetworkInstructions: React.FC<NetworkInstructionsProps> = ({
   const getInstructions = () => {
     if (selectedChain === 'skale') {
       return [
-        "MetaMask will open to add SKALE Europa Hub network",
+        "Your wallet will open to add SKALE Europa Hub network",
         "Tap 'Add network' when prompted",
         "SKALE will be automatically selected after adding",
         "Return to the app to continue your transaction"
       ];
     } else {
       return [
-        "MetaMask will open to switch networks",
+        "Your wallet will open to switch networks",
         "Select the correct network when prompted",
         "Return to the app to continue your transaction"
       ];
@@ -52,11 +52,11 @@ export const NetworkInstructions: React.FC<NetworkInstructionsProps> = ({
       marginBottom="16"
     >
       <FxText variant="bodyMediumRegular" color="content1" marginBottom="12">
-        📱 MetaMask Setup Required
+        Wallet Setup Required
       </FxText>
       
       <FxText variant="bodySmallRegular" color="content2" marginBottom="16">
-        To use {targetNetworkName} features, we need to set up your MetaMask wallet:
+        To use {targetNetworkName} features, we need to set up your wallet:
       </FxText>
 
       {instructions.map((instruction, index) => (
