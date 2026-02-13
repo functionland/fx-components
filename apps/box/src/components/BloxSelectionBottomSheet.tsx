@@ -31,6 +31,7 @@ const BloxListItem = ({ blox, isSelected, connectionStatus, onSelect }: BloxList
     switch (connectionStatus) {
       case 'CONNECTED':
         return 'successBase';
+      case 'SWITCHING':
       case 'CHECKING':
         return 'warningBase';
       default:

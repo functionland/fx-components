@@ -37,7 +37,11 @@
       "WebFetch(domain:docs.reown.com)",
       "WebFetch(domain:docs.metamask.io)",
       "WebFetch(domain:developer.trustwallet.com)",
-      "WebFetch(domain:specs.walletconnect.com)"
+      "WebFetch(domain:specs.walletconnect.com)",
+      "Bash(wc:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(curl:*)"
     ]
   }
 }

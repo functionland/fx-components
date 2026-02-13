@@ -17,6 +17,7 @@ export interface TBloxFolderSize {
 export type TBloxConectionStatus =
   | 'CONNECTED'
   | 'CHECKING'
+  | 'SWITCHING'
   | 'DISCONNECTED'
   | 'NO INTERNET'
   | 'NO CLIENT';

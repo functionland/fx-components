@@ -31,6 +31,7 @@ export const CurrentBloxIndicator = ({
     switch (connectionStatus) {
       case 'CONNECTED':
         return 'successBase';
+      case 'SWITCHING':
       case 'CHECKING':
         return 'warningBase';
       default:
@@ -42,6 +43,8 @@ export const CurrentBloxIndicator = ({
     switch (connectionStatus) {
       case 'CONNECTED':
         return t('currentBloxIndicator.connected');
+      case 'SWITCHING':
+        return t('currentBloxIndicator.switching');
       case 'CHECKING':
         return t('currentBloxIndicator.checking');
       case 'DISCONNECTED':

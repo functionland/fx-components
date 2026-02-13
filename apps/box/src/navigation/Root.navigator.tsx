@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { InitialSetupNavigator } from './InitialSetup.navigator';
 import { MainTabsNavigator } from './MainTabs.navigator';
+import { BloxManagerScreen } from '../screens/BloxManager.screen';
 import { Routes, RootStackParamList } from './navigationConfig';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useBloxsStore } from '../stores';
@@ -48,6 +49,11 @@ export const RootNavigator = () => {
       <RootStack.Screen
         name={Routes.MainTabs}
         component={MainTabsNavigator}
+        options={{ headerShown: false }}
+      />
+      <RootStack.Screen
+        name={Routes.BloxManager}
+        component={BloxManagerScreen}
         options={{ headerShown: false }}
       />
     </RootStack.Navigator>

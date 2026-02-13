@@ -133,7 +133,7 @@ export const BloxInteraction = ({
                   color={
                     bloxsConnectionStatus[item.peerId] === 'CONNECTED'
                       ? 'successBase'
-                      : bloxsConnectionStatus[item.peerId] === 'CHECKING'
+                      : bloxsConnectionStatus[item.peerId] === 'CHECKING' || bloxsConnectionStatus[item.peerId] === 'SWITCHING'
                         ? 'warningBase'
                         : 'errorBase'
                   }
@@ -143,7 +143,7 @@ export const BloxInteraction = ({
                   color={
                     bloxsConnectionStatus[item.peerId] === 'CONNECTED'
                       ? 'successBase'
-                      : bloxsConnectionStatus[item.peerId] === 'CHECKING'
+                      : bloxsConnectionStatus[item.peerId] === 'CHECKING' || bloxsConnectionStatus[item.peerId] === 'SWITCHING'
                         ? 'warningBase'
                         : 'errorBase'
                   }

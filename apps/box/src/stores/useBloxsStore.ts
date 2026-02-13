@@ -17,6 +17,22 @@ import {
   GetDatastoreSizeResponse,
 } from '@functionland/react-native-fula/lib/typescript/types/fxblox';
 
+let switchGeneration = 0;
+let latestSwitchPeerId: string | null = null;
+
+async function waitForBloxStatusSettled(
+  peerId: string,
+  get: () => BloxsModelSlice,
+  timeoutMs = 60000
+): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const status = get().bloxsConnectionStatus[peerId];
+    if (status === 'CONNECTED' || status === 'DISCONNECTED') return;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+}
+
 interface BloxsActionSlice {
   /**
    * Local actions
@@ -31,7 +47,7 @@ interface BloxsActionSlice {
   updateFolderSizeInfo: (peerId: string, info: TBloxFolderSize) => void;
   reset: () => void;
   setCurrentBloxPeerId: (peerId: string) => void;
-  switchToBlox: (peerId: string) => Promise<boolean>;
+  switchToBlox: (peerId: string) => Promise<void>;
 
   /**
    * Remote actions
@@ -39,6 +55,7 @@ interface BloxsActionSlice {
   getBloxSpace: (updateStore?: boolean) => Promise<TBloxFreeSpace>;
   getFolderSize: (updateStore?: boolean) => Promise<TBloxFolderSize>;
   checkBloxConnection: (maxTries?: number, waitBetweenRetries?: number) => Promise<boolean>;
+  checkAllBloxStatus: () => Promise<void>;
 }
 interface BloxsModel {
   _hasHydrated: boolean;
@@ -52,6 +69,8 @@ interface BloxsModel {
   syncProgress: number;
   /** Transient flag: set to 'switch' during switchToBlox to prevent double initFula */
   _initFulaSource: 'switch' | null;
+  /** Transient flag: true while checkAllBloxStatus is running */
+  _isCheckingAllStatus: boolean;
 }
 export interface BloxsModelSlice extends BloxsModel, BloxsActionSlice {}
 const inittalState: BloxsModel = {
@@ -64,6 +83,7 @@ const inittalState: BloxsModel = {
   isChainSynced: false,
   syncProgress: 0,
   _initFulaSource: null,
+  _isCheckingAllStatus: false,
 };
 
 const createModeSlice: StateCreator<
@@ -266,16 +286,15 @@ const createModeSlice: StateCreator<
       });
     },
     checkBloxConnection: async (maxTries?: number, waitBetweenRetries?: number) => {
-      const {
-        bloxsConnectionStatus: currentBloxsConnectionStatus,
-        currentBloxPeerId,
-      } = get();
+      // Capture peerId once so we always update the correct blox,
+      // even if currentBloxPeerId changes during the async check.
+      const peerId = get().currentBloxPeerId;
 
       try {
         set({
           bloxsConnectionStatus: {
-            ...currentBloxsConnectionStatus,
-            [currentBloxPeerId]: 'CHECKING',
+            ...get().bloxsConnectionStatus,
+            [peerId]: 'CHECKING',
           },
         });
         console.log('Geting blox connection status');
@@ -285,16 +304,16 @@ const createModeSlice: StateCreator<
 
         set({
           bloxsConnectionStatus: {
-            ...currentBloxsConnectionStatus,
-            [currentBloxPeerId]: connected ? 'CONNECTED' : 'DISCONNECTED',
+            ...get().bloxsConnectionStatus,
+            [peerId]: connected ? 'CONNECTED' : 'DISCONNECTED',
           },
         });
         return connected;
       } catch (error) {
         set({
           bloxsConnectionStatus: {
-            ...currentBloxsConnectionStatus,
-            [currentBloxPeerId]: 'DISCONNECTED',
+            ...get().bloxsConnectionStatus,
+            [peerId]: 'DISCONNECTED',
           },
         });
         return false;
@@ -306,53 +325,123 @@ const createModeSlice: StateCreator<
       // If already on this Blox, no need to switch
       if (currentBloxPeerId === peerId) {
         console.log('Already connected to this Blox:', peerId);
-        return true;
+        return;
       }
 
       console.log('Switching from Blox:', currentBloxPeerId, 'to:', peerId);
 
-      try {
-        const setFulaIsReady = useUserProfileStore.getState().setFulaIsReady;
+      // Increment generation so any in-flight switch is cancelled
+      const myGeneration = ++switchGeneration;
 
-        // Mark fula as not ready during switch
-        setFulaIsReady(false);
+      const setFulaIsReady = useUserProfileStore.getState().setFulaIsReady;
 
-        // Set switching status for new Blox
+      // === Fast phase (synchronous — returns immediately) ===
+      setFulaIsReady(false);
+      latestSwitchPeerId = peerId;
+      set({
+        _initFulaSource: 'switch',
+        currentBloxPeerId: peerId,
+        bloxsConnectionStatus: {
+          ...bloxsConnectionStatus,
+          [peerId]: 'SWITCHING',
+        },
+      });
+
+      // Helper: mark this specific peerId as DISCONNECTED, but only if a
+      // newer generation hasn't already claimed this same peerId (A→B→A case).
+      const setDisconnected = () => {
+        if (switchGeneration !== myGeneration && latestSwitchPeerId === peerId) {
+          return;
+        }
         set({
           bloxsConnectionStatus: {
-            ...bloxsConnectionStatus,
-            [peerId]: 'CHECKING',
+            ...get().bloxsConnectionStatus,
+            [peerId]: 'DISCONNECTED',
           },
         });
+      };
 
-        // Set flag BEFORE changing currentBloxPeerId so MainTabs skips redundant initFula
-        set({ _initFulaSource: 'switch' });
+      // === Background phase (fire-and-forget) ===
+      (async () => {
+        try {
+          // Debounce: wait a short time so rapid switches (A→B→C) only
+          // dispatch native calls for the final target. Without this,
+          // intermediate switches queue fula.logout/shutdown/newClient on
+          // the native bridge, and the Go bridge serializes them — blocking
+          // the final switch's native calls for tens of seconds.
+          await new Promise(resolve => setTimeout(resolve, 300));
+          if (switchGeneration !== myGeneration) {
+            console.log('Switch to', peerId, 'debounced (newer switch pending)');
+            setDisconnected();
+            return;
+          }
 
-        // Update current Blox PeerId
-        set({ currentBloxPeerId: peerId });
-
-        // Get user credentials for libp2p reconnection
-        const userProfileStore = useUserProfileStore.getState();
-        const { password, signiture } = userProfileStore;
-
-        if (password && signiture) {
           // Import Helper dynamically to avoid circular dependency
           const { Helper } = await import('../utils');
 
-          // Re-initialize Fula with new Blox PeerId to ensure proper libp2p connection
+          // Reset any in-progress initFula so we can start immediately.
+          // The old switch's native call will be cleaned up by our
+          // logout+shutdown inside initFula.
+          Helper.resetInitFula();
+          if (switchGeneration !== myGeneration) {
+            console.log('Switch to', peerId, 'superseded after resetInitFula');
+            setDisconnected();
+            return;
+          }
+
+          // Get user credentials
+          const { password, signiture } = useUserProfileStore.getState();
+          if (!password || !signiture) {
+            console.error('Missing credentials for Blox switch');
+            setFulaIsReady(false);
+            setDisconnected();
+            return;
+          }
+
+          // Re-initialize Fula with new Blox PeerId
           console.log('Re-initializing Fula connection for new Blox:', peerId);
           await Helper.initFula({
             password,
             signiture,
             bloxPeerId: peerId,
+            shouldCancel: () => switchGeneration !== myGeneration,
           });
 
-          // Wait for libp2p to establish relay connections before marking ready
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          if (switchGeneration !== myGeneration) {
+            console.log('Switch to', peerId, 'superseded after initFula');
+            // Don't touch fulaIsReady — the newer switch owns it
+            setDisconnected();
+            return;
+          }
+
+          // Mark fula as ready — no 5s relay wait (library handles it)
           setFulaIsReady(true);
 
-          // Check connection to new Blox
-          const connected = await userProfileStore.checkBloxConnection();
+          // Transition to CHECKING phase
+          set({
+            bloxsConnectionStatus: {
+              ...get().bloxsConnectionStatus,
+              [peerId]: 'CHECKING',
+            },
+          });
+
+          // Call useUserProfileStore.checkBloxConnection directly (not via
+          // the store wrapper) so we manage status for this specific peerId
+          // rather than whatever currentBloxPeerId happens to be.
+          // Use 1 try with short retry — fula.checkConnection() is a native
+          // call that blocks the Go bridge for 30+s on unreachable bloxes.
+          // With 3 tries / 15s waits the bridge is blocked for 2+ minutes,
+          // preventing ALL subsequent fula calls (logout/shutdown/newClient)
+          // from any new switch.
+          const connected = await useUserProfileStore
+            .getState()
+            .checkBloxConnection(1, 5);
+
+          if (switchGeneration !== myGeneration) {
+            console.log('Switch to', peerId, 'superseded after checkBloxConnection');
+            setDisconnected();
+            return;
+          }
 
           set({
             bloxsConnectionStatus: {
@@ -362,28 +451,52 @@ const createModeSlice: StateCreator<
           });
 
           console.log('Blox switch completed. Connected:', connected);
-          return connected;
-        } else {
-          console.error('Missing credentials for Blox switch');
-          setFulaIsReady(false);
-          set({
-            bloxsConnectionStatus: {
-              ...get().bloxsConnectionStatus,
-              [peerId]: 'DISCONNECTED',
-            },
-          });
-          return false;
+        } catch (error) {
+          console.error('Failed to switch to Blox:', peerId, error);
+          // Always mark failed blox as DISCONNECTED regardless of generation
+          setDisconnected();
+          // Only touch fulaIsReady if we're still the active switch
+          if (switchGeneration === myGeneration) {
+            useUserProfileStore.getState().setFulaIsReady(false);
+          }
         }
-      } catch (error) {
-        console.error('Failed to switch to Blox:', peerId, error);
-        useUserProfileStore.getState().setFulaIsReady(false);
-        set({
-          bloxsConnectionStatus: {
-            ...get().bloxsConnectionStatus,
-            [peerId]: 'DISCONNECTED',
-          },
-        });
-        return false;
+      })();
+    },
+    checkAllBloxStatus: async () => {
+      const { bloxs, currentBloxPeerId } = get();
+      const bloxList = Object.keys(bloxs);
+      if (bloxList.length === 0) return;
+
+      set({ _isCheckingAllStatus: true });
+
+      try {
+        // 1. Check current blox first (no switching needed)
+        if (currentBloxPeerId && bloxs[currentBloxPeerId]) {
+          await get().checkBloxConnection(1, 5);
+        }
+
+        // 2. For each non-current blox, switch + check
+        const originalBloxPeerId = currentBloxPeerId;
+        for (const peerId of bloxList) {
+          if (peerId === originalBloxPeerId) continue;
+
+          // switchToBlox handles: initFula + checkBloxConnection + status updates
+          await get().switchToBlox(peerId);
+
+          // Wait for the switch background to complete (poll status)
+          await waitForBloxStatusSettled(peerId, get);
+        }
+
+        // 3. Switch back to original blox
+        if (
+          originalBloxPeerId &&
+          get().currentBloxPeerId !== originalBloxPeerId
+        ) {
+          await get().switchToBlox(originalBloxPeerId);
+          await waitForBloxStatusSettled(originalBloxPeerId, get);
+        }
+      } finally {
+        set({ _isCheckingAllStatus: false });
       }
     },
   }),

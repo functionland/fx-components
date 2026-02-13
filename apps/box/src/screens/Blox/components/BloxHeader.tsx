@@ -5,6 +5,7 @@ import {
   FxText,
   FxPressableOpacity,
   FxChevronDownIcon,
+  FxGridIcon,
   useFxTheme,
   FxSvg,
   FxSvgProps,
@@ -41,7 +42,17 @@ export const BloxHeader = ({ selectedMode, onChangeMode, onAvatarPress }: TBloxH
       </FxPressableOpacity>
 
       <FxBox flexDirection="row" alignItems="center">
-        <FxPressableOpacity 
+        <FxPressableOpacity
+          onPress={() => navigation.navigate(Routes.BloxManager as never)}
+          marginRight="12"
+        >
+          <FxGridIcon
+            width={24}
+            height={24}
+            fill={colors.content1}
+          />
+        </FxPressableOpacity>
+        <FxPressableOpacity
           onPress={() => navigation.navigate(Routes.InitialSetup, {
             screen: Routes.LinkPassword,
           })}

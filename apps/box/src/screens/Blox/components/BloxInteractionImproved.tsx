@@ -1,20 +1,20 @@
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import {
   FxBox,
   FxPressableOpacity,
   FxText,
   FxChevronDownIcon,
+  FxGridIcon,
   useFxTheme,
-  FxBottomSheetModalMethods,
-  useToast,
 } from '@functionland/component-library';
+import { useNavigation } from '@react-navigation/native';
 import OfficeBloxUnitDark from '../../../app/icons/office-blox-unit-dark.svg';
 import OfficeBloxUnitLight from '../../../app/icons/office-blox-unit-light.svg';
 
 import { useBloxsStore, useSettingsStore } from '../../../stores';
 import { EBloxInteractionType, TBloxInteraction } from '../../../models';
 import { CircleFilledIcon } from '../../../components/Icons';
-import { BloxSelectionBottomSheet } from '../../../components/BloxSelectionBottomSheet';
+import { Routes } from '../../../navigation/navigationConfig';
 
 type TBloxInteractionImprovedProps = {
   bloxs: TBloxInteraction[];
@@ -29,79 +29,23 @@ export const BloxInteractionImproved = ({
   onConnectionPress,
   onBloxPress,
 }: TBloxInteractionImprovedProps) => {
-  const bloxSelectionRef = useRef<FxBottomSheetModalMethods>(null);
-  const { queueToast } = useToast();
-  const [isBloxSwitching, setIsBloxSwitching] = useState(false);
-  
+  const navigation = useNavigation();
+
   const colorScheme = useSettingsStore((store) => store.colorScheme);
   const { colors } = useFxTheme();
 
   const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
-  const switchToBlox = useBloxsStore((state) => state.switchToBlox);
 
   // Find current Blox
   const currentBlox = bloxs.find(blox => blox.peerId === currentBloxPeerId);
   const currentConnectionStatus = currentBloxPeerId ? bloxsConnectionStatus[currentBloxPeerId] : undefined;
 
-  const handleBloxSelection = async (peerId: string) => {
-    if (peerId === currentBloxPeerId) {
-      return; // Already selected
-    }
-
-    setIsBloxSwitching(true);
-    
-    try {
-      queueToast({
-        type: 'info',
-        title: 'Switching Blox',
-        message: 'Establishing connection to selected Blox...',
-      });
-
-      const success = await switchToBlox(peerId);
-      
-      if (success) {
-        queueToast({
-          type: 'success',
-          title: 'Blox Connected',
-          message: 'Successfully connected to the selected Blox device.',
-        });
-      } else {
-        queueToast({
-          type: 'error',
-          title: 'Connection Failed',
-          message: 'Failed to connect to the selected Blox. Please try again.',
-        });
-      }
-    } catch (error) {
-      console.error('Error switching Blox:', error);
-      queueToast({
-        type: 'error',
-        title: 'Switch Failed',
-        message: 'An error occurred while switching Blox devices.',
-      });
-    } finally {
-      setIsBloxSwitching(false);
-    }
-  };
-
-  const showBloxSelection = () => {
-    if (bloxs.length <= 1) {
-      queueToast({
-        type: 'info',
-        title: 'Single Blox',
-        message: 'You only have one Blox device configured.',
-      });
-      return;
-    }
-    
-    bloxSelectionRef.current?.present();
-  };
-
   const getStatusColor = () => {
     switch (currentConnectionStatus) {
       case 'CONNECTED':
         return 'successBase';
+      case 'SWITCHING':
       case 'CHECKING':
         return 'warningBase';
       default:
@@ -139,13 +83,11 @@ export const BloxInteractionImproved = ({
             
             {bloxs.length > 1 && (
               <FxPressableOpacity
-                onPress={showBloxSelection}
-                disabled={isBloxSwitching}
-                opacity={isBloxSwitching ? 0.5 : 1}
+                onPress={() => navigation.navigate(Routes.BloxManager as never)}
                 padding="8"
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <FxChevronDownIcon
+                <FxGridIcon
                   width={16}
                   height={16}
                   fill={colors.content1}
@@ -175,7 +117,7 @@ export const BloxInteractionImproved = ({
               color={getStatusColor()}
               variant="bodySmallRegular"
             >
-              {isBloxSwitching ? 'SWITCHING...' : (currentConnectionStatus?.toString() || 'UNKNOWN')}
+              {currentConnectionStatus === 'SWITCHING' ? 'SWITCHING...' : currentConnectionStatus === 'CHECKING' ? 'CHECKING...' : (currentConnectionStatus?.toString() || 'UNKNOWN')}
             </FxText>
             <FxChevronDownIcon
               width={16}
@@ -187,11 +129,6 @@ export const BloxInteractionImproved = ({
         </FxBox>
       </FxBox>
 
-      {/* Blox Selection Bottom Sheet */}
-      <BloxSelectionBottomSheet
-        ref={bloxSelectionRef}
-        onBloxSelect={handleBloxSelection}
-      />
     </FxBox>
   );
 };

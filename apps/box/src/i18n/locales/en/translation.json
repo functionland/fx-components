@@ -229,6 +229,7 @@
       "noBloxSelected": "No Blox Selected",
       "connected": "Connected",
       "checking": "Checking",
+      "switching": "Switching",
       "disconnected": "Disconnected"
     },
     "bleDeviceSelection": {

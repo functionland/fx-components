@@ -454,7 +454,7 @@ getEarnings: async (account?: string) => {
         });
       },
       checkBloxConnection: async (
-        maxTries = 5,
+        maxTries = 3,
         waitBetweenRetries = 15
       ): Promise<boolean> => {
         // Increment generation to cancel any in-flight connection checks

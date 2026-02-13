@@ -27,9 +27,22 @@ export const getMyDIDKeyPair = (
 
 let initFulaPromise: Promise<string | undefined> | null = null; // Shared promise to track execution
 let initFulaTimeout: NodeJS.Timeout | null = null; // Timeout for cleanup
+let initFulaGen = 0; // Generation counter so stale finally/timeout don't clear a newer promise
 
 // Cleanup function to reset promise and timeout
 const cleanupInitFula = () => {
+  if (initFulaTimeout) {
+    clearTimeout(initFulaTimeout);
+    initFulaTimeout = null;
+  }
+  initFulaPromise = null;
+};
+
+// Allow a new initFula to start by clearing the promise guard.
+// The old native call may still be running — the new initFula's
+// logout+shutdown will clean it up.
+export const resetInitFula = () => {
+  initFulaGen++; // prevent old finally/timeout from clearing new state
   if (initFulaTimeout) {
     clearTimeout(initFulaTimeout);
     initFulaTimeout = null;
@@ -43,12 +56,14 @@ export const initFula = async ({
   bloxAddr = undefined,
   bloxPeerId,
   conAddr = Constants.FXRelay,
+  shouldCancel,
 }: {
   password: string;
   signiture: string;
   bloxAddr?: string;
   bloxPeerId?: string;
   conAddr?: string;
+  shouldCancel?: () => boolean;
 }): Promise<string | undefined> => {
   // If a previous call is in progress, wait for it to finish
   if (initFulaPromise) {
@@ -59,11 +74,14 @@ export const initFula = async ({
   }
 
   // Create a new promise for this execution
+  const myGen = ++initFulaGen;
   initFulaPromise = new Promise((resolve, reject) => {
     // Set timeout for cleanup (30 seconds)
     initFulaTimeout = setTimeout(() => {
       console.warn('initFula timeout reached, cleaning up...');
-      cleanupInitFula();
+      if (initFulaGen === myGen) {
+        cleanupInitFula();
+      }
       reject(new Error('initFula operation timed out'));
     }, 30000);
 
@@ -90,18 +108,23 @@ export const initFula = async ({
         try {
           // Attempt to logout and shutdown any previous Fula client
           await fula.logout(keyPair.secretKey.toString(), '');
+          if (shouldCancel?.()) {
+            throw new Error('initFula cancelled — switch superseded after logout');
+          }
           await fula.shutdown();
           console.log('Previous Fula client shutdown successfully.');
         } catch (shutdownError) {
+          // Re-throw cancellation errors
+          if (shutdownError?.message?.includes('cancelled')) throw shutdownError;
           console.warn(
             'Failed to shutdown previous Fula client:',
             shutdownError
           );
-          try {
-            await fula.deleteDsLock();
-          } catch (lockError) {
-            console.warn('Failed to delete lock file:', lockError);
-          }
+        }
+
+        // Bail out before the expensive newClient call if superseded
+        if (shouldCancel?.()) {
+          throw new Error('initFula cancelled — switch superseded before newClient');
         }
 
         // Initialize a new Fula client
@@ -122,9 +145,13 @@ export const initFula = async ({
         reject(error); // Reject with the error on failure
       } finally {
         console.log('Resetting initFulaPromise');
-        // Delay cleanup by one microtick so concurrent awaiters see the
-        // resolved/rejected promise rather than null
-        await Promise.resolve().then(() => cleanupInitFula());
+        // Only clean up if we're still the active generation —
+        // resetInitFula() may have already cleared us for a newer call.
+        if (initFulaGen === myGen) {
+          // Delay cleanup by one microtick so concurrent awaiters see the
+          // resolved/rejected promise rather than null
+          await Promise.resolve().then(() => cleanupInitFula());
+        }
       }
     })(); // Immediately invoke the async function inside the executor
   });

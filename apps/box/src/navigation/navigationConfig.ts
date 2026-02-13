@@ -33,6 +33,9 @@ export enum Routes {
   SettingsTab = 'SettingsTab',
   ChatAITab = 'ChatAITab',
 
+  // Blox Manager
+  BloxManager = 'BloxManager',
+
   // Settings Stack
   Settings = 'Settings',
   ConnectedDApps = 'ConnectedDApps',
@@ -67,6 +70,7 @@ export type RootStackParamList = {
   [Routes.Hub]: undefined;
   [Routes.Plugin]: undefined;
   [Routes.ChatAI]: undefined;
+  [Routes.BloxManager]: undefined;
 };
 
 export type MainTabsParamList = {
