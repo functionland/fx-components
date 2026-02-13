@@ -26,9 +26,11 @@ interface ModeSlice extends ChainSettings {
     endDate: Date,
     uniqueId: string
   };
+  bloxStatusCheckInterval: number; // 0=disabled, 480=8h, 1440=24h (in minutes)
   toggleIsAuto: () => void;
   setColorScheme: (colorScheme: ColorScheme) => void;
-  setDebugMode: (uniqueId: string, endDate: Date) => void
+  setDebugMode: (uniqueId: string, endDate: Date) => void;
+  setBloxStatusCheckInterval: (interval: number) => void;
 }
 const createModeSlice: StateCreator<
   ModeSlice,
@@ -49,6 +51,7 @@ const createModeSlice: StateCreator<
       uniqueId: Helper.generateUniqueId(),
       endDate: moment().add(-2, 'days').toDate()
     },
+    bloxStatusCheckInterval: 0,
     // Chain settings
     selectedChain: 'skale', // Default to SKALE
     baseAuthorized: false,
@@ -82,6 +85,9 @@ const createModeSlice: StateCreator<
           uniqueId
         }
       })
+    },
+    setBloxStatusCheckInterval: (interval: number) => {
+      set({ bloxStatusCheckInterval: interval });
     },
   }),
   {
@@ -123,6 +129,7 @@ const createModeSlice: StateCreator<
       debugMode: state.debugMode,
       selectedChain: state.selectedChain,
       baseAuthorized: state.baseAuthorized,
+      bloxStatusCheckInterval: state.bloxStatusCheckInterval,
     }),
   }
 );

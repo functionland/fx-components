@@ -39,6 +39,7 @@ export enum Routes {
   // Settings Stack
   Settings = 'Settings',
   ConnectedDApps = 'ConnectedDApps',
+  BloxStatusMonitor = 'BloxStatusMonitor',
   Mode = 'Mode',
   ChainSelection = 'ChainSelection',
   Pools = 'Pools',
@@ -93,6 +94,7 @@ export type SettingsStackParamList = {
     returnDeepLink?: string;
     accountId?: string;
   };
+  [Routes.BloxStatusMonitor]: undefined;
   [Routes.Mode]: undefined;
   [Routes.ChainSelection]: undefined;
   [Routes.Pools]: undefined;

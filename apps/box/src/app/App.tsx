@@ -30,6 +30,7 @@ import { copyToClipboard } from '../utils/clipboard';
 import { fula } from '@functionland/react-native-fula';
 import { AppKitProvider, AppKit } from '@reown/appkit-react-native';
 import { appKit } from '../config/appKitConfig';
+import { configureBackgroundBloxCheck } from '../services/backgroundBloxCheck';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -81,7 +82,14 @@ export const App = () => {
 const AppContent = () => {
   const appState = useRef(AppState.currentState);
   const debugMode = useSettingsStore((state) => state.debugMode);
+  const bloxStatusCheckInterval = useSettingsStore((state) => state.bloxStatusCheckInterval);
   const { isDebugModeEnable } = useLogger();
+
+  useEffect(() => {
+    if (bloxStatusCheckInterval !== undefined) {
+      configureBackgroundBloxCheck(bloxStatusCheckInterval).catch(console.error);
+    }
+  }, [bloxStatusCheckInterval]);
 
   useEffect(() => {
     if (!__DEV__) {

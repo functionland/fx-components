@@ -90,7 +90,8 @@
     "whatwg-fetch": "*",
     "zustand": "*",
     "@web3modal/wagmi-react-native": "*",
-    "react-native-randombytes": "*"
+    "react-native-randombytes": "*",
+    "react-native-background-fetch": "*"
   },
   "devDependencies": {
     "@babel/core": "*",

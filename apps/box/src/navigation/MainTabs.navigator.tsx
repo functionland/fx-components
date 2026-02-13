@@ -35,6 +35,7 @@ import {
   ModeScreen,
   ChainSelectionScreen,
   ConnectedDAppsScreen,
+  BloxStatusMonitorScreen,
 } from '../screens/Settings';
 import { ComponentGalleryNavigator } from './ComponentGallery.navigator';
 import { GlobalBottomSheet } from '../components/GlobalBottomSheet';
@@ -318,6 +319,10 @@ const SettingsNavigator = () => {
       <SettingsStack.Screen
         name={Routes.ConnectedDApps}
         component={ConnectedDAppsScreen}
+      />
+      <SettingsStack.Screen
+        name={Routes.BloxStatusMonitor}
+        component={BloxStatusMonitorScreen}
       />
       <SettingsStack.Screen name={Routes.Mode} component={ModeScreen} />
       <SettingsStack.Screen name={Routes.ChainSelection} component={ChainSelectionScreen} />

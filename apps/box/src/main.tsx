@@ -16,6 +16,10 @@ if (typeof fetch === 'undefined') {
 
 AppRegistry.registerComponent('Box', () => App);
 
+import BackgroundFetch from 'react-native-background-fetch';
+import { headlessBloxCheckTask } from './services/backgroundBloxCheck';
+BackgroundFetch.registerHeadlessTask(headlessBloxCheckTask);
+
 LogBox.ignoreLogs([
   'Require cycle: ../../node_modules/',
   'InteractionManager has been deprecated',

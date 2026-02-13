@@ -538,6 +538,7 @@ const createModeSlice: StateCreator<
       bloxs: state.bloxs,
       bloxsSpaceInfo: state.bloxsSpaceInfo,
       bloxsPropertyInfo: state.bloxsPropertyInfo,
+      currentBloxPeerId: state.currentBloxPeerId,
     }),
     migrate: async (persistedState, version) => {
       const bloxsModel = persistedState as Partial<BloxsModelSlice>;

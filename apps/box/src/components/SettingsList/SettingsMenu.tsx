@@ -9,6 +9,12 @@ import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore, useColorMode } from '../../stores';
 import { CHAIN_DISPLAY_NAMES } from '../../contracts/config';
 
+const INTERVAL_LABELS: Record<number, string> = {
+  0: 'Disabled',
+  480: 'Every 8 hours',
+  1440: 'Every 24 hours',
+};
+
 export const SettingsMenu = () => {
   const navigation =
     useNavigation<SettingsStackNavigationProps<Routes.Settings>>();
@@ -16,6 +22,9 @@ export const SettingsMenu = () => {
 
   const mode = useColorMode();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
+  const bloxStatusCheckInterval = useSettingsStore(
+    (state) => state.bloxStatusCheckInterval
+  );
 
   // Add app component gallery in development mode
   const appGallery = __DEV__
@@ -30,9 +39,9 @@ export const SettingsMenu = () => {
 
   const menuItems = [
     {
-      name: 'Connected dApps',
-      detail: null,
-      onPress: () => navigation.navigate(Routes.ConnectedDApps),
+      name: 'Blox Status Monitor',
+      detail: INTERVAL_LABELS[bloxStatusCheckInterval] ?? 'Disabled',
+      onPress: () => navigation.navigate(Routes.BloxStatusMonitor),
     },
     {
       name: 'Mode',
