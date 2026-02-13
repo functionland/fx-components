@@ -14,7 +14,7 @@ import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { EConnectionStatus } from '../../models';
 import { BleManagerWrapper, DiscoveredDevice, ResponseAssembler } from '../../utils/ble';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import axios from 'axios';
 import { API_URL } from '../../api/index';
 import { BleDeviceSelectionBottomSheet, FlashingCircle, FlashingTower } from '../../components';
@@ -243,6 +243,22 @@ export const ConnectToBloxScreen = () => {
                 <FxText variant="h200" textAlign="center">
                   {t('connectToBlox.hotspotInstructions')}
                 </FxText>
+              ) : null}
+              {Platform.OS === 'ios' &&
+              (connectionStatus === EConnectionStatus.bleFailed ||
+                connectionStatus === EConnectionStatus.failed) ? (
+                <FxBox
+                  marginTop="12"
+                  padding="12"
+                  borderRadius="s"
+                  backgroundColor="warningBase"
+                >
+                  <FxText variant="bodySmallRegular" color="backgroundApp" textAlign="center">
+                    If your device is not found, go to iOS Settings → Bluetooth,
+                    find your Blox device (fulatower/fxblox), tap the (i) icon,
+                    and select "Forget This Device". Then try again.
+                  </FxText>
+                </FxBox>
               ) : null}
               <FxText variant="h200" textAlign="center">
                 {t('connectToBlox.formatInstructions')}

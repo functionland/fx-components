@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Alert, ActivityIndicator, Modal, StyleSheet } from 'react-native';
+import { Alert, ActivityIndicator, Modal, Platform, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   FxArrowLeftIcon,
@@ -67,6 +67,7 @@ export const BluetoothCommandsScreen = () => {
   const [securityCode, setSecurityCode] = useState('');
   const [pendingCommand, setPendingCommand] = useState<string | null>(null);
   const [showConnectHint, setShowConnectHint] = useState(false);
+  const [connectionAttempted, setConnectionAttempted] = useState(false);
   const [discoveredDevices, setDiscoveredDevices] = useState<DiscoveredDevice[]>([]);
   const deviceSelectionResolverRef = useRef<((id: string | null) => void) | null>(null);
   const bottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
@@ -179,6 +180,7 @@ export const BluetoothCommandsScreen = () => {
       console.log('BluetoothCommands: Starting BLE connection...');
       setRunningCommand(true);
       setIsConnecting(true);
+      setConnectionAttempted(true);
       
       // Add a small delay to ensure UI updates
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -373,10 +375,26 @@ export const BluetoothCommandsScreen = () => {
               <FxLoadingSpinner marginLeft="4" />
             </FxBox>
           ) : (
-            <FxText variant="bodyMediumRegular">
-              Click the plug icon in the top right corner to connect to your
-              FxBlox device using Bluetooth
-            </FxText>
+            <>
+              <FxText variant="bodyMediumRegular">
+                Click the plug icon in the top right corner to connect to your
+                FxBlox device using Bluetooth
+              </FxText>
+              {Platform.OS === 'ios' && connectionAttempted && (
+                <FxBox
+                  marginTop="16"
+                  padding="12"
+                  borderRadius="s"
+                  backgroundColor="warningBase"
+                >
+                  <FxText variant="bodySmallRegular" color="backgroundApp">
+                    If your device is not found, go to iOS Settings → Bluetooth,
+                    find your Blox device (fulatower/fxblox), tap the (i) icon,
+                    and select "Forget This Device". Then try connecting again.
+                  </FxText>
+                </FxBox>
+              )}
+            </>
           )}
         </FxBox>
       ) : (
