@@ -171,6 +171,7 @@ const DetailInfo = ({
           console.log('Step 2: Calling API joinPool...');
           const request = {
             peerId: clusterPeerId,
+            kuboPeerId: currentBloxPeerId,
             account: account,
             chain: selectedChain,
             poolId: poolId,
@@ -268,6 +269,7 @@ const DetailInfo = ({
     try {
       const request = {
         peerId: clusterPeerId,
+        kuboPeerId: currentBloxPeerId,
         account: account,
         chain: selectedChain,
         poolId: parseInt(pool.poolID, 10),
@@ -381,6 +383,14 @@ const DetailInfo = ({
         <FxText variant="bodyXSRegular" color="content2">
           Join Status:
         </FxText>
+        <FxText variant="bodyXSRegular" color={joinState.step1Complete ? 'greenBase' : 'errorBase'}>
+          • Blox Configuration: {joinState.step1Complete ? '✓ Complete' : '✗ Pending'}
+        </FxText>
+        {joinState.step1Error && (
+          <FxText variant="bodyXSRegular" color="errorBase" marginTop="4">
+            Blox Error: {joinState.step1Error}
+          </FxText>
+        )}
         <FxText variant="bodyXSRegular" color={joinState.step2Complete ? 'greenBase' : 'errorBase'}>
           • Pool Registration: {joinState.step2Complete ? '✓ Complete' : '✗ Pending'}
         </FxText>

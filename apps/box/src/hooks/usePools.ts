@@ -253,6 +253,7 @@ export const usePools = () => {
       try {
         const request: JoinPoolRequest = {
           peerId: currentClusterPeerId,
+          kuboPeerId: currentBloxPeerId,
           account: connectedAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -282,7 +283,7 @@ export const usePools = () => {
         };
       }
     },
-    [connectedAccount, currentClusterPeerId, selectedChain, loadPools]
+    [connectedAccount, currentBloxPeerId, currentClusterPeerId, selectedChain, loadPools]
   );
 
   const joinPool = useCallback(
@@ -313,6 +314,7 @@ export const usePools = () => {
       try {
         const request: JoinPoolRequest = {
           peerId: currentClusterPeerId,
+          kuboPeerId: currentBloxPeerId,
           account: connectedAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -342,7 +344,7 @@ export const usePools = () => {
         };
       }
     },
-    [connectedAccount, currentClusterPeerId, selectedChain, loadPools]
+    [connectedAccount, currentBloxPeerId, currentClusterPeerId, selectedChain, loadPools]
   );
 
   // API-based cancel join request function
@@ -358,6 +360,7 @@ export const usePools = () => {
       try {
         const request: JoinPoolRequest = {
           peerId: currentClusterPeerId,
+          kuboPeerId: currentBloxPeerId,
           account: connectedAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -387,7 +390,7 @@ export const usePools = () => {
         };
       }
     },
-    [connectedAccount, currentClusterPeerId, selectedChain, loadPools]
+    [connectedAccount, currentBloxPeerId, currentClusterPeerId, selectedChain, loadPools]
   );
 
   const leavePool = useCallback(

@@ -275,6 +275,7 @@ export const usePoolsWithFallback = () => {
       try {
         const request: JoinPoolRequest = {
           peerId: currentClusterPeerId,
+          kuboPeerId: currentBloxPeerId,
           account: effectiveAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -304,7 +305,7 @@ export const usePoolsWithFallback = () => {
         };
       }
     },
-    [effectiveAccount, currentClusterPeerId, selectedChain, loadPools]
+    [effectiveAccount, currentBloxPeerId, currentClusterPeerId, selectedChain, loadPools]
   );
 
   /**
@@ -322,6 +323,7 @@ export const usePoolsWithFallback = () => {
       try {
         const request: JoinPoolRequest = {
           peerId: currentClusterPeerId,
+          kuboPeerId: currentBloxPeerId,
           account: effectiveAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -351,7 +353,7 @@ export const usePoolsWithFallback = () => {
         };
       }
     },
-    [effectiveAccount, currentClusterPeerId, selectedChain, loadPools]
+    [effectiveAccount, currentBloxPeerId, currentClusterPeerId, selectedChain, loadPools]
   );
 
   /**
@@ -369,6 +371,7 @@ export const usePoolsWithFallback = () => {
       try {
         const request: JoinPoolRequest = {
           peerId: currentClusterPeerId,
+          kuboPeerId: currentBloxPeerId,
           account: effectiveAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -398,7 +401,7 @@ export const usePoolsWithFallback = () => {
         };
       }
     },
-    [effectiveAccount, currentClusterPeerId, selectedChain, loadPools]
+    [effectiveAccount, currentBloxPeerId, currentClusterPeerId, selectedChain, loadPools]
   );
 
   // Load pools when we have an effective account

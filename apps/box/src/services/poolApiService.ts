@@ -2,6 +2,7 @@ import { SupportedChain } from '../contracts/types';
 
 export interface JoinPoolRequest {
   peerId: string;
+  kuboPeerId?: string;
   account: string;
   chain: SupportedChain;
   poolId: number;
