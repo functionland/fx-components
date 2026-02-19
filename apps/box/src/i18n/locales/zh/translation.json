@@ -143,7 +143,9 @@
       "peerIdMismatchTitle": "对等 ID 不匹配",
       "peerIdMismatchBrief": "此 Blox 由不同的身份授权。",
       "peerIdMismatchHelp": "此 Blox 的授权者对等 ID 与您的应用对等 ID 不匹配。您可以在蓝牙命令中使用重置命令来重置 Blox 并重新设置以重新获得访问权限。\n\n重置后您可以随时领取已获得的代币，但您需要当前的 Blox 对等 ID，因为它可能会更改。请在重置前复制它。",
-      "goToBluetoothCommands": "前往蓝牙命令（重置）"
+      "goToBluetoothCommands": "前往蓝牙命令（重置）",
+      "poolPeerId": "池对等 ID",
+      "poolPeerIdCopied": "池对等 ID 已复制到剪贴板"
   },
   "checkConnection": {
     "verifyingConnectionWith": "正在验证与 {{ssid}} 的连接",

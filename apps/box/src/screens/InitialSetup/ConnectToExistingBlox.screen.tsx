@@ -227,8 +227,22 @@ export const ConnectToExistingBloxScreen = () => {
               bloxs[device?.txt?.bloxPeerIdString]?.name ??
               `${t('connectToExistingBlox.bloxUnitPrefix')} #${bloxsCount + index + 1}`;
             const uniqueName = generateUniqueBloxName(baseName, existingNames);
+            // Handle re-keying: if a device exists under old key matching ipfsClusterID, remove it
+            if (device?.txt?.ipfsClusterID) {
+              const existingBloxEntries = Object.entries(bloxs as Record<string, { peerId: string; clusterPeerId?: string; name: string }>);
+              for (const [oldPeerId, oldBlox] of existingBloxEntries) {
+                if (
+                  oldPeerId !== device?.txt?.bloxPeerIdString &&
+                  (oldBlox.clusterPeerId === device?.txt?.ipfsClusterID || oldPeerId === device?.txt?.ipfsClusterID)
+                ) {
+                  removeBlox(oldPeerId);
+                  break;
+                }
+              }
+            }
             addBlox({
               peerId: device?.txt?.bloxPeerIdString,
+              clusterPeerId: device?.txt?.ipfsClusterID || undefined,
               name: uniqueName,
             });
             if (firstBlox) {
@@ -290,6 +304,20 @@ export const ConnectToExistingBloxScreen = () => {
               </FxPressableOpacity>
             )}
           </FxBox>
+          {item.txt?.ipfsClusterID && item.txt?.ipfsClusterID !== item.txt?.bloxPeerIdString && (
+            <>
+              <FxText variant="bodySmallSemibold">{t('connectToExistingBlox.poolPeerId')}:</FxText>
+              <FxBox flexDirection="row" alignItems="center">
+                <FxText variant="bodySmallLight" flex={1}>{item.txt?.ipfsClusterID}</FxText>
+                <FxPressableOpacity onPress={() => {
+                  copyToClipboard(item.txt?.ipfsClusterID);
+                  queueToast.showToast({ type: 'success', message: t('connectToExistingBlox.poolPeerIdCopied') });
+                }}>
+                  <FxCopyIcon width={16} height={16} fill={colors.content3} />
+                </FxPressableOpacity>
+              </FxBox>
+            </>
+          )}
           <FxText variant="bodySmallSemibold">{t('connectToExistingBlox.hardwareId')}:</FxText>
           <FxText variant="bodySmallLight">{item.txt?.hardwareID}</FxText>
           <FxBox flexDirection="row">

@@ -1,5 +1,6 @@
 export interface TBlox {
-  peerId: string;
+  peerId: string;          // kubo peerID (connection identifier)
+  clusterPeerId?: string;  // ipfs-cluster peerID (pool/reward operations)
   name: string;
 }
 export interface TBloxFreeSpace {
@@ -55,6 +56,8 @@ export type TBloxProperty = {
   ota_type?: 'rpi' | 'rk';
   ota_version?: string;
   restartNeeded?: 'false' | 'true';
+  kubo_peer_id?: string;
+  ipfs_cluster_peer_id?: string;
 };
 
 export type MDNSBloxService = {
@@ -65,8 +68,9 @@ export type MDNSBloxService = {
   port: number; // 8080,
   txt: {
     authorizer: string;
-    bloxPeerIdString: string | 'NA';
+    bloxPeerIdString: string | 'NA';  // kubo peerID
     hardwareID: string;
     poolName: string;
+    ipfsClusterID?: string;           // ipfs-cluster peerID
   };
 };

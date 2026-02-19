@@ -32,6 +32,7 @@ import axios from 'axios';
 import { API_URL } from '../../api/index';
 import { FlashingCircle, FlashingTower } from '../../components';
 import { useTranslation } from 'react-i18next'; // Import for translations
+import { fxblox } from '@functionland/react-native-fula';
 
 type SetupStatus =
   | 'COMPLETED'
@@ -61,6 +62,8 @@ export const SetupCompleteScreen = ({ route }: Props) => {
 
   // currentBloxPeerId could be undefined when user skip setAuthorizer step with any reason
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  const updateBlox = useBloxsStore((state) => state.updateBlox);
   const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
   const checkBloxConnection = useBloxsStore((state) => state.checkBloxConnection);
   const { queueToast } = useToast();
@@ -163,6 +166,18 @@ export const SetupCompleteScreen = ({ route }: Props) => {
       }
     }
   }, [bloxsConnectionStatus, currentBloxPeerId, fulaIsReady]);
+
+  // Fetch cluster peerID from blox when setup is completed and fula is ready
+  useEffect(() => {
+    const currentBlox = currentBloxPeerId ? bloxs[currentBloxPeerId] : null;
+    if (fulaIsReady && currentBloxPeerId && currentBlox && !currentBlox.clusterPeerId) {
+      fxblox.getClusterInfo().then((info: any) => {
+        if (info?.cluster_peer_id) {
+          updateBlox({ peerId: currentBloxPeerId, clusterPeerId: info.cluster_peer_id });
+        }
+      }).catch(() => {});
+    }
+  }, [fulaIsReady, currentBloxPeerId]);
 
   useEffect(() => {
     const interval = setInterval(() => {

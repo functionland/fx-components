@@ -3027,9 +3027,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@functionland/react-native-fula@npm:1.57.2":
-  version: 1.57.2
-  resolution: "@functionland/react-native-fula@npm:1.57.2"
+"@functionland/react-native-fula@npm:1.57.6":
+  version: 1.57.6
+  resolution: "@functionland/react-native-fula@npm:1.57.6"
   dependencies:
     "@react-native/metro-config": ^0.80.2
     text-encoding: ^0.7.0
@@ -3039,7 +3039,7 @@ __metadata:
     "@babel/preset-env": ^7.1.6
     react: "*"
     react-native: 0.73.11
-  checksum: f19ee0308069699f667df90dd6ffc90329cf35259a0a3037f9da6082216e6bb0027d060d9728ac381ba2d11da19d42a24c5156919f64200a87186dc8259fb70e
+  checksum: 5ee246e6d36debf78623577bd57f98f242d161e699416642fdd6d440a1259e69a7abee7b05e4094991dd100c56b2c24441d5c132844001f91747a43521db868a
   languageName: node
   linkType: hard
 
@@ -13086,7 +13086,7 @@ __metadata:
     "@babel/preset-env": ^7.27.2
     "@ethersproject/shims": ^5.7.0
     "@functionland/fula-sec": ^2.0.0
-    "@functionland/react-native-fula": 1.57.2
+    "@functionland/react-native-fula": 1.57.6
     "@gorhom/bottom-sheet": ^5.2.8
     "@notifee/react-native": ^9.1.8
     "@nrwl/js": 19.8.4

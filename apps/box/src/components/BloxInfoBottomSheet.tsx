@@ -74,6 +74,32 @@ export const BloxInfoBottomSheet = React.forwardRef<
                 </FxBox>
               </FxButton>
             </FxBox>
+            {bloxInfo?.clusterPeerId && bloxInfo.clusterPeerId !== bloxInfo.peerId && (
+              <FxBox paddingVertical="4" alignItems="center">
+                <FxText variant="bodyMediumRegular" padding="8">
+                  Pool PeerId
+                </FxText>
+                <FxButton
+                  onPress={() =>
+                    Share.share({
+                      title: 'Pool PeerId',
+                      message: bloxInfo?.clusterPeerId,
+                    })
+                  }
+                  iconLeft={<BloxIcon />}
+                  flexWrap="wrap"
+                  paddingHorizontal="32"
+                >
+                  <FxBox style={{ flex: 1, width: 250 }}>
+                    <FxText
+                      ellipsizeMode="tail"
+                      numberOfLines={1}
+                      style={{ width: 250 }}
+                    >{`${bloxInfo?.clusterPeerId}`}</FxText>
+                  </FxBox>
+                </FxButton>
+              </FxBox>
+            )}
             <FxBox paddingVertical="4" alignItems="center">
               <FxText variant="bodyMediumRegular" padding="8">
                 Blox fula image

@@ -95,6 +95,7 @@ export const BluetoothCommandsScreen = () => {
     label: string;
     command: string;
     dangerous?: boolean;
+    skipCode?: boolean;
   };
   const commandButtons: CommandButton[] = [
     { label: 'Partition', command: 'partition' },
@@ -103,12 +104,49 @@ export const BluetoothCommandsScreen = () => {
     { label: 'Restart Uniondrive', command: 'restart_uniondrive' },
     { label: 'Hotspot', command: 'hotspot' },
     { label: 'Reset', command: 'reset', dangerous: true },
+    { label: 'SUPPORT ON', command: 'wireguard/start', skipCode: true },
+    { label: 'SUPPORT OFF', command: 'wireguard/stop', skipCode: true },
+    { label: 'Force Update', command: 'forceupdate', skipCode: true },
   ];
 
   const executeCommand = async (command: string) => {
     setPendingCommand(command);
     setSecurityCode('');
     setIsCodeModalVisible(true);
+  };
+
+  const executeCommandDirectly = async (command: string) => {
+    try {
+      setLoadingLogs(true);
+      if (currentPeripheral?.id) {
+        const response = await bleManager.writeToBLEAndWaitForResponse(
+          `logs ${JSON.stringify({ exec: [command] })}`,
+          currentPeripheral.id
+        );
+        if (response) {
+          queueToast({
+            type: 'success',
+            title: 'Command executed successfully',
+          });
+          fetchFullLogs(
+            {
+              docker: ['fula_go', 'ipfs_host', 'ipfs_cluster'],
+              system: ['df', 'fula', 'docker', 'uniondrive', 'docker_ps', 'ls'],
+            },
+            currentPeripheral
+          );
+        }
+      }
+    } catch (error) {
+      logger.logError('executeCommandDirectly', error);
+      queueToast({
+        type: 'error',
+        title: 'Failed to execute command',
+        message: error.message,
+      });
+    } finally {
+      setLoadingLogs(false);
+    }
   };
 
   // Initialize BLE manager with status callback
@@ -421,7 +459,9 @@ export const BluetoothCommandsScreen = () => {
                         },
                         {
                           text: 'Yes',
-                          onPress: () => executeCommand(btn.command),
+                          onPress: () => btn.skipCode
+                            ? executeCommandDirectly(btn.command)
+                            : executeCommand(btn.command),
                           style: btn.dangerous ? 'destructive' : 'default',
                         },
                       ]

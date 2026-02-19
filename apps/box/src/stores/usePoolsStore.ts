@@ -196,13 +196,16 @@ const createPoolsModelSlice: StateCreator<
       try {
         const selectedChain = useSettingsStore.getState().selectedChain;
         const contractService = getContractService(selectedChain);
-        const currentBloxPeerId = useBloxsStore.getState().currentBloxPeerId;
+        const bloxsState = useBloxsStore.getState();
+        const currentBloxPeerId = bloxsState.currentBloxPeerId;
+        const blox = currentBloxPeerId ? bloxsState.bloxs[currentBloxPeerId] : null;
+        const clusterPeerId = blox?.clusterPeerId || currentBloxPeerId;
 
-        if (!currentBloxPeerId) {
+        if (!clusterPeerId) {
           throw new Error('Current Blox peer ID is not available');
         }
 
-        await contractService.cancelJoinRequest(poolID.toString(), currentBloxPeerId);
+        await contractService.cancelJoinRequest(poolID.toString(), clusterPeerId);
         set({ dirty: true });
       } catch (error) {
         console.log('cancelPoolJoin error:', error);
@@ -229,13 +232,16 @@ const createPoolsModelSlice: StateCreator<
         // Step 2: Always call contractService.leavePool regardless of step 1 result
         try {
           const contractService = getContractService(selectedChain);
-          const currentBloxPeerId = useBloxsStore.getState().currentBloxPeerId;
+          const bloxsState = useBloxsStore.getState();
+          const currentBloxPeerId = bloxsState.currentBloxPeerId;
+          const blox = currentBloxPeerId ? bloxsState.bloxs[currentBloxPeerId] : null;
+          const clusterPeerId = blox?.clusterPeerId || currentBloxPeerId;
 
-          if (!currentBloxPeerId) {
+          if (!clusterPeerId) {
             throw new Error('Current Blox peer ID is not available');
           }
 
-          await contractService.leavePool(poolID.toString(), currentBloxPeerId);
+          await contractService.leavePool(poolID.toString(), clusterPeerId);
           console.log('contractService.leavePool completed');
         } catch (contractError) {
           console.log('contractService.leavePool error:', contractError);

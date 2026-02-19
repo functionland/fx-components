@@ -37,6 +37,11 @@ export const usePools = () => {
   const { isOnCorrectNetwork } = useWalletNetwork();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  // Use ipfs-cluster peerID for all pool/reward operations
+  const currentClusterPeerId = currentBloxPeerId
+    ? (bloxs[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId)
+    : undefined;
 
   const [state, setState] = useState<PoolsState>({
     pools: [],
@@ -68,7 +73,7 @@ export const usePools = () => {
       // Step 1: Check if connected account is a member of any pool
       const { poolId, requestPoolId } = await contractService.getUserPool(
         connectedAccount,
-        currentBloxPeerId
+        currentClusterPeerId
       );
 
       return {
@@ -84,7 +89,7 @@ export const usePools = () => {
         activeRequests: [],
       };
     }
-  }, [isReady, contractService, connectedAccount, currentBloxPeerId]);
+  }, [isReady, contractService, connectedAccount, currentClusterPeerId]);
 
   const loadPools = useCallback(async () => {
     console.log(
@@ -111,7 +116,7 @@ export const usePools = () => {
     try {
       console.log('🔍 loadPools: Starting...');
       console.log('🔍 connectedAccount:', connectedAccount);
-      console.log('🔍 currentBloxPeerId:', currentBloxPeerId);
+      console.log('🔍 currentClusterPeerId:', currentClusterPeerId);
       console.log('🔍 Calling contractService.listPools...');
       // Get pools from contract
       const poolList = await contractService.listPools(0, 25);
@@ -145,10 +150,10 @@ export const usePools = () => {
 
       try {
         console.log('🔍 Getting user pool info...');
-        // Get user pool info from contract - pass both account and peerId
+        // Get user pool info from contract - pass both account and cluster peerId
         userPool = await contractService.getUserPool(
           connectedAccount,
-          currentBloxPeerId
+          currentClusterPeerId
         );
         console.log('🔍 User pool result:', userPool);
 
@@ -238,7 +243,7 @@ export const usePools = () => {
       poolId: string,
       poolName: string
     ): Promise<{ success: boolean; message: string }> => {
-      if (!connectedAccount || !currentBloxPeerId) {
+      if (!connectedAccount || !currentClusterPeerId) {
         return {
           success: false,
           message: 'Wallet not connected or Blox peer ID not available',
@@ -247,7 +252,7 @@ export const usePools = () => {
 
       try {
         const request: JoinPoolRequest = {
-          peerId: currentBloxPeerId,
+          peerId: currentClusterPeerId,
           account: connectedAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -277,28 +282,28 @@ export const usePools = () => {
         };
       }
     },
-    [connectedAccount, currentBloxPeerId, selectedChain, loadPools]
+    [connectedAccount, currentClusterPeerId, selectedChain, loadPools]
   );
 
   const joinPool = useCallback(
     async (poolId: string) => {
-      if (!currentBloxPeerId) {
+      if (!currentClusterPeerId) {
         throw new Error('Current Blox peer ID is not available');
       }
-      const result = await poolOperations.joinPool(poolId, currentBloxPeerId);
+      const result = await poolOperations.joinPool(poolId, currentClusterPeerId);
       if (result !== null) {
         // Refresh pools after successful join
         await loadPools();
       }
       return result;
     },
-    [poolOperations, loadPools, currentBloxPeerId]
+    [poolOperations, loadPools, currentClusterPeerId]
   );
 
   // API-based leave pool function
   const leavePoolViaAPI = useCallback(
     async (poolId: string): Promise<{ success: boolean; message: string }> => {
-      if (!connectedAccount || !currentBloxPeerId) {
+      if (!connectedAccount || !currentClusterPeerId) {
         return {
           success: false,
           message: 'Wallet not connected or Blox peer ID not available',
@@ -307,7 +312,7 @@ export const usePools = () => {
 
       try {
         const request: JoinPoolRequest = {
-          peerId: currentBloxPeerId,
+          peerId: currentClusterPeerId,
           account: connectedAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -337,13 +342,13 @@ export const usePools = () => {
         };
       }
     },
-    [connectedAccount, currentBloxPeerId, selectedChain, loadPools]
+    [connectedAccount, currentClusterPeerId, selectedChain, loadPools]
   );
 
   // API-based cancel join request function
   const cancelJoinRequestViaAPI = useCallback(
     async (poolId: string): Promise<{ success: boolean; message: string }> => {
-      if (!connectedAccount || !currentBloxPeerId) {
+      if (!connectedAccount || !currentClusterPeerId) {
         return {
           success: false,
           message: 'Wallet not connected or Blox peer ID not available',
@@ -352,7 +357,7 @@ export const usePools = () => {
 
       try {
         const request: JoinPoolRequest = {
-          peerId: currentBloxPeerId,
+          peerId: currentClusterPeerId,
           account: connectedAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -382,20 +387,20 @@ export const usePools = () => {
         };
       }
     },
-    [connectedAccount, currentBloxPeerId, selectedChain, loadPools]
+    [connectedAccount, currentClusterPeerId, selectedChain, loadPools]
   );
 
   const leavePool = useCallback(
     async (poolId: string) => {
-      console.log('usePools.leavePool: Starting leave pool', { poolId, currentBloxPeerId });
+      console.log('usePools.leavePool: Starting leave pool', { poolId, currentClusterPeerId });
 
-      if (!currentBloxPeerId) {
+      if (!currentClusterPeerId) {
         console.error('usePools.leavePool: Current Blox peer ID is not available');
         throw new Error('Current Blox peer ID is not available');
       }
 
       console.log('usePools.leavePool: Calling poolOperations.leavePool');
-      const result = await poolOperations.leavePool(poolId, currentBloxPeerId);
+      const result = await poolOperations.leavePool(poolId, currentClusterPeerId);
       console.log('usePools.leavePool: poolOperations.leavePool result', { result });
 
       // Only refresh pools if the transaction was successful
@@ -410,22 +415,22 @@ export const usePools = () => {
       }
       return result;
     },
-    [poolOperations, loadPools, currentBloxPeerId]
+    [poolOperations, loadPools, currentClusterPeerId]
   );
 
   const cancelJoinRequest = useCallback(
     async (poolId: string) => {
-      if (!currentBloxPeerId) {
+      if (!currentClusterPeerId) {
         throw new Error('Current Blox peer ID is not available');
       }
-      const result = await poolOperations.cancelJoinRequest(poolId, currentBloxPeerId);
+      const result = await poolOperations.cancelJoinRequest(poolId, currentClusterPeerId);
       if (result !== null) {
         // Refresh pools after successful cancel
         await loadPools();
       }
       return result;
     },
-    [poolOperations, loadPools, currentBloxPeerId]
+    [poolOperations, loadPools, currentClusterPeerId]
   );
 
   const voteJoinRequest = useCallback(

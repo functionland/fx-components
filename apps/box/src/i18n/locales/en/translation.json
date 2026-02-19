@@ -150,7 +150,9 @@
         "peerIdMismatchTitle": "Peer ID Mismatch",
         "peerIdMismatchBrief": "This Blox is authorized by a different identity.",
         "peerIdMismatchHelp": "This Blox's authorizer Peer ID doesn't match your app's Peer ID. You can use the Reset command in Bluetooth Commands to reset the Blox and redo the setup to regain access.\n\nYou can claim your earned tokens at any time after the reset, but you will need the current Blox Peer ID as it may change. Copy it before resetting.",
-        "goToBluetoothCommands": "Go to Bluetooth Commands (to Reset)"
+        "goToBluetoothCommands": "Go to Bluetooth Commands (to Reset)",
+        "poolPeerId": "Pool Peer ID",
+        "poolPeerIdCopied": "Pool Peer ID copied to clipboard"
     },
     "checkConnection": {
       "verifyingConnectionWith": "Verifying connection with {{ssid}}",

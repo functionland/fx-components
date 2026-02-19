@@ -49,6 +49,9 @@ interface BloxsActionSlice {
   setCurrentBloxPeerId: (peerId: string) => void;
   switchToBlox: (peerId: string) => Promise<void>;
 
+  getClusterPeerIdForBlox: (peerId: string) => string;
+  getCurrentClusterPeerId: () => string | undefined;
+
   /**
    * Remote actions
    */
@@ -106,6 +109,15 @@ const createModeSlice: StateCreator<
       set({
         currentBloxPeerId: peerId,
       });
+    },
+    getClusterPeerIdForBlox: (peerId: string) => {
+      const blox = get().bloxs[peerId];
+      return blox?.clusterPeerId || peerId;
+    },
+    getCurrentClusterPeerId: () => {
+      const { currentBloxPeerId, bloxs } = get();
+      if (!currentBloxPeerId) return undefined;
+      return bloxs[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId;
     },
     update: (model) => {
       set({
@@ -502,7 +514,7 @@ const createModeSlice: StateCreator<
   }),
   {
     name: 'bloxsModelSlice',
-    version: 2,
+    version: 3,
     storage: {
       getItem: async (name: string) => {
         try {
@@ -541,7 +553,7 @@ const createModeSlice: StateCreator<
       currentBloxPeerId: state.currentBloxPeerId,
     }),
     migrate: async (persistedState, version) => {
-      const bloxsModel = persistedState as Partial<BloxsModelSlice>;
+      let bloxsModel = persistedState as Partial<BloxsModelSlice>;
       try {
         if (version === 1) {
           if (persistedState) {
@@ -556,7 +568,7 @@ const createModeSlice: StateCreator<
               obj[blox?.peerId] = { ...blox?.propertyInfo };
               return obj;
             }, {});
-            return {
+            bloxsModel = {
               ...bloxsModel,
               bloxsPropertyInfo: {
                 ...bloxsPropertyInfo,
@@ -566,6 +578,21 @@ const createModeSlice: StateCreator<
               },
             };
           }
+        }
+        if (version <= 2) {
+          // v2→v3: set clusterPeerId = peerId for existing bloxes
+          // The old shared peerID is the cluster peerID
+          const migratedBloxs: Record<string, TBlox> = {};
+          for (const [key, blox] of Object.entries(bloxsModel?.bloxs || {})) {
+            migratedBloxs[key] = {
+              ...blox,
+              clusterPeerId: blox.clusterPeerId || blox.peerId,
+            };
+          }
+          bloxsModel = {
+            ...bloxsModel,
+            bloxs: migratedBloxs,
+          };
         }
       } catch (error) {
         console.log(error);

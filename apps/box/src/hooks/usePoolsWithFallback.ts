@@ -40,6 +40,11 @@ export const usePoolsWithFallback = () => {
   const { isOnCorrectNetwork } = useWalletNetwork();
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  // Use ipfs-cluster peerID for all pool/reward operations
+  const currentClusterPeerId = currentBloxPeerId
+    ? (bloxs[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId)
+    : undefined;
   const manualSignatureWalletAddress = useUserProfileStore(
     (state) => state.manualSignatureWalletAddress
   );
@@ -89,7 +94,7 @@ export const usePoolsWithFallback = () => {
       const poolReadService = getPoolReadService(selectedChain);
       const userPoolInfo = await poolReadService.getUserPoolInfo(
         effectiveAccount,
-        currentBloxPeerId
+        currentClusterPeerId
       );
 
       return {
@@ -105,7 +110,7 @@ export const usePoolsWithFallback = () => {
         activeRequests: [],
       };
     }
-  }, [effectiveAccount, selectedChain, currentBloxPeerId]);
+  }, [effectiveAccount, selectedChain, currentClusterPeerId]);
 
   /**
    * Load pools using direct RPC calls via poolReadService
@@ -131,7 +136,7 @@ export const usePoolsWithFallback = () => {
     try {
       console.log('🔍 loadPools: Starting...');
       console.log('🔍 effectiveAccount:', effectiveAccount);
-      console.log('🔍 currentBloxPeerId:', currentBloxPeerId);
+      console.log('🔍 currentClusterPeerId:', currentClusterPeerId);
 
       // Always use read-only service for reliable direct RPC calls
       const poolReadService = getPoolReadService(selectedChain);
@@ -166,7 +171,7 @@ export const usePoolsWithFallback = () => {
         const poolReadService = getPoolReadService(selectedChain);
         userPool = await poolReadService.getUserPoolInfo(
           effectiveAccount,
-          currentBloxPeerId
+          currentClusterPeerId
         );
 
         console.log('🔍 User pool result:', userPool);
@@ -250,7 +255,7 @@ export const usePoolsWithFallback = () => {
         enableInteraction: false,
       }));
     }
-  }, [effectiveAccount, selectedChain, currentBloxPeerId, checkUserMembership]);
+  }, [effectiveAccount, selectedChain, currentClusterPeerId, checkUserMembership]);
 
   /**
    * Join pool via API - works with both connected wallet and manual signature
@@ -260,7 +265,7 @@ export const usePoolsWithFallback = () => {
       poolId: string,
       poolName: string
     ): Promise<{ success: boolean; message: string }> => {
-      if (!effectiveAccount || !currentBloxPeerId) {
+      if (!effectiveAccount || !currentClusterPeerId) {
         return {
           success: false,
           message: 'Wallet not connected or Blox peer ID not available',
@@ -269,7 +274,7 @@ export const usePoolsWithFallback = () => {
 
       try {
         const request: JoinPoolRequest = {
-          peerId: currentBloxPeerId,
+          peerId: currentClusterPeerId,
           account: effectiveAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -299,7 +304,7 @@ export const usePoolsWithFallback = () => {
         };
       }
     },
-    [effectiveAccount, currentBloxPeerId, selectedChain, loadPools]
+    [effectiveAccount, currentClusterPeerId, selectedChain, loadPools]
   );
 
   /**
@@ -307,7 +312,7 @@ export const usePoolsWithFallback = () => {
    */
   const leavePoolViaAPI = useCallback(
     async (poolId: string): Promise<{ success: boolean; message: string }> => {
-      if (!effectiveAccount || !currentBloxPeerId) {
+      if (!effectiveAccount || !currentClusterPeerId) {
         return {
           success: false,
           message: 'Wallet not connected or Blox peer ID not available',
@@ -316,7 +321,7 @@ export const usePoolsWithFallback = () => {
 
       try {
         const request: JoinPoolRequest = {
-          peerId: currentBloxPeerId,
+          peerId: currentClusterPeerId,
           account: effectiveAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -346,7 +351,7 @@ export const usePoolsWithFallback = () => {
         };
       }
     },
-    [effectiveAccount, currentBloxPeerId, selectedChain, loadPools]
+    [effectiveAccount, currentClusterPeerId, selectedChain, loadPools]
   );
 
   /**
@@ -354,7 +359,7 @@ export const usePoolsWithFallback = () => {
    */
   const cancelJoinRequestViaAPI = useCallback(
     async (poolId: string): Promise<{ success: boolean; message: string }> => {
-      if (!effectiveAccount || !currentBloxPeerId) {
+      if (!effectiveAccount || !currentClusterPeerId) {
         return {
           success: false,
           message: 'Wallet not connected or Blox peer ID not available',
@@ -363,7 +368,7 @@ export const usePoolsWithFallback = () => {
 
       try {
         const request: JoinPoolRequest = {
-          peerId: currentBloxPeerId,
+          peerId: currentClusterPeerId,
           account: effectiveAccount,
           chain: selectedChain,
           poolId: parseInt(poolId, 10),
@@ -393,7 +398,7 @@ export const usePoolsWithFallback = () => {
         };
       }
     },
-    [effectiveAccount, currentBloxPeerId, selectedChain, loadPools]
+    [effectiveAccount, currentClusterPeerId, selectedChain, loadPools]
   );
 
   // Load pools when we have an effective account

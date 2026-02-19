@@ -54,6 +54,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   const [showFormatDiskButton, setShowFormatDiskButton] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [skipCode, setSkipCode] = useState('');
+  const [newClusterPeerId, setNewClusterPeerId] = useState<string | undefined>(undefined);
 
   const setAppPeerId = useUserProfileStore((state) => state.setAppPeerId);
   const signiture = useUserProfileStore((state) => state.signiture);
@@ -175,6 +176,10 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
         message: error_bloxProperties?.message,
       });
     }
+    // Extract ipfs-cluster peerID from /properties response
+    if (data_bloxProperties?.data?.ipfs_cluster_peer_id) {
+      setNewClusterPeerId(data_bloxProperties.data.ipfs_cluster_peer_id);
+    }
     logger.log('refetch_bloxProperties:result', {
       data_bloxProperties,
       error_bloxProperties,
@@ -278,6 +283,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
       const finalName = generateUniqueBloxName(newBloxName, Object.values(bloxs as Record<string, { name: string }> ).map((b) => b.name));
       addBlox({
         peerId: newBloxPeerId,
+        clusterPeerId: newClusterPeerId,
         name: finalName,
       });
       updateBloxsStore({

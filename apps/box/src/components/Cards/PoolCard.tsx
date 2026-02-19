@@ -59,8 +59,13 @@ const DetailInfo = ({
   const { queueToast } = useToast();
   const { account } = useWallet();
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxsForCluster = useBloxsStore((state) => state.bloxs);
   const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
   const selectedChain = useSettingsStore((state) => state.selectedChain);
+  // Use ipfs-cluster peerID for pool API operations
+  const clusterPeerId = currentBloxPeerId
+    ? (bloxsForCluster[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId)
+    : undefined;
   const joinPool = usePoolsStore((state) => state.joinPool);
 
   // Check if Blox is connected
@@ -165,7 +170,7 @@ const DetailInfo = ({
         try {
           console.log('Step 2: Calling API joinPool...');
           const request = {
-            peerId: currentBloxPeerId,
+            peerId: clusterPeerId,
             account: account,
             chain: selectedChain,
             poolId: poolId,
@@ -262,7 +267,7 @@ const DetailInfo = ({
 
     try {
       const request = {
-        peerId: currentBloxPeerId,
+        peerId: clusterPeerId,
         account: account,
         chain: selectedChain,
         poolId: parseInt(pool.poolID, 10),

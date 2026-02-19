@@ -89,6 +89,7 @@ export const BloxScreen = () => {
   const getBloxSpace = useBloxsStore((state) => state.getBloxSpace);
   const getFolderSize = useBloxsStore((state) => state.getFolderSize);
   const removeBlox = useBloxsStore((state) => state.removeBlox);
+  const updateBlox = useBloxsStore((state) => state.updateBlox);
   const updateBloxsStore = useBloxsStore((state) => state.update);
 
   const pools = usePoolsStore((state) => state.pools);
@@ -112,6 +113,17 @@ export const BloxScreen = () => {
     () => folderSizeInfo?.[currentBloxPeerId],
     [folderSizeInfo, currentBloxPeerId]
   );
+
+  // Lazy fetch cluster peerID if missing
+  useEffect(() => {
+    if (fulaIsReady && currentBloxPeerId && currentBlox && !currentBlox.clusterPeerId) {
+      fxblox.getClusterInfo().then((info: any) => {
+        if (info?.cluster_peer_id) {
+          updateBlox({ peerId: currentBloxPeerId, clusterPeerId: info.cluster_peer_id });
+        }
+      }).catch(() => {});
+    }
+  }, [fulaIsReady, currentBloxPeerId]);
 
   // Update divisionSplit shared value when bloxsSpaceInfo changes
   // Must be in useEffect to avoid writing to shared value during render

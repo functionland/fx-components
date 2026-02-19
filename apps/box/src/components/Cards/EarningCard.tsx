@@ -58,6 +58,11 @@ export const EarningCard = ({
   // Get selected chain and current Blox peerId for claim portal
   const selectedChain = useSettingsStore((state) => state.selectedChain);
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  // Use ipfs-cluster peerID for claim portal URL
+  const clusterPeerId = currentBloxPeerId
+    ? (bloxs[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId)
+    : undefined;
 
   // Determine connected wallet address (connected wallet or manual signature, empty string if neither)
   const walletAddress = account || manualSignatureWalletAddress || '';
@@ -113,8 +118,8 @@ export const EarningCard = ({
     const claimDomain = 'claim-web.fula.network';
     const params = new URLSearchParams();
     params.append('network', selectedChain);
-    if (currentBloxPeerId) {
-      params.append('peerId', currentBloxPeerId);
+    if (clusterPeerId) {
+      params.append('peerId', clusterPeerId);
     }
     if (walletAddress) {
       params.append('wallet', walletAddress);

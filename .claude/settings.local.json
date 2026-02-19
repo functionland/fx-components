@@ -41,7 +41,13 @@
       "Bash(wc:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npx jest --passWithNoTests)",
+      "Bash(git -C /mnt/e/GitHub/fx log --all --oneline --grep=\"readiness\\\\|fula.*check\\\\|device.*hardening\")",
+      "Bash(git -C /mnt/e/GitHub/fx log --all --name-only --pretty=format:)",
+      "Bash(git -C /mnt/e/GitHub/fx show:*)",
+      "Bash(go build:*)",
+      "Bash(go vet:*)"
     ]
   }
 }

@@ -60,6 +60,7 @@ export const MainTabsNavigator = () => {
   const bloxs = useBloxsStore((state) => state.bloxs);
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
   const updateBloxsStore = useBloxsStore((state) => state.update);
+  const updateBlox = useBloxsStore((state) => state.updateBlox);
   const globalBottomSheetRef = useRef<FxBottomSheetModalMethods>(null);
   const logger = useLogger();
   const zeroconf = new Zeroconf();
@@ -100,6 +101,13 @@ export const MainTabsNavigator = () => {
       zeroconf.on('resolved', (resolved: MDNSBloxService) => {
         // Check if the resolved device matches the currentBloxPeerId
         if (resolved && resolved.txt?.bloxPeerIdString === currentBloxPeerId) {
+          // Opportunistic cluster peerID update from mDNS TXT
+          if (resolved.txt?.ipfsClusterID) {
+            const currentBlox = useBloxsStore.getState().bloxs[currentBloxPeerId];
+            if (currentBlox && !currentBlox.clusterPeerId) {
+              updateBlox({ peerId: currentBloxPeerId, clusterPeerId: resolved.txt.ipfsClusterID });
+            }
+          }
           // Fetch the first IP address from the resolved data
           const firstIp = resolved.addresses?.[0];
           if (firstIp) {

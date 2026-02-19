@@ -23,6 +23,11 @@ export interface ClaimableRewardsState {
 export const useClaimableTokens = () => {
   const { contractService, isReady, connectedAccount } = useContractIntegration();
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxs = useBloxsStore((state) => state.bloxs);
+  // Use ipfs-cluster peerID for all reward operations
+  const currentClusterPeerId = currentBloxPeerId
+    ? (bloxs[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId)
+    : undefined;
   const { userPoolId } = usePools();
   const manualSignatureWalletAddress = useUserProfileStore(
     (state) => state.manualSignatureWalletAddress
@@ -50,13 +55,13 @@ export const useClaimableTokens = () => {
     console.log('🔍 useClaimableTokens: Dependencies check:', {
       contractService: !!contractService,
       isReady,
-      currentBloxPeerId,
+      currentClusterPeerId,
       effectiveAccount,
       userPoolId,
       useReadOnlyService,
     });
-    
-    if (!currentBloxPeerId || !effectiveAccount || !userPoolId) {
+
+    if (!currentClusterPeerId || !effectiveAccount || !userPoolId) {
       console.log('⚠️ useClaimableTokens: Missing dependencies, resetting state to zeros');
       setState(prev => ({
         ...prev,
@@ -85,13 +90,13 @@ export const useClaimableTokens = () => {
         
         unclaimedRewards = await contractService.getUnclaimedRewards(
           effectiveAccount,
-          currentBloxPeerId,
+          currentClusterPeerId,
           userPoolId
         );
-        
+
         claimedInfo = await contractService.getClaimedRewardsInfo(
           effectiveAccount,
-          currentBloxPeerId,
+          currentClusterPeerId,
           userPoolId
         );
       } else if (useReadOnlyService) {
@@ -106,7 +111,7 @@ export const useClaimableTokens = () => {
           readOnlyProvider
         );
 
-        const peerIdBytes32 = await peerIdToBytes32(currentBloxPeerId);
+        const peerIdBytes32 = await peerIdToBytes32(currentClusterPeerId);
         
         // Get unclaimed rewards
         const [unclaimedMining, unclaimedStorage] = await rewardContract.getUnclaimedRewards(
@@ -194,15 +199,15 @@ export const useClaimableTokens = () => {
         canClaim: false,
       });
     }
-  }, [contractService, isReady, currentBloxPeerId, effectiveAccount, userPoolId, useReadOnlyService, selectedChain]);
+  }, [contractService, isReady, currentClusterPeerId, effectiveAccount, userPoolId, useReadOnlyService, selectedChain]);
 
   const claimTokens = useCallback(async () => {
-    if (!contractService || !isReady || !currentBloxPeerId || !userPoolId || !state.canClaim) {
+    if (!contractService || !isReady || !currentClusterPeerId || !userPoolId || !state.canClaim) {
       throw new Error('Cannot claim rewards: contract not ready or no claimable amount');
     }
 
     try {
-      await contractService.claimRewardsForPeer(currentBloxPeerId, userPoolId);
+      await contractService.claimRewardsForPeer(currentClusterPeerId, userPoolId);
       // Refresh claimable rewards after successful claim
       await fetchClaimableTokens();
       return true;
@@ -210,7 +215,7 @@ export const useClaimableTokens = () => {
       console.error('Error claiming rewards:', error);
       throw error;
     }
-  }, [contractService, isReady, currentBloxPeerId, userPoolId, state.canClaim, fetchClaimableTokens]);
+  }, [contractService, isReady, currentClusterPeerId, userPoolId, state.canClaim, fetchClaimableTokens]);
 
   // Auto-fetch when dependencies change
   useEffect(() => {
