@@ -41,7 +41,7 @@ PODS:
     - nanopb (~> 3.30910.0)
     - PromisesSwift (~> 2.1)
   - fmt (11.0.2)
-  - Fula (1.57.1)
+  - Fula (1.57.6)
   - glog (0.3.5)
   - GoogleDataTransport (10.1.0):
     - nanopb (~> 3.30910.0)
@@ -2016,12 +2016,12 @@ PODS:
     - react-native-config/App (= 1.5.1)
   - react-native-config/App (1.5.1):
     - React-Core
-  - react-native-fula (1.57.2):
+  - react-native-fula (1.57.6):
     - boost
     - DoubleConversion
     - fast_float
     - fmt
-    - Fula (~> 1.57.1)
+    - Fula (~> 1.57.6)
     - glog
     - hermes-engine
     - RCT-Folly
@@ -3811,7 +3811,7 @@ SPEC CHECKSUMS:
   FirebaseRemoteConfigInterop: 869ddca16614f979e5c931ece11fbb0b8729ed41
   FirebaseSessions: d614ca154c63dbbc6c10d6c38259c2162c4e7c9b
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
-  Fula: 811349af31bf0bc0140448c9740442d880432970
+  Fula: 7fc5f37c9b388c09e2a36bbe9ad63064f95e5d30
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
@@ -3858,7 +3858,7 @@ SPEC CHECKSUMS:
   react-native-background-timer: 4638ae3bee00320753647900b21260b10587b6f7
   react-native-compat: 1b3eefd502741f97912a4acf071a387037300c69
   react-native-config: 136f9755ccc991cc6438053a44363259ad4c7813
-  react-native-fula: e1a791058aa2b5882e77cfe15e28d78c8c5aea4b
+  react-native-fula: 54196d0370036e9016c90f2b62a6ca84aab029f6
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-pager-view: d7d2aa47f54343bf55fdcee3973503dd27c2bd37
