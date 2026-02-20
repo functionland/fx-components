@@ -12,6 +12,7 @@ import { useBloxsStore } from '../stores';
 import axios from 'axios';
 
 const PING_URL = 'https://pools.fx.land/ping';
+const PING_CLUSTER_URL = 'https://pools.fx.land/ping-cluster';
 const POOLS_URL = 'https://pools.fx.land';
 
 type PingStatus = 'idle' | 'pinging' | 'connected' | 'disconnected' | 'error';
@@ -34,6 +35,38 @@ async function pingPeerId(peerId: string): Promise<{ status: PingStatus; message
   // Step 2: Ping the peerId
   try {
     const response = await axios.post(PING_URL, { peerId }, { timeout: 60000 });
+    const data = response.data;
+
+    if (data?.status === 'err') {
+      return { status: 'error', message: data.msg || 'Rate limited' };
+    }
+    if (data?.success === true) {
+      return { status: 'connected', message: `${data.latency}ms` };
+    }
+    return { status: 'disconnected', message: 'Not reachable' };
+  } catch (err: any) {
+    const data = err?.response?.data;
+    if (data?.status === 'err') {
+      return { status: 'error', message: data.msg || 'Rate limited' };
+    }
+    if (data?.success === false) {
+      return { status: 'disconnected', message: 'Not reachable' };
+    }
+    return { status: 'error', message: err?.message || 'Ping failed' };
+  }
+}
+
+async function pingCluster(peerId: string): Promise<{ status: PingStatus; message?: string }> {
+  // Step 1: Check that pools.fx.land is accessible
+  try {
+    await axios.get(POOLS_URL, { timeout: 10000, validateStatus: () => true });
+  } catch {
+    return { status: 'error', message: 'Cannot reach pools.fx.land' };
+  }
+
+  // Step 2: Ping the cluster using the kubo peerId
+  try {
+    const response = await axios.post(PING_CLUSTER_URL, { peerId }, { timeout: 60000 });
     const data = response.data;
 
     if (data?.status === 'err') {
@@ -102,13 +135,13 @@ export const ConnectionOptionsSheet = React.forwardRef<
   }, [currentBloxPeerId, bloxPingStatus]);
 
   const handlePingCluster = useCallback(async () => {
-    if (!clusterPeerId || clusterPingStatus === 'pinging') return;
+    if (!currentBloxPeerId || clusterPingStatus === 'pinging') return;
     setClusterPingStatus('pinging');
     setClusterPingMessage(undefined);
-    const result = await pingPeerId(clusterPeerId);
+    const result = await pingCluster(currentBloxPeerId);
     setClusterPingStatus(result.status);
     setClusterPingMessage(result.message);
-  }, [clusterPeerId, clusterPingStatus]);
+  }, [currentBloxPeerId, clusterPingStatus]);
 
   return (
     <FxBottomSheetModal ref={ref}>
@@ -142,7 +175,7 @@ export const ConnectionOptionsSheet = React.forwardRef<
           </FxPressableOpacity>
         )}
 
-        {clusterPeerId && (
+        {currentBloxPeerId && (
           <FxPressableOpacity
             paddingVertical='8'
             paddingHorizontal='8'
