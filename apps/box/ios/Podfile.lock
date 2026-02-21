@@ -41,7 +41,7 @@ PODS:
     - nanopb (~> 3.30910.0)
     - PromisesSwift (~> 2.1)
   - fmt (11.0.2)
-  - Fula (1.57.6)
+  - Fula (1.57.7)
   - glog (0.3.5)
   - GoogleDataTransport (10.1.0):
     - nanopb (~> 3.30910.0)
@@ -2016,12 +2016,12 @@ PODS:
     - react-native-config/App (= 1.5.1)
   - react-native-config/App (1.5.1):
     - React-Core
-  - react-native-fula (1.57.6):
+  - react-native-fula (1.57.7):
     - boost
     - DoubleConversion
     - fast_float
     - fmt
-    - Fula (~> 1.57.6)
+    - Fula (~> 1.57.7)
     - glog
     - hermes-engine
     - RCT-Folly
