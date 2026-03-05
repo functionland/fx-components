@@ -219,12 +219,18 @@ const createModeSlice: StateCreator<
           fula: '-1',
           chain: '-1',
           fulaCount: '-1',
+          userOwnData: '-1',
         };
         let chainFolderInfo: GetFolderPathResponse = {
           size: '-1',
           folder_path: '/uniondrive/chain',
         };
         const chainFolderSize = await fxblox.getFolderSize('/uniondrive/chain');
+        let userOwnDataFolderInfo: GetFolderPathResponse = {
+          size: '-1',
+          folder_path: '/uniondrive/ipfs_datastore_local',
+        };
+        const userOwnDataFolderSize = await fxblox.getFolderSize('/uniondrive/ipfs_datastore_local');
         console.log('chainFolderSize', chainFolderSize);
         let fulaFolderInfo: GetDatastoreSizeResponse = {
           size: '-1',
@@ -244,10 +250,14 @@ const createModeSlice: StateCreator<
           if (fulaFolderSize?.size) {
             fulaFolderInfo = fulaFolderSize;
           }
+          if (userOwnDataFolderSize?.size) {
+            userOwnDataFolderInfo = userOwnDataFolderSize;
+          }
           folderSizeInfo_tmp = {
             fula: fulaFolderInfo.size,
             fulaCount: fulaFolderInfo.count,
             chain: chainFolderInfo.size,
+            userOwnData: userOwnDataFolderInfo.size,
           };
           set({
             folderSizeInfo: {

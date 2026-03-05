@@ -20,7 +20,7 @@ type Props = NativeStackScreenProps<
   Routes.AutoPinPairing
 >;
 
-export const AutoPinPairingScreen = ({ route }: Props) => {
+export const AutoPinPairingScreen = ({ route, navigation }: Props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -53,6 +53,12 @@ export const AutoPinPairingScreen = ({ route }: Props) => {
       if (result?.pairing_secret) {
         setSuccess(true);
 
+        const alreadyPaired = result.status === 'already_paired';
+        const alertTitle = alreadyPaired ? 'Already Paired' : 'Pairing Successful';
+        const alertMsg = alreadyPaired
+          ? `Auto-pinning was already enabled on ${bloxName}.`
+          : `Auto-pinning is now enabled on ${bloxName}.`;
+
         // Register as connected dApp
         addOrUpdateDApp({
           name: 'FxFiles Auto-Pin',
@@ -73,23 +79,21 @@ export const AutoPinPairingScreen = ({ route }: Props) => {
             .replace('$bloxName', encodeURIComponent(bloxName));
 
           Alert.alert(
-            'Pairing Successful',
-            `Auto-pinning is now enabled on ${bloxName}. Return to FxFiles?`,
+            alertTitle,
+            `${alertMsg} Return to FxFiles?`,
             [
               { text: 'Stay Here', style: 'cancel' },
               {
                 text: 'Open FxFiles',
                 onPress: () => {
+                  navigation.navigate(Routes.Settings);
                   Linking.openURL(finalUrl);
                 },
               },
             ]
           );
         } else {
-          Alert.alert(
-            'Pairing Successful',
-            `Auto-pinning is now enabled on ${bloxName}.`
-          );
+          Alert.alert(alertTitle, alertMsg);
         }
       } else {
         setError('Unexpected response from blox');

@@ -193,6 +193,7 @@
       "capacity": "Capacity",
       "storedFiles": "Stored Files",
       "otherData": "Other Data",
+      "userOwnData": "User Own Data",
       "used": "Used",
       "free": "Free",
       "status": "Status",
