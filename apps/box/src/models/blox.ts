@@ -14,6 +14,7 @@ export interface TBloxFolderSize {
   fula: string;
   chain: string;
   fulaCount: string;
+  userOwnData: string;
 }
 export type TBloxConectionStatus =
   | 'CONNECTED'

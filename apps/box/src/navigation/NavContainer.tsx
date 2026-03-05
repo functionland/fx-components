@@ -21,6 +21,8 @@ const linking: LinkingOptions<unknown> = {
             screens: {
               [Routes.ConnectedDApps]:
                 '/connectdapp/:appName/:bundleId/:peerId/:returnDeepLink/:accountId',
+              [Routes.AutoPinPairing]:
+                '/autopin-pair',
             },
           },
         },

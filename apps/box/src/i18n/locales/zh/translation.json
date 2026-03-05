@@ -186,6 +186,7 @@
     "capacity": "容量",
     "storedFiles": "存储文件",
     "otherData": "其他数据",
+    "userOwnData": "用户自有数据",
     "used": "已使用",
     "free": "可用",
     "status": "状态",

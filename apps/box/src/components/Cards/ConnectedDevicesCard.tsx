@@ -88,6 +88,12 @@ export const DeviceCard = ({
           {convertByteToCapacityUnit(parseInt(folderInfo?.chain, 10))}
         </FxCard.Row.Data>
       </FxCard.Row>
+      <FxCard.Row>
+        <FxCard.Row.Title>{t('connectedDevicesCard.userOwnData')}</FxCard.Row.Title>
+        <FxCard.Row.Data>
+          {convertByteToCapacityUnit(parseInt(folderInfo?.userOwnData, 10))}
+        </FxCard.Row.Data>
+      </FxCard.Row>
       {used != undefined && (
         <FxCard.Row>
           <FxCard.Row.Title>{t('connectedDevicesCard.used')}</FxCard.Row.Title>

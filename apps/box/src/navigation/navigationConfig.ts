@@ -49,6 +49,7 @@ export enum Routes {
   ComponentGallery = 'Component Gallery',
   BloxLogs = 'BloxLogs',
   BluetoothCommands = 'BluetoothCommands',
+  AutoPinPairing = 'AutoPinPairing',
 
   // Component Gallery
   Avatars = 'Avatars',
@@ -103,6 +104,11 @@ export type SettingsStackParamList = {
   [Routes.About]: undefined;
   [Routes.BloxLogs]: undefined;
   [Routes.BluetoothCommands]: undefined;
+  [Routes.AutoPinPairing]: {
+    token?: string;
+    endpoint?: string;
+    returnUrl?: string;
+  };
   [Routes.ComponentGallery]: NavigatorScreenParams<ComponentGalleryStackParamList>;
 };
 

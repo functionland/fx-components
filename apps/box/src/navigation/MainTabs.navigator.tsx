@@ -44,6 +44,7 @@ import { useUserProfileStore } from '../stores/useUserProfileStore';
 import { useLogger } from '../hooks';
 import { useBloxsStore } from '../stores';
 import { BluetoothCommandsScreen } from '../screens/Settings/Bluetooth/BluetoothCommands.screen';
+import { AutoPinPairingScreen } from '../screens/Settings/AutoPinPairing/AutoPinPairing.screen';
 import Zeroconf from 'react-native-zeroconf';
 import { MDNSBloxService } from '../models';
 
@@ -342,6 +343,10 @@ const SettingsNavigator = () => {
       <SettingsStack.Screen
         name={Routes.BluetoothCommands}
         component={BluetoothCommandsScreen}
+      />
+      <SettingsStack.Screen
+        name={Routes.AutoPinPairing}
+        component={AutoPinPairingScreen}
       />
 
       <SettingsStack.Screen
