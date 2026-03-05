@@ -65,6 +65,10 @@ npm run ensure:symlink
 # Navigate to the iOS directory
 cd apps/box/ios
 
+# Ensure CocoaPods CDN trunk repo is set up cleanly
+rm -rf "$HOME/.cocoapods/repos/trunk"
+pod repo add-cdn trunk https://cdn.cocoapods.org/
+
 # Install pods
 pod install --repo-update
 
