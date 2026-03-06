@@ -54,10 +54,21 @@ export class PoolApiService {
     }
 
     if (!response.ok) {
-      return {
-        status: 'err',
-        msg: `HTTP error! status: ${response.status}`,
-      };
+      // Try to parse the error body — the server returns { status, msg, errors? }
+      try {
+        const errorData: JoinPoolResponse = await response.json();
+        if (errorData.errors?.length) {
+          errorData.msg = errorData.errors
+            .map((e) => `${e.field}: ${e.message}`)
+            .join('; ');
+        }
+        return errorData;
+      } catch {
+        return {
+          status: 'err',
+          msg: `HTTP error! status: ${response.status}`,
+        };
+      }
     }
 
     const data: JoinPoolResponse = await response.json();
