@@ -166,6 +166,7 @@ const DetailInfo = ({
       }
 
       // Step 2: Call API to join the pool (always execute)
+      let apiTransactionHash: string | undefined;
       if (!joinState.step2Complete) {
         try {
           console.log('Step 2: Calling API joinPool...');
@@ -182,6 +183,7 @@ const DetailInfo = ({
           if (response.status === 'ok') {
             newJoinState.step2Complete = true;
             newJoinState.step2Error = undefined;
+            apiTransactionHash = response.transactionHash;
             console.log('Step 2: API joinPool succeeded');
           } else {
             throw new Error(response.msg || 'Join request failed');
@@ -199,10 +201,13 @@ const DetailInfo = ({
       // Show appropriate message based on results
       if (newJoinState.step1Complete && newJoinState.step2Complete) {
         // Both steps succeeded
+        const txMsg = apiTransactionHash
+          ? `Transaction: ${apiTransactionHash.slice(0, 10)}...`
+          : 'You are now a member of the pool!';
         queueToast({
           type: 'success',
           title: 'Pool Joined Successfully',
-          message: 'You are now a member of the pool!',
+          message: txMsg,
         });
         // Clear the stored state since join is complete
         const key = `joinState_${pool.poolID}_${currentBloxPeerId}`;
@@ -284,10 +289,13 @@ const DetailInfo = ({
         setJoinState(newJoinState);
         await saveJoinState(newJoinState);
 
+        const txMsg = response.transactionHash
+          ? `Transaction: ${response.transactionHash.slice(0, 10)}...`
+          : 'You are now a member of the pool!';
         queueToast({
           type: 'success',
           title: 'Pool Joined Successfully',
-          message: 'You are now a member of the pool!',
+          message: txMsg,
         });
 
         // Clear the stored state since join is complete
