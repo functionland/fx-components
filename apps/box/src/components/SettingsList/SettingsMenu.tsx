@@ -81,6 +81,11 @@ export const SettingsMenu = () => {
     //   onPress: () => navigation.navigate(Routes.BloxLogs),
     // },
     {
+      name: 'Auto-Pin Pairing',
+      detail: null,
+      onPress: () => navigation.navigate(Routes.AutoPinPairing),
+    },
+    {
       name: 'About',
       detail: null,
       onPress: () => navigation.navigate(Routes.About),

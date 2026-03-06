@@ -1,6 +1,6 @@
 {
   "name": "box",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "private": true,
   "dependencies": {
     "@babel/core": "*",
@@ -78,6 +78,7 @@
     "react-native-syntax-highlighter": "*",
     "react-native-tab-view": "*",
     "react-native-url-polyfill": "*",
+    "react-native-vision-camera": "*",
     "react-native-webview": "*",
     "react-native-wheel-color-picker": "*",
     "react-native-wifi-reborn": "*",

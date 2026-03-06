@@ -89,6 +89,7 @@
     "react-native-syntax-highlighter": "^2.1.0",
     "react-native-tab-view": "^4.2.2",
     "react-native-url-polyfill": "^3.0.0",
+    "react-native-vision-camera": "^4.6.3",
     "react-native-webview": "^13.16.0",
     "react-native-wheel-color-picker": "^1.2.0",
     "react-native-wifi-reborn": "^4.13.6",
