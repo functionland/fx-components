@@ -13192,6 +13192,7 @@ __metadata:
     react-native-syntax-highlighter: ^2.1.0
     react-native-tab-view: ^4.2.2
     react-native-url-polyfill: ^3.0.0
+    react-native-vision-camera: ^4.6.3
     react-native-webview: ^13.16.0
     react-native-wheel-color-picker: ^1.2.0
     react-native-wifi-reborn: ^4.13.6
@@ -19678,6 +19679,26 @@ __metadata:
   peerDependencies:
     react-native: "*"
   checksum: 3d6e02b8c32933bca588b70e86c1b2981cd2d9f4055f7ce5ba5f321596ffae5ce89fea41af8d13eca7b4f29daf685406354c761696e5a4bdfb5698468e54a527
+  languageName: node
+  linkType: hard
+
+"react-native-vision-camera@npm:^4.6.3":
+  version: 4.7.3
+  resolution: "react-native-vision-camera@npm:4.7.3"
+  peerDependencies:
+    "@shopify/react-native-skia": "*"
+    react: "*"
+    react-native: "*"
+    react-native-reanimated: "*"
+    react-native-worklets-core: "*"
+  peerDependenciesMeta:
+    "@shopify/react-native-skia":
+      optional: true
+    react-native-reanimated:
+      optional: true
+    react-native-worklets-core:
+      optional: true
+  checksum: e3abe484e4303d4fa9088e546e846642f4be503180ed24eaf74fc9e11c667cee779c5a9de4f27999dccb830ee60760badc641ee869fc6015e7ab7bec0f494f6d
   languageName: node
   linkType: hard
 

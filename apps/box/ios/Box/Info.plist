@@ -73,6 +73,8 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>This app uses the camera to scan QR codes for auto-pin pairing setup.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This app uses Bluetooth to connect to nearby devices for setting up the hardware iOT device locally without wifi.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
