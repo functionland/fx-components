@@ -65,11 +65,11 @@ export const QRScannerModal = ({ visible, onScanned, onClose }: Props) => {
       );
     }
 
-    if (!device) {
+    if (permissionStatus !== 'granted' || !device) {
       return (
         <View style={styles.centered}>
           <FxText color="content1" variant="bodyMediumRegular" style={styles.message}>
-            No camera device found.
+            Loading camera...
           </FxText>
         </View>
       );
@@ -96,14 +96,14 @@ export const QRScannerModal = ({ visible, onScanned, onClose }: Props) => {
 
         {error && (
           <View style={styles.errorBox}>
-            <FxText color="content1" variant="bodySmallRegular">
+            <FxText color="content1" variant="bodySmallRegular" style={styles.message}>
               {error}
             </FxText>
           </View>
         )}
 
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <FxText color="content1" variant="bodyMediumSemibold">
+          <FxText color="content1" variant="bodySmallSemibold">
             Cancel
           </FxText>
         </TouchableOpacity>
