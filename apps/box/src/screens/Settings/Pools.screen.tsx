@@ -234,17 +234,18 @@ export const PoolsScreen = () => {
       }
 
       // Step 2: Call API to join the pool (always execute if not completed)
+      let apiResult: { success: boolean; message: string; transactionHash?: string } | undefined;
       if (!joinState.step2Complete) {
         try {
           console.log('Step 2: Calling API joinPool....');
-          const result = await joinPoolViaAPI(poolID, poolName);
+          apiResult = await joinPoolViaAPI(poolID, poolName);
 
-          if (result.success) {
+          if (apiResult.success) {
             joinState.step2Complete = true;
             joinState.step2Error = '';
             console.log('Step 2: API joinPool succeeded');
           } else {
-            throw new Error(result.message || 'Join request failed');
+            throw new Error(apiResult.message || 'Join request failed');
           }
         } catch (error) {
           console.error('Step 2: API joinPool failed:', error);
@@ -258,10 +259,13 @@ export const PoolsScreen = () => {
       // Show appropriate message based on results
       if (joinState.step1Complete && joinState.step2Complete) {
         // Both steps succeeded
+        const txMsg = apiResult?.transactionHash
+          ? `Transaction: ${apiResult.transactionHash.slice(0, 10)}...`
+          : 'You are now a member of the pool!';
         queueToast({
           type: 'success',
           title: 'Pool Joined Successfully',
-          message: 'You are now a member of the pool!',
+          message: txMsg,
         });
         // Clear the stored state since join is complete
         await AsyncStorage.removeItem(key);

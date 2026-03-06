@@ -264,7 +264,7 @@ export const usePoolsWithFallback = () => {
     async (
       poolId: string,
       poolName: string
-    ): Promise<{ success: boolean; message: string }> => {
+    ): Promise<{ success: boolean; message: string; transactionHash?: string }> => {
       if (!effectiveAccount || !currentClusterPeerId) {
         return {
           success: false,
@@ -289,6 +289,7 @@ export const usePoolsWithFallback = () => {
           return {
             success: true,
             message: response.msg,
+            transactionHash: response.transactionHash,
           };
         } else {
           return {

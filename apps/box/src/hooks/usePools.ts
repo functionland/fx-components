@@ -242,7 +242,7 @@ export const usePools = () => {
     async (
       poolId: string,
       poolName: string
-    ): Promise<{ success: boolean; message: string }> => {
+    ): Promise<{ success: boolean; message: string; transactionHash?: string }> => {
       if (!connectedAccount || !currentClusterPeerId) {
         return {
           success: false,
@@ -267,6 +267,7 @@ export const usePools = () => {
           return {
             success: true,
             message: response.msg,
+            transactionHash: response.transactionHash,
           };
         } else {
           return {
