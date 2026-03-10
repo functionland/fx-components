@@ -30,6 +30,8 @@ import { useWallet } from '../../hooks/useWallet';
 import { useWalletNetwork } from '../../hooks/useWalletNetwork';
 import { WalletNotification } from '../../components/WalletNotification';
 import { CurrentBloxIndicator } from '../../components';
+import { getContractService } from '../../contracts/contractService';
+import { ethers } from 'ethers';
 
 // --- Add this union type for FlatList items ---
 type PoolListItem =
@@ -73,6 +75,9 @@ export const PoolsScreen = () => {
   // Get Blox join pool method from store
   const joinPoolBlox = usePoolsStore((state) => state.joinPool);
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
+  const bloxsPropertyInfo = useBloxsStore((state) => state.bloxsPropertyInfo);
+  const isPC = currentBloxPeerId
+    && bloxsPropertyInfo?.[currentBloxPeerId]?.containerInfo_fula?.image?.includes('_amd64');
 
   const selectedChain = useSettingsStore((state) => state.selectedChain);
 
@@ -176,10 +181,26 @@ export const PoolsScreen = () => {
         return;
       }
 
+      // Build confirmation message — for PC, include required token amount
+      let confirmMessage = `Are you sure you want to join pool "${poolName}" on ${CHAIN_DISPLAY_NAMES[selectedChain]} for your Blox?`;
+
+      if (isPC) {
+        try {
+          console.log('wrappedJoinPoolViaAPI: PC mode, fetching required tokens for pool', poolID, 'chain', selectedChain);
+          const service = getContractService(selectedChain);
+          const requiredTokens = await service.getRequiredTokens(poolID);
+          console.log('wrappedJoinPoolViaAPI: requiredTokens result:', requiredTokens);
+          const formattedTokens = ethers.utils.formatEther(requiredTokens);
+          confirmMessage = `Joining pool "${poolName}" requires locking ${formattedTokens} FULA tokens.\n\nYou will be asked to approve the token transfer, then confirm the join transaction.\n\nContinue?`;
+        } catch (err) {
+          console.error('Failed to get required tokens:', err);
+        }
+      }
+
       // Ask user for confirmation
       Alert.alert(
         'Join Pool Confirmation',
-        `Are you sure you want to join pool "${poolName}" on ${CHAIN_DISPLAY_NAMES[selectedChain]} for your Blox?`,
+        confirmMessage,
         [
           {
             text: 'Cancel',
@@ -233,22 +254,35 @@ export const PoolsScreen = () => {
         }
       }
 
-      // Step 2: Call API to join the pool (always execute if not completed)
+      // Step 2: Join the pool
       let apiResult: { success: boolean; message: string; transactionHash?: string } | undefined;
       if (!joinState.step2Complete) {
         try {
-          console.log('Step 2: Calling API joinPool....');
-          apiResult = await joinPoolViaAPI(poolID, poolName);
-
-          if (apiResult.success) {
+          if (isPC) {
+            // PC: Direct smart contract interaction
+            console.log('Step 2: Direct contract joinPool (PC mode)...');
+            const service = getContractService(selectedChain);
+            await service.ensureTokenApproval(poolID);
+            await service.joinPool(poolID, currentBloxPeerId);
             joinState.step2Complete = true;
             joinState.step2Error = '';
-            console.log('Step 2: API joinPool succeeded');
+            apiResult = { success: true, message: 'Contract joinPool succeeded' };
+            console.log('Step 2: Contract joinPool succeeded');
           } else {
-            throw new Error(apiResult.message || 'Join request failed');
+            // Armbian: API server call (unchanged)
+            console.log('Step 2: Calling API joinPool....');
+            apiResult = await joinPoolViaAPI(poolID, poolName);
+
+            if (apiResult.success) {
+              joinState.step2Complete = true;
+              joinState.step2Error = '';
+              console.log('Step 2: API joinPool succeeded');
+            } else {
+              throw new Error(apiResult.message || 'Join request failed');
+            }
           }
         } catch (error) {
-          console.error('Step 2: API joinPool failed:', error);
+          console.error('Step 2 failed:', error);
           joinState.step2Error = error instanceof Error ? error.message : String(error);
         }
       }

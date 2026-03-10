@@ -134,7 +134,7 @@ export const GAS_SETTINGS: Record<SupportedChain, {
 
 // Contract method gas limits
 export const METHOD_GAS_LIMITS = {
-  joinPool: 200000,
+  joinPool: 1000000,
   leavePool: 850000,
   cancelJoinRequest: 100000,
   voteJoinRequest: 120000,

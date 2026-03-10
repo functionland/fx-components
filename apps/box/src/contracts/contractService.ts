@@ -74,7 +74,7 @@ export class ContractService {
         gasLimit: METHOD_GAS_LIMITS.createPool,
       });
       
-      const receipt = await tx.wait();
+      const receipt = await this.waitForTx(tx);
       const event = receipt.events?.find((e: any) => e.event === 'PoolCreated');
       return event?.args?.poolId?.toString() || '';
     } catch (error) {
@@ -82,26 +82,133 @@ export class ContractService {
     }
   }
 
+  /**
+   * Wait for a transaction receipt, falling back to the read-only provider
+   * if the wallet provider fails (e.g. MetaMask switches networks).
+   */
+  private async waitForTx(tx: ethers.providers.TransactionResponse): Promise<ethers.providers.TransactionReceipt> {
+    try {
+      return await tx.wait();
+    } catch (waitError) {
+      console.warn('waitForTx: wallet provider tx.wait() failed, polling via read-only provider...', waitError);
+      if (!this.readOnlyProvider || !tx.hash) throw waitError;
+
+      for (let i = 0; i < 60; i++) {
+        const receipt = await this.readOnlyProvider.getTransactionReceipt(tx.hash);
+        if (receipt) {
+          if (receipt.status === 0) throw new Error('Transaction reverted on-chain');
+          console.log('waitForTx: confirmed via read-only provider', { hash: tx.hash, blockNumber: receipt.blockNumber });
+          return receipt;
+        }
+        await new Promise(r => setTimeout(r, 2000));
+      }
+      throw new Error(`Transaction ${tx.hash} not confirmed after 120s timeout`);
+    }
+  }
+
   async joinPool(poolId: string, peerId?: string): Promise<void> {
     try {
-      if (!this.poolStorageContract) throw new Error('Contract not initialized');
+      if (!this.poolStorageContract || !this.provider || !this.signer) throw new Error('Contract not initialized');
 
       if (!peerId) {
         throw new Error('PeerId is required for joining pool');
       }
 
-      // Convert peerId to bytes32 format for contract call
       const peerIdBytes32 = await peerIdToBytes32(peerId);
       console.log('joinPool: Converted peerId to bytes32', { peerId, peerIdBytes32 });
 
-      const tx = await this.poolStorageContract.joinPoolRequest(poolId, peerIdBytes32, {
-        gasLimit: METHOD_GAS_LIMITS.joinPool,
-      });
+      const chainConfig = getChainConfigByName(this.chain);
+      const iface = this.poolStorageContract.interface;
+      const data = iface.encodeFunctionData('joinPoolRequest', [poolId, peerIdBytes32]);
+      const from = await this.signer.getAddress();
+      const gasHex = ethers.utils.hexlify(METHOD_GAS_LIMITS.joinPool);
 
-      await tx.wait();
+      console.log('joinPool: Sending transaction via eth_sendTransaction...');
+      const txHash = await this.provider.provider.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from,
+          to: chainConfig.contracts.poolStorage,
+          data,
+          gas: gasHex,
+          value: '0x0',
+        }],
+      });
+      console.log('joinPool: tx sent, hash:', txHash);
+
+      const receipt = await this.readOnlyProvider!.waitForTransaction(txHash);
+      if (receipt.status === 0) {
+        console.error('joinPool: transaction reverted on-chain', { txHash });
+        throw new Error('Transaction reverted on-chain. This may be due to insufficient FULA token balance or the pool rejecting the request.');
+      }
+      console.log('joinPool: tx confirmed');
     } catch (error) {
       throw this.handleError(error);
     }
+  }
+
+  /**
+   * Check token allowance and approve if needed for pool joining.
+   * @returns The required token amount as a string.
+   */
+  async ensureTokenApproval(poolId: string): Promise<string> {
+    if (!this.fulaTokenContract || !this.signer || !this.provider) throw new Error('Contract not initialized');
+
+    const pool = await this.getPool(poolId);
+    const requiredTokens = ethers.BigNumber.from(pool.requiredTokens);
+
+    if (requiredTokens.isZero()) return '0';
+
+    const chainConfig = getChainConfigByName(this.chain);
+    const spender = chainConfig.contracts.poolStorage;
+    const owner = await this.signer.getAddress();
+
+    // Check balance before attempting approval
+    const balance = await this.fulaTokenContract.balanceOf(owner);
+    if (ethers.BigNumber.from(balance).lt(requiredTokens)) {
+      const balFormatted = ethers.utils.formatEther(balance);
+      const reqFormatted = ethers.utils.formatEther(requiredTokens);
+      throw new Error(`Insufficient FULA balance. You have ${balFormatted} but need ${reqFormatted} FULA to join this pool.`);
+    }
+
+    const currentAllowance = await this.fulaTokenContract.allowance(owner, spender);
+
+    if (ethers.BigNumber.from(currentAllowance).lt(requiredTokens)) {
+      console.log('ensureTokenApproval: approving', requiredTokens.toString(), 'tokens for', spender);
+
+      const iface = this.fulaTokenContract.interface;
+      const data = iface.encodeFunctionData('approve', [spender, requiredTokens]);
+      const gasHex = ethers.utils.hexlify(200000);
+
+      const txHash = await this.provider.provider.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: owner,
+          to: chainConfig.contracts.fulaToken,
+          data,
+          gas: gasHex,
+          value: '0x0',
+        }],
+      });
+      console.log('ensureTokenApproval: tx sent, hash:', txHash);
+
+      const receipt = await this.readOnlyProvider!.waitForTransaction(txHash);
+      if (receipt.status === 0) {
+        console.error('ensureTokenApproval: approve tx reverted', { txHash });
+        throw new Error('Token approval transaction reverted on-chain.');
+      }
+      console.log('ensureTokenApproval: approve tx confirmed');
+    }
+
+    return requiredTokens.toString();
+  }
+
+  /**
+   * Get the required token amount for joining a pool.
+   */
+  async getRequiredTokens(poolId: string): Promise<string> {
+    const pool = await this.getPool(poolId);
+    return pool.requiredTokens;
   }
 
   async leavePool(poolId: string, peerId?: string): Promise<void> {
@@ -218,7 +325,11 @@ export class ContractService {
         console.log('leavePool: User confirmed transaction – hash:', txHash);
 
         // Wait for transaction confirmation
-        await this.readOnlyProvider!.waitForTransaction(txHash);
+        const receipt = await this.readOnlyProvider!.waitForTransaction(txHash);
+        if (receipt.status === 0) {
+          console.error('leavePool: transaction reverted on-chain', { txHash });
+          throw new Error('Leave pool transaction reverted on-chain.');
+        }
         console.log('leavePool: Transaction confirmed', { txHash });
       } catch (contractCallError: any) {
         console.error('leavePool: Contract call failed:', contractCallError);
@@ -253,7 +364,7 @@ export class ContractService {
         gasLimit: METHOD_GAS_LIMITS.cancelJoinRequest,
       });
 
-      await tx.wait();
+      await this.waitForTx(tx);
     } catch (error) {
       throw this.handleError(error);
     }
@@ -275,7 +386,7 @@ export class ContractService {
         gasLimit: METHOD_GAS_LIMITS.voteJoinRequest,
       });
 
-      await tx.wait();
+      await this.waitForTx(tx);
     } catch (error) {
       throw this.handleError(error);
     }
@@ -407,7 +518,9 @@ export class ContractService {
         this.readOnlyProvider
       );
 
+      console.log('getPool: querying contract', { poolId, contract: chainConfig.contracts.poolStorage, chain: this.chain });
       const pool = await readOnlyContract.pools(poolId);
+      console.log('getPool: raw response', { requiredTokens: pool.requiredTokens?.toString(), name: pool.name, id: pool.id?.toString() });
       return {
         creator: pool.creator,
         id: pool.id.toString(),
@@ -830,8 +943,8 @@ export class ContractService {
         throw new Error('Transaction not found');
       }
       
-      const receipt = await tx.wait();
-      
+      const receipt = await this.waitForTx(tx);
+
       console.log('✅ claimRewardsForPeer: Transaction sent successfully!', {
         hash: tx.hash,
         from: tx.from,
@@ -1165,7 +1278,7 @@ export class ContractService {
       const amountWei = ethers.utils.parseUnits(amount, decimals);
 
       const tx = await this.fulaTokenContract.transfer(to, amountWei);
-      await tx.wait();
+      await this.waitForTx(tx);
     } catch (error) {
       throw this.handleError(error);
     }

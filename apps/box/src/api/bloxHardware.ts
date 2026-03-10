@@ -106,6 +106,44 @@ export const getBloxProperties = async (): Promise<any> => {
  * Erase partition
  * @returns
  */
+/**
+ * Exchange config with a Blox at a specific IP address (LAN/PC setup).
+ * Same as exchangeConfig but targets the provided IP instead of the
+ * hardcoded hotspot API_URL.
+ */
+export const exchangeConfigAtIp = async (
+  ip: string,
+  port: number,
+  data: { peer_id?: string; seed?: string }
+): Promise<{ data: { peer_id: string } }> => {
+  const formData = new URLSearchParams();
+  formData.append('peer_id', data?.peer_id);
+  formData.append('seed', data?.seed);
+  return axios.post(
+    `http://${ip}:${port}/peer/exchange?${formData.toString()}`,
+    undefined,
+    {
+      timeout: 1000 * 15,
+      headers: {
+        Accept: '*/*',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    }
+  );
+};
+
+/**
+ * Get Blox properties from a specific IP address (LAN/PC setup).
+ * Skips BLE — goes straight to HTTP at the provided address.
+ */
+export const getBloxPropertiesAtIp = async (
+  ip: string,
+  port: number
+): Promise<any> => {
+  const res = await axios.get(`http://${ip}:${port}/properties`);
+  return res;
+};
+
 export const bloxFormatDisk = async (): Promise<{ data: GeneralResponse }> => {
   return axios.post(`${API_URL}/partition`);
 };

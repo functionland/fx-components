@@ -121,7 +121,7 @@ export type InitialSetupStackParamList = {
   [Routes.ConnectToWifi]: undefined;
   [Routes.CheckConnection]: { ssid: string };
   [Routes.SetupComplete]: { isManualSetup?: boolean };
-  [Routes.SetBloxAuthorizer]: { isManualSetup?: boolean };
+  [Routes.SetBloxAuthorizer]: { isManualSetup?: boolean; deviceIp?: string; devicePort?: number; bloxPeerId?: string };
   [Routes.BluetoothCommands]: undefined;
 };
 

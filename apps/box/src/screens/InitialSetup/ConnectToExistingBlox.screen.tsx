@@ -19,7 +19,7 @@ import {
   FxInfoIcon,
   useFxTheme,
 } from '@functionland/component-library';
-import { ActivityIndicator, Alert, FlatList, ListRenderItem, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, ListRenderItem, StyleSheet, TextInput } from 'react-native';
 import { SmallHeaderText, SubHeaderText } from '../../components/Text';
 import Zeroconf from 'react-native-zeroconf';
 import { NativeModules } from 'react-native';
@@ -72,6 +72,8 @@ export const ConnectToExistingBloxScreen = () => {
   
   // Fixed this line - the correct useState syntax with type
   const [checkboxState, setCheckboxState] = React.useState<Record<string, boolean>>({});
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualIp, setManualIp] = useState('');
 
   // Use useRef to persist uniqueDevices across renders
   const uniqueDevicesRef = useRef(new Map());
@@ -267,27 +269,31 @@ export const ConnectToExistingBloxScreen = () => {
 
   const renderItem = React.useCallback<ListRenderItem<MDNSBloxService>>(
     ({ item }) => {
-      const authorized = item.txt?.authorizer === appPeerId;
+      const authorizerValue = item.txt?.authorizer || '';
+      const isUnpaired = !authorizerValue || authorizerValue === '';
+      const authorized = !isUnpaired && authorizerValue === appPeerId;
       const alreadyExist = !!bloxs[item.txt?.bloxPeerIdString];
       return (
         <FxCard
-          disabled={!authorized || !appPeerId || alreadyExist}
-          onPress={() => handleOnItemPress(item.txt?.bloxPeerIdString)}
+          disabled={!isUnpaired && (!authorized || !appPeerId || alreadyExist)}
+          onPress={() => !isUnpaired && handleOnItemPress(item.txt?.bloxPeerIdString)}
         >
           <FxCard.Row>
             <FxBox flexDirection="row" alignItems="center">
-              <FxRadioButton
-                value={item.txt?.bloxPeerIdString}
-                disabled={!authorized || !appPeerId || alreadyExist}
-              />
+              {!isUnpaired && (
+                <FxRadioButton
+                  value={item.txt?.bloxPeerIdString}
+                  disabled={!authorized || !appPeerId || alreadyExist}
+                />
+              )}
               <FxText variant="bodyMediumRegular" paddingStart="16">
-                {item.host}
+                {item.txt?.ipAddress || item.host}
               </FxText>
             </FxBox>
           </FxCard.Row>
           <FxText variant="bodySmallLight">
             <FxText variant="bodySmallSemibold">{t('connectToExistingBlox.ip')}: </FxText>
-            {item?.addresses?.map(
+            {item.txt?.ipAddress || item?.addresses?.map(
               (ip, index) =>
                 `${ip}${item.addresses.length - 1 != index ? ',' : ''}`
             )}
@@ -321,7 +327,7 @@ export const ConnectToExistingBloxScreen = () => {
           <FxText variant="bodySmallSemibold">{t('connectToExistingBlox.hardwareId')}:</FxText>
           <FxText variant="bodySmallLight">{item.txt?.hardwareID}</FxText>
           <FxBox flexDirection="row">
-            {item.txt?.bloxPeerIdString === item.txt?.authorizer && (
+            {!isUnpaired && item.txt?.bloxPeerIdString === item.txt?.authorizer && (
               <FxExclamationIcon
                 color="warningBase"
                 width={22}
@@ -334,18 +340,22 @@ export const ConnectToExistingBloxScreen = () => {
               alignSelf="flex-start"
               marginRight="8"
               backgroundColor={
-                appPeerId && authorized
-                  ? 'successBase'
-                  : appPeerId
-                    ? 'errorBase'
-                    : 'warningBase'
+                isUnpaired
+                  ? 'backgroundSecondary'
+                  : appPeerId && authorized
+                    ? 'successBase'
+                    : appPeerId
+                      ? 'errorBase'
+                      : 'warningBase'
               }
             >
-              {appPeerId && authorized
-                ? t('connectToExistingBlox.authorized')
-                : appPeerId
-                  ? t('connectToExistingBlox.notAuthorized')
-                  : t('connectToExistingBlox.checking')}
+              {isUnpaired
+                ? t('connectToExistingBlox.newDevice', { defaultValue: 'New Device' })
+                : appPeerId && authorized
+                  ? t('connectToExistingBlox.authorized')
+                  : appPeerId
+                    ? t('connectToExistingBlox.notAuthorized')
+                    : t('connectToExistingBlox.checking')}
             </FxTag>
             {alreadyExist && (
               <FxTag alignSelf="flex-start" marginStart="0">
@@ -353,7 +363,23 @@ export const ConnectToExistingBloxScreen = () => {
               </FxTag>
             )}
           </FxBox>
-          {appPeerId && !authorized && item.txt?.authorizer && item.txt?.authorizer !== '' && (
+          {isUnpaired && appPeerId && (
+            <FxBox marginTop="8">
+              <FxButton
+                size="defaults"
+                onPress={() =>
+                  navigation.navigate(Routes.SetBloxAuthorizer, {
+                    deviceIp: item.txt?.ipAddress || item.addresses?.[0],
+                    devicePort: item.port || 3500,
+                    bloxPeerId: item.txt?.bloxPeerIdString,
+                  })
+                }
+              >
+                {t('connectToExistingBlox.setup', { defaultValue: 'Setup' })}
+              </FxButton>
+            </FxBox>
+          )}
+          {appPeerId && !authorized && !isUnpaired && (
             <FxBox marginTop="8">
               <FxBox flexDirection="row" alignItems="center" marginBottom="8">
                 <FxPressableOpacity onPress={() => {
@@ -436,6 +462,63 @@ export const ConnectToExistingBloxScreen = () => {
           contentContainerStyle={{
             paddingBottom: 180,
           }}
+          ListFooterComponent={!scanning ? (
+            <FxBox marginTop="16">
+              {!showManualEntry ? (
+                <FxButton
+                  size="defaults"
+                  variant="inverted"
+                  onPress={() => setShowManualEntry(true)}
+                >
+                  {t('connectToExistingBlox.addManually', { defaultValue: 'Add Manually' })}
+                </FxButton>
+              ) : (
+                <FxCard>
+                  <FxText variant="bodyMediumRegular" marginBottom="8">
+                    {t('connectToExistingBlox.enterIpAddress', { defaultValue: 'Enter the IP address of your Fula Node' })}
+                  </FxText>
+                  <TextInput
+                    style={[styles.manualIpInput, { color: colors.content1, borderColor: colors.border }]}
+                    placeholder="192.168.1.100"
+                    placeholderTextColor={colors.content3}
+                    value={manualIp}
+                    onChangeText={setManualIp}
+                    keyboardType="decimal-pad"
+                    autoFocus
+                  />
+                  <FxBox flexDirection="row" marginTop="12" gap="8">
+                    <FxBox flex={1}>
+                      <FxButton
+                        size="defaults"
+                        variant="inverted"
+                        onPress={() => {
+                          setShowManualEntry(false);
+                          setManualIp('');
+                        }}
+                      >
+                        {t('connectToExistingBlox.cancel', { defaultValue: 'Cancel' })}
+                      </FxButton>
+                    </FxBox>
+                    <FxBox flex={1}>
+                      <FxButton
+                        size="defaults"
+                        disabled={!manualIp.trim() || !appPeerId}
+                        onPress={() => {
+                          const ip = manualIp.trim();
+                          navigation.navigate(Routes.SetBloxAuthorizer, {
+                            deviceIp: ip,
+                            devicePort: 3500,
+                          });
+                        }}
+                      >
+                        {t('connectToExistingBlox.connect', { defaultValue: 'Connect' })}
+                      </FxButton>
+                    </FxBox>
+                  </FxBox>
+                </FxCard>
+              )}
+            </FxBox>
+          ) : null}
         />
       </FxRadioButton.Group>
       <FxBox
@@ -470,7 +553,15 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 10,
     width: 120,
-  }
+  },
+  manualIpInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    fontFamily: 'monospace',
+  },
 });
 
 const MockData: DicoveryDeviceType[] = [

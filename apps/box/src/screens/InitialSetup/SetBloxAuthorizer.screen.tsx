@@ -33,7 +33,9 @@ import {
   bloxDeleteFulaConfig,
   bloxFormatDisk,
   exchangeConfig,
+  exchangeConfigAtIp,
   getBloxProperties,
+  getBloxPropertiesAtIp,
 } from '../../api/bloxHardware';
 import { useBloxsStore } from '../../stores';
 import { DeviceCard } from '../../components';
@@ -49,7 +51,8 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   const [newBloxPeerId, setNewBloxPeerId] = useState(undefined);
   const { queueToast } = useToast();
   const logger = useLogger();
-  const { isManualSetup = false } = route.params || {};
+  const { isManualSetup = false, deviceIp, devicePort, bloxPeerId } = route.params || {};
+  const isLanSetup = !!deviceIp;
   const [showSkipButton, setShowSkipButton] = useState(false);
   const [showFormatDiskButton, setShowFormatDiskButton] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
@@ -96,6 +99,11 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     }
   };
 
+  // LAN setup: wrap exchangeConfigAtIp so it matches the apiMethod signature
+  const lanExchangeConfig = async (data: { peer_id?: string; seed?: string }) => {
+    return exchangeConfigAtIp(deviceIp!, devicePort || 3500, data);
+  };
+
   const {
     loading: loading_exchange,
     data: data_exchange,
@@ -103,7 +111,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     refetch: refetch_exchangeConfig,
   } = useFetchWithBLE({
     initialLoading: false,
-    apiMethod: exchangeConfig,
+    apiMethod: isLanSetup ? lanExchangeConfig : exchangeConfig,
     bleMethod: blePeerExchange,
   });
 
@@ -120,6 +128,11 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     initialLoading: false,
     apiMethod: bloxDeleteFulaConfig,
   });
+  // LAN setup: wrap getBloxPropertiesAtIp so it matches the no-args apiMethod signature
+  const lanGetBloxProperties = async () => {
+    return getBloxPropertiesAtIp(deviceIp!, devicePort || 3500);
+  };
+
   const {
     loading: loading_bloxProperties,
     data: data_bloxProperties,
@@ -127,7 +140,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
     refetch: refetch_bloxProperties,
   } = useFetch({
     initialLoading: false,
-    apiMethod: getBloxProperties,
+    apiMethod: isLanSetup ? lanGetBloxProperties : getBloxProperties,
   });
   useEffect(() => {
     if (password && signiture) generateAppPeerId();
@@ -155,13 +168,16 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
 
   //echange config with blox when peerId is ready
   useEffect(() => {
-    if (
-      newPeerId &&
-      data_bloxProperties?.data?.restartNeeded === 'false' &&
-      (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) > 0 &&
-      !isManualSetup
-    ) {
-      handleExchangeConfig();
+    if (newPeerId && !isManualSetup) {
+      // LAN/PC setup: skip restartNeeded and storage checks (not applicable to PC nodes)
+      if (isLanSetup && data_bloxProperties?.data) {
+        handleExchangeConfig();
+      } else if (
+        data_bloxProperties?.data?.restartNeeded === 'false' &&
+        (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) > 0
+      ) {
+        handleExchangeConfig();
+      }
     }
   }, [newPeerId, data_bloxProperties, error_bloxProperties]);
 
@@ -246,7 +262,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
           seed,
         },
         withLoading: true,
-        tryBLE: true, // Will try BLE first, then fall back to HTTP
+        tryBLE: !isLanSetup, // LAN setup: skip BLE, use HTTP directly
       });
     } catch (error) {
       logger.logError('exchangeConfig', error);
@@ -302,7 +318,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
         freeSpace: data_bloxProperties?.data?.bloxFreeSpace,
         propertyInfo: data_bloxProperties?.data,
       });
-      if (isManualSetup) {
+      if (isManualSetup || isLanSetup) {
         navigation.navigate(Routes.SetupComplete, { isManualSetup });
       } else {
         navigation.navigate(Routes.ConnectToWifi);
@@ -383,7 +399,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
               error={t('setBloxAuthorizer.networkError')}
             />
           )}
-          {data_bloxProperties?.data &&
+          {!isLanSetup && data_bloxProperties?.data &&
             (!data_bloxProperties?.data?.restartNeeded ||
               data_bloxProperties?.data?.restartNeeded === 'true') && (
             <FxWarning
@@ -396,7 +412,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
               }
             />
           )}
-          {!isManualSetup &&
+          {!isManualSetup && !isLanSetup &&
             (!data_bloxProperties?.data?.bloxFreeSpace ||
               (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) === 0) &&
             !loading_bloxProperties && (
@@ -610,9 +626,11 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
                 !newPeerId ||
                 loading_exchange ||
                 loading_bloxProperties ||
-                !data_bloxProperties?.data?.restartNeeded ||
-                data_bloxProperties?.data?.restartNeeded === 'true' ||
-                (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) === 0
+                (!isLanSetup && (
+                  !data_bloxProperties?.data?.restartNeeded ||
+                  data_bloxProperties?.data?.restartNeeded === 'true' ||
+                  (data_bloxProperties?.data?.bloxFreeSpace?.size || 0) === 0
+                ))
               }
               width={120}
               onPress={handleSetOwnerPeerId}

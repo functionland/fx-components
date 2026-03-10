@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FxBox,
   FxButton,
@@ -16,6 +16,8 @@ import { usePoolsStore } from '../../stores/usePoolsStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useWallet } from '../../hooks/useWallet';
 import { PoolApiService } from '../../services/poolApiService';
+import { getContractService } from '../../contracts/contractService';
+import { ethers } from 'ethers';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type PoolCardType = React.ComponentProps<typeof FxCard> & {
@@ -55,6 +57,8 @@ const DetailInfo = ({
     step1Error?: string;
     step2Error?: string;
   }>({ step1Complete: false, step2Complete: false });
+  const joinCancelledRef = useRef(false);
+  const joinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { queueToast } = useToast();
   const { account } = useWallet();
@@ -62,6 +66,9 @@ const DetailInfo = ({
   const bloxsForCluster = useBloxsStore((state) => state.bloxs);
   const bloxsConnectionStatus = useBloxsStore((state) => state.bloxsConnectionStatus);
   const selectedChain = useSettingsStore((state) => state.selectedChain);
+  const bloxsPropertyInfo = useBloxsStore((state) => state.bloxsPropertyInfo);
+  const isPC = currentBloxPeerId
+    && bloxsPropertyInfo?.[currentBloxPeerId]?.containerInfo_fula?.image?.includes('_amd64');
   // Use ipfs-cluster peerID for pool API operations
   const clusterPeerId = currentBloxPeerId
     ? (bloxsForCluster[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId)
@@ -123,10 +130,26 @@ const DetailInfo = ({
       return;
     }
 
+    // Build confirmation message — for PC, include required token amount
+    let confirmMessage = `Are you sure you want to join pool: ${pool.name} on ${selectedChain} for Blox: ${currentBloxPeerId}?`;
+
+    if (isPC) {
+      try {
+        console.log('handleJoinPool: PC mode, fetching required tokens for pool', pool.poolID, 'chain', selectedChain);
+        const service = getContractService(selectedChain);
+        const requiredTokens = await service.getRequiredTokens(pool.poolID);
+        console.log('handleJoinPool: requiredTokens result:', requiredTokens);
+        const formattedTokens = ethers.utils.formatEther(requiredTokens);
+        confirmMessage = `Joining pool "${pool.name}" requires locking ${formattedTokens} FULA tokens.\n\nYou will be asked to approve the token transfer, then confirm the join transaction.\n\nContinue?`;
+      } catch (err) {
+        console.error('Failed to get required tokens:', err);
+      }
+    }
+
     // Show confirmation dialog
     Alert.alert(
       'Join Pool',
-      `Are you sure you want to join pool: ${pool.name} on ${selectedChain} for Blox: ${currentBloxPeerId}?`,
+      confirmMessage,
       [
         {
           text: 'Cancel',
@@ -142,8 +165,27 @@ const DetailInfo = ({
     );
   };
 
+  const cancelJoining = () => {
+    joinCancelledRef.current = true;
+    if (joinTimeoutRef.current) clearTimeout(joinTimeoutRef.current);
+    setIsJoining(false);
+    queueToast({
+      type: 'info',
+      title: 'Cancelled',
+      message: 'Join operation cancelled. You can retry.',
+    });
+  };
+
   const performJoinPool = async () => {
+    joinCancelledRef.current = false;
     setIsJoining(true);
+    // Safety timeout: reset isJoining after 120s
+    joinTimeoutRef.current = setTimeout(() => {
+      if (!joinCancelledRef.current) {
+        setIsJoining(false);
+        queueToast({ type: 'warning', title: 'Timeout', message: 'Join operation timed out. Check your transaction status and retry if needed.' });
+      }
+    }, 120000);
     const poolId = parseInt(pool.poolID, 10);
     let newJoinState = { ...joinState };
 
@@ -165,31 +207,43 @@ const DetailInfo = ({
         }
       }
 
-      // Step 2: Call API to join the pool (always execute)
+      // Step 2: Join the pool
       let apiTransactionHash: string | undefined;
       if (!joinState.step2Complete) {
         try {
-          console.log('Step 2: Calling API joinPool...');
-          const request = {
-            peerId: clusterPeerId,
-            kuboPeerId: currentBloxPeerId,
-            account: account,
-            chain: selectedChain,
-            poolId: poolId,
-          };
-
-          const response = await PoolApiService.joinPool(request);
-
-          if (response.status === 'ok') {
+          if (isPC) {
+            // PC: Direct smart contract interaction
+            console.log('Step 2: Direct contract joinPool (PC mode)...');
+            const service = getContractService(selectedChain);
+            await service.ensureTokenApproval(pool.poolID);
+            await service.joinPool(pool.poolID, clusterPeerId);
             newJoinState.step2Complete = true;
             newJoinState.step2Error = undefined;
-            apiTransactionHash = response.transactionHash;
-            console.log('Step 2: API joinPool succeeded');
+            console.log('Step 2: Contract joinPool succeeded');
           } else {
-            throw new Error(response.msg || 'Join request failed');
+            // Armbian: API server call (unchanged)
+            console.log('Step 2: Calling API joinPool...');
+            const request = {
+              peerId: clusterPeerId,
+              kuboPeerId: currentBloxPeerId,
+              account: account,
+              chain: selectedChain,
+              poolId: poolId,
+            };
+
+            const response = await PoolApiService.joinPool(request);
+
+            if (response.status === 'ok') {
+              newJoinState.step2Complete = true;
+              newJoinState.step2Error = undefined;
+              apiTransactionHash = response.transactionHash;
+              console.log('Step 2: API joinPool succeeded');
+            } else {
+              throw new Error(response.msg || 'Join request failed');
+            }
           }
         } catch (error) {
-          console.error('Step 2: API joinPool failed:', error);
+          console.error('Step 2 failed:', error);
           newJoinState.step2Error = error instanceof Error ? error.message : String(error);
         }
       }
@@ -262,47 +316,78 @@ const DetailInfo = ({
         }
       }
     } finally {
-      setIsJoining(false);
+      if (joinTimeoutRef.current) clearTimeout(joinTimeoutRef.current);
+      if (!joinCancelledRef.current) setIsJoining(false);
     }
   };
 
   const handleResendJoin = async () => {
-    // Only perform step 2 (API call) since step 1 is already complete
+    // Only perform step 2 since step 1 is already complete
+    joinCancelledRef.current = false;
     setIsJoining(true);
+    joinTimeoutRef.current = setTimeout(() => {
+      if (!joinCancelledRef.current) {
+        setIsJoining(false);
+        queueToast({ type: 'warning', title: 'Timeout', message: 'Join operation timed out. Check your transaction status and retry if needed.' });
+      }
+    }, 120000);
     let newJoinState = { ...joinState };
 
     try {
-      const request = {
-        peerId: clusterPeerId,
-        kuboPeerId: currentBloxPeerId,
-        account: account,
-        chain: selectedChain,
-        poolId: parseInt(pool.poolID, 10),
-      };
+      if (isPC) {
+        // PC: Direct smart contract interaction
+        console.log('Re-send: Direct contract joinPool (PC mode)...');
+        const service = getContractService(selectedChain);
+        await service.ensureTokenApproval(pool.poolID);
+        await service.joinPool(pool.poolID, clusterPeerId);
 
-      const response = await PoolApiService.joinPool(request);
-
-      if (response.status === 'ok') {
         newJoinState.step2Complete = true;
         newJoinState.step2Error = undefined;
 
         setJoinState(newJoinState);
         await saveJoinState(newJoinState);
 
-        const txMsg = response.transactionHash
-          ? `Transaction: ${response.transactionHash.slice(0, 10)}...`
-          : 'You are now a member of the pool!';
         queueToast({
           type: 'success',
           title: 'Pool Joined Successfully',
-          message: txMsg,
+          message: 'You are now a member of the pool!',
         });
 
-        // Clear the stored state since join is complete
         const key = `joinState_${pool.poolID}_${currentBloxPeerId}`;
         await AsyncStorage.removeItem(key);
       } else {
-        throw new Error(response.msg || 'Join request failed');
+        // Armbian: API server call (unchanged)
+        const request = {
+          peerId: clusterPeerId,
+          kuboPeerId: currentBloxPeerId,
+          account: account,
+          chain: selectedChain,
+          poolId: parseInt(pool.poolID, 10),
+        };
+
+        const response = await PoolApiService.joinPool(request);
+
+        if (response.status === 'ok') {
+          newJoinState.step2Complete = true;
+          newJoinState.step2Error = undefined;
+
+          setJoinState(newJoinState);
+          await saveJoinState(newJoinState);
+
+          const txMsg = response.transactionHash
+            ? `Transaction: ${response.transactionHash.slice(0, 10)}...`
+            : 'You are now a member of the pool!';
+          queueToast({
+            type: 'success',
+            title: 'Pool Joined Successfully',
+            message: txMsg,
+          });
+
+          const key = `joinState_${pool.poolID}_${currentBloxPeerId}`;
+          await AsyncStorage.removeItem(key);
+        } else {
+          throw new Error(response.msg || 'Join request failed');
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -316,7 +401,8 @@ const DetailInfo = ({
         message: errorMessage,
       });
     } finally {
-      setIsJoining(false);
+      if (joinTimeoutRef.current) clearTimeout(joinTimeoutRef.current);
+      if (!joinCancelledRef.current) setIsJoining(false);
     }
   };
 
@@ -355,32 +441,34 @@ const DetailInfo = ({
     {isDetailed && !isRequested && (
       <FxButton
         onPress={
-          joinState.step2Complete
-            ? async () => {
-                await leavePool(parseInt(pool.poolID, 10));
-                // Clear join state when leaving pool
-                const key = `joinState_${pool.poolID}_${currentBloxPeerId}`;
-                await AsyncStorage.removeItem(key);
-                setJoinState({ step1Complete: false, step2Complete: false });
-              }
-            : joinState.step1Complete && !joinState.step2Complete
-              ? handleResendJoin
-              : handleJoinPool
+          isJoining
+            ? cancelJoining
+            : joinState.step2Complete
+              ? async () => {
+                  await leavePool(parseInt(pool.poolID, 10));
+                  // Clear join state when leaving pool
+                  const key = `joinState_${pool.poolID}_${currentBloxPeerId}`;
+                  await AsyncStorage.removeItem(key);
+                  setJoinState({ step1Complete: false, step2Complete: false });
+                }
+              : joinState.step1Complete && !joinState.step2Complete
+                ? handleResendJoin
+                : handleJoinPool
         }
         flexWrap="wrap"
         paddingHorizontal="16"
         iconLeft={<FxPoolIcon />}
-        disabled={isJoining || (!isBloxConnected && !joinState.step2Complete)}
+        disabled={!isJoining && !isBloxConnected && !joinState.step2Complete}
       >
         {isJoining
-          ? 'Processing...'
+          ? 'Cancel'
           : joinState.step2Complete
             ? 'Leave Pool'
             : !isBloxConnected
               ? 'Blox Disconnected'
               : joinState.step1Complete && !joinState.step2Complete
-                ? 'Re-send Join'
-                : 'Join'
+                ? (isPC ? 'Re-send (Contract)' : 'Re-send Join')
+                : (isPC ? 'Join (Contract)' : 'Join')
         }
       </FxButton>
     )}

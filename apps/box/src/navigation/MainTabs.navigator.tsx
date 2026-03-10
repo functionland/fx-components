@@ -109,8 +109,8 @@ export const MainTabsNavigator = () => {
               updateBlox({ peerId: currentBloxPeerId, clusterPeerId: resolved.txt.ipfsClusterID });
             }
           }
-          // Fetch the first IP address from the resolved data
-          const firstIp = resolved.addresses?.[0];
+          // Prefer explicit LAN IP from TXT (avoids wrong A record on multi-NIC hosts like Windows PCs)
+          const firstIp = resolved.txt?.ipAddress || resolved.addresses?.[0];
           if (firstIp) {
             console.log(`Matching Blox found. Setting local IP: ${firstIp}`);
             setUseLocalIp(firstIp); // Set the local IP
