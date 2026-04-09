@@ -118,7 +118,10 @@ export const ConnectionOptionsSheet = React.forwardRef<
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
   const bloxs = useBloxsStore((state) => state.bloxs);
   const currentBlox = currentBloxPeerId ? bloxs[currentBloxPeerId] : null;
-  const clusterPeerId = currentBlox?.clusterPeerId || currentBloxPeerId;
+  // Do not fall back to kubo peerId — it is wrong for cluster operations
+  const clusterPeerId = (currentBlox?.clusterPeerId && currentBlox.clusterPeerId !== currentBloxPeerId)
+    ? currentBlox.clusterPeerId
+    : undefined;
 
   const [bloxPingStatus, setBloxPingStatus] = useState<PingStatus>('idle');
   const [bloxPingMessage, setBloxPingMessage] = useState<string | undefined>();
