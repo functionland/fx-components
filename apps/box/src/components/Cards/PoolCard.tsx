@@ -74,6 +74,7 @@ const DetailInfo = ({
     ? (bloxsForCluster[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId)
     : undefined;
   const joinPool = usePoolsStore((state) => state.joinPool);
+  const forceRejoinPool = usePoolsStore((state) => state.forceRejoinPool);
 
   // Check if Blox is connected
   const isBloxConnected = currentBloxPeerId &&
@@ -535,6 +536,36 @@ const DetailInfo = ({
         variant="inverted"
       >
         Leave Pool
+      </FxButton>
+    )}
+
+    {/* Force rejoin - re-sends pool ID to blox config without contract interaction */}
+    {isDetailed && isJoined && (
+      <FxButton
+        onPress={async () => {
+          try {
+            await forceRejoinPool(parseInt(pool.poolID, 10));
+            queueToast({
+              type: 'success',
+              title: 'Pool Rejoined',
+              message: `Pool ID ${pool.poolID} has been re-set on your Blox.`,
+            });
+          } catch (error) {
+            console.error('Force rejoin error:', error);
+            queueToast({
+              type: 'error',
+              title: 'Rejoin Failed',
+              message: error instanceof Error ? error.message : 'Failed to rejoin pool on Blox.',
+            });
+          }
+        }}
+        flexWrap="wrap"
+        paddingHorizontal="16"
+        marginRight="8"
+        marginBottom="8"
+        variant="inverted"
+      >
+        Force Rejoin
       </FxButton>
     )}
 

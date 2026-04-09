@@ -114,9 +114,10 @@ export const BloxScreen = () => {
     [folderSizeInfo, currentBloxPeerId]
   );
 
-  // Lazy fetch cluster peerID if missing
+  // Lazy fetch cluster peerID if missing or stale (migration may have set it to peerId)
   useEffect(() => {
-    if (fulaIsReady && currentBloxPeerId && currentBlox && !currentBlox.clusterPeerId) {
+    if (fulaIsReady && currentBloxPeerId && currentBlox &&
+        (!currentBlox.clusterPeerId || currentBlox.clusterPeerId === currentBloxPeerId)) {
       fxblox.getClusterInfo().then((info: any) => {
         if (info?.cluster_peer_id) {
           updateBlox({ peerId: currentBloxPeerId, clusterPeerId: info.cluster_peer_id });

@@ -30,6 +30,7 @@ interface PoolsActionSlice {
     poolName: string;
   }) => Promise<PoolData>;
   joinPool: (poolID: number) => Promise<PoolJoinResponse>;
+  forceRejoinPool: (poolID: number) => Promise<PoolJoinResponse>;
   leavePool: (poolID: number) => Promise<PoolLeaveResponse>;
   cancelPoolJoin: (poolID: number) => Promise<void>;
   reset: () => void;
@@ -99,23 +100,27 @@ const createPoolsModelSlice: StateCreator<
           let numVotes = 0;
           let numVoters = participants.length;
 
-          // Check if user is a member
-          if (accountId) {
-            const memberIndex = await contractService.getMemberIndex(poolId, accountId);
-            if (memberIndex !== '0') {
-              joined = true;
-            } else {
-              // If not a member, check for join request
-              // You may need a way to get peerId for this user, for now assume peerId = accountId
-              try {
-                const joinRequest = await contractService.getJoinRequest(poolId, accountId);
-                if (joinRequest && joinRequest.status === 1) {
-                  requested = true;
-                  numVotes = (joinRequest.approvals || 0) + (joinRequest.rejections || 0);
-                }
-              } catch (e) {
-                // No join request
+          // Check if this device's cluster peer ID is a member of the pool
+          const clusterPeerId = useBloxsStore.getState().getCurrentClusterPeerId();
+          if (clusterPeerId) {
+            try {
+              const peerMembership = await contractService.isPeerIdMemberOfPool(poolId, clusterPeerId);
+              joined = peerMembership.isMember;
+            } catch (e) {
+              joined = false;
+            }
+          }
+
+          // Check for join request (wallet-based)
+          if (!joined && accountId) {
+            try {
+              const joinRequest = await contractService.getJoinRequest(poolId, accountId);
+              if (joinRequest && joinRequest.status === 1) {
+                requested = true;
+                numVotes = (joinRequest.approvals || 0) + (joinRequest.rejections || 0);
               }
+            } catch (e) {
+              // No join request
             }
           }
 
@@ -189,6 +194,19 @@ const createPoolsModelSlice: StateCreator<
         throw new Error('Unknown error in joinPool');
       } catch (error) {
         console.log('joinPool: ', error);
+        throw error;
+      }
+    },
+    forceRejoinPool: async (poolID: number) => {
+      try {
+        await fula.isReady(false);
+        const selectedChain = useSettingsStore.getState().selectedChain;
+        const response = await blockchain.joinPoolWithChain(poolID, selectedChain);
+        console.log('forceRejoinPool response:', response);
+        set({ dirty: true });
+        return response;
+      } catch (error) {
+        console.log('forceRejoinPool error:', error);
         throw error;
       }
     },

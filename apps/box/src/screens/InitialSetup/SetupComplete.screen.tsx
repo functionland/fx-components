@@ -168,9 +168,11 @@ export const SetupCompleteScreen = ({ route }: Props) => {
   }, [bloxsConnectionStatus, currentBloxPeerId, fulaIsReady]);
 
   // Fetch cluster peerID from blox when setup is completed and fula is ready
+  // Also re-fetch if clusterPeerId equals peerId (stale migration default)
   useEffect(() => {
     const currentBlox = currentBloxPeerId ? bloxs[currentBloxPeerId] : null;
-    if (fulaIsReady && currentBloxPeerId && currentBlox && !currentBlox.clusterPeerId) {
+    if (fulaIsReady && currentBloxPeerId && currentBlox &&
+        (!currentBlox.clusterPeerId || currentBlox.clusterPeerId === currentBloxPeerId)) {
       fxblox.getClusterInfo().then((info: any) => {
         if (info?.cluster_peer_id) {
           updateBlox({ peerId: currentBloxPeerId, clusterPeerId: info.cluster_peer_id });

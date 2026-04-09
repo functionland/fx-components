@@ -15,6 +15,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { usePoolsWithFallback } from '../../hooks/usePoolsWithFallback';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { CHAIN_DISPLAY_NAMES } from '../../contracts/config';
+import { usePoolsStore } from '../../stores/usePoolsStore';
 import MyLoader from '../../components/ContentLoader';
 
 interface PoolDetailsRouteParams {
@@ -44,6 +45,7 @@ export const PoolDetailsScreen = () => {
   } = usePoolsWithFallback();
 
   const selectedChain = useSettingsStore((state) => state.selectedChain);
+  const forceRejoinPool = usePoolsStore((state) => state.forceRejoinPool);
 
   const pool = pools.find(p => p.poolID === poolId);
   const userIsMember = userMemberPools.includes(poolId);
@@ -166,6 +168,28 @@ export const PoolDetailsScreen = () => {
     );
   };
 
+  const handleForceRejoin = async () => {
+    if (!pool) return;
+
+    setRefreshing(true);
+    try {
+      await forceRejoinPool(parseInt(poolId, 10));
+      queueToast({
+        type: 'success',
+        title: 'Pool Rejoined',
+        message: `Pool ID ${poolId} has been re-set on your Blox.`,
+      });
+    } catch (error) {
+      queueToast({
+        type: 'error',
+        title: 'Rejoin Failed',
+        message: error instanceof Error ? error.message : 'Failed to rejoin pool on Blox.',
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   if (!pool) {
     return (
       <FxSafeAreaBox flex={1} edges={['top']}>
@@ -224,14 +248,23 @@ export const PoolDetailsScreen = () => {
         {/* Action Buttons */}
         <FxBox flexDirection="row" flexWrap="wrap" marginBottom="16">
           {userIsMember ? (
-            <FxButton
-              onPress={handleLeavePool}
-              variant="destructive"
-              marginRight="8"
-              marginBottom="8"
-            >
-              Leave Pool
-            </FxButton>
+            <>
+              <FxButton
+                onPress={handleLeavePool}
+                variant="destructive"
+                marginRight="8"
+                marginBottom="8"
+              >
+                Leave Pool
+              </FxButton>
+              <FxButton
+                onPress={handleForceRejoin}
+                marginRight="8"
+                marginBottom="8"
+              >
+                Force Rejoin
+              </FxButton>
+            </>
           ) : (
             <FxButton
               onPress={handleJoinPool}
