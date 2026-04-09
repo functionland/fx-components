@@ -70,8 +70,10 @@ const DetailInfo = ({
   const isPC = currentBloxPeerId
     && bloxsPropertyInfo?.[currentBloxPeerId]?.containerInfo_fula?.image?.includes('_amd64');
   // Use ipfs-cluster peerID for pool API operations
-  const clusterPeerId = currentBloxPeerId
-    ? (bloxsForCluster[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId)
+  // Do not fall back to kubo peerId — it is wrong for on-chain operations
+  const storedClusterPeerId = currentBloxPeerId ? bloxsForCluster[currentBloxPeerId]?.clusterPeerId : undefined;
+  const clusterPeerId = (storedClusterPeerId && storedClusterPeerId !== currentBloxPeerId)
+    ? storedClusterPeerId
     : undefined;
   const joinPool = usePoolsStore((state) => state.joinPool);
   const forceRejoinPool = usePoolsStore((state) => state.forceRejoinPool);

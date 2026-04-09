@@ -112,12 +112,16 @@ const createModeSlice: StateCreator<
     },
     getClusterPeerIdForBlox: (peerId: string) => {
       const blox = get().bloxs[peerId];
-      return blox?.clusterPeerId || peerId;
+      const stored = blox?.clusterPeerId;
+      // If clusterPeerId equals kubo peerId, it's a stale migration default — not real
+      return (stored && stored !== peerId) ? stored : undefined;
     },
     getCurrentClusterPeerId: () => {
       const { currentBloxPeerId, bloxs } = get();
       if (!currentBloxPeerId) return undefined;
-      return bloxs[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId;
+      const stored = bloxs[currentBloxPeerId]?.clusterPeerId;
+      // If clusterPeerId equals kubo peerId, it's a stale migration default — not real
+      return (stored && stored !== currentBloxPeerId) ? stored : undefined;
     },
     update: (model) => {
       set({

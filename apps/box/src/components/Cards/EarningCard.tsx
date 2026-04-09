@@ -60,8 +60,10 @@ export const EarningCard = ({
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
   const bloxs = useBloxsStore((state) => state.bloxs);
   // Use ipfs-cluster peerID for claim portal URL
-  const clusterPeerId = currentBloxPeerId
-    ? (bloxs[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId)
+  // Do not fall back to kubo peerId — it is wrong for on-chain operations
+  const storedClusterPeerId = currentBloxPeerId ? bloxs[currentBloxPeerId]?.clusterPeerId : undefined;
+  const clusterPeerId = (storedClusterPeerId && storedClusterPeerId !== currentBloxPeerId)
+    ? storedClusterPeerId
     : undefined;
 
   // Determine connected wallet address (connected wallet or manual signature, empty string if neither)

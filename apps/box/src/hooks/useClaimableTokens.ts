@@ -25,8 +25,10 @@ export const useClaimableTokens = () => {
   const currentBloxPeerId = useBloxsStore((state) => state.currentBloxPeerId);
   const bloxs = useBloxsStore((state) => state.bloxs);
   // Use ipfs-cluster peerID for all reward operations
-  const currentClusterPeerId = currentBloxPeerId
-    ? (bloxs[currentBloxPeerId]?.clusterPeerId || currentBloxPeerId)
+  // Do not fall back to kubo peerId — it is wrong for on-chain operations
+  const storedClusterPeerId = currentBloxPeerId ? bloxs[currentBloxPeerId]?.clusterPeerId : undefined;
+  const currentClusterPeerId = (storedClusterPeerId && storedClusterPeerId !== currentBloxPeerId)
+    ? storedClusterPeerId
     : undefined;
   const { userPoolId } = usePools();
   const manualSignatureWalletAddress = useUserProfileStore(
