@@ -167,11 +167,11 @@ export const SetupCompleteScreen = ({ route }: Props) => {
     }
   }, [bloxsConnectionStatus, currentBloxPeerId, fulaIsReady]);
 
-  // Fetch cluster peerID from blox when setup is completed and fula is ready
-  // Also re-fetch if clusterPeerId equals peerId (stale migration default)
+  // Fetch cluster peerID from blox when connected and clusterPeerId is missing or stale.
+  // Wait until connection is confirmed to avoid competing with checkConnection on the Go bridge.
   useEffect(() => {
     const currentBlox = currentBloxPeerId ? bloxs[currentBloxPeerId] : null;
-    if (fulaIsReady && currentBloxPeerId && currentBlox &&
+    if (bloxsConnectionStatus[currentBloxPeerId] === 'CONNECTED' && currentBloxPeerId && currentBlox &&
         (!currentBlox.clusterPeerId || currentBlox.clusterPeerId === currentBloxPeerId)) {
       fxblox.getClusterInfo().then((info: any) => {
         if (info?.cluster_peer_id) {
@@ -179,7 +179,7 @@ export const SetupCompleteScreen = ({ route }: Props) => {
         }
       }).catch(() => {});
     }
-  }, [fulaIsReady, currentBloxPeerId]);
+  }, [bloxsConnectionStatus, currentBloxPeerId]);
 
   useEffect(() => {
     const interval = setInterval(() => {

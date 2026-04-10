@@ -114,9 +114,11 @@ export const BloxScreen = () => {
     [folderSizeInfo, currentBloxPeerId]
   );
 
-  // Lazy fetch cluster peerID if missing or stale (migration may have set it to peerId)
+  // Lazy fetch cluster peerID if missing or stale (migration may have set it to peerId).
+  // Wait until connection is confirmed to avoid competing with checkConnection on the Go bridge.
+  const currentConnectionStatus = bloxsConnectionStatus?.[currentBloxPeerId];
   useEffect(() => {
-    if (fulaIsReady && currentBloxPeerId && currentBlox &&
+    if (currentConnectionStatus === 'CONNECTED' && currentBloxPeerId && currentBlox &&
         (!currentBlox.clusterPeerId || currentBlox.clusterPeerId === currentBloxPeerId)) {
       fxblox.getClusterInfo().then((info: any) => {
         if (info?.cluster_peer_id) {
@@ -124,7 +126,7 @@ export const BloxScreen = () => {
         }
       }).catch(() => {});
     }
-  }, [fulaIsReady, currentBloxPeerId]);
+  }, [currentConnectionStatus, currentBloxPeerId]);
 
   // Update divisionSplit shared value when bloxsSpaceInfo changes
   // Must be in useEffect to avoid writing to shared value during render
