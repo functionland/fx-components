@@ -168,7 +168,7 @@
       "totalInWallet": "Total {{tokenSymbol}} in Wallet",
       "claimableRewards": "Claimable Rewards",
       "miningRewards": "Mining Rewards",
-      "storageRewards": "Storage Rewards",
+      "storageRewards": "Network Rewards",
       "lastClaimed": "Last Claimed",
       "claimRewards": "Claim Rewards",
       "claiming": "Claiming...",

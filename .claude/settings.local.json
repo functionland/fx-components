@@ -47,7 +47,10 @@
       "Bash(git -C /mnt/e/GitHub/fx log --all --name-only --pretty=format:)",
       "Bash(git -C /mnt/e/GitHub/fx show:*)",
       "Bash(go build:*)",
-      "Bash(go vet:*)"
+      "Bash(go vet:*)",
+      "PowerShell(Set-Location 'E:\\\\GitHub\\\\fula-chain'; & git log --all --oneline -S '__gap' -- contracts/governance/GovernanceModule.sol 2>&1 | Select-Object -First 5 | ForEach-Object { Write-Output $_ })",
+      "PowerShell(Set-Location 'E:\\\\GitHub\\\\fula-chain'; & git show --stat 97fae06 2>&1 | Select-Object -First 30 | ForEach-Object { Write-Output $_ })",
+      "PowerShell(Set-Location 'E:\\\\GitHub\\\\fula-chain'; & git show 97fae06 -- contracts/governance/GovernanceModule.sol 2>&1 | Select-Object -First 30 | ForEach-Object { Write-Output $_ })"
     ]
   }
 }

@@ -161,7 +161,7 @@
     "totalInWallet": "钱包中总计 {{tokenSymbol}}",
     "claimableRewards": "可领取奖励",
     "miningRewards": "挖矿奖励",
-    "storageRewards": "存储奖励",
+    "storageRewards": "网络奖励",
     "lastClaimed": "上次领取",
     "claimRewards": "领取奖励",
     "claiming": "正在领取...",
