@@ -8,7 +8,7 @@ export const FXRelay =
 
 // Cloudflare Workers discovery API. Owns the current relay set + per-box
 // reachability state. See E:/GitHub/libp2p-relay/cloudflare/ for the source.
-export const FXDiscoveryURL = 'https://discovery.fula.network';
+export const FXDiscoveryURL = 'https://discovery.fx.land';
 
 // AsyncStorage key for the cached relay list.
 export const FXRelayCacheKey = 'fx.relayCache.v1';
