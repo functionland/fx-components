@@ -46,7 +46,11 @@ export const refreshRelayCache = async (): Promise<void> => {
   try {
     const r = await fetchWithTimeout(
       `${Constants.FXDiscoveryURL}/relays`,
-      { method: 'GET', headers: { accept: 'application/json' } },
+      { method: 'GET', headers: {
+        accept: 'application/json',
+        // Gate for the Cloudflare WAF rule that blocks unknown bot traffic.
+        'x-fula-client': 'app',
+      } },
       DISCOVERY_TIMEOUT_MS,
     );
     if (!r.ok) return;
@@ -73,7 +77,11 @@ export const findBox = async (bloxPeerId: string): Promise<string[]> => {
       `${Constants.FXDiscoveryURL}/find-box`,
       {
         method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json',
+          'x-fula-client': 'app',
+        },
         body: JSON.stringify({ peerId: bloxPeerId }),
       },
       DISCOVERY_TIMEOUT_MS,
