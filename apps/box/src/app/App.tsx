@@ -31,6 +31,7 @@ import { fula } from '@functionland/react-native-fula';
 import { AppKitProvider, AppKit } from '@reown/appkit-react-native';
 import { appKit } from '../config/appKitConfig';
 import { configureBackgroundBloxCheck } from '../services/backgroundBloxCheck';
+import { refreshRelayCache } from '../utils/helper';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -58,6 +59,11 @@ export const App = () => {
   useEffect(() => {
     loadAllCredentials();
   }, [loadAllCredentials]);
+
+  useEffect(() => {
+    refreshRelayCache();
+  }, []);
+
   return (
     <GestureHandlerRootView style={styles.flex1}>
       <SafeAreaProvider>

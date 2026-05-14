@@ -86,8 +86,8 @@ android {
         applicationId "land.fx.blox"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 260
-        versionName "2.5.4"
+        versionCode 261
+        versionName "2.5.5"
 
         testBuildType System.getProperty('testBuildType', 'debug')
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
