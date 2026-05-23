@@ -90,6 +90,23 @@ export const EarningCard = ({
     fetchClaimableTokens,
   } = useClaimableTokens();
 
+  // Staleness detection — mirrors the claim-web catch-up logic.
+  // When a peer is offline >6 months, the user's `lastClaimedRewards` falls
+  // outside the RewardEngine's MAX_VIEW_PERIODS_V2 window (540 periods ×
+  // 8h = 180 days), so `getUnclaimedRewards` returns 0 even though the peer
+  // is now online again. The fix in claim-web enables a multi-call "advance"
+  // flow; in-app we just surface the situation so users don't dismiss the
+  // 0 as "nothing to do". Threshold matches the contract constant exactly:
+  //   MAX_VIEW_PERIODS_V2 * DEFAULT_EXPECTED_PERIOD = 540 * 28800s = 180 days.
+  // Only flagged when claim is in a clean, fetched, zero-reward state — no
+  // false positives during loading, errors, or for users with rewards.
+  const STALE_THRESHOLD_SECS = 180 * 24 * 60 * 60;
+  const isStale =
+    !claimableLoading &&
+    !claimableError &&
+    parseFloat(totalUnclaimed) === 0 &&
+    timeSinceLastClaim > STALE_THRESHOLD_SECS;
+
   // Handler for refresh icon click
   const handleRefresh = async () => {
     // Only try to connect wallet if no account is available (neither wallet nor manual signature)
@@ -219,6 +236,20 @@ export const EarningCard = ({
           </FxBox>
         </FxCard.Row.Data>
       </FxCard.Row>
+
+      {isStale && (
+        <FxBox
+          marginTop="8"
+          marginBottom="4"
+          padding="8"
+          backgroundColor="warningBase"
+          borderRadius="s"
+        >
+          <FxText variant="bodyXSRegular" color="backgroundApp">
+            {t('earningCard.catchUpHint')}
+          </FxText>
+        </FxBox>
+      )}
 
       <FxCard.Row>
         <FxCard.Row.Title>{t('earningCard.miningRewards')}</FxCard.Row.Title>

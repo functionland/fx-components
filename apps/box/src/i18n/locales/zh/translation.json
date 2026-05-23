@@ -179,7 +179,8 @@
     "copyClaimLink": "复制领取链接",
     "linkCopied": "链接已复制",
     "openInWalletInstructions": "领取链接已复制到剪贴板。请打开您的钱包应用，进入浏览器/探索部分，粘贴网址以领取奖励。",
-    "gotIt": "知道了"
+    "gotIt": "知道了",
+    "catchUpHint": "⏳ 您的领取窗口已超过6个月。点击「领取奖励」开始追赶——第一笔交易不会直接发放奖励，但需要先推进窗口，才能领取更早累计的奖励。"
   },
   "connectedDevicesCard": {
     "title": "已连接设备",

@@ -186,7 +186,8 @@
       "copyClaimLink": "Copy Claim Link",
       "linkCopied": "Link Copied",
       "openInWalletInstructions": "The claim link has been copied to your clipboard. Open your wallet app, go to the browser/explore section, and paste the URL to claim your rewards.",
-      "gotIt": "Got It"
+      "gotIt": "Got It",
+      "catchUpHint": "⏳ Your claim window is over 6 months old. Tap Claim Rewards to begin catch-up — the first transaction will not pay rewards directly, but is required to advance the window before older rewards become visible."
     },
     "connectedDevicesCard": {
       "title": "Connected Devices",
