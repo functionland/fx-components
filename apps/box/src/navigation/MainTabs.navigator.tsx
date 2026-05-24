@@ -37,6 +37,7 @@ import {
   ConnectedDAppsScreen,
   BloxStatusMonitorScreen,
 } from '../screens/Settings';
+import { DiagnosticsScreen } from '../screens/Diagnostics/Diagnostics.screen';
 import { ComponentGalleryNavigator } from './ComponentGallery.navigator';
 import { GlobalBottomSheet } from '../components/GlobalBottomSheet';
 import { Helper } from '../utils';
@@ -347,6 +348,10 @@ const SettingsNavigator = () => {
       <SettingsStack.Screen
         name={Routes.AutoPinPairing}
         component={AutoPinPairingScreen}
+      />
+      <SettingsStack.Screen
+        name={Routes.Diagnostics}
+        component={DiagnosticsScreen}
       />
 
       <SettingsStack.Screen
