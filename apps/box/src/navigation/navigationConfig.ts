@@ -11,7 +11,6 @@ export enum Routes {
   MainTabs = 'MainTabs',
   Hub = 'Hub',
   Plugin = 'Plugin',
-  ChatAI = 'ChatAI',
 
   // Initial Setup
   Welcome = 'Welcome',
@@ -31,7 +30,7 @@ export enum Routes {
   PluginTab = 'PluginTab',
   DevicesTab = 'DevicesTab',
   SettingsTab = 'SettingsTab',
-  ChatAITab = 'ChatAITab',
+  DiagnosticsTab = 'DiagnosticsTab',
 
   // Blox Manager
   BloxManager = 'BloxManager',
@@ -50,7 +49,6 @@ export enum Routes {
   BloxLogs = 'BloxLogs',
   BluetoothCommands = 'BluetoothCommands',
   AutoPinPairing = 'AutoPinPairing',
-  Diagnostics = 'Diagnostics',
 
   // Component Gallery
   Avatars = 'Avatars',
@@ -72,7 +70,6 @@ export type RootStackParamList = {
   [Routes.MainTabs]: NavigatorScreenParams<MainTabsParamList>;
   [Routes.Hub]: undefined;
   [Routes.Plugin]: undefined;
-  [Routes.ChatAI]: undefined;
   [Routes.BloxManager]: undefined;
 };
 
@@ -84,7 +81,7 @@ export type MainTabsParamList = {
   [Routes.DevicesTab]: undefined;
   [Routes.SettingsTab]: NavigatorScreenParams<SettingsStackParamList>;
   [Routes.InitialSetup]: undefined;
-  [Routes.ChatAITab]: undefined;
+  [Routes.DiagnosticsTab]: undefined;
 };
 
 export type SettingsStackParamList = {
@@ -110,7 +107,6 @@ export type SettingsStackParamList = {
     endpoint?: string;
     returnUrl?: string;
   };
-  [Routes.Diagnostics]: undefined;
   [Routes.ComponentGallery]: NavigatorScreenParams<ComponentGalleryStackParamList>;
 };
 

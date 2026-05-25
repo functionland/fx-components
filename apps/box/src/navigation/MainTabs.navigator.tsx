@@ -4,14 +4,13 @@ import {
   FxBottomSheetModalMethods,
   FxArrowUpIcon,
   useFxTheme,
-  FxScanCodeIcon,
+  FxSearchIcon,
 } from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BloxScreen } from '../screens/Blox/Blox.screen';
 import { PluginScreen } from '../screens/Plugin.screen';
 import { DevicesScreen } from '../screens/Devices.screen';
 import { UsersScreen } from '../screens/Users/Users.screen';
-import ChatAIScreen from '../screens/ChatAI.screen';
 import {
   BloxIcon,
   UserIcon,
@@ -268,12 +267,12 @@ export const MainTabsNavigator = () => {
           })}
         />
         <MainTabs.Screen
-          name={Routes.ChatAITab}
-          component={ChatAIScreen}
+          name={Routes.DiagnosticsTab}
+          component={DiagnosticsScreen}
           options={{
             // eslint-disable-next-line react/no-unstable-nested-components
-            tabBarIcon: ({ color }) => <FxScanCodeIcon fill={color} />,
-            tabBarLabel: 'Loyal Agent',
+            tabBarIcon: ({ color }) => <FxSearchIcon fill={color} />,
+            tabBarLabel: 'Blox AI',
           }}
         />
         <MainTabs.Screen
@@ -348,10 +347,6 @@ const SettingsNavigator = () => {
       <SettingsStack.Screen
         name={Routes.AutoPinPairing}
         component={AutoPinPairingScreen}
-      />
-      <SettingsStack.Screen
-        name={Routes.Diagnostics}
-        component={DiagnosticsScreen}
       />
 
       <SettingsStack.Screen

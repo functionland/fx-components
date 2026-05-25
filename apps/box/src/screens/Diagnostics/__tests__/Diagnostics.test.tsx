@@ -29,12 +29,16 @@ describe('Diagnostics screen wiring', () => {
     // statically. Reducer + i18n + route tests below give us behavioural
     // coverage of the pieces that matter operationally.
 
-    test('Diagnostics route is registered in navigationConfig', () => {
+    test('Diagnostics tab route is registered in navigationConfig', () => {
         // Wiring check: the route enum value the screen will be rendered
         // under must exist + be unique. If a future refactor renames it,
         // the snapshot-free check still catches the regression.
-        expect(Routes.Diagnostics).toBeDefined();
-        expect(Routes.Diagnostics).toBe('Diagnostics');
+        // (The tab was promoted from Settings → Diagnostics to a top-level
+        // tab during the loyal-agent → Blox AI rebrand; the route id was
+        // updated from 'Diagnostics' to 'DiagnosticsTab' to follow the
+        // existing `*Tab` naming convention for top-level tabs.)
+        expect(Routes.DiagnosticsTab).toBeDefined();
+        expect(Routes.DiagnosticsTab).toBe('DiagnosticsTab');
     });
 });
 
