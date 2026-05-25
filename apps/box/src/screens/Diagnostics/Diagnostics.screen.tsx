@@ -36,6 +36,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import TcpSocket from 'react-native-tcp-socket';
 
 import { usePluginsStore } from '../../stores/usePluginsStore';
 import { Routes } from '../../navigation/navigationConfig';
@@ -50,6 +51,11 @@ const PHONE_INTERNET_PROBE_TIMEOUT_MS = 5000;
 const DISCOVERY_PROBE_URL = `${Constants.FXDiscoveryURL}/relays`;
 const DISCOVERY_PROBE_TIMEOUT_MS = 5000;
 const RELAY_PROBE_TIMEOUT_MS = 5000;
+// Standard kubo / libp2p TCP port. Fula relays are kubo-based and only
+// expose the libp2p multistream on this port — no HTTPS on :443, no other
+// admin ports. A successful TCP SYN-ACK on :4001 is the only meaningful
+// "reachable from this phone" signal.
+const RELAY_PROBE_PORT = 4001;
 const BLOX_AI_PLUGIN_NAME = 'blox-ai';
 
 type ProbeStatus = 'checking' | 'ok' | 'failed';
@@ -151,42 +157,57 @@ async function probeDiscoveryAndListRelays(): Promise<{
     return { discovery, dnsNames: hardcoded };
 }
 
-// Probe a single relay's hostname for HTTPS reachability on port 443. This
-// is NOT the same as libp2p reachability — Fula relays serve libp2p on TCP
-// 4001, and React Native's fetch can only do HTTPS. On a network that blocks
-// 4001 but allows 443 (some corporate firewalls), this probe will show ✓
-// while real connections still fail.
+// Probe a single relay's libp2p port via raw TCP. Fula relays are kubo-based
+// and only expose libp2p multistream on TCP :4001 — no HTTPS on :443, no
+// admin ports. A TCP SYN-ACK on :4001 is the only meaningful "the phone
+// can reach this relay" signal.
 //
-// Why we ship it anyway: Fula relays are Cloudflare-fronted, so :443 and
-// :4001 share DNS + network path. A green ✓ usually means the relay's host
-// is reachable; a red ✗ definitively means something is blocking the host.
-// The user-facing i18n copy ("HTTPS reachable" rather than "reachable")
-// reflects this narrowness. A real TCP/4001 probe would need
-// react-native-tcp-socket (not currently a dep); tracked as a follow-up.
+// We rely on react-native-tcp-socket here (added as a native dep) because
+// RN's built-in fetch + WebSocket can't probe a port that doesn't speak
+// HTTP or TLS. An earlier HTTPS-HEAD-on-:443 probe was a false-negative
+// machine — kubo relays always returned ✗ even when fully reachable.
 //
-// Any HTTP response (2xx/3xx/4xx/5xx) means TCP+TLS succeeded — that's the
-// signal we care about. The relay may legitimately return 404 on /, since
-// it doesn't serve HTTP routes; that's still "reachable" for our purposes.
+// We resolve 'ok' the moment the connect callback fires (TCP handshake
+// complete) and immediately destroy() the socket so we don't trigger the
+// libp2p multistream handshake. The relay will close the connection on
+// its side too once it sees us not speak; that's fine, we already have
+// our signal.
 async function probeRelay(dnsName: string): Promise<ProbeStatus> {
-    try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), RELAY_PROBE_TIMEOUT_MS);
+    return new Promise<ProbeStatus>((resolve) => {
+        let settled = false;
+        let client: ReturnType<typeof TcpSocket.createConnection> | null = null;
+
+        const settle = (status: ProbeStatus) => {
+            if (settled) return;
+            settled = true;
+            if (client) {
+                try { client.destroy(); } catch { /* socket already torn down */ }
+            }
+            resolve(status);
+        };
+
+        // Connect timeout — TcpSocket's per-socket timeout fires AFTER
+        // connect, not during. We need our own wall-clock guard so a host
+        // that silently drops SYNs doesn't hang the probe forever.
+        const timer = setTimeout(() => settle('failed'), RELAY_PROBE_TIMEOUT_MS);
+
         try {
-            const r = await fetch(`https://${dnsName}/`, {
-                method: 'HEAD',
-                signal: controller.signal,
+            client = TcpSocket.createConnection(
+                { host: dnsName, port: RELAY_PROBE_PORT },
+                () => {
+                    clearTimeout(timer);
+                    settle('ok');
+                }
+            );
+            client.on('error', () => {
+                clearTimeout(timer);
+                settle('failed');
             });
-            // Any standard HTTP status counts as reachable — including 4xx/5xx
-            // because those still prove TCP+TLS+HTTP completed. The only
-            // "unreachable" outcomes are network errors / DNS fail / timeout,
-            // all of which throw rather than resolve.
-            return r.status >= 100 && r.status < 600 ? 'ok' : 'failed';
-        } finally {
+        } catch {
             clearTimeout(timer);
+            settle('failed');
         }
-    } catch {
-        return 'failed';
-    }
+    });
 }
 
 export const DiagnosticsScreen: React.FC = () => {

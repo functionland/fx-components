@@ -14,7 +14,7 @@
       "discoveryFailed": "Discovery service is unreachable (your phone can't find a relay)",
       "relaysChecking": "Probing relays…",
       "relaysUnknown": "No relays are known yet. Try again once the discovery service is reachable.",
-      "relaysListLabel": "Relays (HTTPS reachability on :443 — proxy for libp2p path):",
+      "relaysListLabel": "Relays (libp2p reachability on TCP :4001):",
       "pluginStatusTitle": "Blox AI plugin",
       "pluginChecking": "Checking plugin status…",
       "pluginInstalled": "Blox AI is installed on your Blox",
