@@ -81,13 +81,36 @@ const createPluginsModelSlice: StateCreator<
         const result = await fxblox.listActivePlugins();
         if (result.status) {
           if (result.msg && Array.isArray(result.msg)) {
-            set({ activePlugins: result.msg });
+            // Reference-stable update: only `set` if the contents actually
+            // changed. zustand uses shallow equality; without this guard
+            // every call produces a new array reference even when the
+            // contents are identical, which re-renders every subscriber
+            // and is what caused the Diagnostics-screen listActivePlugins
+            // infinite loop (effect dep on activePlugins → fetch → new
+            // [] → state change → effect fires → fetch …).
+            const next = result.msg as string[];
+            const prev = get().activePlugins;
+            const same =
+              Array.isArray(prev) &&
+              prev.length === next.length &&
+              prev.every((p, i) => p === next[i]);
+            if (!same) {
+              set({ activePlugins: next });
+            }
             return {
               success: true,
               message: 'Active plugins listed successfully',
             };
           } else {
-            set({ activePlugins: [] });
+            // Same guard for the empty case: msg=null from go-fula (which
+            // happens when active-plugins.txt is empty — its filter strips
+            // empty strings, leaving nil that JSON-marshals to null) used
+            // to fire `set({ activePlugins: [] })` on every call, producing
+            // a fresh [] reference and the same re-render storm.
+            const prev = get().activePlugins;
+            if (!Array.isArray(prev) || prev.length !== 0) {
+              set({ activePlugins: [] });
+            }
             return { success: true, message: 'No active plugins found' };
           }
         } else {

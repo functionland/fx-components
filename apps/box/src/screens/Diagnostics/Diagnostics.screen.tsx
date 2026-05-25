@@ -94,31 +94,47 @@ export const DiagnosticsScreen: React.FC = () => {
 
     // Plugin presence — tolerant of pre-plugin firmware per Codex review:
     // missing data ≠ "not installed", so the UI copy avoids overclaiming.
+    //
+    // Split into two effects to avoid the infinite-loop trap:
+    //   (1) fetch once on mount — listActivePlugins() updates the store,
+    //       which would re-fire any effect that depends on activePlugins.
+    //   (2) react to store changes — derives pluginPresence from whatever
+    //       activePlugins currently is. No fetching here, so updating
+    //       activePlugins (whether via the mount fetch, an install action
+    //       elsewhere, or a future polling refresh) flips presence without
+    //       re-triggering the fetch.
+    // The previous single-effect form (which called listActivePlugins
+    // inside an effect that depended on activePlugins) looped forever
+    // because the store creates a fresh `[]` reference on every empty
+    // result and zustand's shallow equality flags that as a change.
+    const [hasFetched, setHasFetched] = React.useState(false);
+
     React.useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                await listActivePlugins();
-            } catch {
+        listActivePlugins()
+            .catch(() => {
                 // listActivePlugins captures its own errors into the store
-            }
-            if (cancelled) return;
-            const list = (activePlugins || []) as string[];
-            if (!Array.isArray(list)) {
-                setPluginPresence('notInstalledOrUnavailable');
-                return;
-            }
-            setPluginPresence(
-                list.includes(BLOX_AI_PLUGIN_NAME)
-                    ? 'installed'
-                    : 'notInstalledOrUnavailable'
-            );
-        })();
-        return () => { cancelled = true; };
-    // listActivePlugins/activePlugins from zustand are stable enough; we want
-    // this to run on every mount AND when activePlugins flips
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activePlugins]);
+            })
+            .finally(() => setHasFetched(true));
+        // listActivePlugins is the zustand setter — referentially stable.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    React.useEffect(() => {
+        // Wait for the mount fetch before deriving presence — without this,
+        // the initial activePlugins=[] from the store would flash a
+        // one-frame "Blox AI not installed" before the real response lands.
+        if (!hasFetched) return;
+        const list = (activePlugins || []) as string[];
+        if (!Array.isArray(list)) {
+            setPluginPresence('notInstalledOrUnavailable');
+            return;
+        }
+        setPluginPresence(
+            list.includes(BLOX_AI_PLUGIN_NAME)
+                ? 'installed'
+                : 'notInstalledOrUnavailable'
+        );
+    }, [activePlugins, hasFetched]);
 
     return (
         <FxKeyboardAwareScrollView>
