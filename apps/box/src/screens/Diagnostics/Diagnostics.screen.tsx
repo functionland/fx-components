@@ -35,9 +35,11 @@ import {
 } from '@functionland/component-library';
 import { useTranslation } from 'react-i18next';
 import NetInfo from '@react-native-community/netinfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { usePluginsStore } from '../../stores/usePluginsStore';
 import { Routes } from '../../navigation/navigationConfig';
+import * as Constants from '../../utils/constants';
 
 // Generic captive-portal-style "is the phone online" probe. 204 No Content
 // is the standard "internet works" signal — chosen over a Fula-specific URL
@@ -45,10 +47,14 @@ import { Routes } from '../../navigation/navigationConfig';
 // (per Codex review: don't conflate the two).
 const PHONE_INTERNET_PROBE_URL = 'https://www.google.com/generate_204';
 const PHONE_INTERNET_PROBE_TIMEOUT_MS = 5000;
+const DISCOVERY_PROBE_URL = `${Constants.FXDiscoveryURL}/relays`;
+const DISCOVERY_PROBE_TIMEOUT_MS = 5000;
+const RELAY_PROBE_TIMEOUT_MS = 5000;
 const BLOX_AI_PLUGIN_NAME = 'blox-ai';
 
 type ProbeStatus = 'checking' | 'ok' | 'failed';
 type PluginPresence = 'checking' | 'installed' | 'notInstalledOrUnavailable';
+type RelayInfo = { dnsName: string; status: ProbeStatus };
 
 async function probePhoneInternet(): Promise<ProbeStatus> {
     try {
@@ -71,6 +77,118 @@ async function probePhoneInternet(): Promise<ProbeStatus> {
     }
 }
 
+// Probe the Fula discovery API and return the relay list. Falls back to the
+// AsyncStorage cache when the live API is unreachable so we can still show
+// per-relay status from the last-known list. Final fallback is the hardcoded
+// FXRelay constant (parsed from its multiaddr) so the user always sees at
+// least one relay to probe — matches the same resolution order helper.ts
+// uses for actual connections.
+async function probeDiscoveryAndListRelays(): Promise<{
+    discovery: ProbeStatus;
+    dnsNames: string[];
+}> {
+    let discovery: ProbeStatus = 'failed';
+    let liveDnsNames: string[] | null = null;
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(),
+                                 DISCOVERY_PROBE_TIMEOUT_MS);
+        try {
+            const r = await fetch(DISCOVERY_PROBE_URL, {
+                method: 'GET',
+                signal: controller.signal,
+                headers: {
+                    accept: 'application/json',
+                    // Same WAF gate header helper.ts uses for /relays.
+                    'x-fula-client': 'app',
+                },
+            });
+            if (r.status >= 200 && r.status < 300) {
+                discovery = 'ok';
+                try {
+                    const list = (await r.json()) as Array<{ dnsName?: string }>;
+                    if (Array.isArray(list)) {
+                        liveDnsNames = list
+                            .map(x => x?.dnsName)
+                            .filter((x): x is string => typeof x === 'string' && x.length > 0);
+                    }
+                } catch {
+                    // Body parse failed but discovery is reachable; we'll
+                    // fall through to cache/hardcoded for the relay list.
+                }
+            }
+        } finally {
+            clearTimeout(timer);
+        }
+    } catch {
+        discovery = 'failed';
+    }
+
+    if (liveDnsNames && liveDnsNames.length > 0) {
+        return { discovery, dnsNames: liveDnsNames };
+    }
+
+    // Discovery returned nothing usable (or failed entirely). Try cache.
+    try {
+        const raw = await AsyncStorage.getItem(Constants.FXRelayCacheKey);
+        if (raw) {
+            const parsed = JSON.parse(raw) as { list?: Array<{ dnsName?: string }> };
+            const cached = (parsed?.list ?? [])
+                .map(x => x?.dnsName)
+                .filter((x): x is string => typeof x === 'string' && x.length > 0);
+            if (cached.length > 0) {
+                return { discovery, dnsNames: cached };
+            }
+        }
+    } catch {
+        // Cache unreadable; fall through to hardcoded.
+    }
+
+    // Last-resort: parse the hardcoded relay multiaddr to get a dnsName so
+    // the user still sees one relay row to probe.
+    const m = Constants.FXRelay.match(/^\/dns\/([^/]+)/);
+    const hardcoded = m ? [m[1]] : [];
+    return { discovery, dnsNames: hardcoded };
+}
+
+// Probe a single relay's hostname for HTTPS reachability on port 443. This
+// is NOT the same as libp2p reachability — Fula relays serve libp2p on TCP
+// 4001, and React Native's fetch can only do HTTPS. On a network that blocks
+// 4001 but allows 443 (some corporate firewalls), this probe will show ✓
+// while real connections still fail.
+//
+// Why we ship it anyway: Fula relays are Cloudflare-fronted, so :443 and
+// :4001 share DNS + network path. A green ✓ usually means the relay's host
+// is reachable; a red ✗ definitively means something is blocking the host.
+// The user-facing i18n copy ("HTTPS reachable" rather than "reachable")
+// reflects this narrowness. A real TCP/4001 probe would need
+// react-native-tcp-socket (not currently a dep); tracked as a follow-up.
+//
+// Any HTTP response (2xx/3xx/4xx/5xx) means TCP+TLS succeeded — that's the
+// signal we care about. The relay may legitimately return 404 on /, since
+// it doesn't serve HTTP routes; that's still "reachable" for our purposes.
+async function probeRelay(dnsName: string): Promise<ProbeStatus> {
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), RELAY_PROBE_TIMEOUT_MS);
+        try {
+            const r = await fetch(`https://${dnsName}/`, {
+                method: 'HEAD',
+                signal: controller.signal,
+            });
+            // Any standard HTTP status counts as reachable — including 4xx/5xx
+            // because those still prove TCP+TLS+HTTP completed. The only
+            // "unreachable" outcomes are network errors / DNS fail / timeout,
+            // all of which throw rather than resolve.
+            return r.status >= 100 && r.status < 600 ? 'ok' : 'failed';
+        } finally {
+            clearTimeout(timer);
+        }
+    } catch {
+        return 'failed';
+    }
+}
+
 export const DiagnosticsScreen: React.FC = () => {
     const { t } = useTranslation();
     const { colors } = useFxTheme();
@@ -78,6 +196,8 @@ export const DiagnosticsScreen: React.FC = () => {
 
     const [netInfoConnected, setNetInfoConnected] = React.useState<boolean | null>(null);
     const [phoneInternet, setPhoneInternet] = React.useState<ProbeStatus>('checking');
+    const [discoveryStatus, setDiscoveryStatus] = React.useState<ProbeStatus>('checking');
+    const [relays, setRelays] = React.useState<RelayInfo[] | null>(null);
     const [pluginPresence, setPluginPresence] = React.useState<PluginPresence>('checking');
 
     // Phone-side probes run once on mount. Re-fetching on every focus would
@@ -90,6 +210,38 @@ export const DiagnosticsScreen: React.FC = () => {
         });
         probePhoneInternet().then(setPhoneInternet);
         return () => unsub();
+    }, []);
+
+    // Fula network reachability: discovery API + per-relay TCP probes.
+    // Discovery resolves to a list of relay DNS names; we then probe each
+    // relay in parallel. State is set as results arrive so the UI shows
+    // progress without waiting for the slowest relay.
+    React.useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            const { discovery, dnsNames } = await probeDiscoveryAndListRelays();
+            if (cancelled) return;
+            setDiscoveryStatus(discovery);
+            if (dnsNames.length === 0) {
+                setRelays([]);
+                return;
+            }
+            // Seed the relay list with 'checking' so the user sees the
+            // hostnames immediately; per-relay status updates as probes
+            // resolve.
+            setRelays(dnsNames.map(dnsName => ({ dnsName, status: 'checking' })));
+            await Promise.all(dnsNames.map(async (dnsName) => {
+                const status = await probeRelay(dnsName);
+                if (cancelled) return;
+                setRelays(prev => {
+                    if (!prev) return prev;
+                    return prev.map(r =>
+                        r.dnsName === dnsName ? { ...r, status } : r
+                    );
+                });
+            }));
+        })();
+        return () => { cancelled = true; };
     }, []);
 
     // Plugin presence — tolerant of pre-plugin firmware per Codex review:
@@ -170,6 +322,83 @@ export const DiagnosticsScreen: React.FC = () => {
                             <FxText color="errorBase">
                                 {t('diagnostics.phoneInternetFailed')}
                             </FxText>
+                        )}
+                    </FxBox>
+                </FxCard>
+
+                <FxSpacer height={12} />
+
+                {/* ───────── Fula network reachability ───────── */}
+                <FxCard>
+                    <FxCard.Title>
+                        {t('diagnostics.fulaNetworkTitle')}
+                    </FxCard.Title>
+                    <FxBox paddingVertical="8">
+                        {discoveryStatus === 'checking' ? (
+                            <FxBox flexDirection="row" alignItems="center">
+                                <ActivityIndicator size="small" />
+                                <FxSpacer width={8} />
+                                <FxText>{t('diagnostics.discoveryChecking')}</FxText>
+                            </FxBox>
+                        ) : discoveryStatus === 'ok' ? (
+                            <FxText color="successBase">
+                                {t('diagnostics.discoveryOk')}
+                            </FxText>
+                        ) : (
+                            <FxText color="errorBase">
+                                {t('diagnostics.discoveryFailed')}
+                            </FxText>
+                        )}
+                        <FxSpacer height={8} />
+                        {relays === null ? (
+                            <FxBox flexDirection="row" alignItems="center">
+                                <ActivityIndicator size="small" />
+                                <FxSpacer width={8} />
+                                <FxText>{t('diagnostics.relaysChecking')}</FxText>
+                            </FxBox>
+                        ) : relays.length === 0 ? (
+                            <FxText variant="bodySmallRegular">
+                                {t('diagnostics.relaysUnknown')}
+                            </FxText>
+                        ) : (
+                            <>
+                                <FxText variant="bodySmallRegular">
+                                    {t('diagnostics.relaysListLabel')}
+                                </FxText>
+                                <FxSpacer height={4} />
+                                {relays.map((r) => (
+                                    <FxBox
+                                        key={r.dnsName}
+                                        flexDirection="row"
+                                        alignItems="center"
+                                        paddingVertical="4"
+                                    >
+                                        {r.status === 'checking' ? (
+                                            <>
+                                                <ActivityIndicator size="small" />
+                                                <FxSpacer width={8} />
+                                                <FxText variant="bodySmallRegular">
+                                                    {r.dnsName}
+                                                </FxText>
+                                            </>
+                                        ) : r.status === 'ok' ? (
+                                            <FxText
+                                                variant="bodySmallRegular"
+                                                color="successBase"
+                                            >
+                                                ✓ {r.dnsName}
+                                            </FxText>
+                                        ) : (
+                                            <FxText
+                                                variant="bodySmallRegular"
+                                                color="errorBase"
+                                            >
+                                                ✗ {r.dnsName}
+                                            </FxText>
+                                        )}
+                                    </FxBox>
+                                ))}
+                            </>
                         )}
                     </FxBox>
                 </FxCard>
