@@ -45,6 +45,7 @@ import { blockchain, fxblox } from '@functionland/react-native-fula';
 import { Helper } from '../../utils';
 import axios from 'axios';
 import { useContractIntegration } from '../../hooks/useContractIntegration';
+import { useTranslation } from 'react-i18next';
 
 const DEFAULT_DIVISION = 30;
 
@@ -66,6 +67,7 @@ export const BloxScreen = () => {
     EBloxInteractionType.OfficeBloxUnit
   );
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const logger = useLogger();
   const earnings = useUserProfileStore((state) => state.earnings);
   const getEarnings = useUserProfileStore((state) => state.getEarnings);
@@ -434,8 +436,31 @@ export const BloxScreen = () => {
             }
             onBloxPress={() => bloxInfoBottomSheetRef.current?.present()}
           />
+          <FxSpacer height={12} />
+
+          {/*
+            Plan A end-to-end follow-up #4 — entry point into the
+            Diagnostics tab + Blox AI session, pre-selecting the
+            "disconnected" scenario. The Diagnostics screen reads
+            `prefillScenario: 'disconnected'`, highlights the
+            matching quick-start card, and waits for the user to tap
+            Start (no auto-start; codex/gemini/built-in agreed v1's
+            silent auto-start was high-friction).
+          */}
+          <FxButton
+            testID="blox-screen-diagnose-cta"
+            variant="inverted"
+            onPress={() =>
+              navigation.navigate(Routes.MainTabs, {
+                screen: Routes.DiagnosticsTab,
+                params: { prefillScenario: 'disconnected' },
+              })
+            }
+          >
+            {t('blox.disconnected.diagnoseCta')}
+          </FxButton>
           <FxSpacer height={16} />
-          
+
           {/* Wallet Connection and Network Notification */}
           <WalletNotification compact={true} />
           

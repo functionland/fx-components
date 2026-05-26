@@ -36,6 +36,7 @@ import { useTranslation } from 'react-i18next';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TcpSocket from 'react-native-tcp-socket';
+import BleManager from 'react-native-ble-manager';
 
 import { usePluginsStore } from '../../stores/usePluginsStore';
 import { useBloxsStore } from '../../stores/useBloxsStore';
@@ -51,6 +52,7 @@ import { FeedbackModal } from './FeedbackModal';
 import { UploadTranscriptModal } from './UploadTranscriptModal';
 import { PendingActionsPanel } from './PendingActionsPanel';
 import { useAiSession } from './useAiSession';
+import { BleManagerWrapper } from '../../utils/ble';
 import type { ScenarioId } from './quickStartPrompts';
 import type { RouteProp } from '@react-navigation/native';
 import type { MainTabsParamList } from '../../navigation/navigationConfig';
@@ -565,11 +567,54 @@ const BloxAiSessionBlock: React.FC<{
     bloxPeerId: string;
     prefillScenario: ScenarioId | null;
 }> = ({ appPeerId, bloxPeerId, prefillScenario }) => {
+    // BLE wiring (Plan A end-to-end follow-up #1):
+    // useMemo a BleManagerWrapper bound to this screen's lifecycle,
+    // mirroring the BluetoothCommands.screen pattern. On mount, query
+    // for already-connected peripherals (cheap, no permissions
+    // prompt). If the user paired their blox earlier in this app
+    // session, the peripheral.id is already cached by the OS and we
+    // can use it for BLE AI commands. If nothing is connected, BLE
+    // operations return ble-busy/network errors and the hook surfaces
+    // them in the transcript — at least LAN HTTP still works for
+    // users on the same LAN as their blox.
+    const bleManager = React.useMemo(
+        () => new BleManagerWrapper(() => {
+            // Status changes are a no-op for the AI screen — we don't
+            // need to render connection-status badges here; if the
+            // peripheral drops, the next AI session attempt will
+            // surface the failure.
+        }),
+        [],
+    );
+    const [blePeripheralId, setBlePeripheralId] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        let cancelled = false;
+        // Discover any already-connected blox peripheral. Empty array
+        // filter returns ALL connected peripherals; we match by name
+        // prefix (fulatower / fxblox) — same naming convention the
+        // BluetoothCommands screen uses.
+        BleManager.getConnectedPeripherals([]).then((peripherals) => {
+            if (cancelled) return;
+            const blox = peripherals.find((p) => {
+                const n = (p.name || '').toLowerCase();
+                return n === 'fulatower' || n === 'fxblox-rk1' || n.startsWith('fulatower') || n.startsWith('fxblox');
+            });
+            if (blox?.id) {
+                setBlePeripheralId(blox.id);
+            }
+        }).catch(() => {
+            // BLE permissions might not be granted; not an error for
+            // this screen. LAN HTTP still works.
+        });
+        return () => { cancelled = true; };
+    }, []);
+
     const { state, actions } = useAiSession({
         appPeerId,
         bloxPeerId,
-        bleManager: null,
-        blePeripheralId: null,
+        bleManager,
+        blePeripheralId,
         pluginInstalled: true,
         initialPrefilledScenario: prefillScenario,
     });
@@ -588,16 +633,12 @@ const BloxAiSessionBlock: React.FC<{
     return (
         <>
             <FxSpacer height={12} />
-            {state.pending && state.pending.items.length > 0 && (
+            {state.pending && state.pending.actions.length > 0 && (
                 <>
                     <PendingActionsPanel
                         pending={state.pending}
-                        onApprove={(action) =>
-                            actions.approvePending(action)
-                        }
-                        onDismiss={(actionId) =>
-                            actions.dismissPending(actionId)
-                        }
+                        onApprove={actions.approvePending}
+                        onDismiss={actions.dismissPending}
                         busy={state.busy}
                     />
                     <FxSpacer height={12} />
@@ -657,9 +698,7 @@ const BloxAiSessionBlock: React.FC<{
                         ? state.modals.feedbackSessionId
                         : null
                 }
-                onSubmit={(payload) =>
-                    actions.submitFeedback(payload.rating, payload.comment)
-                }
+                onSubmit={actions.submitFeedback}
                 onDismiss={actions.dismissFeedback}
                 busy={state.busy}
             />

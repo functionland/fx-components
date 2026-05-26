@@ -161,41 +161,80 @@ describe('useAiSession reducer — modal mutual exclusion', () => {
             type: 'recommended_action', action_id: 'a', action_name: 'x', args: {},
             reasoning: 'r', confidence: 0.5, tier: 2, approval_token: 't',
         };
+        // Use the canonical PhoneContext shape from phoneLogger.
+        const samplePhoneCtx = {
+            app_version: '2.5.6',
+            os: 'android' as const,
+            os_version: '14',
+        };
         const withApproval = reducer(initialState(null), { type: 'modal/open-approval', action });
         const withShare = reducer(withApproval, {
-            type: 'modal/open-share-context', preview: { foo: 'bar' },
+            type: 'modal/open-share-context', preview: samplePhoneCtx,
         });
         expect(withShare.modals.active).toBe('shareContext');
         // Approval data is preserved in slot but UI reads `active`.
         expect(withShare.modals.approvalAction?.action_id).toBe('a');
-        expect(withShare.modals.shareContextPreview).toEqual({ foo: 'bar' });
+        expect(withShare.modals.shareContextPreview).toEqual(samplePhoneCtx);
     });
 
     test('opening upload-transcript modal stores the payload', () => {
+        // AnonymizedTranscript has a tight schema — supply minimum
+        // required fields per anonymizeTranscript.ts.
+        const sampleAnon = {
+            schema_version: 1 as const,
+            upload_id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+            session_relative_start: '+0s' as const,
+            events: [],
+            user_rating: 1 as const,
+            consent: {
+                explicit_opt_in: true as const,
+                preview_shown: true as const,
+                anonymizer_version: 'v1',
+            },
+            device_class: 'rk3588' as const,
+        };
         const after = reducer(initialState(null), {
-            type: 'modal/open-upload-transcript', payload: { anon: true },
+            type: 'modal/open-upload-transcript', payload: sampleAnon,
         });
         expect(after.modals.active).toBe('uploadTranscript');
-        expect(after.modals.uploadTranscriptPayload).toEqual({ anon: true });
+        expect(after.modals.uploadTranscriptPayload).toEqual(sampleAnon);
     });
 });
 
 describe('useAiSession reducer — pending actions', () => {
+    // Canonical PendingActionsRecord shape per parsePendingResponse.ts —
+    // matches the blox-side pending_response.schema.json contract.
+    const samplePending = {
+        ts: '2026-01-01T00:00:00Z',
+        trigger: 'isolation_mode' as const,
+        verdict: null,
+        actions: [{
+            type: 'recommended_action' as const,
+            action_id: 'a',
+            action_name: 'x',
+            args: {},
+            reasoning: 'r',
+            confidence: 0.5,
+            tier: 2 as const,
+            approval_token: 't',
+        }],
+    };
+
     test('pending/set stores the record + clears errors', () => {
         const errored = reducer(initialState(null), { type: 'pending/error', message: 'oh no' });
         expect(errored.pendingError).toBe('oh no');
         const after = reducer(errored, {
             type: 'pending/set',
-            record: { items: [{ action_id: 'a', action_name: 'x', args: {}, tier: 2, approval_token: 't', recorded_at: '2026-01-01' }] },
+            record: samplePending,
         });
-        expect(after.pending?.items).toHaveLength(1);
+        expect(after.pending?.actions).toHaveLength(1);
         expect(after.pendingError).toBeNull();
     });
 
     test('pending/clear resets both', () => {
         const set = reducer(initialState(null), {
             type: 'pending/set',
-            record: { items: [{ action_id: 'a', action_name: 'x', args: {}, tier: 2, approval_token: 't', recorded_at: '2026-01-01' }] },
+            record: samplePending,
         });
         const cleared = reducer(set, { type: 'pending/clear' });
         expect(cleared.pending).toBeNull();

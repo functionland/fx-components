@@ -53,6 +53,25 @@ import {
     getScenario,
     type ScenarioId,
 } from './quickStartPrompts';
+// Re-use the EXISTING typed shapes the modal components were built
+// against. Plan A end-to-end follow-up: useAiSession originally made
+// up loose types (Record<string, unknown>, {items: ...}) that didn't
+// match — the Diagnostics screen wiring failed to typecheck against
+// the actual modal prop interfaces. Importing the canonical types
+// fixes the mismatch.
+import { parsePendingResponse, type PendingActionsRecord } from '../../utils/parsePendingResponse';
+import type { PhoneContext } from '../../utils/phoneLogger';
+import type { AnonymizedTranscript } from '../../utils/anonymizeTranscript';
+import type { FeedbackPayload, FeedbackRating } from '../../utils/buildFeedbackPayload';
+
+// Re-export so Diagnostics.screen can import everything from one place.
+export type {
+    PendingActionsRecord,
+    PhoneContext,
+    AnonymizedTranscript,
+    FeedbackPayload,
+    FeedbackRating,
+};
 
 // Public types -------------------------------------------------------------
 
@@ -62,26 +81,6 @@ export type ActiveModal =
     | 'feedback'
     | 'uploadTranscript'
     | null;
-
-/** Phone context payload — narrow type since the modal accepts any shape. */
-export type PhoneContext = Record<string, unknown>;
-
-/** Pending-actions record shape returned by the `ai/pending` BLE command. */
-export interface PendingActionsRecord {
-    items: Array<{
-        action_id: string;
-        action_name: string;
-        args: Record<string, unknown>;
-        verdict_summary?: string;
-        confidence?: number;
-        tier: 2 | 3;
-        approval_token: string;
-        recorded_at: string;
-    }>;
-}
-
-/** Anonymized transcript shape for the upload modal. */
-export type AnonymizedTranscript = Record<string, unknown>;
 
 /** Aggregated state surface returned by the hook. */
 export interface AiSessionState {
@@ -146,30 +145,35 @@ export interface UseAiSessionResult {
         retryOverBle: () => Promise<void>;
         consumePrefill: () => void;
 
-        // Recommendation flow
+        // Recommendation flow — signatures match the modal/component
+        // prop contracts so screens can pass the action verbatim.
         openApproval: (action: RecommendedActionEvent) => void;
-        confirmApproval: (securityCode?: string) => Promise<void>;
+        /** Matches ApprovalModal.onApprove: `(security_code: string | null) => void`. */
+        confirmApproval: (securityCode: string | null) => void;
         dismissApproval: () => void;
 
         // Conversation
         submitReply: (questionId: string, replyText: string) => Promise<void>;
 
-        // Phone context
+        // Phone context — types match SharePhoneContextModal.
         openShareContext: () => Promise<void>;
         confirmShareContext: () => Promise<void>;
         dismissShareContext: () => void;
 
-        // Feedback + upload
+        // Feedback + upload — types match FeedbackModal / UploadTranscriptModal.
         openFeedback: () => void;
-        submitFeedback: (rating: 1 | 0 | -1, comment?: string) => Promise<void>;
+        /** Matches FeedbackModal.onSubmit: `(payload: FeedbackPayload) => void`. */
+        submitFeedback: (payload: FeedbackPayload) => void;
         dismissFeedback: () => void;
         openUploadTranscript: (payload: AnonymizedTranscript) => void;
         dismissUploadTranscript: () => void;
 
-        // Pending actions
+        // Pending actions — `dismissPending` is parameterless to match
+        // PendingActionsPanel.onDismiss (single Dismiss button on the
+        // panel, not per-row).
         refreshPending: () => Promise<void>;
-        approvePending: (action: RecommendedActionEvent) => Promise<void>;
-        dismissPending: (actionId: string) => Promise<void>;
+        approvePending: (action: RecommendedActionEvent) => void;
+        dismissPending: () => void;
     };
 }
 
@@ -461,14 +465,15 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 10_000,
             );
             const parsed: unknown = typeof raw === 'string' ? JSON.parse(raw) : raw;
-            if (parsed && typeof parsed === 'object' && Array.isArray((parsed as any).items)) {
-                if (mountedRef.current) {
-                    dispatch({ type: 'pending/set', record: parsed as PendingActionsRecord });
-                }
-            } else {
-                if (mountedRef.current) {
-                    dispatch({ type: 'pending/error', message: 'unexpected pending payload' });
-                }
+            // Use the canonical parser that matches the
+            // pending_response.schema.json contract on the blox side.
+            // parsePendingResponse returns null on any malformed input
+            // so the panel silently hides rather than rendering noise.
+            const record = parsePendingResponse(parsed);
+            if (record && mountedRef.current) {
+                dispatch({ type: 'pending/set', record });
+            } else if (mountedRef.current) {
+                dispatch({ type: 'pending/clear' });
             }
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
@@ -539,7 +544,19 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 chosenKind = 'ble';
                 client = new BleAiClient(bleManager!, blePeripheralId!);
             } else {
-                const choice = await selectAiTransport(bloxPeerId, appPeerId);
+                // Plan A end-to-end follow-up: opt INTO `scanIfEmpty:
+                // true` here. The Zeroconf-conflict concern (codex
+                // Plan HTTP final-review BLOCK) only matters when the
+                // pairing flow's Zeroconf is running concurrently —
+                // that's only during InitialSetup. By the time
+                // useAiSession.startSession fires, the user has tapped
+                // a quick-start button in Diagnostics, which means
+                // they're past pairing and no other scan is active.
+                // Safe to run a one-shot scan to warm the mdnsCache if
+                // it's empty on cold start.
+                const choice = await selectAiTransport(bloxPeerId, appPeerId, {
+                    scanIfEmpty: true,
+                });
                 chosenKind = choice.kind;
                 if (choice.kind === 'lan-http') {
                     client = choice.httpClient!;
@@ -631,8 +648,13 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         dispatch({ type: 'modal/dismiss' });
     }, []);
 
+    // confirmApproval matches ApprovalModal's onApprove signature:
+    //   (security_code: string | null) => void
+    // ApprovalModal passes `null` for tier-2 (no code) and the user's
+    // 4-digit string for tier-3. Internally we await executeAction but
+    // the modal contract is fire-and-forget.
     const confirmApproval = useCallback(
-        async (securityCode?: string): Promise<void> => {
+        (securityCode: string | null): void => {
             const action = state.modals.approvalAction;
             const client = activeClientRef.current;
             if (!action || !client) {
@@ -640,24 +662,25 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 return;
             }
             dispatch({ type: 'busy/set', busy: true });
-            try {
-                const result = await client.executeAction(
-                    { action_id: action.action_id, approval_token: action.approval_token },
-                    securityCode,
-                );
-                if (result.ok && result.payload) {
-                    // Append the execution_result to the transcript.
-                    dispatch({
-                        type: 'session/event',
-                        event: result.payload as ExecutionResultEvent,
-                    });
-                } else if (result.error) {
-                    dispatch({ type: 'session/transport-error', error: result.error });
+            void (async () => {
+                try {
+                    const result = await client.executeAction(
+                        { action_id: action.action_id, approval_token: action.approval_token },
+                        securityCode ?? undefined,
+                    );
+                    if (result.ok && result.payload) {
+                        dispatch({
+                            type: 'session/event',
+                            event: result.payload as ExecutionResultEvent,
+                        });
+                    } else if (result.error) {
+                        dispatch({ type: 'session/transport-error', error: result.error });
+                    }
+                } finally {
+                    dispatch({ type: 'busy/set', busy: false });
+                    dispatch({ type: 'modal/dismiss' });
                 }
-            } finally {
-                dispatch({ type: 'busy/set', busy: false });
-                dispatch({ type: 'modal/dismiss' });
-            }
+            })();
         },
         [state.modals.approvalAction],
     );
@@ -717,7 +740,11 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         }
         dispatch({ type: 'busy/set', busy: true });
         try {
-            await client.phoneContext(sid, ctx);
+            // HttpAiClient/BleAiClient accept Record<string, unknown>;
+            // PhoneContext is structurally compatible (its fields are
+            // all serializable scalars/arrays/objects). Cast at the
+            // boundary rather than widening the client surface.
+            await client.phoneContext(sid, ctx as unknown as Record<string, unknown>);
         } catch (e) {
             const err = (e as any)?.kind
                 ? (e as AiClientError)
@@ -740,33 +767,34 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         dispatch({ type: 'modal/dismiss' });
     }, []);
 
+    // submitFeedback matches FeedbackModal's onSubmit signature:
+    //   (payload: FeedbackPayload) => void
+    // The modal builds the payload internally via buildFeedbackPayload
+    // and hands it to us already-shaped to the schema.
     const submitFeedback = useCallback(
-        async (rating: 1 | 0 | -1, comment?: string): Promise<void> => {
-            const sid = state.modals.feedbackSessionId;
-            if (!sid) return;
+        (payload: FeedbackPayload): void => {
             if (!bleManager || !blePeripheralId) {
                 dispatch({ type: 'modal/dismiss' });
                 return;
             }
-            // Feedback goes via BLE today (no HTTP /feedback in the
-            // client; container exposes it but we don't need the
-            // streaming surface). Best-effort.
-            try {
-                await bleManager.writeToBLEAndWaitForResponse(
-                    JSON.stringify({
-                        command: 'ai/feedback',
-                        args: { session_id: sid, rating, ...(comment ? { comment } : {}) },
-                    }),
-                    blePeripheralId, undefined, undefined, 10_000,
-                );
-            } catch {
-                // swallow — local-only feedback log on the device;
-                // not critical that the network call succeeds.
-            } finally {
-                dispatch({ type: 'modal/dismiss' });
-            }
+            void (async () => {
+                try {
+                    await bleManager.writeToBLEAndWaitForResponse(
+                        JSON.stringify({
+                            command: 'ai/feedback',
+                            args: payload,
+                        }),
+                        blePeripheralId, undefined, undefined, 10_000,
+                    );
+                } catch {
+                    // Best-effort. Local-only feedback log on the
+                    // device; not critical the network call succeeds.
+                } finally {
+                    dispatch({ type: 'modal/dismiss' });
+                }
+            })();
         },
-        [state.modals.feedbackSessionId, bleManager, blePeripheralId],
+        [bleManager, blePeripheralId],
     );
 
     const openUploadTranscript = useCallback((payload: AnonymizedTranscript) => {
@@ -780,34 +808,37 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
     // ---- Pending action approve/dismiss --------------------------------
 
     const approvePending = useCallback(
-        async (action: RecommendedActionEvent): Promise<void> => {
+        (action: RecommendedActionEvent): void => {
             // Open approval modal for the pending action.
             dispatch({ type: 'modal/open-approval', action });
         },
         [],
     );
 
+    // dismissPending matches PendingActionsPanel.onDismiss: `() => void`.
+    // Clears the local pending state. Server-side dismissal (telling
+    // the blox to drop the staged record) is best-effort and fire-and-
+    // forget — refreshPending will get the updated list on next mount /
+    // foreground.
     const dismissPending = useCallback(
-        async (actionId: string): Promise<void> => {
-            if (!bleManager || !blePeripheralId) {
-                await refreshPending();
-                return;
-            }
-            // Best-effort: tell the blox to drop this pending entry.
-            try {
-                await bleManager.writeToBLEAndWaitForResponse(
-                    JSON.stringify({
-                        command: 'ai/pending-dismiss',
-                        args: { action_id: actionId },
-                    }),
-                    blePeripheralId, undefined, undefined, 5_000,
-                );
-            } catch {
-                // swallow
-            }
-            await refreshPending();
+        (): void => {
+            dispatch({ type: 'pending/clear' });
+            if (!bleManager || !blePeripheralId) return;
+            void (async () => {
+                try {
+                    await bleManager.writeToBLEAndWaitForResponse(
+                        JSON.stringify({
+                            command: 'ai/pending-dismiss-all',
+                            args: {},
+                        }),
+                        blePeripheralId, undefined, undefined, 5_000,
+                    );
+                } catch {
+                    // swallow — local dispatch already cleared the panel
+                }
+            })();
         },
-        [bleManager, blePeripheralId, refreshPending],
+        [bleManager, blePeripheralId],
     );
 
     // ---- Prefill consumption -------------------------------------------
