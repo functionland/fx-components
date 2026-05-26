@@ -12,12 +12,16 @@
  * thing that actually matters.
  */
 
+// ESM default-export-compatible mock. `import EventSource from 'react-native-sse'`
+// resolves to the module's `default` property; we expose a jest.fn there so
+// tests can re-implement it via mockImplementation per case.
 jest.mock('react-native-sse', () => {
-    return jest.fn().mockImplementation(() => ({
+    const ctor = jest.fn().mockImplementation(() => ({
         addEventListener: jest.fn(),
         removeAllEventListeners: jest.fn(),
         close: jest.fn(),
     }));
+    return { __esModule: true, default: ctor };
 });
 
 import { HttpAiClient, HEALTH_CACHE_TTL_MS } from '../httpAiClient';
@@ -276,5 +280,87 @@ describe('HttpAiClient.cancel — best-effort', () => {
         const c = new HttpAiClient('192.168.1.50');
 
         await expect(c.cancel('s')).resolves.toBeUndefined();
+    });
+});
+
+describe('HttpAiClient.runAi — SSE lifecycle (Plan HTTP v2.2 regression test)', () => {
+    /**
+     * Codex Plan HTTP final-review BLOCK: react-native-sse's close()
+     * synchronously dispatches the 'close' event. If `closed=true` is
+     * set AFTER es.close() in the error path, the close handler fires
+     * onComplete on the same tick as onError — caller sees both for
+     * one error.
+     *
+     * The fix sets `closed = true` BEFORE es.close(). This test locks
+     * that invariant in by mocking react-native-sse so it dispatches
+     * error then close synchronously (matching the real lib's
+     * behavior) and asserting onComplete was never called.
+     */
+    test('onError fires once, onComplete does NOT fire on same tick', () => {
+        // Re-mock react-native-sse to capture handlers and let us
+        // trigger error → close synchronously.
+        const handlers: Record<string, Function[]> = {};
+        const EventSourceMock = require('react-native-sse').default as jest.Mock;
+        EventSourceMock.mockImplementation(() => ({
+            addEventListener: jest.fn((event: string, fn: Function) => {
+                handlers[event] = handlers[event] || [];
+                handlers[event].push(fn);
+            }),
+            removeAllEventListeners: jest.fn(),
+            close: jest.fn(() => {
+                // Real react-native-sse dispatches close synchronously
+                // when close() is called. Simulate that.
+                (handlers.close || []).forEach(fn => fn({}));
+            }),
+        }));
+
+        const c = new HttpAiClient('192.168.1.50');
+        const onEvent = jest.fn();
+        const onComplete = jest.fn();
+        const onError = jest.fn();
+
+        c.runAi('hi', undefined, { onEvent, onComplete, onError });
+
+        // Simulate an SSE error with HTTP status 503 — should produce
+        // a single onError(http-server, transient: true). Then close()
+        // fires synchronously inside the error handler; if the
+        // lifecycle is correct, the close listener short-circuits.
+        (handlers.error || []).forEach(fn => fn({ xhrStatus: 503, message: 'boom' }));
+
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith(
+            expect.objectContaining({ kind: 'http-server', transient: true, httpStatus: 503 }),
+        );
+        // The bug this test guards against: onComplete would fire after
+        // onError if `closed = true` is set AFTER es.close().
+        expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    test('cancel() does not fire onError or onComplete after close', () => {
+        const handlers: Record<string, Function[]> = {};
+        const EventSourceMock = require('react-native-sse').default as jest.Mock;
+        EventSourceMock.mockImplementation(() => ({
+            addEventListener: jest.fn((event: string, fn: Function) => {
+                handlers[event] = handlers[event] || [];
+                handlers[event].push(fn);
+            }),
+            removeAllEventListeners: jest.fn(),
+            close: jest.fn(() => {
+                (handlers.close || []).forEach(fn => fn({}));
+            }),
+        }));
+
+        const c = new HttpAiClient('192.168.1.50');
+        const onError = jest.fn();
+        const onComplete = jest.fn();
+
+        const session = c.runAi('hi', undefined, { onEvent: jest.fn(), onComplete, onError });
+
+        session.cancel();
+
+        // After cancel: neither callback should fire (closed=true set
+        // before es.close() so the close listener short-circuits).
+        expect(onError).not.toHaveBeenCalled();
+        expect(onComplete).not.toHaveBeenCalled();
     });
 });

@@ -267,18 +267,21 @@ export class HttpAiClient {
 
         es.addEventListener('error', (event: any) => {
             if (closed) return;
-            // Set closed BEFORE es.close() because react-native-sse's close()
-            // synchronously dispatches the 'close' event, which would
-            // otherwise fire onComplete after onError on the same tick
-            // (codex Plan HTTP final-review BLOCK). The 'close' listener
-            // below short-circuits when closed === true.
-            closed = true;
             // react-native-sse v1.x exposes xhrStatus on error events when
             // the initial response wasn't 200. `event.status` isn't in v1.x
             // types; only xhrStatus is real (codex catch). Mid-stream TCP
             // drops surface as xhrStatus=0 (or sometimes a stale 200) — the
             // `>= 400` gate falls through to networkError which is correct.
             const status: number | undefined = event?.xhrStatus;
+            // Order matters (codex Plan HTTP final-review BLOCK):
+            //   1. safeError runs FIRST while closed===false so onError fires.
+            //   2. Set closed=true.
+            //   3. es.close() — react-native-sse dispatches 'close'
+            //      synchronously; our close listener short-circuits on
+            //      closed===true and DOES NOT call onComplete.
+            // Earlier (v2.1) order was `safeError → es.close() → closed=true`,
+            // which let the synchronous close listener see closed===false
+            // and fire onComplete on the same tick as onError.
             if (typeof status === 'number' && status >= 400) {
                 safeError(fromHttpStatus(status, event?.message ?? ''));
             } else if (isAbortError(event)) {
@@ -286,6 +289,7 @@ export class HttpAiClient {
             } else {
                 safeError(networkError(event?.message ?? 'SSE network error'));
             }
+            closed = true;
             try { es.close(); } catch (e) { /* */ }
         });
 
