@@ -32,6 +32,7 @@ import { useBloxsStore } from '../../stores';
 import { Routes } from '../../navigation/navigationConfig';
 import { useTranslation } from 'react-i18next'; // Import for translations
 import { generateUniqueBloxName } from '../../utils/bloxName';
+import * as mdnsCache from '../../utils/mdnsCache';
 
 type DicoveryDeviceType = {
   ipAddress: string;
@@ -111,6 +112,20 @@ export const ConnectToExistingBloxScreen = () => {
 
     zeroconf.on('resolved', (resolved: MDNSBloxService) => {
       console.log('[Zeroconf] Service resolved:', resolved);
+      // Plan A end-to-end follow-up #2: feed the AI transport's mDNS
+      // cache from this existing scan. The Diagnostics screen's
+      // `selectAiTransport()` reads `mdnsCache.findAuthorizedBlox()`
+      // to decide whether LAN HTTP qualifies. Without this call, the
+      // cache stays empty in production → LAN HTTP never qualifies →
+      // AI sessions always fall to BLE (and fail if no BLE peripheral
+      // is wired). Calling `noteRecord` from EVERY 'resolved' event
+      // keeps the cache warm at the cost of one Map.set per
+      // discovery — negligible. Codex Plan HTTP final-review pattern.
+      try {
+        mdnsCache.noteRecord(resolved);
+      } catch {
+        // Never let cache plumbing break the pairing flow.
+      }
       // Check if the hardwareId has already been seen
       if (!uniqueDevicesRef.current.has(resolved.txt?.hardwareID)) {
         // If it's a new hardwareId, add to the Map and update state
