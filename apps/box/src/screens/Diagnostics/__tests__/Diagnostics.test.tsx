@@ -113,6 +113,8 @@ describe('i18n strings present', () => {
         'diagnostics.rawDiagnosticsTitle',
         'diagnostics.rawDiagnosticsPluginRequired',
         'diagnostics.rawDiagnosticsUnavailable',
+        'diagnostics.rawDiagnosticsComingSoon',
+        'diagnostics.rawDiagnosticsComingSoonButton',
     ];
 
     function lookup(path: string): unknown {

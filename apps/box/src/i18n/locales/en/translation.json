@@ -25,6 +25,8 @@
       "rawDiagnosticsTitle": "Raw diagnostics (for support)",
       "rawDiagnosticsPluginRequired": "When Blox AI is installed, this section will let you fetch your Blox's diagnostic state files and send them to support.",
       "rawDiagnosticsUnavailable": "Unavailable until Blox AI is installed",
+      "rawDiagnosticsComingSoon": "Coming soon — raw state-file dump from your Blox will appear here in a future app version.",
+      "rawDiagnosticsComingSoonButton": "Fetch raw diagnostics (coming soon)",
       "chat": {
         "ctaTitle": "Let Blox AI figure it out",
         "ctaSubtitle": "Describe what's wrong in a sentence; Blox AI will run diagnostics and suggest fixes you can approve.",

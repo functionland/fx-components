@@ -468,21 +468,45 @@ export const DiagnosticsScreen: React.FC = () => {
 
                 <FxSpacer height={12} />
 
-                {/* ───────── Support diagnostics (deferred-to-plugin shell) ───────── */}
-                <FxCard>
-                    <FxCard.Title>
-                        {t('diagnostics.rawDiagnosticsTitle')}
-                    </FxCard.Title>
-                    <FxBox paddingVertical="8">
-                        <FxText variant="bodySmallRegular">
-                            {t('diagnostics.rawDiagnosticsPluginRequired')}
-                        </FxText>
-                        <FxSpacer height={8} />
-                        <FxButton disabled>
-                            {t('diagnostics.rawDiagnosticsUnavailable')}
-                        </FxButton>
-                    </FxBox>
-                </FxCard>
+                {/* ───────── Support diagnostics (deferred-to-plugin shell) ─────────
+                    Two states:
+                      - plugin NOT installed → "Unavailable until Blox AI is installed"
+                        (the original Phase 5 copy; encourages install)
+                      - plugin installed → "Coming soon — raw state-file dump …"
+                        (the feature itself is still deferred to a future app version;
+                        the plugin install is no longer the blocker)
+                    Don't render anything while presence is still 'checking' — would
+                    flash the wrong message between mount and the first fetch. */}
+                {pluginPresence !== 'checking' && (
+                    <FxCard>
+                        <FxCard.Title>
+                            {t('diagnostics.rawDiagnosticsTitle')}
+                        </FxCard.Title>
+                        <FxBox paddingVertical="8">
+                            {pluginPresence === 'installed' ? (
+                                <>
+                                    <FxText variant="bodySmallRegular">
+                                        {t('diagnostics.rawDiagnosticsComingSoon')}
+                                    </FxText>
+                                    <FxSpacer height={8} />
+                                    <FxButton disabled>
+                                        {t('diagnostics.rawDiagnosticsComingSoonButton')}
+                                    </FxButton>
+                                </>
+                            ) : (
+                                <>
+                                    <FxText variant="bodySmallRegular">
+                                        {t('diagnostics.rawDiagnosticsPluginRequired')}
+                                    </FxText>
+                                    <FxSpacer height={8} />
+                                    <FxButton disabled>
+                                        {t('diagnostics.rawDiagnosticsUnavailable')}
+                                    </FxButton>
+                                </>
+                            )}
+                        </FxBox>
+                    </FxCard>
+                )}
             </FxBox>
         </FxKeyboardAwareScrollView>
     );
