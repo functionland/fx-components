@@ -53,7 +53,8 @@
         "submitReply": "Send reply",
         "shareContext": "Share my phone's context",
         "connectingTitle": "Connecting to your Blox…",
-        "connectingSubtitle": "Looking for your Blox on your WiFi network or over Bluetooth. This usually takes a couple of seconds."
+        "connectingSubtitle": "Looking for your Blox on your WiFi network or over Bluetooth. This usually takes a couple of seconds.",
+        "endAndRateButton": "End session & rate"
       },
       "approval": {
         "tier2Title": "Approve this fix?",
@@ -80,7 +81,9 @@
         "skip": "Skip",
         "dismiss": "Close",
         "commentLabel": "Optional: tell us more",
-        "commentPlaceholder": "What was helpful or missing?"
+        "commentPlaceholder": "What was helpful or missing?",
+        "shareHint": "Help improve Blox AI — share an anonymized copy of this session. You'll review the JSON before it's uploaded.",
+        "shareButton": "Share anonymized transcript…"
       },
       "uploadTranscript": {
         "title": "Help improve Blox AI?",

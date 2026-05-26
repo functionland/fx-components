@@ -53,6 +53,14 @@ export interface BloxAIChatProps {
     onShareContext: () => void;
     /** Fired when the user taps the initial CTA to start a session. */
     onStartSession: (prompt: string) => void;
+    /**
+     * Fired when the user taps "End session & share" — opens the
+     * FeedbackModal where they can rate + optionally share the
+     * anonymized transcript (Phase 21 / Phase 16). Only rendered as a
+     * button when sessionId is set AND streaming is false (i.e. the
+     * session has yielded its verdict). Until then the chat is still
+     * live and we don't offer the end-CTA. */
+    onOpenFeedback?: () => void;
     /** True while ai/execute or ai/phone-context is in flight (locks UI). */
     busy?: boolean;
 }
@@ -80,6 +88,7 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
     onSubmitReply,
     onShareContext,
     onStartSession,
+    onOpenFeedback,
     busy = false,
 }) => {
     const { t } = useTranslation();
@@ -202,6 +211,25 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
                 >
                     {t('diagnostics.chat.shareContext')}
                 </FxButton>
+
+                {/* End-session CTA: opens FeedbackModal where the user
+                    rates the session (👍/👎/Skip) AND can opt-in to
+                    share the anonymized transcript via the upload modal
+                    (Phase 21). Only shown when the session has actually
+                    produced output (sessionId set + not streaming) —
+                    no point rating a session that's mid-tool-call. */}
+                {onOpenFeedback && sessionId && !streaming && transcript.length > 0 && (
+                    <>
+                        <FxSpacer height={8} />
+                        <FxButton
+                            onPress={onOpenFeedback}
+                            disabled={busy}
+                            testID="blox-ai-end-and-rate"
+                        >
+                            {t('diagnostics.chat.endAndRateButton')}
+                        </FxButton>
+                    </>
+                )}
             </FxBox>
         </FxCard>
     );

@@ -660,6 +660,11 @@ const BloxAiSessionBlock: React.FC<{
                 onSubmitReply={actions.submitReply}
                 onShareContext={actions.openShareContext}
                 onStartSession={actions.startSession}
+                // Opens FeedbackModal where the user rates the session
+                // AND can opt-in to share an anonymized transcript
+                // (Phase 21 — the only path that triggers the upload to
+                // ai-training.fx.land/transcripts).
+                onOpenFeedback={actions.openFeedback}
             />
 
             {/* Quick-start card sits below the chat when no session is
@@ -707,6 +712,10 @@ const BloxAiSessionBlock: React.FC<{
                 onSubmit={actions.submitFeedback}
                 onDismiss={actions.dismissFeedback}
                 busy={state.busy}
+                // Phase 21 opt-in upload — anonymize the live transcript
+                // + open the preview modal where the user reviews the
+                // JSON before any POST to ai-training.fx.land/transcripts.
+                onShareTranscript={actions.prepareTranscriptUpload}
             />
             <UploadTranscriptModal
                 payload={

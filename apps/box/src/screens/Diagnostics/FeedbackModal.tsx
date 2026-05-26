@@ -48,6 +48,15 @@ export interface FeedbackModalProps {
     onDismiss: () => void;
     /** True while the parent's POST is in flight. */
     busy?: boolean;
+    /**
+     * Optional: called when the user opts to ALSO share an anonymized
+     * transcript to help train the AI (Phase 21). Wired by the screen
+     * to useAiSession.prepareTranscriptUpload — that builds the payload
+     * + opens UploadTranscriptModal (where the user reviews the JSON
+     * before the actual POST). When this prop is omitted, the share
+     * button stays hidden.
+     */
+    onShareTranscript?: (rating: FeedbackRating, comment: string) => boolean;
 }
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({
@@ -55,6 +64,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     onSubmit,
     onDismiss,
     busy = false,
+    onShareTranscript,
 }) => {
     const { t } = useTranslation();
     const theme = useFxTheme();
@@ -157,6 +167,50 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                             {t('diagnostics.feedback.skip')}
                         </FxButton>
                     </FxBox>
+
+                    {/* Phase 21 opt-in transcript upload offer. Independent
+                        of the 👍/👎/Skip choice so the user can share a
+                        session even if they don't want to also rate it.
+                        Tapping this button does NOT upload immediately — it
+                        opens UploadTranscriptModal where the user can
+                        REVIEW the anonymized JSON before any network call. */}
+                    {onShareTranscript && (
+                        <>
+                            <FxSpacer height={14} />
+                            <FxBox
+                                paddingTop="8"
+                                borderTopWidth={1}
+                                style={{ borderTopColor: 'rgba(127,127,127,0.3)' }}
+                            >
+                                <FxText variant="bodyXSRegular">
+                                    {t('diagnostics.feedback.shareHint')}
+                                </FxText>
+                                <FxSpacer height={6} />
+                                <FxButton
+                                    disabled={busy}
+                                    onPress={() => {
+                                        // Use the current rating selection
+                                        // signal (skip=0) if user hasn't
+                                        // tapped 👍/👎 — the upload modal
+                                        // will show the rating in the
+                                        // preview JSON so the user can
+                                        // confirm/abort there.
+                                        const opened = onShareTranscript(0, comment);
+                                        if (opened) {
+                                            // FeedbackModal closes; the
+                                            // UploadTranscriptModal takes over.
+                                            setComment('');
+                                            onDismiss();
+                                        }
+                                    }}
+                                    variant="inverted"
+                                    testID="feedback-share-transcript"
+                                >
+                                    {t('diagnostics.feedback.shareButton')}
+                                </FxButton>
+                            </FxBox>
+                        </>
+                    )}
                 </FxBox>
             </FxBox>
         </Modal>

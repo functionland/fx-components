@@ -61,7 +61,12 @@ import {
 // fixes the mismatch.
 import { parsePendingResponse, type PendingActionsRecord } from '../../utils/parsePendingResponse';
 import type { PhoneContext } from '../../utils/phoneLogger';
-import type { AnonymizedTranscript } from '../../utils/anonymizeTranscript';
+import {
+    anonymizeTranscript,
+    AnonymizerError,
+    type AnonymizedTranscript,
+    type RawTranscriptEvent,
+} from '../../utils/anonymizeTranscript';
 import type { FeedbackPayload, FeedbackRating } from '../../utils/buildFeedbackPayload';
 
 // Re-export so Diagnostics.screen can import everything from one place.
@@ -166,6 +171,15 @@ export interface UseAiSessionResult {
         submitFeedback: (payload: FeedbackPayload) => void;
         dismissFeedback: () => void;
         openUploadTranscript: (payload: AnonymizedTranscript) => void;
+        /**
+         * One-shot helper for the FeedbackModal: builds an
+         * AnonymizedTranscript from the live transcript + the user's
+         * rating/comment and opens the preview/upload modal. Returns
+         * false if nothing was opened (empty transcript, anonymizer
+         * rejected the payload). No network traffic until the user
+         * confirms inside the preview modal.
+         */
+        prepareTranscriptUpload: (rating: FeedbackRating, comment?: string) => boolean;
         dismissUploadTranscript: () => void;
 
         // Pending actions — `dismissPending` is parameterless to match
@@ -841,6 +855,77 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         dispatch({ type: 'modal/open-upload-transcript', payload });
     }, []);
 
+    /**
+     * Bridge action — wires the dead `openUploadTranscript` path to actual
+     * user gestures. Builds an AnonymizedTranscript from the current live
+     * transcript + the rating/comment the user just gave in FeedbackModal,
+     * then opens UploadTranscriptModal so the user can REVIEW the JSON
+     * before tapping Upload.
+     *
+     * Returns true iff the payload was built + the modal opened. Returns
+     * false on any structural problem (no transcript, empty events,
+     * anonymizer rejection) — caller can show a toast.
+     *
+     * Privacy: the actual POST to ai-training.fx.land/transcripts happens
+     * inside UploadTranscriptModal's onUpload handler, NOT here. This
+     * function only stages the preview. No network traffic.
+     */
+    const prepareTranscriptUpload = useCallback(
+        (rating: FeedbackRating, comment?: string): boolean => {
+            const entries = state.transcript;
+            if (entries.length === 0) return false;
+            // Session start = receivedAt of the first entry (we expect this
+            // to be the session_started SSE event but don't require it).
+            const sessionStartTs = new Date(entries[0].receivedAt).toISOString();
+
+            // Convert hook's TranscriptEntry → anonymizer's RawTranscriptEvent.
+            // The hook's `event` is the raw SSE event JSON (any extra fields
+            // pass through); we just add a `ts` field from receivedAt.
+            const rawEvents: RawTranscriptEvent[] = entries.map((e) => ({
+                ...(e.event as unknown as Record<string, unknown>),
+                type: (e.event as { type?: string }).type ?? 'unknown',
+                ts: new Date(e.receivedAt).toISOString(),
+            }));
+
+            // Generate a fresh UUID for the upload (idempotency key on the
+            // server). Hermes 0.74+ has crypto.randomUUID; fall back to a
+            // simple v4 polyfill if unavailable.
+            let uploadId: string;
+            const cryptoObj = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+            if (cryptoObj?.randomUUID) {
+                uploadId = cryptoObj.randomUUID();
+            } else {
+                // Minimal RFC4122 v4. Math.random is OK here — uploadId is an
+                // idempotency key, not a security token.
+                uploadId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                    const r = (Math.random() * 16) | 0;
+                    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+                    return v.toString(16);
+                });
+            }
+
+            try {
+                const payload = anonymizeTranscript({
+                    uploadId,
+                    sessionStartTs,
+                    events: rawEvents,
+                    rating,
+                    comment: comment && comment.trim() ? comment.trim() : undefined,
+                });
+                dispatch({ type: 'modal/open-upload-transcript', payload });
+                return true;
+            } catch (e) {
+                // AnonymizerError covers structural issues (too many events,
+                // bad UUID, etc.). Non-fatal — just don't open the modal.
+                if (e instanceof AnonymizerError) {
+                    return false;
+                }
+                return false;
+            }
+        },
+        [state.transcript],
+    );
+
     const dismissUploadTranscript = useCallback(() => {
         dispatch({ type: 'modal/dismiss' });
     }, []);
@@ -910,6 +995,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 submitFeedback,
                 dismissFeedback,
                 openUploadTranscript,
+                prepareTranscriptUpload,
                 dismissUploadTranscript,
                 refreshPending,
                 approvePending,
@@ -921,7 +1007,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
             retryOverBle, consumePrefill, openApproval, confirmApproval,
             dismissApproval, submitReply, openShareContext, confirmShareContext,
             dismissShareContext, openFeedback, submitFeedback, dismissFeedback,
-            openUploadTranscript, dismissUploadTranscript,
+            openUploadTranscript, prepareTranscriptUpload, dismissUploadTranscript,
             refreshPending, approvePending, dismissPending,
         ],
     );
