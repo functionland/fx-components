@@ -43,7 +43,6 @@ import { HttpAiClient, type AiClientError, type SessionHandle } from '../../util
 import { BleAiClient } from '../../utils/bleAiClient';
 import type { BleManagerWrapper } from '../../utils/ble';
 import {
-    parseBloxAiEvent,
     type BloxAiEvent,
     type RecommendedActionEvent,
     type ExecutionResultEvent,
