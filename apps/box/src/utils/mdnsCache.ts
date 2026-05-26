@@ -29,7 +29,11 @@ import Zeroconf from 'react-native-zeroconf';
 import { NativeModules } from 'react-native';
 import type { MDNSBloxService } from '../models/blox';
 
-const SERVICE_NAME = '_fulatower._tcp.';
+// The mDNS service name is `_fulatower._tcp.local.` — `Zeroconf.scan()`
+// takes the name + protocol separately as `scan('fulatower', 'tcp')`.
+// We do that literal call in refreshOnce() rather than reconstruct from
+// a single constant, because the scan() arity matches what
+// `react-native-zeroconf` exposes.
 const DEFAULT_SCAN_TIMEOUT_MS = 4000;
 const DEFAULT_FRESHNESS_MAX_AGE_MS = 90_000;
 

@@ -24,7 +24,7 @@ jest.mock('react-native-sse', () => {
     return { __esModule: true, default: ctor };
 });
 
-import { HttpAiClient, HEALTH_CACHE_TTL_MS } from '../httpAiClient';
+import { HttpAiClient } from '../httpAiClient';
 
 const originalFetch = global.fetch;
 
