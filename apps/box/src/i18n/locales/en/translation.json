@@ -46,11 +46,14 @@
         "executionSuccess": "Action completed in {{ms}}ms",
         "executionFailure": "Action failed",
         "errorEvent": "[{{code}}] {{message}}",
+        "errorEvent_noTransport": "Cannot reach your Blox over LAN or Bluetooth. Make sure your Blox is powered on, connected to the internet, and that your phone is on the same WiFi network — then try again.",
         "yes": "Yes",
         "no": "No",
         "replyPlaceholder": "Type your reply…",
         "submitReply": "Send reply",
-        "shareContext": "Share my phone's context"
+        "shareContext": "Share my phone's context",
+        "connectingTitle": "Connecting to your Blox…",
+        "connectingSubtitle": "Looking for your Blox on your WiFi network or over Bluetooth. This usually takes a couple of seconds."
       },
       "approval": {
         "tier2Title": "Approve this fix?",

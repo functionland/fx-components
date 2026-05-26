@@ -180,7 +180,8 @@ export interface UseAiSessionResult {
 // Reducer ------------------------------------------------------------------
 
 type Action =
-    | { type: 'session/start-requested'; prompt: string; transportKind: AiTransportKind }
+    | { type: 'session/start-requested'; prompt: string; transportKind: AiTransportKind | null }
+    | { type: 'session/transport-selected'; transportKind: AiTransportKind }
     | { type: 'session/started'; sessionId: string }
     | { type: 'session/event'; event: BloxAiEvent }
     | { type: 'session/transport-error'; error: AiClientError }
@@ -224,6 +225,13 @@ function initialState(prefilled: ScenarioId | null): AiSessionState {
 function reducer(state: AiSessionState, action: Action): AiSessionState {
     switch (action.type) {
         case 'session/start-requested':
+            // Bug fix 2026-05-26: dispatched IMMEDIATELY on user tap (before
+            // selectAiTransport awaits) so the UI flips out of the
+            // QuickStart/CTA card and into a "Connecting..." state straight
+            // away — otherwise the user sees no feedback while transport
+            // selection (mDNS scan, etc.) runs and may double-tap.
+            // transportKind can be null at this point; updated by the
+            // session/transport-selected dispatch once the choice is made.
             return {
                 ...state,
                 transcript: [],
@@ -233,6 +241,9 @@ function reducer(state: AiSessionState, action: Action): AiSessionState {
                 lastPrompt: action.prompt,
                 lastTransportError: null,
             };
+
+        case 'session/transport-selected':
+            return { ...state, transportKind: action.transportKind };
 
         case 'session/started':
             return { ...state, sessionId: action.sessionId };
@@ -545,6 +556,16 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
             activeHandleRef.current = null;
             activeClientRef.current = null;
 
+            // Flip streaming=true IMMEDIATELY so the UI can show a
+            // "Connecting..." card while we run selectAiTransport
+            // (which may take a couple seconds for an mDNS scan). Without
+            // this the user sees the QuickStart card / CTA card stay put
+            // for a while and may double-tap thinking nothing happened.
+            // transportKind is filled in by `session/transport-selected`
+            // once a choice is made; the UI doesn't need it to render
+            // "Connecting...".
+            dispatch({ type: 'session/start-requested', prompt, transportKind: null });
+
             let chosenKind: AiTransportKind;
             let client: AiClient;
 
@@ -554,7 +575,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 if (!bleAvailable) {
                     dispatch({
                         type: 'session/transport-error',
-                        error: { kind: 'network', message: 'BLE not available on this device', transient: false },
+                        error: { kind: 'no-transport', message: 'BLE not available on this device', transient: false },
                     });
                     return;
                 }
@@ -581,20 +602,22 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                     client = new BleAiClient(bleManager!, blePeripheralId!);
                 } else {
                     // No transport available — neither LAN HTTP candidate
-                    // qualified nor BLE wired. Surface a clean error so
-                    // the screen can show "no transport available; check
-                    // that you're paired with your blox" rather than
-                    // throwing.
+                    // qualified nor BLE wired. Use the dedicated
+                    // 'no-transport' error kind so the chat renders a
+                    // friendly, user-facing sentence (i18n key
+                    // diagnostics.chat.errorEvent_noTransport) instead of
+                    // the technical "[network] No transport available..."
+                    // string.
                     dispatch({
                         type: 'session/transport-error',
-                        error: { kind: 'network', message: 'No transport available (LAN unreachable + BLE not paired)', transient: false },
+                        error: { kind: 'no-transport', message: 'Cannot reach your Blox over LAN or Bluetooth', transient: false },
                     });
                     return;
                 }
             }
 
             activeClientRef.current = client;
-            dispatch({ type: 'session/start-requested', prompt, transportKind: chosenKind });
+            dispatch({ type: 'session/transport-selected', transportKind: chosenKind });
 
             // Start a fresh session each time (codex catch: do not
             // try to "resume" because there's no event-cursor contract).

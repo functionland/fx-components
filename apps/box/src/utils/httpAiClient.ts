@@ -56,6 +56,7 @@ export type AiClientErrorKind =
     | 'http-not-found'         // 404 on session/action lookups — do NOT fall back
     | 'http-server'            // 5xx — transient; try BLE
     | 'network'                // TCP/DNS/timeout — transient; try BLE
+    | 'no-transport'           // neither LAN HTTP nor BLE reachable at session-start time
     | 'sse-malformed'          // SSE stream emitted garbage we can't parse
     | 'sse-aborted'            // client cancelled or aborted mid-stream
     | 'unknown';

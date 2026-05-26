@@ -105,7 +105,27 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
         onSubmitReply(pendingQuestion.question_id, replyText.trim());
     }, [pendingQuestion, replyText, onSubmitReply]);
 
-    // No session yet: show CTA
+    // Streaming flipped on but session_started + first events haven't
+    // arrived yet → user just tapped a quick-start scenario or Start.
+    // Show an immediate "Connecting…" card so they don't think the tap
+    // did nothing (and don't double-tap).
+    if (streaming && !sessionId && transcript.length === 0) {
+        return (
+            <FxCard testID="blox-ai-chat-connecting">
+                <FxCard.Title>{t('diagnostics.chat.connectingTitle')}</FxCard.Title>
+                <FxBox paddingVertical="8" flexDirection="row" alignItems="center">
+                    <ActivityIndicator size="small" />
+                    <FxSpacer width={8} />
+                    <FxText variant="bodySmallRegular" style={{ flex: 1 }}>
+                        {t('diagnostics.chat.connectingSubtitle')}
+                    </FxText>
+                </FxBox>
+            </FxCard>
+        );
+    }
+
+    // No session yet AND not streaming: show CTA (the "type your own
+    // prompt" entry point).
     if (!sessionId && transcript.length === 0) {
         return (
             <FxCard testID="blox-ai-chat-cta">
@@ -340,7 +360,17 @@ const EventRow: React.FC<{
                 </FxBox>
             );
 
-        case 'error':
+        case 'error': {
+            // Friendly per-code translations override the default
+            // "[{code}] {message}" technical rendering. Used today for
+            // 'no-transport' (the "Cannot reach your Blox over LAN or
+            // Bluetooth" case). Falls through to the generic format for
+            // any other error code so we don't accidentally swallow
+            // a useful technical message.
+            const friendlyKey =
+                ev.code === 'no-transport'
+                    ? 'diagnostics.chat.errorEvent_noTransport'
+                    : null;
             return (
                 <FxBox
                     paddingVertical="8"
@@ -351,13 +381,16 @@ const EventRow: React.FC<{
                     testID={`event-error-${entry.id}`}
                 >
                     <FxText variant="bodySmallRegular">
-                        {t('diagnostics.chat.errorEvent', {
-                            code: ev.code,
-                            message: ev.message,
-                        })}
+                        {friendlyKey
+                            ? t(friendlyKey)
+                            : t('diagnostics.chat.errorEvent', {
+                                  code: ev.code,
+                                  message: ev.message,
+                              })}
                     </FxText>
                 </FxBox>
             );
+        }
     }
 };
 
