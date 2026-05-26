@@ -73,9 +73,19 @@ export interface SelectorOptions {
     /** Max mDNS record age. Older records aren't trusted for LAN HTTP. */
     mdnsMaxAgeMs?: number;
     /**
-     * If true, run a one-shot Zeroconf scan before checking the cache.
-     * Default true on first call per process; set false for tests or
-     * when the caller has already populated the cache.
+     * If true, run a one-shot Zeroconf scan when the cache lookup fails.
+     *
+     * Default **false** — codex Plan HTTP final-review BLOCK:
+     * `react-native-zeroconf` stops any other scan when a new one
+     * starts. Spawning an ephemeral scan here would kill the pairing
+     * flow's long-lived Zeroconf instance. The preferred wiring is the
+     * other direction: the pairing flow's `zeroconf.on('resolved', ...)`
+     * handler calls `mdnsCache.noteRecord(service)` so this cache stays
+     * warm without us touching Zeroconf at all.
+     *
+     * When you KNOW no pairing is active (e.g. an AI-only diagnostics
+     * screen that opens long after pairing completed), you may opt in
+     * with `scanIfEmpty: true`. Most callers should leave this false.
      */
     scanIfEmpty?: boolean;
 }
@@ -99,7 +109,9 @@ export async function selectAiTransport(
 ): Promise<AiTransportChoice> {
     const probeTimeoutMs = opts.probeTimeoutMs ?? LAN_HTTP_PROBE_TIMEOUT_MS;
     const mdnsMaxAgeMs = opts.mdnsMaxAgeMs ?? MDNS_FRESHNESS_MAX_AGE_MS;
-    const scanIfEmpty = opts.scanIfEmpty ?? true;
+    // Default false to avoid stomping the pairing flow's Zeroconf scan
+    // (codex Plan HTTP final-review BLOCK). Opt-in only.
+    const scanIfEmpty = opts.scanIfEmpty ?? false;
 
     if (!bloxPeerId || !appPeerId) {
         return { kind: 'ble', reason: 'missing bloxPeerId or appPeerId — cannot qualify LAN HTTP' };

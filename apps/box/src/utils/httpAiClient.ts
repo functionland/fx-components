@@ -267,10 +267,18 @@ export class HttpAiClient {
 
         es.addEventListener('error', (event: any) => {
             if (closed) return;
-            // react-native-sse error events sometimes carry an HTTP status
-            // when the initial response wasn't 200. Surface that as
-            // http-* rather than generic network failure.
-            const status: number | undefined = event?.status ?? event?.xhrStatus;
+            // Set closed BEFORE es.close() because react-native-sse's close()
+            // synchronously dispatches the 'close' event, which would
+            // otherwise fire onComplete after onError on the same tick
+            // (codex Plan HTTP final-review BLOCK). The 'close' listener
+            // below short-circuits when closed === true.
+            closed = true;
+            // react-native-sse v1.x exposes xhrStatus on error events when
+            // the initial response wasn't 200. `event.status` isn't in v1.x
+            // types; only xhrStatus is real (codex catch). Mid-stream TCP
+            // drops surface as xhrStatus=0 (or sometimes a stale 200) — the
+            // `>= 400` gate falls through to networkError which is correct.
+            const status: number | undefined = event?.xhrStatus;
             if (typeof status === 'number' && status >= 400) {
                 safeError(fromHttpStatus(status, event?.message ?? ''));
             } else if (isAbortError(event)) {
@@ -279,7 +287,6 @@ export class HttpAiClient {
                 safeError(networkError(event?.message ?? 'SSE network error'));
             }
             try { es.close(); } catch (e) { /* */ }
-            closed = true;
         });
 
         es.addEventListener('close', () => {

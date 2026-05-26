@@ -99,14 +99,26 @@ describe('selectAiTransport — happy path', () => {
 });
 
 describe('selectAiTransport — fall back to BLE', () => {
-    test('no mDNS hit → BLE; scanIfEmpty triggers refreshOnce', async () => {
+    test('no mDNS hit + default scanIfEmpty=false → BLE WITHOUT triggering refreshOnce', async () => {
+        // Codex Plan HTTP final-review BLOCK: scanIfEmpty default must be
+        // false to avoid stomping the pairing flow's Zeroconf scan. We
+        // assert refreshOnce is NOT called by default.
         findAuthorizedBlox.mockReturnValue(null);
 
         const choice = await selectAiTransport('BLOX1', 'APP1');
 
         expect(choice.kind).toBe('ble');
-        expect(refreshOnce).toHaveBeenCalledTimes(1);
+        expect(refreshOnce).not.toHaveBeenCalled();
         expect(choice.reason).toMatch(/no fresh mDNS record/);
+    });
+
+    test('no mDNS hit + scanIfEmpty=true → triggers refreshOnce (opt-in)', async () => {
+        findAuthorizedBlox.mockReturnValue(null);
+
+        const choice = await selectAiTransport('BLOX1', 'APP1', { scanIfEmpty: true });
+
+        expect(choice.kind).toBe('ble');
+        expect(refreshOnce).toHaveBeenCalledTimes(1);
     });
 
     test('mDNS hit but IP not RFC1918 → BLE', async () => {

@@ -87,14 +87,24 @@ export function findAuthorizedBlox(
  * resolves within `timeoutMs`. Concurrent calls share the same scan
  * — no double-scanning.
  *
- * The scan listens for `resolved` events; records arrive asynchronously
- * during the timeout window. Returns when the window closes (we don't
- * try to detect "scan complete" beyond the timeout — Zeroconf's "stop"
- * event is unreliable across platforms).
+ * IMPORTANT — codex Plan HTTP final-review catch:
+ * `react-native-zeroconf` documents that `.scan()` stops any other
+ * scan already running. The pairing flow
+ * (`ConnectToExistingBlox.screen.tsx`) has its OWN long-lived Zeroconf
+ * instance. If this method runs while pairing is mid-scan it will
+ * abort the pairing scan. Therefore:
+ *   - Callers should NOT call `refreshOnce()` from contexts where the
+ *     pairing flow may be active (e.g. during the InitialSetup flow).
+ *   - The preferred integration is the OTHER direction: the pairing
+ *     flow's `zeroconf.on('resolved', ...)` handler calls
+ *     `noteRecord(service)` so the cache stays warm without us
+ *     spawning a second Zeroconf instance.
+ *   - `aiTransport.selectAiTransport()` defaults to NOT calling this
+ *     method (`scanIfEmpty: false`). UI screens that need an opt-in
+ *     scan (e.g. an "ai-only" path that's never used during pairing)
+ *     can pass `scanIfEmpty: true`.
  *
- * Returns silently on platforms where the native module isn't linked
- * (e.g. dev builds without iOS pods installed). Caller should not rely
- * on this method ALWAYS populating the cache.
+ * Returns silently on platforms where the native module isn't linked.
  */
 export function refreshOnce(timeoutMs: number = DEFAULT_SCAN_TIMEOUT_MS): Promise<void> {
     if (inflight) return inflight.promise;

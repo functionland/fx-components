@@ -73,7 +73,7 @@
     "react-native-redash": "*",
     "react-native-safe-area-context": "*",
     "react-native-screens": "*",
-    "react-native-sse": "*",
+    "react-native-sse": "^1.2.1",
     "react-native-svg": "*",
     "react-native-svg-transformer": "*",
     "react-native-syntax-highlighter": "*",
