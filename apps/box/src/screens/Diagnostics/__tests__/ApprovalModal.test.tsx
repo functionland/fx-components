@@ -3,7 +3,7 @@
  * press-and-hold, dedup, cancellation safety.
  */
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { ApprovalModal } from '../ApprovalModal';
 import type { RecommendedActionEvent } from '../../../utils/bloxAiEvents';
 

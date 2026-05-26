@@ -12,7 +12,6 @@ import {
     installNetInfoLogger,
 } from '../phoneLogger';
 
-const AsyncStorage = AsyncStorageModule.default;
 const resetStore = (AsyncStorageModule as any).__resetStore;
 
 beforeEach(async () => {

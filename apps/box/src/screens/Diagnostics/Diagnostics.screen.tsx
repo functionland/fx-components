@@ -31,7 +31,6 @@ import {
     FxButton,
     FxKeyboardAwareScrollView,
     FxSpacer,
-    useFxTheme,
 } from '@functionland/component-library';
 import { useTranslation } from 'react-i18next';
 import NetInfo from '@react-native-community/netinfo';
@@ -39,7 +38,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import TcpSocket from 'react-native-tcp-socket';
 
 import { usePluginsStore } from '../../stores/usePluginsStore';
-import { Routes } from '../../navigation/navigationConfig';
 import * as Constants from '../../utils/constants';
 
 // Generic captive-portal-style "is the phone online" probe. 204 No Content
@@ -212,7 +210,6 @@ async function probeRelay(dnsName: string): Promise<ProbeStatus> {
 
 export const DiagnosticsScreen: React.FC = () => {
     const { t } = useTranslation();
-    const { colors } = useFxTheme();
     const { listActivePlugins, activePlugins } = usePluginsStore();
 
     const [netInfoConnected, setNetInfoConnected] = React.useState<boolean | null>(null);
