@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "upload_id": "12345678-90ab-4cde-90ab-1234567890ab",
+  "session_relative_start": "+0s",
+  "events": [
+    {"type": "session_started", "relative_ts": "+0s", "payload": {}},
+    {"type": "thought", "relative_ts": "+2s",
+     "payload": "checking discovery; saw peer at <IP>"},
+    {"type": "tool_call", "relative_ts": "+3s",
+     "payload": {"tool": "diag/internet", "args": {}}},
+    {"type": "tool_result", "relative_ts": "+5s",
+     "payload": {"dns_ok": true, "https_discovery_ok": false}},
+    {"type": "verdict", "relative_ts": "+10s",
+     "payload": {"summary": "discovery unreachable", "severity": "yellow"}}
+  ],
+  "user_rating": -1,
+  "user_comment": "didn't fix it; still offline",
+  "consent": {
+    "explicit_opt_in": true,
+    "preview_shown": true,
+    "anonymizer_version": "0.1.0"
+  },
+  "device_class": "rk3588"
+}

@@ -4,14 +4,13 @@ import {
   FxBottomSheetModalMethods,
   FxArrowUpIcon,
   useFxTheme,
-  FxScanCodeIcon,
+  FxSearchIcon,
 } from '@functionland/component-library';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BloxScreen } from '../screens/Blox/Blox.screen';
 import { PluginScreen } from '../screens/Plugin.screen';
 import { DevicesScreen } from '../screens/Devices.screen';
 import { UsersScreen } from '../screens/Users/Users.screen';
-import ChatAIScreen from '../screens/ChatAI.screen';
 import {
   BloxIcon,
   UserIcon,
@@ -37,6 +36,7 @@ import {
   ConnectedDAppsScreen,
   BloxStatusMonitorScreen,
 } from '../screens/Settings';
+import { DiagnosticsScreen } from '../screens/Diagnostics/Diagnostics.screen';
 import { ComponentGalleryNavigator } from './ComponentGallery.navigator';
 import { GlobalBottomSheet } from '../components/GlobalBottomSheet';
 import { Helper } from '../utils';
@@ -267,12 +267,12 @@ export const MainTabsNavigator = () => {
           })}
         />
         <MainTabs.Screen
-          name={Routes.ChatAITab}
-          component={ChatAIScreen}
+          name={Routes.DiagnosticsTab}
+          component={DiagnosticsScreen}
           options={{
             // eslint-disable-next-line react/no-unstable-nested-components
-            tabBarIcon: ({ color }) => <FxScanCodeIcon fill={color} />,
-            tabBarLabel: 'Loyal Agent',
+            tabBarIcon: ({ color }) => <FxSearchIcon fill={color} />,
+            tabBarLabel: 'Blox AI',
           }}
         />
         <MainTabs.Screen

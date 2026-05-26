@@ -1,0 +1,510 @@
+/**
+ * Diagnostics screen — Phase 5 shell.
+ *
+ * Always-on diagnostic surface that ships BEFORE the Blox AI plugin (Phases
+ * 6-12) so users on devices that never install the plugin still get useful
+ * troubleshooting visibility:
+ *
+ *   1. Phone-side connectivity preamble: NetInfo state + a cheap HTTPS probe
+ *      to `generate_204` (proves the PHONE is online, distinct from "is the
+ *      Blox reachable").
+ *   2. Plugin-presence detection via `usePluginsStore.activePlugins` —
+ *      tolerant of pre-plugin firmwares (modelled as `checking` /
+ *      `installed` / `notInstalledOrUnavailable`).
+ *   3. Support diagnostics shell — for Phase 5, an inert "Available once
+ *      Blox AI is installed" placeholder. The actual state-file dump comes
+ *      with the plugin in Phase 6+ (the plan's plugin-isolation requirement
+ *      means we don't add a cross-repo `diag_raw` command in core).
+ *
+ * Wired into the Settings stack as the lowest-risk entry point for an
+ * always-on utility screen (per Codex pre-implementation review). The Blox
+ * screen's "Disconnected" CTA will route here in a later phase.
+ *
+ * No AI features (no chat, approvals, transcripts) — those land in Phase 12.
+ */
+import React from 'react';
+import { ActivityIndicator } from 'react-native';
+import {
+    FxBox,
+    FxText,
+    FxCard,
+    FxButton,
+    FxKeyboardAwareScrollView,
+    FxSpacer,
+} from '@functionland/component-library';
+import { useTranslation } from 'react-i18next';
+import NetInfo from '@react-native-community/netinfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import TcpSocket from 'react-native-tcp-socket';
+
+import { usePluginsStore } from '../../stores/usePluginsStore';
+import * as Constants from '../../utils/constants';
+
+// Generic captive-portal-style "is the phone online" probe. 204 No Content
+// is the standard "internet works" signal — chosen over a Fula-specific URL
+// because this card is about the PHONE's connectivity, not the device's
+// (per Codex review: don't conflate the two).
+const PHONE_INTERNET_PROBE_URL = 'https://www.google.com/generate_204';
+const PHONE_INTERNET_PROBE_TIMEOUT_MS = 5000;
+const DISCOVERY_PROBE_URL = `${Constants.FXDiscoveryURL}/relays`;
+const DISCOVERY_PROBE_TIMEOUT_MS = 5000;
+const RELAY_PROBE_TIMEOUT_MS = 5000;
+// Standard kubo / libp2p TCP port. Fula relays are kubo-based and only
+// expose the libp2p multistream on this port — no HTTPS on :443, no other
+// admin ports. A successful TCP SYN-ACK on :4001 is the only meaningful
+// "reachable from this phone" signal.
+const RELAY_PROBE_PORT = 4001;
+const BLOX_AI_PLUGIN_NAME = 'blox-ai';
+
+type ProbeStatus = 'checking' | 'ok' | 'failed';
+type PluginPresence = 'checking' | 'installed' | 'notInstalledOrUnavailable';
+type RelayInfo = { dnsName: string; status: ProbeStatus };
+
+async function probePhoneInternet(): Promise<ProbeStatus> {
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(),
+                                 PHONE_INTERNET_PROBE_TIMEOUT_MS);
+        try {
+            const r = await fetch(PHONE_INTERNET_PROBE_URL, {
+                method: 'GET',
+                signal: controller.signal,
+                // generate_204 is supposed to return 204 No Content; treat
+                // any 2xx as success (proxies may rewrite to 200).
+            });
+            return r.status >= 200 && r.status < 300 ? 'ok' : 'failed';
+        } finally {
+            clearTimeout(timer);
+        }
+    } catch {
+        return 'failed';
+    }
+}
+
+// Probe the Fula discovery API and return the relay list. Falls back to the
+// AsyncStorage cache when the live API is unreachable so we can still show
+// per-relay status from the last-known list. Final fallback is the hardcoded
+// FXRelay constant (parsed from its multiaddr) so the user always sees at
+// least one relay to probe — matches the same resolution order helper.ts
+// uses for actual connections.
+async function probeDiscoveryAndListRelays(): Promise<{
+    discovery: ProbeStatus;
+    dnsNames: string[];
+}> {
+    let discovery: ProbeStatus = 'failed';
+    let liveDnsNames: string[] | null = null;
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(),
+                                 DISCOVERY_PROBE_TIMEOUT_MS);
+        try {
+            const r = await fetch(DISCOVERY_PROBE_URL, {
+                method: 'GET',
+                signal: controller.signal,
+                headers: {
+                    accept: 'application/json',
+                    // Same WAF gate header helper.ts uses for /relays.
+                    'x-fula-client': 'app',
+                },
+            });
+            if (r.status >= 200 && r.status < 300) {
+                discovery = 'ok';
+                try {
+                    const list = (await r.json()) as Array<{ dnsName?: string }>;
+                    if (Array.isArray(list)) {
+                        liveDnsNames = list
+                            .map(x => x?.dnsName)
+                            .filter((x): x is string => typeof x === 'string' && x.length > 0);
+                    }
+                } catch {
+                    // Body parse failed but discovery is reachable; we'll
+                    // fall through to cache/hardcoded for the relay list.
+                }
+            }
+        } finally {
+            clearTimeout(timer);
+        }
+    } catch {
+        discovery = 'failed';
+    }
+
+    if (liveDnsNames && liveDnsNames.length > 0) {
+        return { discovery, dnsNames: liveDnsNames };
+    }
+
+    // Discovery returned nothing usable (or failed entirely). Try cache.
+    try {
+        const raw = await AsyncStorage.getItem(Constants.FXRelayCacheKey);
+        if (raw) {
+            const parsed = JSON.parse(raw) as { list?: Array<{ dnsName?: string }> };
+            const cached = (parsed?.list ?? [])
+                .map(x => x?.dnsName)
+                .filter((x): x is string => typeof x === 'string' && x.length > 0);
+            if (cached.length > 0) {
+                return { discovery, dnsNames: cached };
+            }
+        }
+    } catch {
+        // Cache unreadable; fall through to hardcoded.
+    }
+
+    // Last-resort: parse the hardcoded relay multiaddr to get a dnsName so
+    // the user still sees one relay row to probe.
+    const m = Constants.FXRelay.match(/^\/dns\/([^/]+)/);
+    const hardcoded = m ? [m[1]] : [];
+    return { discovery, dnsNames: hardcoded };
+}
+
+// Probe a single relay's libp2p port via raw TCP. Fula relays are kubo-based
+// and only expose libp2p multistream on TCP :4001 — no HTTPS on :443, no
+// admin ports. A TCP SYN-ACK on :4001 is the only meaningful "the phone
+// can reach this relay" signal.
+//
+// We rely on react-native-tcp-socket here (added as a native dep) because
+// RN's built-in fetch + WebSocket can't probe a port that doesn't speak
+// HTTP or TLS. An earlier HTTPS-HEAD-on-:443 probe was a false-negative
+// machine — kubo relays always returned ✗ even when fully reachable.
+//
+// We resolve 'ok' the moment the connect callback fires (TCP handshake
+// complete) and immediately destroy() the socket so we don't trigger the
+// libp2p multistream handshake. The relay will close the connection on
+// its side too once it sees us not speak; that's fine, we already have
+// our signal.
+async function probeRelay(dnsName: string): Promise<ProbeStatus> {
+    return new Promise<ProbeStatus>((resolve) => {
+        let settled = false;
+        let client: ReturnType<typeof TcpSocket.createConnection> | null = null;
+
+        const settle = (status: ProbeStatus) => {
+            if (settled) return;
+            settled = true;
+            if (client) {
+                try { client.destroy(); } catch { /* socket already torn down */ }
+            }
+            resolve(status);
+        };
+
+        // Connect timeout — TcpSocket's per-socket timeout fires AFTER
+        // connect, not during. We need our own wall-clock guard so a host
+        // that silently drops SYNs doesn't hang the probe forever.
+        const timer = setTimeout(() => settle('failed'), RELAY_PROBE_TIMEOUT_MS);
+
+        try {
+            client = TcpSocket.createConnection(
+                { host: dnsName, port: RELAY_PROBE_PORT },
+                () => {
+                    clearTimeout(timer);
+                    settle('ok');
+                }
+            );
+            client.on('error', () => {
+                clearTimeout(timer);
+                settle('failed');
+            });
+        } catch {
+            clearTimeout(timer);
+            settle('failed');
+        }
+    });
+}
+
+export const DiagnosticsScreen: React.FC = () => {
+    const { t } = useTranslation();
+    const { listActivePlugins, activePlugins } = usePluginsStore();
+
+    const [netInfoConnected, setNetInfoConnected] = React.useState<boolean | null>(null);
+    const [phoneInternet, setPhoneInternet] = React.useState<ProbeStatus>('checking');
+    const [discoveryStatus, setDiscoveryStatus] = React.useState<ProbeStatus>('checking');
+    const [relays, setRelays] = React.useState<RelayInfo[] | null>(null);
+    const [pluginPresence, setPluginPresence] = React.useState<PluginPresence>('checking');
+
+    // Phone-side probes run once on mount. Re-fetching on every focus would
+    // be nice but adds complexity; Phase 12's chat UX can trigger a refresh
+    // when it needs one. NetInfo subscription updates the connected flag
+    // live so disconnecting while on the screen flips the card.
+    React.useEffect(() => {
+        const unsub = NetInfo.addEventListener((s) => {
+            setNetInfoConnected(s.isConnected ?? null);
+        });
+        probePhoneInternet().then(setPhoneInternet);
+        return () => unsub();
+    }, []);
+
+    // Fula network reachability: discovery API + per-relay TCP probes.
+    // Discovery resolves to a list of relay DNS names; we then probe each
+    // relay in parallel. State is set as results arrive so the UI shows
+    // progress without waiting for the slowest relay.
+    React.useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            const { discovery, dnsNames } = await probeDiscoveryAndListRelays();
+            if (cancelled) return;
+            setDiscoveryStatus(discovery);
+            if (dnsNames.length === 0) {
+                setRelays([]);
+                return;
+            }
+            // Seed the relay list with 'checking' so the user sees the
+            // hostnames immediately; per-relay status updates as probes
+            // resolve.
+            setRelays(dnsNames.map(dnsName => ({ dnsName, status: 'checking' })));
+            await Promise.all(dnsNames.map(async (dnsName) => {
+                const status = await probeRelay(dnsName);
+                if (cancelled) return;
+                setRelays(prev => {
+                    if (!prev) return prev;
+                    return prev.map(r =>
+                        r.dnsName === dnsName ? { ...r, status } : r
+                    );
+                });
+            }));
+        })();
+        return () => { cancelled = true; };
+    }, []);
+
+    // Plugin presence — tolerant of pre-plugin firmware per Codex review:
+    // missing data ≠ "not installed", so the UI copy avoids overclaiming.
+    //
+    // Split into two effects to avoid the infinite-loop trap:
+    //   (1) fetch once on mount — listActivePlugins() updates the store,
+    //       which would re-fire any effect that depends on activePlugins.
+    //   (2) react to store changes — derives pluginPresence from whatever
+    //       activePlugins currently is. No fetching here, so updating
+    //       activePlugins (whether via the mount fetch, an install action
+    //       elsewhere, or a future polling refresh) flips presence without
+    //       re-triggering the fetch.
+    // The previous single-effect form (which called listActivePlugins
+    // inside an effect that depended on activePlugins) looped forever
+    // because the store creates a fresh `[]` reference on every empty
+    // result and zustand's shallow equality flags that as a change.
+    const [hasFetched, setHasFetched] = React.useState(false);
+
+    React.useEffect(() => {
+        listActivePlugins()
+            .catch(() => {
+                // listActivePlugins captures its own errors into the store
+            })
+            .finally(() => setHasFetched(true));
+        // listActivePlugins is the zustand setter — referentially stable.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    React.useEffect(() => {
+        // Wait for the mount fetch before deriving presence — without this,
+        // the initial activePlugins=[] from the store would flash a
+        // one-frame "Blox AI not installed" before the real response lands.
+        if (!hasFetched) return;
+        const list = (activePlugins || []) as string[];
+        if (!Array.isArray(list)) {
+            setPluginPresence('notInstalledOrUnavailable');
+            return;
+        }
+        setPluginPresence(
+            list.includes(BLOX_AI_PLUGIN_NAME)
+                ? 'installed'
+                : 'notInstalledOrUnavailable'
+        );
+    }, [activePlugins, hasFetched]);
+
+    return (
+        <FxKeyboardAwareScrollView>
+            <FxBox paddingHorizontal="20" paddingVertical="16">
+                <FxText variant="h300">{t('diagnostics.screenTitle')}</FxText>
+                <FxSpacer height={16} />
+
+                {/* ───────── Phone-side preamble ───────── */}
+                <FxCard>
+                    <FxCard.Title>
+                        {t('diagnostics.phoneConnectivityTitle')}
+                    </FxCard.Title>
+                    <FxBox paddingVertical="8">
+                        <FxText>
+                            {netInfoConnected === null
+                                ? t('diagnostics.netInfoChecking')
+                                : netInfoConnected
+                                    ? t('diagnostics.netInfoConnected')
+                                    : t('diagnostics.netInfoDisconnected')}
+                        </FxText>
+                        <FxSpacer height={4} />
+                        {phoneInternet === 'checking' ? (
+                            <FxBox flexDirection="row" alignItems="center">
+                                <ActivityIndicator size="small" />
+                                <FxSpacer width={8} />
+                                <FxText>{t('diagnostics.phoneInternetChecking')}</FxText>
+                            </FxBox>
+                        ) : phoneInternet === 'ok' ? (
+                            <FxText color="successBase">
+                                {t('diagnostics.phoneInternetOk')}
+                            </FxText>
+                        ) : (
+                            <FxText color="errorBase">
+                                {t('diagnostics.phoneInternetFailed')}
+                            </FxText>
+                        )}
+                    </FxBox>
+                </FxCard>
+
+                <FxSpacer height={12} />
+
+                {/* ───────── Fula network reachability ───────── */}
+                <FxCard>
+                    <FxCard.Title>
+                        {t('diagnostics.fulaNetworkTitle')}
+                    </FxCard.Title>
+                    <FxBox paddingVertical="8">
+                        {discoveryStatus === 'checking' ? (
+                            <FxBox flexDirection="row" alignItems="center">
+                                <ActivityIndicator size="small" />
+                                <FxSpacer width={8} />
+                                <FxText>{t('diagnostics.discoveryChecking')}</FxText>
+                            </FxBox>
+                        ) : discoveryStatus === 'ok' ? (
+                            <FxText color="successBase">
+                                {t('diagnostics.discoveryOk')}
+                            </FxText>
+                        ) : (
+                            <FxText color="errorBase">
+                                {t('diagnostics.discoveryFailed')}
+                            </FxText>
+                        )}
+                        <FxSpacer height={8} />
+                        {relays === null ? (
+                            <FxBox flexDirection="row" alignItems="center">
+                                <ActivityIndicator size="small" />
+                                <FxSpacer width={8} />
+                                <FxText>{t('diagnostics.relaysChecking')}</FxText>
+                            </FxBox>
+                        ) : relays.length === 0 ? (
+                            <FxText variant="bodySmallRegular">
+                                {t('diagnostics.relaysUnknown')}
+                            </FxText>
+                        ) : (
+                            <>
+                                <FxText variant="bodySmallRegular">
+                                    {t('diagnostics.relaysListLabel')}
+                                </FxText>
+                                <FxSpacer height={4} />
+                                {relays.map((r) => (
+                                    <FxBox
+                                        key={r.dnsName}
+                                        flexDirection="row"
+                                        alignItems="center"
+                                        paddingVertical="4"
+                                    >
+                                        {r.status === 'checking' ? (
+                                            <>
+                                                <ActivityIndicator size="small" />
+                                                <FxSpacer width={8} />
+                                                <FxText variant="bodySmallRegular">
+                                                    {r.dnsName}
+                                                </FxText>
+                                            </>
+                                        ) : r.status === 'ok' ? (
+                                            <FxText
+                                                variant="bodySmallRegular"
+                                                color="successBase"
+                                            >
+                                                ✓ {r.dnsName}
+                                            </FxText>
+                                        ) : (
+                                            <FxText
+                                                variant="bodySmallRegular"
+                                                color="errorBase"
+                                            >
+                                                ✗ {r.dnsName}
+                                            </FxText>
+                                        )}
+                                    </FxBox>
+                                ))}
+                            </>
+                        )}
+                    </FxBox>
+                </FxCard>
+
+                <FxSpacer height={12} />
+
+                {/* ───────── Plugin presence ───────── */}
+                <FxCard>
+                    <FxCard.Title>{t('diagnostics.pluginStatusTitle')}</FxCard.Title>
+                    <FxBox paddingVertical="8">
+                        {pluginPresence === 'checking' ? (
+                            <FxBox flexDirection="row" alignItems="center">
+                                <ActivityIndicator size="small" />
+                                <FxSpacer width={8} />
+                                <FxText>{t('diagnostics.pluginChecking')}</FxText>
+                            </FxBox>
+                        ) : pluginPresence === 'installed' ? (
+                            <>
+                                <FxText color="successBase">
+                                    {t('diagnostics.pluginInstalled')}
+                                </FxText>
+                                <FxSpacer height={4} />
+                                <FxText variant="bodySmallRegular">
+                                    {t('diagnostics.pluginInstalledHint')}
+                                </FxText>
+                                <FxSpacer height={8} />
+                                {/* Deliberately disabled in Phase 5 — Phase 12 wires
+                                    this CTA to the AI chat screen. Disabled + "Coming
+                                    soon" is honest; a tappable no-op looks broken
+                                    (Codex pre-implementation review). */}
+                                <FxButton disabled>
+                                    {t('diagnostics.openBloxAiComingSoon')}
+                                </FxButton>
+                            </>
+                        ) : (
+                            <>
+                                <FxText>{t('diagnostics.pluginNotDetected')}</FxText>
+                                <FxSpacer height={4} />
+                                <FxText variant="bodySmallRegular">
+                                    {t('diagnostics.pluginNotDetectedHint')}
+                                </FxText>
+                            </>
+                        )}
+                    </FxBox>
+                </FxCard>
+
+                <FxSpacer height={12} />
+
+                {/* ───────── Support diagnostics (deferred-to-plugin shell) ─────────
+                    Two states:
+                      - plugin NOT installed → "Unavailable until Blox AI is installed"
+                        (the original Phase 5 copy; encourages install)
+                      - plugin installed → "Coming soon — raw state-file dump …"
+                        (the feature itself is still deferred to a future app version;
+                        the plugin install is no longer the blocker)
+                    Don't render anything while presence is still 'checking' — would
+                    flash the wrong message between mount and the first fetch. */}
+                {pluginPresence !== 'checking' && (
+                    <FxCard>
+                        <FxCard.Title>
+                            {t('diagnostics.rawDiagnosticsTitle')}
+                        </FxCard.Title>
+                        <FxBox paddingVertical="8">
+                            {pluginPresence === 'installed' ? (
+                                <>
+                                    <FxText variant="bodySmallRegular">
+                                        {t('diagnostics.rawDiagnosticsComingSoon')}
+                                    </FxText>
+                                    <FxSpacer height={8} />
+                                    <FxButton disabled>
+                                        {t('diagnostics.rawDiagnosticsComingSoonButton')}
+                                    </FxButton>
+                                </>
+                            ) : (
+                                <>
+                                    <FxText variant="bodySmallRegular">
+                                        {t('diagnostics.rawDiagnosticsPluginRequired')}
+                                    </FxText>
+                                    <FxSpacer height={8} />
+                                    <FxButton disabled>
+                                        {t('diagnostics.rawDiagnosticsUnavailable')}
+                                    </FxButton>
+                                </>
+                            )}
+                        </FxBox>
+                    </FxCard>
+                )}
+            </FxBox>
+        </FxKeyboardAwareScrollView>
+    );
+};

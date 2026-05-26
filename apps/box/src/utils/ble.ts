@@ -9,11 +9,57 @@ export type DiscoveredDevice = {
 };
 
 export interface ChunkedResponse {
-    type?: 'ble_header' | 'ble_chunk';
+    type?: 'ble_header' | 'ble_chunk' | 'ble_stream';
     index?: number;
     total_length?: number;
     chunks?: number;
     data?: string;
+    final?: boolean;
+}
+
+/**
+ * Frame shape for the streaming protocol introduced in Phase 5 (foundation
+ * for the Blox AI chat UX in Phase 12). One frame per token/event as it's
+ * produced by the blox-side SSE → BLE bridge. `final: true` on the last
+ * frame; `data` is a JSON string payload per frame.
+ */
+export interface BleStreamFrame {
+    type: 'ble_stream';
+    index: number;
+    data: string;
+    final: boolean;
+}
+
+/**
+ * Accumulated result returned to the caller of writeToBLEAndWaitForResponse
+ * when the response was a stream. `frames` is the ordered list of parsed
+ * frame payloads (each one decoded from its `data` JSON string), and `final`
+ * is the payload of the frame marked `final: true` (also the last entry in
+ * `frames`). Phase 12 consumers can use whichever fits their UX better.
+ */
+export interface BleStreamResult {
+    frames: any[];
+    final: any;
+}
+
+/**
+ * Error thrown when a stream times out before its `final: true` frame
+ * arrives. Carries the frames that DID arrive before the timeout — Phase 12's
+ * chat UX needs to render the partial transcript ("stream interrupted, here's
+ * what we got") rather than just showing "error" and losing the user's
+ * mid-stream content. All three post-implementation reviewers (gemini, codex,
+ * built-in advisor) recommended this shape; consumers `try { ... } catch (e)
+ * { if (e instanceof BleStreamTimeoutError) { renderPartial(e.partialFrames); } }`.
+ */
+export class BleStreamTimeoutError extends Error {
+    public readonly partialFrames: any[];
+    constructor(message: string, partialFrames: any[]) {
+        super(message);
+        this.name = 'BleStreamTimeoutError';
+        this.partialFrames = partialFrames;
+        // Preserve prototype chain across the babel/TS class-extends transform
+        Object.setPrototypeOf(this, BleStreamTimeoutError.prototype);
+    }
 }
 
 export class ResponseAssembler {
@@ -28,8 +74,16 @@ export class ResponseAssembler {
     private currentCommand: string | null = null;
     private commandPromise: Promise<any> | null = null;
     private commandResolve: ((value: any) => void) | null = null;
+    private commandReject: ((reason?: any) => void) | null = null;
     private commandTimeout: NodeJS.Timeout | null = null;
     private bleListener: any = null;
+
+    // Streaming state — isolated per command. Reset on cleanupCommand() so
+    // a leftover stream from a prior command can never bleed into the next.
+    // Per Codex pre-implementation review: stream isolation is mandatory.
+    private isStreaming: boolean = false;
+    private streamFrames: any[] = [];
+    private onStreamFrame: ((frame: any) => void) | null = null;
 
     constructor() {
         this.setupBleListener();
@@ -61,11 +115,19 @@ export class ResponseAssembler {
     private cleanupCommand() {
         this.currentCommand = null;
         this.commandResolve = null;
+        this.commandReject = null;
         this.commandPromise = null;
         if (this.commandTimeout) {
             clearTimeout(this.commandTimeout);
             this.commandTimeout = null;
         }
+        // Reset stream state so the next command starts clean. Without this,
+        // a leftover frames[] or onStreamFrame callback from a prior command
+        // could leak into an unrelated subsequent command (Codex's "stream
+        // should be isolated per command" review point).
+        this.isStreaming = false;
+        this.streamFrames = [];
+        this.onStreamFrame = null;
     }
 
     async writeToBLEAndWaitForResponse(
@@ -73,7 +135,8 @@ export class ResponseAssembler {
         peripheral: string,
         serviceUUID: string = "00000001-710e-4a5b-8d75-3e5b444bc3cf",
         characteristicUUID: string = "00000003-710e-4a5b-8d75-3e5b444bc3cf",
-        timeout: number = 30000
+        timeout: number = 30000,
+        onStreamFrame?: (frame: any) => void
     ): Promise<any> {
         try {
             if (this.currentCommand) {
@@ -81,6 +144,7 @@ export class ResponseAssembler {
             }
     
             this.currentCommand = command;
+            this.onStreamFrame = onStreamFrame || null;
             this.reset();
             
             // Add delay after connection before retrieving services
@@ -126,9 +190,21 @@ export class ResponseAssembler {
     
             this.responsePromise = new Promise((resolve, reject) => {
                 this.commandResolve = resolve;
+                this.commandReject = reject;
                 this.commandTimeout = setTimeout(() => {
                     console.log('Command timeout triggered after', timeout, 'ms');
-                    reject(new Error('Command timed out'));
+                    // Per Codex/Gemini/built-in advisor consensus: the
+                    // OUTER promise rejects on timeout — never resolves
+                    // with a partial result — BUT the rejection carries the
+                    // frames that DID arrive so Phase 12's chat UX can
+                    // render a partial transcript. Without this, consumers
+                    // would have to maintain parallel mutable state to
+                    // recover progress after a timeout.
+                    const partial = this.isStreaming
+                        ? this.streamFrames.slice()
+                        : [];
+                    reject(new BleStreamTimeoutError(
+                        'Command timed out', partial));
                     this.cleanupCommand();
                 }, timeout);
             });
@@ -177,6 +253,56 @@ export class ResponseAssembler {
             if (Array.isArray(parsed) || typeof parsed !== 'object' || parsed === null) {
                 console.log('Received direct response:', parsed);
                 return parsed;
+            }
+
+            // Phase 5 streaming protocol: one frame per token/event with
+            // explicit `index` for diagnostics + `final: true` on the last
+            // frame. Foundation for Phase 12's Blox AI chat UX. Backward
+            // compatible: existing ble_header + ble_chunk path below is
+            // untouched, so non-streaming callers see no behavior change.
+            if (parsed.type === 'ble_stream') {
+                if (!this.isStreaming) {
+                    this.isStreaming = true;
+                    this.streamFrames = [];
+                }
+
+                // Each frame's `data` is itself a JSON-encoded payload.
+                // Decode it once per frame so the caller sees structured data
+                // rather than nested-stringified JSON.
+                let framePayload: any = parsed.data;
+                if (typeof parsed.data === 'string') {
+                    try {
+                        framePayload = JSON.parse(parsed.data);
+                    } catch {
+                        framePayload = parsed.data;
+                    }
+                }
+                this.streamFrames.push(framePayload);
+
+                // Deliver to consumer as soon as we have it. The callback is
+                // best-effort: any exception in user code is swallowed so a
+                // single bad frame can't kill the stream.
+                if (this.onStreamFrame) {
+                    try {
+                        this.onStreamFrame(framePayload);
+                    } catch (cbErr) {
+                        console.error('onStreamFrame callback raised:', cbErr);
+                    }
+                }
+
+                if (parsed.final === true) {
+                    const result = {
+                        frames: this.streamFrames,
+                        final: framePayload,
+                    };
+                    if (this.commandResolve) {
+                        this.commandResolve(result);
+                    }
+                }
+                // Returning null signals "frame handled, don't resolve at the
+                // outer command level yet" — the outer promise was already
+                // resolved above on `final: true`, or remains pending.
+                return null;
             }
 
             if (parsed.type === 'ble_header') {
