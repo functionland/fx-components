@@ -238,17 +238,28 @@ function reducer(state: AiSessionState, action: Action): AiSessionState {
             return { ...state, sessionId: action.sessionId };
 
         case 'session/event': {
-            // Append; if event has its own id field, use it for stable
-            // React keys (avoids re-render keying collisions when two
-            // events arrive in the same tick).
+            // Append; build a React key that is BOTH semantically meaningful
+            // (so testID / debugging stays readable) AND guaranteed unique.
+            //
+            // Bug observed in lab (2026-05-26): the previous logic fell
+            // through to session_id when an event had no action_id /
+            // call_id / question_id, but session_id is the SAME for every
+            // event in a session, so all such events collided on the same
+            // React key. React's reconciler then warned ("Encountered two
+            // children with the same key, `rk-0-0`") and silently kept
+            // only the first instance — which is why later recommended_action
+            // cards (with their Approve buttons) failed to render.
+            //
+            // Fix: always suffix the semantic prefix with the monotonic
+            // transcript position. Identical prefixes never collide.
             const ev = action.event;
-            const id = (ev as any).action_id
+            const baseId = (ev as any).action_id
                 ?? (ev as any).call_id
                 ?? (ev as any).question_id
                 ?? (ev as any).session_id
-                ?? `idx-${state.transcript.length}`;
+                ?? 'evt';
             const entry: TranscriptEntry = {
-                id: String(id),
+                id: `${String(baseId)}-${state.transcript.length}`,
                 event: ev,
                 receivedAt: Date.now(),
             };
@@ -289,10 +300,16 @@ function reducer(state: AiSessionState, action: Action): AiSessionState {
                 // Inject a synthetic error entry into the transcript so
                 // the chat UI can render the "Retry over BLE" prompt
                 // inline rather than as an out-of-band banner.
+                //
+                // Bug fix 2026-05-26: id was `err-${Date.now()}` — two
+                // transport errors in the same millisecond (or React-strict-
+                // mode dispatching the reducer twice) produced duplicate
+                // React keys. Suffix with monotonic transcript position so
+                // collisions are mechanically impossible.
                 transcript: [
                     ...state.transcript,
                     {
-                        id: `err-${Date.now()}`,
+                        id: `err-${Date.now()}-${state.transcript.length}`,
                         event: {
                             type: 'error',
                             code: action.error.kind,

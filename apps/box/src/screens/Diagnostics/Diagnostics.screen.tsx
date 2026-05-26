@@ -53,6 +53,7 @@ import { UploadTranscriptModal } from './UploadTranscriptModal';
 import { PendingActionsPanel } from './PendingActionsPanel';
 import { useAiSession } from './useAiSession';
 import { BleManagerWrapper } from '../../utils/ble';
+import { gatherContext as gatherPhoneContext } from '../../utils/phoneLogger';
 import type { ScenarioId } from './quickStartPrompts';
 import type { RouteProp } from '@react-navigation/native';
 import type { MainTabsParamList } from '../../navigation/navigationConfig';
@@ -617,6 +618,11 @@ const BloxAiSessionBlock: React.FC<{
         blePeripheralId,
         pluginInstalled: true,
         initialPrefilledScenario: prefillScenario,
+        // Wire the phone-context gatherer so the "Share my phone's context"
+        // button (BloxAIChat.tsx) actually does something. Without this,
+        // useAiSession.openShareContext bails out at the `if (!gatherPhoneContext) return;`
+        // guard and the button is a no-op.
+        gatherPhoneContext,
     });
 
     // Consume the route param after the first render so re-focus
