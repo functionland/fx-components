@@ -87,6 +87,39 @@
         "upload": "Upload",
         "uploading": "Uploading…",
         "errorPrefix": "Could not upload."
+      },
+      "pending": {
+        "title": "While you were away",
+        "subtitle": "Blox AI ran a self-diagnostic and has {{count}} pending recommendation(s) for you.",
+        "verdictPrefix": "Verdict: ",
+        "dismiss": "Dismiss"
+      },
+      "quickStart": {
+        "title": "What's wrong?",
+        "subtitle": "Pick the closest scenario and Blox AI will diagnose it.",
+        "disconnectedLabel": "My Blox is disconnected",
+        "disconnectedSubtitle": "App shows the device as offline.",
+        "notEarningLabel": "My Blox isn't earning",
+        "notEarningSubtitle": "Rewards or pin counts aren't moving.",
+        "cannotJoinPoolLabel": "I can't join a pool",
+        "cannotJoinPoolSubtitle": "Pool join is failing.",
+        "freeformDisclosure": "Other issue? Describe it…",
+        "startButton": "Start session",
+        "endSessionButton": "End session",
+        "retryOverBleButton": "Retry over BLE",
+        "transportLanLabel": "LAN HTTP",
+        "transportBleLabel": "BLE"
+      },
+      "transportError": {
+        "connectionLost": "Connection lost. Tap to retry over BLE (will start a fresh session).",
+        "bleBusy": "BLE is busy with another command. Try LAN HTTP for multi-turn conversations.",
+        "deviceBusy": "Blox AI is busy with another session. Please wait a moment and try again.",
+        "recommendationExpired": "This recommendation expired. Please re-run the diagnosis."
+      }
+    },
+    "blox": {
+      "disconnected": {
+        "diagnoseCta": "Diagnose with Blox AI"
       }
     },
     "welcome": {

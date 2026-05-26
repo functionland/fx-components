@@ -4,6 +4,7 @@ import {
   NavigatorScreenParams,
 } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { ScenarioId } from '../screens/Diagnostics/quickStartPrompts';
 
 export enum Routes {
   // Root
@@ -81,7 +82,14 @@ export type MainTabsParamList = {
   [Routes.DevicesTab]: undefined;
   [Routes.SettingsTab]: NavigatorScreenParams<SettingsStackParamList>;
   [Routes.InitialSetup]: undefined;
-  [Routes.DiagnosticsTab]: undefined;
+  /**
+   * Diagnostics tab accepts an optional `prefillScenario` route param
+   * (Plan A v2 — A4): when Blox.screen's "Disconnected" CTA navigates
+   * here, it passes `prefillScenario: 'disconnected'`. The screen
+   * highlights the matching quick-start card and CLEARS the param after
+   * first read so focus/remount doesn't re-prefill (codex catch).
+   */
+  [Routes.DiagnosticsTab]: { prefillScenario?: ScenarioId } | undefined;
 };
 
 export type SettingsStackParamList = {
