@@ -13251,6 +13251,7 @@ __metadata:
     react-native-redash: ^18.1.4
     react-native-safe-area-context: ^5.6.2
     react-native-screens: ^4.20.0
+    react-native-sse: latest
     react-native-svg: ^15.15.1
     react-native-svg-transformer: ^1.5.2
     react-native-syntax-highlighter: ^2.1.0
@@ -19669,6 +19670,13 @@ __metadata:
   peerDependencies:
     react-native: "*"
   checksum: 65dac50cad8d03bd046c62e327edf1c162c650fa3320613343bb978ca4b83c8e4e61b0f528502a154a1d4e4baa6dc296799a57737177e3d3c77b64750f5d8076
+  languageName: node
+  linkType: hard
+
+"react-native-sse@npm:latest":
+  version: 1.2.1
+  resolution: "react-native-sse@npm:1.2.1"
+  checksum: 424910fa1bcc6643a7e9f628f2710bf185c862b63375ea6ec4b8eecfb5b714055480757ea1250ce6cdae66c2785f6a64432cdf9833e0ec0411b59f9791f6cce8
   languageName: node
   linkType: hard
 

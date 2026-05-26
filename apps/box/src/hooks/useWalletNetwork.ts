@@ -22,7 +22,12 @@ export const useWalletNetwork = () => {
   const selectedChain = useSettingsStore((state) => state.selectedChain);
 
   const targetChainId = selectedChain === 'base' ? 8453 : 2046399126;
-  const isOnCorrectNetwork = isConnected && chainId === targetChainId;
+  // useAccount().chainId can be a string ('2046399126') or hex ('0x79f99296')
+  // depending on the connector. Normalize before comparing to a numeric constant —
+  // strict-equality on mismatched types is what caused isOnCorrectNetwork to be
+  // permanently false while the wallet was actually on SKALE.
+  const isOnCorrectNetwork =
+    isConnected && chainId != null && Number(chainId) === targetChainId;
 
   const checkNetwork = useCallback(async (): Promise<boolean> => {
     return isOnCorrectNetwork;
