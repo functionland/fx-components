@@ -1,6 +1,6 @@
 {
   "name": "box",
-  "version": "2.5.5",
+  "version": "2.5.6",
   "private": true,
   "dependencies": {
     "@babel/core": "*",
@@ -73,6 +73,7 @@
     "react-native-redash": "*",
     "react-native-safe-area-context": "*",
     "react-native-screens": "*",
+    "react-native-sse": "^1.2.1",
     "react-native-svg": "*",
     "react-native-svg-transformer": "*",
     "react-native-syntax-highlighter": "*",
@@ -92,7 +93,8 @@
     "zustand": "*",
     "@web3modal/wagmi-react-native": "*",
     "react-native-randombytes": "*",
-    "react-native-background-fetch": "*"
+    "react-native-background-fetch": "*",
+    "react-native-tcp-socket": "*"
   },
   "devDependencies": {
     "@babel/core": "*",

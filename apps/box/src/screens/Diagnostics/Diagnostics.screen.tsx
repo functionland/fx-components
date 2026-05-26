@@ -38,7 +38,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import TcpSocket from 'react-native-tcp-socket';
 
 import { usePluginsStore } from '../../stores/usePluginsStore';
+import { useBloxsStore } from '../../stores/useBloxsStore';
+import { useUserProfileStore } from '../../stores/useUserProfileStore';
+import { Routes } from '../../navigation/navigationConfig';
 import * as Constants from '../../utils/constants';
+// Plan A v2 — A2 wiring.
+import { QuickStartCard } from './QuickStartCard';
+import { BloxAIChat } from './BloxAIChat';
+import { ApprovalModal } from './ApprovalModal';
+import { SharePhoneContextModal } from './SharePhoneContextModal';
+import { FeedbackModal } from './FeedbackModal';
+import { UploadTranscriptModal } from './UploadTranscriptModal';
+import { PendingActionsPanel } from './PendingActionsPanel';
+import { useAiSession } from './useAiSession';
+import type { ScenarioId } from './quickStartPrompts';
+import type { RouteProp } from '@react-navigation/native';
+import type { MainTabsParamList } from '../../navigation/navigationConfig';
 
 // Generic captive-portal-style "is the phone online" probe. 204 No Content
 // is the standard "internet works" signal — chosen over a Fula-specific URL
@@ -208,9 +223,21 @@ async function probeRelay(dnsName: string): Promise<ProbeStatus> {
     });
 }
 
-export const DiagnosticsScreen: React.FC = () => {
+type DiagnosticsScreenProps = {
+    route?: RouteProp<MainTabsParamList, Routes.DiagnosticsTab>;
+};
+
+export const DiagnosticsScreen: React.FC<DiagnosticsScreenProps> = ({ route }) => {
     const { t } = useTranslation();
     const { listActivePlugins, activePlugins } = usePluginsStore();
+    // Plan A v2 wiring: pull peer ids from the existing stores.
+    const appPeerId = useUserProfileStore((s) => s.appPeerId) ?? '';
+    const currentBloxPeerId = useBloxsStore((s) => s.currentBloxPeerId) ?? '';
+    // Plan A v2 — A4 prefill from nav route param. Consumed once by
+    // the hook; the reducer clears it after first read so focus/remount
+    // doesn't re-prefill (codex catch).
+    const prefillScenario: ScenarioId | null =
+        (route?.params?.prefillScenario as ScenarioId | undefined) ?? null;
 
     const [netInfoConnected, setNetInfoConnected] = React.useState<boolean | null>(null);
     const [phoneInternet, setPhoneInternet] = React.useState<ProbeStatus>('checking');
@@ -442,14 +469,9 @@ export const DiagnosticsScreen: React.FC = () => {
                                 <FxText variant="bodySmallRegular">
                                     {t('diagnostics.pluginInstalledHint')}
                                 </FxText>
-                                <FxSpacer height={8} />
-                                {/* Deliberately disabled in Phase 5 — Phase 12 wires
-                                    this CTA to the AI chat screen. Disabled + "Coming
-                                    soon" is honest; a tappable no-op looks broken
-                                    (Codex pre-implementation review). */}
-                                <FxButton disabled>
-                                    {t('diagnostics.openBloxAiComingSoon')}
-                                </FxButton>
+                                {/* Plan A v2 (A2): AI session UI is rendered
+                                    below this card, OUTSIDE this branch so it
+                                    can stretch + own its own modals. */}
                             </>
                         ) : (
                             <>
@@ -474,6 +496,21 @@ export const DiagnosticsScreen: React.FC = () => {
                         the plugin install is no longer the blocker)
                     Don't render anything while presence is still 'checking' — would
                     flash the wrong message between mount and the first fetch. */}
+                {/* ───────── Plan A v2 (A2): Blox AI session UI ─────────
+                    Rendered when the plugin is installed AND both peer IDs
+                    are known. Owned by this screen so modals can sit on
+                    top of the scroll view. Hook accepts nullable BLE
+                    args; for the first cut bleManager is null (no
+                    discovery wired here yet — follow-up). LAN HTTP path
+                    works regardless when mDNS cache is populated. */}
+                {pluginPresence === 'installed' && appPeerId && currentBloxPeerId && (
+                    <BloxAiSessionBlock
+                        appPeerId={appPeerId}
+                        bloxPeerId={currentBloxPeerId}
+                        prefillScenario={prefillScenario}
+                    />
+                )}
+
                 {pluginPresence !== 'checking' && (
                     <FxCard>
                         <FxCard.Title>
@@ -506,5 +543,135 @@ export const DiagnosticsScreen: React.FC = () => {
                 )}
             </FxBox>
         </FxKeyboardAwareScrollView>
+    );
+};
+
+/**
+ * Inner block that instantiates the AI session hook and renders the
+ * chat + modals + pending panel. Split into its own component so the
+ * hook only mounts when both peer IDs are known (avoids the hook
+ * doing pending fetches before pairing completes).
+ *
+ * BLE wiring follow-up: for this PR's first cut, bleManager and
+ * blePeripheralId are null. The LAN HTTP path works for users on the
+ * same LAN as their blox once the mDNS cache is populated (Plan HTTP
+ * follow-up: wire the pairing flow's Zeroconf 'resolved' handler to
+ * call mdnsCache.noteRecord()). BLE fallback comes online when this
+ * screen mirrors the BluetoothCommands.screen pattern of useMemo'd
+ * BleManagerWrapper + getConnectedPeripherals on mount.
+ */
+const BloxAiSessionBlock: React.FC<{
+    appPeerId: string;
+    bloxPeerId: string;
+    prefillScenario: ScenarioId | null;
+}> = ({ appPeerId, bloxPeerId, prefillScenario }) => {
+    const { state, actions } = useAiSession({
+        appPeerId,
+        bloxPeerId,
+        bleManager: null,
+        blePeripheralId: null,
+        pluginInstalled: true,
+        initialPrefilledScenario: prefillScenario,
+    });
+
+    // Consume the route param after the first render so re-focus
+    // doesn't re-prefill (codex catch).
+    React.useEffect(() => {
+        if (state.prefilledScenario !== null) {
+            // Read once; reducer clears it on consume.
+            actions.consumePrefill();
+        }
+        // Run only once on mount.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    return (
+        <>
+            <FxSpacer height={12} />
+            {state.pending && state.pending.items.length > 0 && (
+                <>
+                    <PendingActionsPanel
+                        pending={state.pending}
+                        onApprove={(action) =>
+                            actions.approvePending(action)
+                        }
+                        onDismiss={(actionId) =>
+                            actions.dismissPending(actionId)
+                        }
+                        busy={state.busy}
+                    />
+                    <FxSpacer height={12} />
+                </>
+            )}
+
+            <BloxAIChat
+                transcript={state.transcript}
+                streaming={state.streaming}
+                sessionId={state.sessionId}
+                busy={state.busy}
+                onApprove={actions.openApproval}
+                onSubmitReply={actions.submitReply}
+                onShareContext={actions.openShareContext}
+                onStartSession={actions.startSession}
+            />
+
+            {/* Quick-start card sits below the chat when no session is
+                active; once a session starts the chat takes over. */}
+            {!state.sessionId && !state.streaming && (
+                <>
+                    <FxSpacer height={12} />
+                    <QuickStartCard
+                        onSelectScenario={actions.startQuickStart}
+                        onSubmitFreeform={actions.startSession}
+                        disabled={state.streaming}
+                        prefilledScenario={state.prefilledScenario}
+                    />
+                </>
+            )}
+
+            {/* Modal stack — only one is rendered at a time per the
+                reducer's activeModal invariant. */}
+            <ApprovalModal
+                action={
+                    state.modals.active === 'approval'
+                        ? state.modals.approvalAction
+                        : null
+                }
+                onApprove={actions.confirmApproval}
+                onCancel={actions.dismissApproval}
+                executing={state.busy}
+            />
+            <SharePhoneContextModal
+                phoneContext={
+                    state.modals.active === 'shareContext'
+                        ? state.modals.shareContextPreview
+                        : null
+                }
+                onConfirm={actions.confirmShareContext}
+                onCancel={actions.dismissShareContext}
+                sending={state.busy}
+            />
+            <FeedbackModal
+                sessionId={
+                    state.modals.active === 'feedback'
+                        ? state.modals.feedbackSessionId
+                        : null
+                }
+                onSubmit={(payload) =>
+                    actions.submitFeedback(payload.rating, payload.comment)
+                }
+                onDismiss={actions.dismissFeedback}
+                busy={state.busy}
+            />
+            <UploadTranscriptModal
+                payload={
+                    state.modals.active === 'uploadTranscript'
+                        ? state.modals.uploadTranscriptPayload
+                        : null
+                }
+                onUploaded={actions.dismissUploadTranscript}
+                onDismiss={actions.dismissUploadTranscript}
+            />
+        </>
     );
 };
