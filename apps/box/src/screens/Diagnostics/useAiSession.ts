@@ -825,10 +825,22 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
     //   (payload: FeedbackPayload) => void
     // The modal builds the payload internally via buildFeedbackPayload
     // and hands it to us already-shaped to the schema.
+    //
+    // Bug fix 2026-05-26: previously this dispatched modal/dismiss after
+    // the BLE write completed, which auto-closed FeedbackModal the
+    // instant the user picked 👍/👎/Skip. That killed the chance for
+    // the user to ALSO tap "Share anonymized transcript…" — the share
+    // button was visually present but unreachable. Now: this function
+    // is fire-and-forget for the rating signal, and the modal manages
+    // its own lifecycle (records "ratedAs" internally, shows the share
+    // button afterward, dismisses only when the user explicitly closes
+    // OR when the share action transitions activeModal away from
+    // 'feedback').
     const submitFeedback = useCallback(
         (payload: FeedbackPayload): void => {
             if (!bleManager || !blePeripheralId) {
-                dispatch({ type: 'modal/dismiss' });
+                // BLE unavailable — silently no-op the BLE write. The
+                // modal stays open so the user can still share + close.
                 return;
             }
             void (async () => {
@@ -843,9 +855,9 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 } catch {
                     // Best-effort. Local-only feedback log on the
                     // device; not critical the network call succeeds.
-                } finally {
-                    dispatch({ type: 'modal/dismiss' });
                 }
+                // Intentionally NOT dispatching modal/dismiss here —
+                // the modal stays open for the share follow-up.
             })();
         },
         [bleManager, blePeripheralId],
@@ -916,10 +928,19 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 return true;
             } catch (e) {
                 // AnonymizerError covers structural issues (too many events,
-                // bad UUID, etc.). Non-fatal — just don't open the modal.
-                if (e instanceof AnonymizerError) {
-                    return false;
-                }
+                // bad UUID, unknown event type, etc.). Non-fatal but the
+                // share button MUST fail visibly — silent returns led to
+                // a "tapped, nothing happens" bug (2026-05-26 lab report).
+                // Log to console so the React Native DevTools / Metro log
+                // captures it, AND return false so the caller can show a
+                // toast/banner.
+                const reason = e instanceof Error ? e.message : String(e);
+                // eslint-disable-next-line no-console
+                console.warn(
+                    'prepareTranscriptUpload: anonymizeTranscript failed:',
+                    reason,
+                    { transcriptLen: rawEvents.length, eventTypes: rawEvents.map((r) => r.type) },
+                );
                 return false;
             }
         },

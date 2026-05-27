@@ -1,24 +1,39 @@
 /**
- * FeedbackModal — Phase 16.
+ * FeedbackModal — Phase 16 + Phase 21 (rewritten 2026-05-26).
  *
- * Shown at end-of-session in the Diagnostics screen. Three primary CTAs:
+ * Shown at end-of-session in the Diagnostics screen. Two phases:
  *
- *   - 👍 (rating=1, "helpful")
- *   - 👎 (rating=-1, "didn't help")
- *   - Skip (rating=0, explicit skip)
+ *   Phase 1: 'rate' — user picks 👍 / 👎 / Skip.
+ *   Phase 2: 'recorded' — modal stays open, shows the rating they
+ *            recorded + an optional "Share anonymized transcript…"
+ *            button (Phase 21 path to the developer team's training
+ *            server) + a Close button.
  *
- * An optional comment field appears below. The submit handler is parent-
- * supplied; the parent owns the BLE call (ai/feedback) and the navigation
- * after success. Modal closes on either submit or backdrop tap.
+ * Three UX bugs this rewrite fixes (lab-observed 2026-05-26):
  *
- * Distinct from Phase 12's ApprovalModal — this one is non-blocking and
- * carries no security boundary; it just logs the user's signal.
+ *   (a) Buttons were sized to text only ("Yes" / "No" / "Skip" /
+ *       "Close" each ~40px wide). Now each button is `flex: 1`
+ *       inside a row, so they share the modal width evenly.
  *
- * The payload construction is in `utils/buildFeedbackPayload.ts` so the
+ *   (b) Picking 👍 / 👎 / Skip auto-dismissed the modal (because
+ *       useAiSession.submitFeedback dispatched modal/dismiss). That
+ *       killed the user's ability to ALSO tap "Share anonymized
+ *       transcript…". Now: rating switches the modal to Phase 2
+ *       and the share button is reachable.
+ *
+ *   (c) Tapping "Share anonymized transcript…" did nothing — the
+ *       previous handler called onShareTranscript() (which dispatches
+ *       modal/open-upload-transcript) AND THEN onDismiss() (which
+ *       dispatches modal/dismiss, clearing uploadTranscriptPayload
+ *       back to null in the same tick). Upload modal opened then
+ *       immediately died. Now: share button does NOT call onDismiss;
+ *       activeModal transition auto-hides this modal.
+ *
+ * Payload construction stays in `utils/buildFeedbackPayload.ts` so the
  * pure logic is testable without dragging @functionland/component-library
- * into the jest path (Phase 5 lesson).
+ * into the jest path.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Modal,
     TextInput,
@@ -42,9 +57,11 @@ import {
 export interface FeedbackModalProps {
     /** When non-null, modal is visible and bound to this session. */
     sessionId: string | null;
-    /** Called when the user picks a rating + optional comment. */
+    /** Called when the user picks a rating + optional comment.
+     *  Fire-and-forget on the parent side: must NOT dismiss the modal
+     *  (FeedbackModal manages its own dismiss in Phase 2). */
     onSubmit: (payload: FeedbackPayload) => void;
-    /** Called when the user dismisses without rating. */
+    /** Called when the user explicitly closes the modal. */
     onDismiss: () => void;
     /** True while the parent's POST is in flight. */
     busy?: boolean;
@@ -53,11 +70,14 @@ export interface FeedbackModalProps {
      * transcript to help train the AI (Phase 21). Wired by the screen
      * to useAiSession.prepareTranscriptUpload — that builds the payload
      * + opens UploadTranscriptModal (where the user reviews the JSON
-     * before the actual POST). When this prop is omitted, the share
-     * button stays hidden.
+     * before the actual POST). Returns false if the payload couldn't
+     * be built (empty transcript, anonymizer rejection); we show an
+     * inline error so the user isn't left staring at "nothing happened".
      */
     onShareTranscript?: (rating: FeedbackRating, comment: string) => boolean;
 }
+
+type Phase = 'rate' | 'recorded';
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     sessionId,
@@ -69,26 +89,70 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     const { t } = useTranslation();
     const theme = useFxTheme();
     const [comment, setComment] = useState('');
+    const [phase, setPhase] = useState<Phase>('rate');
+    const [ratedAs, setRatedAs] = useState<FeedbackRating | null>(null);
+    const [shareError, setShareError] = useState<string | null>(null);
 
     const visible = sessionId !== null;
+
+    // Reset state every time the modal opens fresh (sessionId becoming
+    // non-null after being null). Avoids stale phase from a prior session.
+    useEffect(() => {
+        if (visible) {
+            setPhase('rate');
+            setRatedAs(null);
+            setShareError(null);
+            // Don't reset `comment` here — user might have typed before
+            // tapping a rating and we want to preserve it in the share
+            // call below.
+        }
+    }, [visible]);
 
     const submit = (rating: FeedbackRating) => {
         if (!sessionId) return;
         try {
-            const payload = buildFeedbackPayload({
-                sessionId,
-                rating,
-                comment,
-            });
+            const payload = buildFeedbackPayload({ sessionId, rating, comment });
             onSubmit(payload);
-            setComment('');
+            setRatedAs(rating);
+            setPhase('recorded');
         } catch {
-            // Should never happen: buildFeedbackPayload only throws on
-            // invalid sessionId / rating, and we control both. If it
-            // does, fall through to dismiss so the user isn't stuck.
+            // Should never happen at runtime — buildFeedbackPayload only
+            // throws on bogus session/rating combos. If it does, fail
+            // safe by dismissing so the user isn't stuck.
             onDismiss();
         }
     };
+
+    const handleShare = () => {
+        if (!onShareTranscript) return;
+        setShareError(null);
+        const ratingToShare = ratedAs ?? 0;
+        const opened = onShareTranscript(ratingToShare, comment);
+        if (!opened) {
+            // anonymizeTranscript rejected (empty transcript, unknown
+            // event type, etc.). Show the error inline rather than
+            // silently doing nothing — the previous silent behavior
+            // wasted the user's tap.
+            setShareError(t('diagnostics.feedback.shareFailed'));
+            return;
+        }
+        // SUCCESS path — do NOT call onDismiss. The reducer's
+        // modal/open-upload-transcript dispatch switched activeModal
+        // to 'uploadTranscript', which makes this modal's `sessionId`
+        // prop become null (gated by the Diagnostics screen), which
+        // auto-hides this modal. Calling onDismiss here would dispatch
+        // modal/dismiss and clear uploadTranscriptPayload back to null
+        // in the same tick, killing the upload modal before it renders.
+    };
+
+    const ratingLabel =
+        ratedAs === 1
+            ? t('diagnostics.feedback.thumbsUp')
+            : ratedAs === -1
+                ? t('diagnostics.feedback.thumbsDown')
+                : ratedAs === 0
+                    ? t('diagnostics.feedback.skip')
+                    : '';
 
     return (
         <Modal
@@ -110,105 +174,128 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     </FxText>
                     <FxSpacer height={6} />
                     <FxText variant="bodySmallRegular">
-                        {t('diagnostics.feedback.subtitle')}
+                        {phase === 'rate'
+                            ? t('diagnostics.feedback.subtitle')
+                            : t('diagnostics.feedback.recordedSubtitle', {
+                                  rating: ratingLabel,
+                              })}
                     </FxText>
                     <FxSpacer height={12} />
 
-                    <FxBox flexDirection="row" justifyContent="space-around">
-                        <FxButton
-                            disabled={busy}
-                            onPress={() => submit(1)}
-                            testID="feedback-thumbs-up"
-                        >
-                            {t('diagnostics.feedback.thumbsUp')}
-                        </FxButton>
-                        <FxButton
-                            disabled={busy}
-                            onPress={() => submit(-1)}
-                            testID="feedback-thumbs-down"
-                            variant="inverted"
-                        >
-                            {t('diagnostics.feedback.thumbsDown')}
-                        </FxButton>
-                    </FxBox>
-
-                    <FxSpacer height={14} />
-                    <FxText variant="bodyXSRegular">
-                        {t('diagnostics.feedback.commentLabel')}
-                    </FxText>
-                    <FxSpacer height={4} />
-                    <TextInput
-                        value={comment}
-                        onChangeText={setComment}
-                        multiline
-                        maxLength={COMMENT_MAX_LENGTH}
-                        editable={!busy}
-                        style={[styles.comment, { color: theme.colors.content1 }]}
-                        placeholder={t('diagnostics.feedback.commentPlaceholder')}
-                        placeholderTextColor={theme.colors.content3}
-                        testID="feedback-comment-input"
-                    />
-
-                    <FxSpacer height={12} />
-                    <FxBox flexDirection="row" justifyContent="space-between">
-                        <FxButton
-                            disabled={busy}
-                            onPress={onDismiss}
-                            variant="inverted"
-                            testID="feedback-dismiss"
-                        >
-                            {t('diagnostics.feedback.dismiss')}
-                        </FxButton>
-                        <FxButton
-                            disabled={busy}
-                            onPress={() => submit(0)}
-                            testID="feedback-skip"
-                        >
-                            {t('diagnostics.feedback.skip')}
-                        </FxButton>
-                    </FxBox>
-
-                    {/* Phase 21 opt-in transcript upload offer. Independent
-                        of the 👍/👎/Skip choice so the user can share a
-                        session even if they don't want to also rate it.
-                        Tapping this button does NOT upload immediately — it
-                        opens UploadTranscriptModal where the user can
-                        REVIEW the anonymized JSON before any network call. */}
-                    {onShareTranscript && (
+                    {phase === 'rate' && (
                         <>
-                            <FxSpacer height={14} />
-                            <FxBox
-                                paddingTop="8"
-                                borderTopWidth={1}
-                                style={{ borderTopColor: 'rgba(127,127,127,0.3)' }}
-                            >
-                                <FxText variant="bodyXSRegular">
-                                    {t('diagnostics.feedback.shareHint')}
-                                </FxText>
-                                <FxSpacer height={6} />
-                                <FxButton
-                                    disabled={busy}
-                                    onPress={() => {
-                                        // Use the current rating selection
-                                        // signal (skip=0) if user hasn't
-                                        // tapped 👍/👎 — the upload modal
-                                        // will show the rating in the
-                                        // preview JSON so the user can
-                                        // confirm/abort there.
-                                        const opened = onShareTranscript(0, comment);
-                                        if (opened) {
-                                            // FeedbackModal closes; the
-                                            // UploadTranscriptModal takes over.
-                                            setComment('');
-                                            onDismiss();
-                                        }
-                                    }}
-                                    variant="inverted"
-                                    testID="feedback-share-transcript"
-                                >
-                                    {t('diagnostics.feedback.shareButton')}
-                                </FxButton>
+                            {/* Yes / No row — each button takes 50% via
+                                flex:1 + a gap. Was previously sized to
+                                text only (Yes ≈ 40px wide). */}
+                            <FxBox flexDirection="row">
+                                <FxBox flex={1}>
+                                    <FxButton
+                                        disabled={busy}
+                                        onPress={() => submit(1)}
+                                        testID="feedback-thumbs-up"
+                                    >
+                                        {t('diagnostics.feedback.thumbsUp')}
+                                    </FxButton>
+                                </FxBox>
+                                <FxSpacer width={8} />
+                                <FxBox flex={1}>
+                                    <FxButton
+                                        disabled={busy}
+                                        onPress={() => submit(-1)}
+                                        testID="feedback-thumbs-down"
+                                        variant="inverted"
+                                    >
+                                        {t('diagnostics.feedback.thumbsDown')}
+                                    </FxButton>
+                                </FxBox>
                             </FxBox>
+
+                            <FxSpacer height={14} />
+                            <FxText variant="bodyXSRegular">
+                                {t('diagnostics.feedback.commentLabel')}
+                            </FxText>
+                            <FxSpacer height={4} />
+                            <TextInput
+                                value={comment}
+                                onChangeText={setComment}
+                                multiline
+                                maxLength={COMMENT_MAX_LENGTH}
+                                editable={!busy}
+                                style={[styles.comment, { color: theme.colors.content1 }]}
+                                placeholder={t('diagnostics.feedback.commentPlaceholder')}
+                                placeholderTextColor={theme.colors.content3}
+                                testID="feedback-comment-input"
+                            />
+
+                            <FxSpacer height={12} />
+                            {/* Close / Skip row — also each flex:1. */}
+                            <FxBox flexDirection="row">
+                                <FxBox flex={1}>
+                                    <FxButton
+                                        disabled={busy}
+                                        onPress={onDismiss}
+                                        variant="inverted"
+                                        testID="feedback-dismiss"
+                                    >
+                                        {t('diagnostics.feedback.dismiss')}
+                                    </FxButton>
+                                </FxBox>
+                                <FxSpacer width={8} />
+                                <FxBox flex={1}>
+                                    <FxButton
+                                        disabled={busy}
+                                        onPress={() => submit(0)}
+                                        testID="feedback-skip"
+                                    >
+                                        {t('diagnostics.feedback.skip')}
+                                    </FxButton>
+                                </FxBox>
+                            </FxBox>
+                        </>
+                    )}
+
+                    {phase === 'recorded' && (
+                        <>
+                            {/* Phase 21 share offer — independent action.
+                                Tap to anonymize + open the upload preview
+                                modal. The share button is the ONLY path to
+                                ai-training.fx.land/transcripts. */}
+                            {onShareTranscript && (
+                                <>
+                                    <FxText variant="bodyXSRegular">
+                                        {t('diagnostics.feedback.shareHint')}
+                                    </FxText>
+                                    {shareError && (
+                                        <>
+                                            <FxSpacer height={4} />
+                                            <FxText
+                                                variant="bodyXSRegular"
+                                                color="errorBase"
+                                            >
+                                                {shareError}
+                                            </FxText>
+                                        </>
+                                    )}
+                                    <FxSpacer height={8} />
+                                    <FxButton
+                                        disabled={busy}
+                                        onPress={handleShare}
+                                        testID="feedback-share-transcript"
+                                    >
+                                        {t('diagnostics.feedback.shareButton')}
+                                    </FxButton>
+                                    <FxSpacer height={10} />
+                                </>
+                            )}
+                            {/* Close button is FULL WIDTH in Phase 2. */}
+                            <FxButton
+                                disabled={busy}
+                                onPress={onDismiss}
+                                variant="inverted"
+                                testID="feedback-close"
+                            >
+                                {t('diagnostics.feedback.dismiss')}
+                            </FxButton>
                         </>
                     )}
                 </FxBox>

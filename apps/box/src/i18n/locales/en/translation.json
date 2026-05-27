@@ -78,14 +78,16 @@
       "feedback": {
         "title": "Did this help?",
         "subtitle": "Your rating stays on your Blox; no automatic upload happens.",
+        "recordedSubtitle": "Recorded: {{rating}}. You can also share an anonymized copy of this session with the developers (optional) or close.",
         "thumbsUp": "Yes",
         "thumbsDown": "No",
         "skip": "Skip",
         "dismiss": "Close",
         "commentLabel": "Optional: tell us more",
         "commentPlaceholder": "What was helpful or missing?",
-        "shareHint": "Help improve Blox AI — share an anonymized copy of this session. You'll review the JSON before it's uploaded.",
-        "shareButton": "Share anonymized transcript…"
+        "shareHint": "Help improve Blox AI — share an anonymized copy of this session with the Fula developer team. You'll review the JSON before it's uploaded.",
+        "shareButton": "Share anonymized transcript…",
+        "shareFailed": "Couldn't prepare the transcript for sharing. Check Metro logs for the reason (anonymizer error)."
       },
       "uploadTranscript": {
         "title": "Help improve Blox AI?",
