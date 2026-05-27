@@ -51,10 +51,12 @@
         "no": "No",
         "replyPlaceholder": "Type your reply…",
         "submitReply": "Send reply",
-        "shareContext": "Share my phone's context",
+        "shareContext": "Share my phone's context with Blox AI",
+        "shareContextHint": "Sends WiFi / connectivity info to your Blox locally for the AI to use during this session. Stays on your device — not uploaded.",
         "connectingTitle": "Connecting to your Blox…",
         "connectingSubtitle": "Looking for your Blox on your WiFi network or over Bluetooth. This usually takes a couple of seconds.",
-        "endAndRateButton": "End session & rate"
+        "endAndRateButton": "End session, rate & share with developer",
+        "endAndRateHint": "Rate the session and (optionally) upload an anonymized copy to the Fula developer team to help improve Blox AI. You'll review the JSON before anything is sent."
       },
       "approval": {
         "tier2Title": "Approve this fix?",

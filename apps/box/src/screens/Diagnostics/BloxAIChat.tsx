@@ -211,16 +211,25 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
                 >
                     {t('diagnostics.chat.shareContext')}
                 </FxButton>
+                <FxSpacer height={4} />
+                <FxText variant="bodyXSRegular" style={{ opacity: 0.65 }}>
+                    {t('diagnostics.chat.shareContextHint')}
+                </FxText>
 
                 {/* End-session CTA: opens FeedbackModal where the user
                     rates the session (👍/👎/Skip) AND can opt-in to
-                    share the anonymized transcript via the upload modal
-                    (Phase 21). Only shown when the session has actually
-                    produced output (sessionId set + not streaming) —
-                    no point rating a session that's mid-tool-call. */}
+                    upload an anonymized transcript to the Fula
+                    developer team via the upload modal (Phase 21).
+                    Only shown when the session has actually produced
+                    output (sessionId set + not streaming) — no point
+                    rating a session that's mid-tool-call.
+
+                    Labelled "End session, rate & share with developer"
+                    explicitly so the user can distinguish it from the
+                    Share-Context button above (which stays local). */}
                 {onOpenFeedback && sessionId && !streaming && transcript.length > 0 && (
                     <>
-                        <FxSpacer height={8} />
+                        <FxSpacer height={12} />
                         <FxButton
                             onPress={onOpenFeedback}
                             disabled={busy}
@@ -228,6 +237,10 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
                         >
                             {t('diagnostics.chat.endAndRateButton')}
                         </FxButton>
+                        <FxSpacer height={4} />
+                        <FxText variant="bodyXSRegular" style={{ opacity: 0.65 }}>
+                            {t('diagnostics.chat.endAndRateHint')}
+                        </FxText>
                     </>
                 )}
             </FxBox>
