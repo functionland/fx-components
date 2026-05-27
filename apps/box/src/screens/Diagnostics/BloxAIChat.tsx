@@ -61,6 +61,16 @@ export interface BloxAIChatProps {
      * session has yielded its verdict). Until then the chat is still
      * live and we don't offer the end-CTA. */
     onOpenFeedback?: () => void;
+    /**
+     * Fired when the user taps "Start a new chat". Pure local state reset —
+     * the parent's clearSession() wipes the transcript so a fresh prompt
+     * can be entered. Rendered alongside onOpenFeedback when the active
+     * session has ended (verdict reached, user ended it, OR transport
+     * aborted — common after the phone returns from background and the
+     * SSE stream surfaces "Software caused connection abort"). Without
+     * this affordance the user is stuck on a dead transcript and has to
+     * navigate away to reset. */
+    onStartNewChat?: () => void;
     /** True while ai/execute or ai/phone-context is in flight (locks UI). */
     busy?: boolean;
 }
@@ -89,6 +99,7 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
     onShareContext,
     onStartSession,
     onOpenFeedback,
+    onStartNewChat,
     busy = false,
 }) => {
     const { t } = useTranslation();
@@ -216,31 +227,52 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
                     {t('diagnostics.chat.shareContextHint')}
                 </FxText>
 
-                {/* End-session CTA: opens FeedbackModal where the user
-                    rates the session (👍/👎/Skip) AND can opt-in to
-                    upload an anonymized transcript to the Fula
-                    developer team via the upload modal (Phase 21).
-                    Only shown when the session has actually produced
-                    output (sessionId set + not streaming) — no point
-                    rating a session that's mid-tool-call.
-
-                    Labelled "End session, rate & share with developer"
-                    explicitly so the user can distinguish it from the
-                    Share-Context button above (which stays local). */}
-                {onOpenFeedback && sessionId && !streaming && transcript.length > 0 && (
+                {/* Ended-session CTAs: render Start-new-chat whenever the
+                    chat is sitting idle on something the user can read
+                    (a verdict, an error, an aborted half-session). The
+                    SSE-aborted case includes the dropped-before-
+                    session_started scenario (phone backgrounded
+                    immediately after tapping Start), so sessionId may
+                    still be null — gate Start-new-chat on transcript +
+                    !streaming ONLY. End-and-rate additionally requires a
+                    real sessionId because FeedbackModal posts the rating
+                    against that id; if no session ever started, there's
+                    nothing to rate. */}
+                {!streaming && transcript.length > 0 && (
                     <>
-                        <FxSpacer height={12} />
-                        <FxButton
-                            onPress={onOpenFeedback}
-                            disabled={busy}
-                            testID="blox-ai-end-and-rate"
-                        >
-                            {t('diagnostics.chat.endAndRateButton')}
-                        </FxButton>
-                        <FxSpacer height={4} />
-                        <FxText variant="bodyXSRegular" style={{ opacity: 0.65 }}>
-                            {t('diagnostics.chat.endAndRateHint')}
-                        </FxText>
+                        {onStartNewChat && (
+                            <>
+                                <FxSpacer height={12} />
+                                <FxButton
+                                    onPress={onStartNewChat}
+                                    disabled={busy}
+                                    testID="blox-ai-start-new-chat"
+                                >
+                                    {t('diagnostics.chat.startNewChatButton')}
+                                </FxButton>
+                                <FxSpacer height={4} />
+                                <FxText variant="bodyXSRegular" style={{ opacity: 0.65 }}>
+                                    {t('diagnostics.chat.startNewChatHint')}
+                                </FxText>
+                            </>
+                        )}
+                        {onOpenFeedback && sessionId && (
+                            <>
+                                <FxSpacer height={12} />
+                                <FxButton
+                                    variant="inverted"
+                                    onPress={onOpenFeedback}
+                                    disabled={busy}
+                                    testID="blox-ai-end-and-rate"
+                                >
+                                    {t('diagnostics.chat.endAndRateButton')}
+                                </FxButton>
+                                <FxSpacer height={4} />
+                                <FxText variant="bodyXSRegular" style={{ opacity: 0.65 }}>
+                                    {t('diagnostics.chat.endAndRateHint')}
+                                </FxText>
+                            </>
+                        )}
                     </>
                 )}
             </FxBox>

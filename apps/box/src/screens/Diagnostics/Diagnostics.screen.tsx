@@ -665,6 +665,14 @@ const BloxAiSessionBlock: React.FC<{
                 // (Phase 21 — the only path that triggers the upload to
                 // ai-training.fx.land/transcripts).
                 onOpenFeedback={actions.openFeedback}
+                // Wipes the local transcript so the user can begin a
+                // fresh session. Primary recovery after the SSE stream
+                // aborts (phone backgrounded mid-session, OS suspended
+                // the JS engine, "Software caused connection abort"
+                // surfaces on resume). Also offered alongside the
+                // rate-and-share button after a normal session end so
+                // users aren't forced through the rate flow to chat again.
+                onStartNewChat={actions.clearSession}
             />
 
             {/* Quick-start card sits below the chat when no session is

@@ -155,6 +155,16 @@ export interface UseAiSessionResult {
         startQuickStart: (scenario: ScenarioId) => Promise<void>;
         endSession: () => void;
         cancelSession: () => void;
+        /**
+         * Reset the chat surface so the user can begin a fresh session.
+         * Pure local state reset — no BLE/HTTP traffic. Used by the
+         * "Start new chat" button in BloxAIChat that appears after a
+         * session has reached a verdict, been ended by the user, or
+         * been aborted (e.g. SSE dropped while the phone was backgrounded).
+         * Does NOT touch modals, pending recommendations, or
+         * prefilledScenario — those are independent of the live chat.
+         */
+        clearSession: () => void;
         retryOverBle: () => Promise<void>;
         consumePrefill: () => void;
 
@@ -210,6 +220,7 @@ type Action =
     | { type: 'session/ended-complete' }
     | { type: 'session/ended-by-user'; sessionId: string }
     | { type: 'session/cancelled' }
+    | { type: 'session/clear' }
     | { type: 'busy/set'; busy: boolean }
     | { type: 'modal/open-approval'; action: RecommendedActionEvent }
     | { type: 'modal/dismiss' }
@@ -372,6 +383,25 @@ function reducer(state: AiSessionState, action: Action): AiSessionState {
 
         case 'session/cancelled':
             return { ...state, streaming: false };
+
+        case 'session/clear':
+            // Reset the conversation surface so the user can start a fresh
+            // chat after a previous session ended (verdict reached, user
+            // tapped End-and-rate, OR the SSE stream aborted because the
+            // phone went to background). Leaves modals / pending /
+            // prefilledScenario alone — those are independent surfaces and
+            // resetting them would dismiss in-progress UX the user didn't
+            // ask to close.
+            return {
+                ...state,
+                transcript: [],
+                sessionId: null,
+                streaming: false,
+                transportKind: null,
+                lastPrompt: null,
+                lastScenarioId: null,
+                lastTransportError: null,
+            };
 
         case 'busy/set':
             return { ...state, busy: action.busy };
@@ -723,6 +753,21 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         }
     }, []);
 
+    const clearSession = useCallback(() => {
+        // Cancel any lingering SSE handle before we wipe the local state.
+        // If the previous session already terminated (verdict or
+        // transport-error), cancel() is a safe no-op.
+        try {
+            activeHandleRef.current?.cancel();
+        } catch {
+            // swallow
+        }
+        activeHandleRef.current = null;
+        activeClientRef.current = null;
+        sessionIdRef.current = null;
+        dispatch({ type: 'session/clear' });
+    }, []);
+
     // ---- Recommendation flow --------------------------------------------
 
     const openApproval = useCallback((action: RecommendedActionEvent) => {
@@ -1042,6 +1087,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 startQuickStart,
                 endSession,
                 cancelSession,
+                clearSession,
                 retryOverBle,
                 consumePrefill,
                 openApproval,
@@ -1064,7 +1110,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         }),
         [
             state, startSession, startQuickStart, endSession, cancelSession,
-            retryOverBle, consumePrefill, openApproval, confirmApproval,
+            clearSession, retryOverBle, consumePrefill, openApproval, confirmApproval,
             dismissApproval, submitReply, openShareContext, confirmShareContext,
             dismissShareContext, openFeedback, submitFeedback, dismissFeedback,
             openUploadTranscript, prepareTranscriptUpload, dismissUploadTranscript,

@@ -38,6 +38,7 @@ describe('useAiSession reducer — session lifecycle', () => {
         const after = reducer(before, {
             type: 'session/start-requested',
             prompt: 'why disconnected?',
+            scenarioId: 'freeform',
             transportKind: 'lan-http',
         });
         expect(after.transcript).toEqual([]);
@@ -72,7 +73,7 @@ describe('useAiSession reducer — session lifecycle', () => {
 
     test('session/event with verdict stops streaming', () => {
         const start = reducer(initialState(null), {
-            type: 'session/start-requested', prompt: 'p', transportKind: 'ble',
+            type: 'session/start-requested', prompt: 'p', scenarioId: 'freeform', transportKind: 'ble',
         });
         const after = reducer(start, {
             type: 'session/event',
@@ -139,6 +140,50 @@ describe('useAiSession reducer — session lifecycle', () => {
         expect(after.streaming).toBe(false);
         expect(after.modals.active).toBe('feedback');
         expect(after.modals.feedbackSessionId).toBe('sess-9');
+    });
+
+    test('session/clear wipes the transcript + session refs but keeps modals + pending', () => {
+        // Build a state that mimics "session ended by user with feedback
+        // modal still open, transcript populated, transport error
+        // recorded (simulating SSE abort from backgrounding)".
+        const populated = {
+            ...initialState('disconnected'),
+            transcript: [
+                { id: 'ev-0', event: { type: 'thought', payload: 'thinking' } as BloxAiEvent, receivedAt: 0 },
+                { id: 'err-1', event: { type: 'error', code: 'sse-aborted', message: 'aborted', recoverable: true } as BloxAiEvent, receivedAt: 0 },
+            ],
+            sessionId: 'sess-42',
+            streaming: true,
+            transportKind: 'lan-http' as const,
+            lastPrompt: 'why disconnected?',
+            lastScenarioId: 'disconnected' as const,
+            lastTransportError: { kind: 'sse-aborted' as const, message: 'aborted', transient: true },
+            modals: {
+                active: 'feedback' as const,
+                approvalAction: null,
+                shareContextPreview: null,
+                feedbackSessionId: 'sess-42',
+                uploadTranscriptPayload: null,
+            },
+            pending: { actions: [{ action_id: 'p1' }] } as unknown as ReturnType<typeof initialState>['pending'],
+        };
+
+        const cleared = reducer(populated, { type: 'session/clear' });
+
+        // Conversation surface wiped clean.
+        expect(cleared.transcript).toEqual([]);
+        expect(cleared.sessionId).toBeNull();
+        expect(cleared.streaming).toBe(false);
+        expect(cleared.transportKind).toBeNull();
+        expect(cleared.lastPrompt).toBeNull();
+        expect(cleared.lastScenarioId).toBeNull();
+        expect(cleared.lastTransportError).toBeNull();
+
+        // Independent surfaces preserved.
+        expect(cleared.modals.active).toBe('feedback');
+        expect(cleared.modals.feedbackSessionId).toBe('sess-42');
+        expect(cleared.pending).toEqual(populated.pending);
+        expect(cleared.prefilledScenario).toBe('disconnected');
     });
 });
 

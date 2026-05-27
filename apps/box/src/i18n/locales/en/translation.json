@@ -56,7 +56,9 @@
         "connectingTitle": "Connecting to your Blox…",
         "connectingSubtitle": "Looking for your Blox on your WiFi network or over Bluetooth. This usually takes a couple of seconds.",
         "endAndRateButton": "End session, rate & share with developer",
-        "endAndRateHint": "Rate the session and (optionally) upload an anonymized copy to the Fula developer team to help improve Blox AI. You'll review the JSON before anything is sent."
+        "endAndRateHint": "Rate the session and (optionally) upload an anonymized copy to the Fula developer team to help improve Blox AI. You'll review the JSON before anything is sent.",
+        "startNewChatButton": "Start a new chat",
+        "startNewChatHint": "Clears the current conversation so you can ask Blox AI a new question. Use this if the session got interrupted (e.g. the app went to the background and the connection dropped)."
       },
       "approval": {
         "tier2Title": "Approve this fix?",
