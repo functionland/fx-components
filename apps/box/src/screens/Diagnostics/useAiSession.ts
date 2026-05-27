@@ -106,6 +106,14 @@ export interface AiSessionState {
     };
     /** Last prompt sent — populated so "Retry over BLE" can re-fire it. */
     lastPrompt: string | null;
+    /**
+     * Which scenario the user picked for the last-started session.
+     * 'freeform' if they typed their own prompt; null before any
+     * session starts. Persisted into the uploaded transcript so the
+     * operator analytics can filter by symptom class without parsing
+     * English text.
+     */
+    lastScenarioId: ScenarioId | 'freeform' | null;
     /** Last transport error that yielded a retry surface. */
     lastTransportError: AiClientError | null;
 }
@@ -194,7 +202,7 @@ export interface UseAiSessionResult {
 // Reducer ------------------------------------------------------------------
 
 type Action =
-    | { type: 'session/start-requested'; prompt: string; transportKind: AiTransportKind | null }
+    | { type: 'session/start-requested'; prompt: string; scenarioId: ScenarioId | 'freeform'; transportKind: AiTransportKind | null }
     | { type: 'session/transport-selected'; transportKind: AiTransportKind }
     | { type: 'session/started'; sessionId: string }
     | { type: 'session/event'; event: BloxAiEvent }
@@ -232,6 +240,7 @@ function initialState(prefilled: ScenarioId | null): AiSessionState {
             uploadTranscriptPayload: null,
         },
         lastPrompt: null,
+        lastScenarioId: null,
         lastTransportError: null,
     };
 }
@@ -253,6 +262,7 @@ function reducer(state: AiSessionState, action: Action): AiSessionState {
                 streaming: true,
                 transportKind: action.transportKind,
                 lastPrompt: action.prompt,
+                lastScenarioId: action.scenarioId,
                 lastTransportError: null,
             };
 
@@ -556,7 +566,13 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
     }, []);
 
     const startSessionInternal = useCallback(
-        async (prompt: string, opts?: { forceTransport?: 'lan-http' | 'ble' }) => {
+        async (
+            prompt: string,
+            opts?: {
+                forceTransport?: 'lan-http' | 'ble';
+                scenarioId?: ScenarioId | 'freeform';
+            },
+        ) => {
             // Don't start a new session if one is already streaming.
             if (state.streaming) return;
 
@@ -578,7 +594,12 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
             // transportKind is filled in by `session/transport-selected`
             // once a choice is made; the UI doesn't need it to render
             // "Connecting...".
-            dispatch({ type: 'session/start-requested', prompt, transportKind: null });
+            dispatch({
+                type: 'session/start-requested',
+                prompt,
+                scenarioId: opts?.scenarioId ?? 'freeform',
+                transportKind: null,
+            });
 
             let chosenKind: AiTransportKind;
             let client: AiClient;
@@ -651,7 +672,12 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
     const startQuickStart = useCallback(
         (id: ScenarioId) => {
             const scenario = getScenario(id);
-            return startSessionInternal(scenario.canonicalPrompt);
+            // Pass the scenarioId through so the eventual upload payload
+            // knows which canonical scenario the user tapped (vs. typed
+            // freeform).
+            return startSessionInternal(scenario.canonicalPrompt, {
+                scenarioId: id,
+            });
         },
         [startSessionInternal],
     );
@@ -661,9 +687,14 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         // Fresh session over BLE — codex's "do not claim seamless
         // resume" stance. Container's SessionManager will mint a new
         // sessionId; transcript shows the old error row + the new
-        // session rows; no duplicate events.
-        await startSessionInternal(state.lastPrompt, { forceTransport: 'ble' });
-    }, [state.lastPrompt, startSessionInternal]);
+        // session rows; no duplicate events. Preserve the scenarioId
+        // from the original attempt so the uploaded transcript still
+        // carries the right symptom-class label.
+        await startSessionInternal(state.lastPrompt, {
+            forceTransport: 'ble',
+            scenarioId: state.lastScenarioId ?? 'freeform',
+        });
+    }, [state.lastPrompt, state.lastScenarioId, startSessionInternal]);
 
     const cancelSession = useCallback(() => {
         try {
@@ -923,6 +954,14 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                     events: rawEvents,
                     rating,
                     comment: comment && comment.trim() ? comment.trim() : undefined,
+                    // Include the prompt + scenario the user picked so the
+                    // operator analyzing this transcript has the full
+                    // context — without these the verdict and recommended
+                    // actions are hard to interpret. Anonymizer strips
+                    // any PII from the prompt before it lands in the
+                    // payload.
+                    userPrompt: state.lastPrompt ?? undefined,
+                    scenarioId: state.lastScenarioId ?? undefined,
                 });
                 dispatch({ type: 'modal/open-upload-transcript', payload });
                 return true;
@@ -944,7 +983,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 return false;
             }
         },
-        [state.transcript],
+        [state.transcript, state.lastPrompt, state.lastScenarioId],
     );
 
     const dismissUploadTranscript = useCallback(() => {

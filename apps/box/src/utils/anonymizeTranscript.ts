@@ -194,6 +194,12 @@ export interface AnonymizedEvent {
     payload?: unknown;
 }
 
+export type ScenarioId =
+    | 'disconnected'
+    | 'not-earning'
+    | 'cannot-join-pool'
+    | 'freeform';
+
 export interface AnonymizeArgs {
     /** Client-supplied UUID v4 (lowercase). Used as idempotency key. */
     uploadId: string;
@@ -203,6 +209,20 @@ export interface AnonymizeArgs {
     events: RawTranscriptEvent[];
     rating: FeedbackRating;
     comment?: string;
+    /**
+     * Optional. The original prompt that started the AI session — either
+     * a canonical quick-start prompt or user-typed freeform. Phone-side
+     * anonymizer strips path/SSID/IP/peer-id patterns before upload.
+     * Without this, the operator has no context for the verdict /
+     * recommended_action they're reviewing.
+     */
+    userPrompt?: string;
+    /**
+     * Optional. Which quick-start scenario the user tapped, or 'freeform'
+     * if they typed their own prompt. Enables analytical filtering on
+     * the server without re-parsing English prompt text.
+     */
+    scenarioId?: ScenarioId;
 }
 
 export interface AnonymizedTranscript {
@@ -212,6 +232,8 @@ export interface AnonymizedTranscript {
     events: AnonymizedEvent[];
     user_rating: FeedbackRating;
     user_comment?: string;
+    user_prompt?: string;
+    scenario_id?: ScenarioId;
     consent: {
         explicit_opt_in: true;
         preview_shown: true;
@@ -278,6 +300,30 @@ export function anonymizeTranscript(args: AnonymizeArgs): AnonymizedTranscript {
         ).slice(0, 2000);
         if (sanitized.length > 0) {
             out.user_comment = sanitized;
+        }
+    }
+    if (typeof args.userPrompt === 'string') {
+        // Run through the same PII-stripping path as comments. Canonical
+        // quick-start prompts contain no PII (we author them) but user
+        // freeform input might. anonymizeString is idempotent on clean
+        // text.
+        const sanitized = anonymizeString(
+            args.userPrompt.replace(/[\r\n]+/g, ' ').trim(),
+        ).slice(0, 2000);
+        if (sanitized.length > 0) {
+            out.user_prompt = sanitized;
+        }
+    }
+    if (typeof args.scenarioId === 'string') {
+        // No anonymization needed — it's a closed enum we control.
+        const allowed: ReadonlySet<ScenarioId> = new Set([
+            'disconnected',
+            'not-earning',
+            'cannot-join-pool',
+            'freeform',
+        ]);
+        if (allowed.has(args.scenarioId as ScenarioId)) {
+            out.scenario_id = args.scenarioId as ScenarioId;
         }
     }
     return out;

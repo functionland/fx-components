@@ -282,6 +282,59 @@ describe('anonymizeTranscript — happy path', () => {
         });
         expect(out.user_comment).not.toMatch(/[\r\n]/);
     });
+
+    test('emits canonical user_prompt unchanged (no PII to strip)', () => {
+        const out = anonymizeTranscript({
+            uploadId: VALID_UUID,
+            sessionStartTs: START_TS,
+            events: makeRawEvents(),
+            rating: 0,
+            userPrompt: 'My Blox is showing as disconnected in the app.',
+            scenarioId: 'disconnected',
+        });
+        expect(out.user_prompt).toBe(
+            'My Blox is showing as disconnected in the app.',
+        );
+        expect(out.scenario_id).toBe('disconnected');
+    });
+
+    test('sanitizes PII from freeform user_prompt', () => {
+        const out = anonymizeTranscript({
+            uploadId: VALID_UUID,
+            sessionStartTs: START_TS,
+            events: makeRawEvents(),
+            rating: 0,
+            userPrompt: 'My blox at 192.168.1.55 keeps dropping the relay',
+            scenarioId: 'freeform',
+        });
+        expect(out.user_prompt).toBe(
+            'My blox at <IP> keeps dropping the relay',
+        );
+        expect(out.scenario_id).toBe('freeform');
+    });
+
+    test('omits user_prompt when not supplied (backward compat)', () => {
+        const out = anonymizeTranscript({
+            uploadId: VALID_UUID,
+            sessionStartTs: START_TS,
+            events: makeRawEvents(),
+            rating: 1,
+        });
+        expect(out).not.toHaveProperty('user_prompt');
+        expect(out).not.toHaveProperty('scenario_id');
+    });
+
+    test('drops scenario_id that is not in the closed enum', () => {
+        const out = anonymizeTranscript({
+            uploadId: VALID_UUID,
+            sessionStartTs: START_TS,
+            events: makeRawEvents(),
+            rating: 0,
+            // @ts-expect-error — deliberately testing invalid runtime input
+            scenarioId: 'not-an-enum-value',
+        });
+        expect(out).not.toHaveProperty('scenario_id');
+    });
 });
 
 describe('anonymizeTranscript — input validation', () => {
