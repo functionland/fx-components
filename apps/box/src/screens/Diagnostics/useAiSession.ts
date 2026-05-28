@@ -542,6 +542,18 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
     // Refs that bypass closure staleness (codex catch on sessionId).
     const sessionIdRef = useRef<string | null>(null);
     sessionIdRef.current = state.sessionId;
+    // Mirror lastPrompt + lastScenarioId in refs for the same reason:
+    // buildCallbacks reads them, and attemptAutoResume dispatches
+    // session/resumed THEN immediately calls buildCallbacks() — React
+    // hasn't re-rendered between those statements so `state.lastPrompt`
+    // inside the closure is still the OLD value (null on cold launch).
+    // Without these refs the first onSeq after auto-resume skips the
+    // persist (prompt is falsy), the snapshot ages out, a second
+    // kill-then-relaunch loses the session. advisor 2026-05-28.
+    const lastPromptRef = useRef<string | null>(null);
+    lastPromptRef.current = state.lastPrompt;
+    const lastScenarioIdRef = useRef<ScenarioId | 'freeform' | null>(null);
+    lastScenarioIdRef.current = state.lastScenarioId;
 
     const activeClientRef = useRef<AiClient | null>(null);
     const activeHandleRef = useRef<SessionHandle | null>(null);
@@ -643,14 +655,18 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 if (seq === null) return;
                 if (seq <= lastEventSeqRef.current) return;
                 lastEventSeqRef.current = seq;
+                // Read prompt + scenarioId from refs (not closure-
+                // captured state) so attemptAutoResume's dispatch-then-
+                // immediately-call-this codepath sees the JUST-set
+                // values instead of the pre-resume null.
                 const sid = sessionIdRef.current;
-                const prompt = state.lastPrompt;
+                const prompt = lastPromptRef.current;
                 if (sid && prompt) {
                     schedulePersist({
                         sessionId: sid,
                         lastEventSeq: seq,
                         lastPrompt: prompt,
-                        lastScenarioId: state.lastScenarioId ?? 'freeform',
+                        lastScenarioId: lastScenarioIdRef.current ?? 'freeform',
                         savedAt: Date.now(),
                     });
                 }
@@ -680,7 +696,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 }
             },
         };
-    }, [state.lastPrompt, state.lastScenarioId]);
+    }, []);  // refs handle staleness; no closure deps needed
 
     // --------------------------------------------------------------------
     // Auto-resume after background / app-kill (2026-05-28 resume support).
