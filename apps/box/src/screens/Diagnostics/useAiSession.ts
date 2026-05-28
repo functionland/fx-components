@@ -340,6 +340,29 @@ function reducer(state: AiSessionState, action: Action): AiSessionState {
                 // a decision point).
                 next.streaming = false;
             } else if (ev.type === 'recommended_action') {
+                // Phase 1.e (Session 2 2026-05-28) — action-replay
+                // idempotency: if the transcript already contains a
+                // matching execution_result for this action_id, the
+                // action already ran (either before background, or
+                // it was emitted by a deterministic tree which is
+                // re-emitting on SSE replay). Do NOT auto-open the
+                // approval modal — that would re-prompt the user for
+                // an action that already ran successfully.
+                //
+                // The server caches the execution_result and returns
+                // it to /execute-action token replays (200 + cached);
+                // this client-side guard avoids the modal pop entirely
+                // so the UX is "already done" not "redo this".
+                const alreadyExecuted = state.transcript.some((t) => {
+                    const ee = t.event as { type?: string; action_id?: string };
+                    return ee?.type === 'execution_result' && ee.action_id === ev.action_id;
+                });
+                if (alreadyExecuted) {
+                    // Leave the recommended_action card in the
+                    // transcript so the user sees the history; just
+                    // don't auto-open the modal.
+                    return next;
+                }
                 // Auto-open approval modal on recommended_action arrival
                 // ONLY if no other modal is currently open. If e.g.
                 // feedback modal is open the new action sits in
@@ -885,22 +908,84 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         [bleManager, blePeripheralId, bloxPeerId, appPeerId, state.streaming, buildCallbacks],
     );
 
+    // Phase 1.c/1.d/1.f (Session 2 2026-05-28) — start a deterministic
+    // tree session via POST /troubleshoot/tree. LAN-HTTP only (BLE
+    // path falls back to LLM via startSessionInternal). If LAN HTTP
+    // isn't reachable, we surface the no-transport error.
+    const startTreeInternal = useCallback(
+        async (scenarioId: string, displayPrompt: string) => {
+            if (state.streaming) return;
+            try {
+                activeHandleRef.current?.cancel();
+            } catch { /* swallow */ }
+            activeHandleRef.current = null;
+            activeClientRef.current = null;
+
+            dispatch({
+                type: 'session/start-requested',
+                prompt: displayPrompt,
+                scenarioId: (scenarioId as ScenarioId | 'freeform'),
+                transportKind: null,
+            });
+
+            const choice = await selectAiTransport(bloxPeerId, appPeerId, {
+                scanIfEmpty: true,
+            });
+            if (choice.kind !== 'lan-http' || !choice.httpClient) {
+                // Tree endpoint is HTTP-only. Fall back to LLM via the
+                // standard LLM path so the user still gets help.
+                await startSessionInternal(displayPrompt, {
+                    scenarioId: (scenarioId as ScenarioId | 'freeform'),
+                });
+                return;
+            }
+            const httpClient = choice.httpClient;
+            activeClientRef.current = httpClient;
+            dispatch({ type: 'session/transport-selected', transportKind: 'lan-http' });
+            lastEventSeqRef.current = -1;
+            const handle = httpClient.runTree(
+                scenarioId,
+                undefined,
+                buildCallbacks(),
+            );
+            activeHandleRef.current = handle;
+        },
+        [bloxPeerId, appPeerId, state.streaming, buildCallbacks, startSessionInternal],
+    );
+
     const startSession = useCallback(
-        (prompt: string) => startSessionInternal(prompt),
-        [startSessionInternal],
+        async (prompt: string) => {
+            // Phase 1.d: classify free-text first. If the LLM maps it
+            // to a known scenario, route to the deterministic tree;
+            // else fall through to the LLM path.
+            const trimmed = prompt.trim();
+            if (!trimmed) return;
+            const choice = await selectAiTransport(bloxPeerId, appPeerId, {
+                scanIfEmpty: true,
+            });
+            if (choice.kind === 'lan-http' && choice.httpClient) {
+                const sid = await choice.httpClient.classify(trimmed).catch(() => 'other');
+                if (sid === 'disconnected' || sid === 'not-earning' || sid === 'cannot-join-pool') {
+                    await startTreeInternal(sid, trimmed);
+                    return;
+                }
+            }
+            await startSessionInternal(trimmed);
+        },
+        [bloxPeerId, appPeerId, startSessionInternal, startTreeInternal],
     );
 
     const startQuickStart = useCallback(
-        (id: ScenarioId) => {
+        async (id: ScenarioId) => {
+            // Phase 1.f: quick-start buttons skip the classifier and
+            // jump straight to the deterministic tree for that scenario.
+            // The display prompt is still the scenario's canonical
+            // English so the transcript reads naturally for the user.
             const scenario = getScenario(id);
-            // Pass the scenarioId through so the eventual upload payload
-            // knows which canonical scenario the user tapped (vs. typed
-            // freeform).
-            return startSessionInternal(scenario.canonicalPrompt, {
-                scenarioId: id,
-            });
+            const treeScenarioId = id;   // ScenarioId values match server tree ids
+            await startTreeInternal(treeScenarioId, scenario.canonicalPrompt);
         },
-        [startSessionInternal],
+        [startTreeInternal],
     );
 
     const retryOverBle = useCallback(async () => {

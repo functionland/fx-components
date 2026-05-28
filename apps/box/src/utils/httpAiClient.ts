@@ -347,6 +347,158 @@ export class HttpAiClient {
     }
 
     /**
+     * Phase 1.c (Session 2 2026-05-28) — start a DETERMINISTIC TREE
+     * session via POST /troubleshoot/tree (SSE response stream).
+     *
+     * Same callback shape + SessionHandle as runAi; same SSE event
+     * vocabulary; same session/buffer/resume infrastructure on the
+     * server. Difference: the events come from a YAML-authored tree
+     * walker, not the LLM. Used by:
+     *  - quick-start buttons (the user picked the scenario)
+     *  - the classifier-returned scenario_id branch of startSession
+     *
+     * Server returns:
+     *  - 200 + SSE stream → normal path
+     *  - 404 → scenario_id not in registry (caller bug)
+     *  - 503 → tree runner failed to load at container start
+     */
+    public runTree(
+        scenarioId: string,
+        sessionId: string | undefined,
+        cb: AiCallbacks,
+    ): SessionHandle {
+        const seedSession = sessionId ?? '';
+        const url = `${this.baseUrl}/troubleshoot/tree`;
+        const body = JSON.stringify({
+            scenario_id: scenarioId,
+            ...(seedSession ? { session_id: seedSession } : {}),
+        });
+
+        let resolvedSessionId = seedSession;
+        let closed = false;
+        const es: any = new (EventSource as any)(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'text/event-stream',
+            },
+            body,
+            pollingInterval: 0,
+        });
+
+        const safeError = (err: AiClientError) => {
+            if (closed) return;
+            try { cb.onError?.(err); } catch { /* swallow */ }
+        };
+        const safeComplete = () => {
+            if (closed) return;
+            try { cb.onComplete?.(); } catch { /* swallow */ }
+        };
+
+        es.addEventListener('open', (_e: unknown) => { /* awaiting events */ });
+
+        es.addEventListener('message', (event: { data?: string; lastEventId?: string }) => {
+            if (closed) return;
+            const raw = event?.data;
+            if (typeof raw !== 'string' || !raw.length) return;
+            let frame: unknown;
+            try {
+                frame = JSON.parse(raw);
+            } catch {
+                safeError({
+                    kind: 'sse-malformed',
+                    message: 'SSE frame is not JSON',
+                    transient: false,
+                });
+                return;
+            }
+            const parsed = parseBloxAiEvent(frame);
+            if (parsed.type === 'session_started') {
+                resolvedSessionId = parsed.session_id;
+            }
+            const rawId = event?.lastEventId;
+            if (cb.onSeq) {
+                let seq: number | null = null;
+                if (typeof rawId === 'string' && rawId !== '' && rawId !== '-1') {
+                    const n = Number(rawId);
+                    if (Number.isInteger(n) && n >= 0) {
+                        seq = n;
+                    }
+                }
+                try { cb.onSeq(seq); } catch { /* swallow */ }
+            }
+            try { cb.onEvent(parsed); } catch { /* swallow */ }
+        });
+
+        es.addEventListener('error', (event: any) => {
+            if (closed) return;
+            const status: number | undefined = event?.xhrStatus;
+            if (typeof status === 'number' && status >= 400) {
+                safeError(fromHttpStatus(status, event?.message ?? ''));
+            } else if (isAbortError(event)) {
+                safeError({ kind: 'sse-aborted', message: 'aborted', transient: true });
+            } else {
+                safeError(networkError(event?.message ?? 'SSE network error'));
+            }
+            closed = true;
+            try { es.close(); } catch { /* */ }
+        });
+
+        es.addEventListener('close', () => {
+            if (closed) return;
+            closed = true;
+            safeComplete();
+        });
+
+        const cancel = () => {
+            if (closed) return;
+            closed = true;
+            try { es.close(); } catch { /* */ }
+            if (resolvedSessionId) {
+                this.cancel(resolvedSessionId).catch(() => undefined);
+            }
+        };
+
+        return {
+            get sessionId() { return resolvedSessionId; },
+            cancel,
+        } as unknown as SessionHandle;
+    }
+
+    /**
+     * Phase 1.d (Session 2 2026-05-28) — one-shot LLM classifier.
+     * POST /troubleshoot/classify {prompt} → {scenario_id}.
+     *
+     * Returns the classification or 'other' on any error (server
+     * returns 'other' itself for graceful degradation; we never throw
+     * up to the caller). Used by useAiSession.startSession (free-text
+     * path) to route to /troubleshoot/tree when the prompt maps to a
+     * known scenario, falling back to /troubleshoot (LLM) for 'other'.
+     */
+    public async classify(prompt: string): Promise<string> {
+        try {
+            const res = await fetchWithTimeout(
+                `${this.baseUrl}/troubleshoot/classify`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt }),
+                },
+                REQUEST_TIMEOUT_MS,
+            );
+            if (!res.ok) return 'other';
+            const body = await res.json().catch(() => null) as { scenario_id?: string } | null;
+            const sid = body?.scenario_id;
+            if (typeof sid === 'string' && sid.length) {
+                return sid;
+            }
+            return 'other';
+        } catch {
+            return 'other';
+        }
+    }
+
+    /**
      * Submit a reply to a user_question event mid-session.
      */
     public async userReply(
