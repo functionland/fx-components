@@ -43,6 +43,13 @@ import { HttpAiClient, type AiClientError, type SessionHandle } from '../../util
 import { BleAiClient } from '../../utils/bleAiClient';
 import type { BleManagerWrapper } from '../../utils/ble';
 import {
+    clearPersistedSession,
+    flushDebounce,
+    loadPersistedSession,
+    schedulePersist,
+    type PersistedSession,
+} from '../../utils/aiSessionPersistence';
+import {
     type BloxAiEvent,
     type RecommendedActionEvent,
     type ExecutionResultEvent,
@@ -231,6 +238,7 @@ type Action =
     | { type: 'session/ended-by-user'; sessionId: string }
     | { type: 'session/cancelled' }
     | { type: 'session/clear' }
+    | { type: 'session/resumed'; sessionId: string; prompt: string; scenarioId: ScenarioId | 'freeform' }
     | { type: 'busy/set'; busy: boolean }
     | { type: 'modal/open-approval'; action: RecommendedActionEvent }
     | { type: 'modal/dismiss' }
@@ -413,6 +421,26 @@ function reducer(state: AiSessionState, action: Action): AiSessionState {
                 lastTransportError: null,
             };
 
+        case 'session/resumed':
+            // Auto-resume after the app was backgrounded-or-killed. The
+            // server's /troubleshoot/resume endpoint replays buffered
+            // events from `from=<lastEventSeq+1>`, so we DON'T see the
+            // original session_started event — set sessionId directly
+            // from the persisted snapshot. Transcript starts empty;
+            // upcoming SSE events from the replay rebuild it. If the
+            // server returns 404 the buildCallbacks onError path
+            // clears the persisted state.
+            return {
+                ...state,
+                transcript: [],
+                sessionId: action.sessionId,
+                streaming: true,
+                transportKind: 'lan-http',  // resume is HTTP-only
+                lastPrompt: action.prompt,
+                lastScenarioId: action.scenarioId,
+                lastTransportError: null,
+            };
+
         case 'busy/set':
             return { ...state, busy: action.busy };
 
@@ -518,6 +546,17 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
     const activeClientRef = useRef<AiClient | null>(null);
     const activeHandleRef = useRef<SessionHandle | null>(null);
     const mountedRef = useRef(true);
+    // Highest SSE id field observed for the current session. Updated
+    // from the HttpAiClient.runAi/resume `onSeq` callback and persisted
+    // to AsyncStorage with debounce so a backgrounded-or-killed app
+    // can reattach via /troubleshoot/resume?from=<lastEventSeq>. Reset
+    // to -1 when a new session starts (next real seq is 0). Persisted
+    // value is what the server's _stream_from_buffer compares against.
+    const lastEventSeqRef = useRef<number>(-1);
+    // Guard against re-running auto-resume more than once per
+    // foreground transition (StrictMode + AppState can fire 'active'
+    // multiple times). Cleared after the attempt completes.
+    const autoResumeInFlightRef = useRef<boolean>(false);
 
     // Track unmount for "don't setState after unmount" discipline.
     useEffect(() => {
@@ -594,16 +633,136 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 if (!mountedRef.current) return;
                 dispatch({ type: 'session/event', event: ev });
             },
+            // Track + persist the SSE id field (per-session monotonic
+            // seq) so a backgrounded-or-killed app can resume via
+            // GET /troubleshoot/resume?from=<lastEventSeq>. Null seqs
+            // (synthetic truncation marker) intentionally don't update
+            // the ref — they're not real buffer positions.
+            onSeq: (seq: number | null) => {
+                if (!mountedRef.current) return;
+                if (seq === null) return;
+                if (seq <= lastEventSeqRef.current) return;
+                lastEventSeqRef.current = seq;
+                const sid = sessionIdRef.current;
+                const prompt = state.lastPrompt;
+                if (sid && prompt) {
+                    schedulePersist({
+                        sessionId: sid,
+                        lastEventSeq: seq,
+                        lastPrompt: prompt,
+                        lastScenarioId: state.lastScenarioId ?? 'freeform',
+                        savedAt: Date.now(),
+                    });
+                }
+            },
             onComplete: () => {
                 if (!mountedRef.current) return;
                 dispatch({ type: 'session/ended-complete' });
+                // Generator finished — keep the persisted snapshot for
+                // a brief replay window (user might still want resume
+                // to view the verdict). Container's 30-min TTL +
+                // PERSISTED_SESSION_MAX_AGE_MS in aiSessionPersistence
+                // age it out naturally.
             },
             onError: (err: AiClientError) => {
                 if (!mountedRef.current) return;
                 dispatch({ type: 'session/transport-error', error: err });
+                // 404 from /resume means the container evicted the
+                // session (TTL elapsed, LRU, container restart).
+                // Synchronously cancel any pending debounced write +
+                // clear the snapshot so the next AppState foreground
+                // doesn't immediately retry the dead session.
+                if (err.kind === 'http-not-found') {
+                    void (async () => {
+                        await flushDebounce();
+                        await clearPersistedSession();
+                    })();
+                }
             },
         };
-    }, []);
+    }, [state.lastPrompt, state.lastScenarioId]);
+
+    // --------------------------------------------------------------------
+    // Auto-resume after background / app-kill (2026-05-28 resume support).
+    //
+    // Flow:
+    //   1. On hook mount AND on every AppState 'active' transition:
+    //   2. Load persisted snapshot from AsyncStorage.
+    //   3. If a snapshot exists AND we're not currently streaming AND
+    //      we don't already have an active sessionId in local state:
+    //   4. selectAiTransport() — resume is LAN-HTTP-only (the server's
+    //      buffer + /resume endpoint only exist over HTTP; BLE has no
+    //      equivalent state-replay surface).
+    //   5. Dispatch session/resumed (sets sessionId + streaming=true).
+    //   6. Call httpClient.resume(sessionId, lastEventSeq+1, callbacks).
+    //   7. Buffered events replay via the same onEvent path; the chat
+    //      transcript rebuilds inline. The truncation marker (synthetic
+    //      `thought`) renders if events fell off the server-side cap.
+    //
+    // On 404 from /resume (session evicted): buildCallbacks' onError
+    // already clears persistence + dispatches transport-error so the
+    // chat surfaces Start-new-chat. We don't need to handle 404 here.
+    // --------------------------------------------------------------------
+    const attemptAutoResume = useCallback(async () => {
+        if (autoResumeInFlightRef.current) return;
+        if (state.streaming) return;
+        if (sessionIdRef.current) return;  // already attached
+        autoResumeInFlightRef.current = true;
+        try {
+            const snap = await loadPersistedSession();
+            if (snap === null) return;
+            if (!mountedRef.current) return;
+            // Resume is LAN-HTTP-only — select transport explicitly so
+            // we get an HttpAiClient. If only BLE is available, skip
+            // auto-resume entirely (the persisted snapshot stays on
+            // disk for the next foreground attempt).
+            const choice = await selectAiTransport(bloxPeerId, appPeerId, {
+                scanIfEmpty: true,
+            });
+            if (!mountedRef.current) return;
+            if (choice.kind !== 'lan-http' || !choice.httpClient) {
+                return;  // BLE or no transport — silently retain snapshot
+            }
+            const httpClient = choice.httpClient;
+            // Restore local state BEFORE firing the SSE so onSeq
+            // callbacks (which read state.lastPrompt/scenarioId)
+            // have non-null values.
+            const scenarioId = (snap.lastScenarioId as ScenarioId | 'freeform') ?? 'freeform';
+            dispatch({
+                type: 'session/resumed',
+                sessionId: snap.sessionId,
+                prompt: snap.lastPrompt,
+                scenarioId,
+            });
+            sessionIdRef.current = snap.sessionId;
+            lastEventSeqRef.current = snap.lastEventSeq;
+
+            activeClientRef.current = httpClient;
+            const handle = httpClient.resume(
+                snap.sessionId,
+                snap.lastEventSeq + 1,
+                buildCallbacks(),
+            );
+            activeHandleRef.current = handle;
+        } catch (e) {
+            // selectAiTransport / loadPersistedSession failures are
+            // non-fatal — the user can still tap Start session and a
+            // fresh /troubleshoot will work normally.
+            // eslint-disable-next-line no-console
+            console.warn('attemptAutoResume failed', e);
+        } finally {
+            autoResumeInFlightRef.current = false;
+        }
+    }, [state.streaming, bloxPeerId, appPeerId, buildCallbacks]);
+
+    useEffect(() => {
+        // Mount-time attempt + every foreground transition.
+        void attemptAutoResume();
+        const sub = AppState.addEventListener('change', (s: AppStateStatus) => {
+            if (s === 'active') void attemptAutoResume();
+        });
+        return () => sub.remove();
+    }, [attemptAutoResume]);
 
     const startSessionInternal = useCallback(
         async (
@@ -694,8 +853,14 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
             activeClientRef.current = client;
             dispatch({ type: 'session/transport-selected', transportKind: chosenKind });
 
+            // Reset the persisted seq counter — every fresh session
+            // starts at seq=0 on the server, so the persisted snapshot
+            // from any prior session is now stale.
+            lastEventSeqRef.current = -1;
+
             // Start a fresh session each time (codex catch: do not
-            // try to "resume" because there's no event-cursor contract).
+            // try to "resume" via this path; that's what
+            // attemptAutoResume + the /resume endpoint are for).
             const handle = client.runAi(prompt, undefined, buildCallbacks());
             activeHandleRef.current = handle;
 
@@ -789,7 +954,16 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         activeHandleRef.current = null;
         activeClientRef.current = null;
         sessionIdRef.current = null;
+        lastEventSeqRef.current = -1;
         dispatch({ type: 'session/clear' });
+        // Discard persisted resume state — user explicitly closed the
+        // conversation, no point holding the snapshot for a
+        // foreground/relaunch auto-resume that would re-show the same
+        // dead chat.
+        void (async () => {
+            await flushDebounce();
+            await clearPersistedSession();
+        })();
     }, []);
 
     // ---- Recommendation flow --------------------------------------------

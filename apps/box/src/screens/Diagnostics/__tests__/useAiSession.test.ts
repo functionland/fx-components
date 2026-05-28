@@ -169,6 +169,46 @@ describe('useAiSession reducer — session lifecycle', () => {
         expect(after.transcript).toEqual([]);   // fresh transcript
     });
 
+    test('session/resumed restores sessionId + prompt without clobbering modals/pending', () => {
+        // After app-kill + relaunch, attemptAutoResume loads the
+        // persisted snapshot and dispatches this to wire the local
+        // state back up. Caller then fires httpClient.resume which
+        // replays buffered events via onEvent → the transcript
+        // rebuilds from empty.
+        const before = {
+            ...initialState('disconnected'),
+            // Simulate an unrelated modal sitting open at relaunch time
+            // (e.g. pending feedback share) — resume must NOT dismiss it.
+            modals: {
+                active: 'feedback' as const,
+                approvalAction: null,
+                shareContextPreview: null,
+                feedbackSessionId: 'prev-sess-id',
+                uploadTranscriptPayload: null,
+            },
+            // And a pending recommendation that arrived while the app
+            // was backgrounded — also must survive.
+            pending: { actions: [{ action_id: 'pending-1' }] } as unknown as ReturnType<typeof initialState>['pending'],
+        };
+        const after = reducer(before, {
+            type: 'session/resumed',
+            sessionId: 'resumed-sess-1',
+            prompt: 'why disconnected?',
+            scenarioId: 'disconnected',
+        });
+        expect(after.sessionId).toBe('resumed-sess-1');
+        expect(after.streaming).toBe(true);
+        expect(after.transportKind).toBe('lan-http');
+        expect(after.lastPrompt).toBe('why disconnected?');
+        expect(after.lastScenarioId).toBe('disconnected');
+        expect(after.transcript).toEqual([]);  // server replay rebuilds it
+        expect(after.lastTransportError).toBeNull();
+        // Independent surfaces preserved
+        expect(after.modals.active).toBe('feedback');
+        expect(after.modals.feedbackSessionId).toBe('prev-sess-id');
+        expect(after.pending).toEqual(before.pending);
+    });
+
     test('session/clear wipes the transcript + session refs but keeps modals + pending', () => {
         // Build a state that mimics "session ended by user with feedback
         // modal still open, transcript populated, transport error

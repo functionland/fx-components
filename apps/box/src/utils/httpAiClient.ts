@@ -70,6 +70,15 @@ export interface AiClientError {
 
 export interface AiCallbacks {
     onEvent: (event: BloxAiEvent) => void;
+    /**
+     * Optional — fires per event with the SSE `id:` field (per-session
+     * monotonic seq number) so the caller can persist it for resume.
+     * Synthetic events (e.g. the truncation marker injected by the
+     * server on resume) carry seq=null because they're not part of
+     * the canonical buffer — the caller should NOT use null seqs as
+     * a resume offset (they'd advance lastEventSeq past real events).
+     */
+    onSeq?: (seq: number | null) => void;
     onComplete?: () => void;
     onError?: (err: AiClientError) => void;
 }
@@ -244,7 +253,7 @@ export class HttpAiClient {
             // Stream opened — nothing to do until first event arrives.
         });
 
-        es.addEventListener('message', (event: { data?: string }) => {
+        es.addEventListener('message', (event: { data?: string; lastEventId?: string }) => {
             if (closed) return;
             const raw = event?.data;
             if (typeof raw !== 'string' || !raw.length) return;
@@ -262,6 +271,23 @@ export class HttpAiClient {
             const parsed = parseBloxAiEvent(frame);
             if (parsed.type === 'session_started') {
                 resolvedSessionId = parsed.session_id;
+            }
+            // Surface the SSE id field (per-session monotonic seq number,
+            // added 2026-05-28 for resume support) so the caller can
+            // persist lastEventSeq. Sentinel id "-1" marks the synthetic
+            // truncation marker the server injects on resume — that's
+            // NOT a real buffer position so we report null and the
+            // caller leaves their stored seq untouched.
+            const rawId = event?.lastEventId;
+            if (cb.onSeq) {
+                let seq: number | null = null;
+                if (typeof rawId === 'string' && rawId !== '' && rawId !== '-1') {
+                    const n = Number(rawId);
+                    if (Number.isInteger(n) && n >= 0) {
+                        seq = n;
+                    }
+                }
+                try { cb.onSeq(seq); } catch (e) { /* swallow */ }
             }
             try { cb.onEvent(parsed); } catch (e) { /* swallow */ }
         });
@@ -415,6 +441,119 @@ export class HttpAiClient {
             }
             return { ok: false, error: networkError(e?.message ?? 'execute-action failed') };
         }
+    }
+
+    /**
+     * Reattach to an in-flight (or completed-but-buffered) session via
+     * GET /troubleshoot/resume. The server replays buffered events with
+     * seq > `fromSeq`, injects a synthetic `thought` truncation marker
+     * if `fromSeq` predates the oldest buffered event, then awaits new
+     * events until the generator marks itself done.
+     *
+     * Returns the same `SessionHandle` shape as `runAi` so callers
+     * (useAiSession) can swap one for the other transparently.
+     *
+     * On 404 from the server (session evicted by TTL/LRU/container
+     * restart): fires onError with kind 'http-not-found' so the caller
+     * can synchronously clear its persisted state and surface the
+     * Start-new-chat affordance.
+     */
+    public resume(
+        sessionId: string,
+        fromSeq: number,
+        cb: AiCallbacks,
+    ): SessionHandle {
+        const safeFrom = Number.isInteger(fromSeq) && fromSeq >= 0 ? fromSeq : 0;
+        const url =
+            `${this.baseUrl}/troubleshoot/resume`
+            + `?session_id=${encodeURIComponent(sessionId)}`
+            + `&from=${safeFrom}`;
+
+        let resolvedSessionId = sessionId;
+        let closed = false;
+        const es: any = new (EventSource as any)(url, {
+            method: 'GET',
+            headers: { Accept: 'text/event-stream' },
+            pollingInterval: 0,
+        });
+
+        const safeError = (err: AiClientError) => {
+            if (closed) return;
+            try { cb.onError?.(err); } catch (e) { /* swallow */ }
+        };
+        const safeComplete = () => {
+            if (closed) return;
+            try { cb.onComplete?.(); } catch (e) { /* swallow */ }
+        };
+
+        es.addEventListener('open', (_e: unknown) => { /* awaiting events */ });
+
+        es.addEventListener('message', (event: { data?: string; lastEventId?: string }) => {
+            if (closed) return;
+            const raw = event?.data;
+            if (typeof raw !== 'string' || !raw.length) return;
+            let frame: unknown;
+            try {
+                frame = JSON.parse(raw);
+            } catch {
+                safeError({
+                    kind: 'sse-malformed',
+                    message: 'SSE frame is not JSON',
+                    transient: false,
+                });
+                return;
+            }
+            const parsed = parseBloxAiEvent(frame);
+            if (parsed.type === 'session_started') {
+                resolvedSessionId = parsed.session_id;
+            }
+            // Same id-handling as runAi: skip "-1" (truncation marker)
+            // so the caller's persisted lastEventSeq stays anchored to
+            // a real buffer position.
+            const rawId = event?.lastEventId;
+            if (cb.onSeq) {
+                let seq: number | null = null;
+                if (typeof rawId === 'string' && rawId !== '' && rawId !== '-1') {
+                    const n = Number(rawId);
+                    if (Number.isInteger(n) && n >= 0) {
+                        seq = n;
+                    }
+                }
+                try { cb.onSeq(seq); } catch (e) { /* swallow */ }
+            }
+            try { cb.onEvent(parsed); } catch (e) { /* swallow */ }
+        });
+
+        es.addEventListener('error', (event: any) => {
+            if (closed) return;
+            const status: number | undefined = event?.xhrStatus;
+            if (typeof status === 'number' && status >= 400) {
+                safeError(fromHttpStatus(status, event?.message ?? ''));
+            } else if (isAbortError(event)) {
+                safeError({ kind: 'sse-aborted', message: 'aborted', transient: true });
+            } else {
+                safeError(networkError(event?.message ?? 'SSE network error'));
+            }
+            closed = true;
+            try { es.close(); } catch (e) { /* */ }
+        });
+
+        es.addEventListener('close', () => {
+            if (closed) return;
+            closed = true;
+            safeComplete();
+        });
+
+        const cancel = () => {
+            if (closed) return;
+            closed = true;
+            try { es.close(); } catch (e) { /* */ }
+        };
+
+        return {
+            get sessionId() { return resolvedSessionId; },
+            cancel,
+        } as unknown as SessionHandle;
     }
 
     public async cancel(sessionId: string): Promise<void> {
