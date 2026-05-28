@@ -102,19 +102,44 @@ function findPendingQuestion(t: TranscriptEntry[]): UserQuestionEvent | null {
 
 // Synthetic root_cause codes the rkllm backend emits when the model
 // couldn't converge on a real verdict. Kept in sync with
-// `blox-ai/src/runtime/rkllm_runtime.py` (search FORCE_VERDICT_DIRECTIVE
-// + the two yield {"type":"verdict", … "root_cause": …} sites).
+// `blox-ai/src/runtime/rkllm_runtime.py` (search FORCE_VERDICT_DIRECTIVE,
+// the no-evidence guardrail, and the two yield {"type":"verdict",
+// … "root_cause": …} sites).
 const SYNTHETIC_VERDICT_CODES = new Set<string>([
     'no_verdict_emitted',
     'max_turns_exceeded',
+    // 2026-05-28 no-evidence guardrail: backend overrides a
+    // hallucinated verdict (model claimed red severity with zero
+    // successful tool calls) with this synthetic code so the
+    // Try-Again button surfaces.
+    'insufficient_data',
 ]);
 
-function lastVerdictIsSynthetic(t: TranscriptEntry[]): boolean {
+const SCHEMA_ERROR_CODES = new Set<string>([
+    'SCHEMA_VIOLATION',
+    'SCHEMA_VIOLATION_RECOVERED',
+]);
+
+// "Try again with the same question" surfaces when the chat ended in
+// a state the user can't reasonably act on:
+//   (a) the final verdict's root_cause is one of the synthetic codes
+//       (model couldn't converge / no data / exceeded turn budget), OR
+//   (b) the model emitted a schema-violating event AND no real verdict
+//       followed it (the chat just stops on the recovered error).
+// Both states leave the user staring at a dead-end chat; the
+// retry-same-prompt button gives them a one-tap recovery.
+function shouldOfferRetry(t: TranscriptEntry[]): boolean {
+    // Walk backwards to find the last verdict OR the last schema error
+    // (whichever came first from the end).
     for (let i = t.length - 1; i >= 0; i--) {
-        const e = t[i].event as { type?: string; payload?: { root_cause?: string } };
+        const e = t[i].event as { type?: string; code?: string; payload?: { root_cause?: string } };
         if (e.type === 'verdict') {
             const rc = e.payload?.root_cause;
             return typeof rc === 'string' && SYNTHETIC_VERDICT_CODES.has(rc);
+        }
+        if (e.type === 'error' && typeof e.code === 'string' && SCHEMA_ERROR_CODES.has(e.code)) {
+            // Schema error with no verdict following → offer retry.
+            return true;
         }
     }
     return false;
@@ -271,7 +296,7 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
                     nothing to rate. */}
                 {!streaming && transcript.length > 0 && (
                     <>
-                        {onRetrySamePrompt && lastVerdictIsSynthetic(transcript) && (
+                        {onRetrySamePrompt && shouldOfferRetry(transcript) && (
                             <>
                                 <FxSpacer height={12} />
                                 <FxButton
@@ -482,14 +507,22 @@ const EventRow: React.FC<{
 
         case 'error': {
             // Friendly per-code translations override the default
-            // "[{code}] {message}" technical rendering. Used today for
-            // 'no-transport' (the "Cannot reach your Blox over LAN or
-            // Bluetooth" case). Falls through to the generic format for
-            // any other error code so we don't accidentally swallow
-            // a useful technical message.
+            // "[{code}] {message}" technical rendering. Falls through to
+            // the generic format for any other error code so we don't
+            // accidentally swallow a useful technical message.
+            //
+            // SCHEMA_VIOLATION_RECOVERED surfaces in lab when the model
+            // emits a malformed event (missing field, bad enum value,
+            // etc.). It's recoverable — the chat keeps streaming — but
+            // the raw "[SCHEMA_VIOLATION_RECOVERED] backend emitted an
+            // invalid …" copy reads like a crash to users. Replace
+            // with a plain-language hint that maps to the Try-Again
+            // button rendered below.
             const friendlyKey =
                 ev.code === 'no-transport'
                     ? 'diagnostics.chat.errorEvent_noTransport'
+                    : (ev.code === 'SCHEMA_VIOLATION_RECOVERED' || ev.code === 'SCHEMA_VIOLATION')
+                    ? 'diagnostics.chat.errorEvent_schemaViolation'
                     : null;
             return (
                 <FxBox
