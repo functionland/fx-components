@@ -166,6 +166,16 @@ export interface UseAiSessionResult {
          */
         clearSession: () => void;
         retryOverBle: () => Promise<void>;
+        /**
+         * Re-runs the most recent prompt + scenario with auto-selected
+         * transport. Hooked up to the "Try again with the same question"
+         * button BloxAIChat renders when the model failed to converge
+         * (verdict.payload.root_cause is no_verdict_emitted or
+         * max_turns_exceeded). Useful because the model is sampled
+         * with non-zero temperature so a second attempt often produces
+         * a real verdict where the first did not.
+         */
+        retrySamePrompt: () => Promise<void>;
         consumePrefill: () => void;
 
         // Recommendation flow — signatures match the modal/component
@@ -726,6 +736,20 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         });
     }, [state.lastPrompt, state.lastScenarioId, startSessionInternal]);
 
+    const retrySamePrompt = useCallback(async () => {
+        // Re-run the same prompt + scenario with auto-selected transport
+        // (LAN HTTP preferred, BLE fallback). Used by the "Try again"
+        // CTA the chat surface renders alongside synthetic verdicts
+        // (root_cause: no_verdict_emitted | max_turns_exceeded) so the
+        // user can re-roll without retyping. session/start-requested
+        // resets the transcript inside the reducer, so we don't need
+        // to call clearSession() first.
+        if (!state.lastPrompt) return;
+        await startSessionInternal(state.lastPrompt, {
+            scenarioId: state.lastScenarioId ?? 'freeform',
+        });
+    }, [state.lastPrompt, state.lastScenarioId, startSessionInternal]);
+
     const cancelSession = useCallback(() => {
         try {
             activeHandleRef.current?.cancel();
@@ -1089,6 +1113,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 cancelSession,
                 clearSession,
                 retryOverBle,
+                retrySamePrompt,
                 consumePrefill,
                 openApproval,
                 confirmApproval,
@@ -1110,7 +1135,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
         }),
         [
             state, startSession, startQuickStart, endSession, cancelSession,
-            clearSession, retryOverBle, consumePrefill, openApproval, confirmApproval,
+            clearSession, retryOverBle, retrySamePrompt, consumePrefill, openApproval, confirmApproval,
             dismissApproval, submitReply, openShareContext, confirmShareContext,
             dismissShareContext, openFeedback, submitFeedback, dismissFeedback,
             openUploadTranscript, prepareTranscriptUpload, dismissUploadTranscript,

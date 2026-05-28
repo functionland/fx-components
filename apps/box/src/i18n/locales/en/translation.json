@@ -58,7 +58,9 @@
         "endAndRateButton": "End session, rate & share with developer",
         "endAndRateHint": "Rate the session and (optionally) upload an anonymized copy to the Fula developer team to help improve Blox AI. You'll review the JSON before anything is sent.",
         "startNewChatButton": "Start a new chat",
-        "startNewChatHint": "Clears the current conversation so you can ask Blox AI a new question. Use this if the session got interrupted (e.g. the app went to the background and the connection dropped)."
+        "startNewChatHint": "Clears the current conversation so you can ask Blox AI a new question. Use this if the session got interrupted (e.g. the app went to the background and the connection dropped).",
+        "retrySamePromptButton": "Try again with the same question",
+        "retrySamePromptHint": "Blox AI couldn't reach a clear answer this time. Tap to retry the same question — model sampling is non-deterministic so a second attempt often produces a real verdict."
       },
       "approval": {
         "tier2Title": "Approve this fix?",

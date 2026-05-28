@@ -71,6 +71,16 @@ export interface BloxAIChatProps {
      * this affordance the user is stuck on a dead transcript and has to
      * navigate away to reset. */
     onStartNewChat?: () => void;
+    /**
+     * Fired when the user taps "Try again with the same question". Re-runs
+     * the most recent prompt + scenario without forcing the user to retype.
+     * Rendered alongside onStartNewChat ONLY when the final verdict in the
+     * transcript is one of the SYNTHETIC fallbacks the backend emits when
+     * the model couldn't converge — root_cause "no_verdict_emitted" (model
+     * went prose-only) or "max_turns_exceeded" (8-turn budget burned).
+     * Useful because the model is sampled with non-zero temperature so a
+     * second attempt often produces a real verdict where the first did not. */
+    onRetrySamePrompt?: () => void;
     /** True while ai/execute or ai/phone-context is in flight (locks UI). */
     busy?: boolean;
 }
@@ -90,6 +100,26 @@ function findPendingQuestion(t: TranscriptEntry[]): UserQuestionEvent | null {
     return null;
 }
 
+// Synthetic root_cause codes the rkllm backend emits when the model
+// couldn't converge on a real verdict. Kept in sync with
+// `blox-ai/src/runtime/rkllm_runtime.py` (search FORCE_VERDICT_DIRECTIVE
+// + the two yield {"type":"verdict", … "root_cause": …} sites).
+const SYNTHETIC_VERDICT_CODES = new Set<string>([
+    'no_verdict_emitted',
+    'max_turns_exceeded',
+]);
+
+function lastVerdictIsSynthetic(t: TranscriptEntry[]): boolean {
+    for (let i = t.length - 1; i >= 0; i--) {
+        const e = t[i].event as { type?: string; payload?: { root_cause?: string } };
+        if (e.type === 'verdict') {
+            const rc = e.payload?.root_cause;
+            return typeof rc === 'string' && SYNTHETIC_VERDICT_CODES.has(rc);
+        }
+    }
+    return false;
+}
+
 export const BloxAIChat: React.FC<BloxAIChatProps> = ({
     transcript,
     streaming,
@@ -100,6 +130,7 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
     onStartSession,
     onOpenFeedback,
     onStartNewChat,
+    onRetrySamePrompt,
     busy = false,
 }) => {
     const { t } = useTranslation();
@@ -240,6 +271,22 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
                     nothing to rate. */}
                 {!streaming && transcript.length > 0 && (
                     <>
+                        {onRetrySamePrompt && lastVerdictIsSynthetic(transcript) && (
+                            <>
+                                <FxSpacer height={12} />
+                                <FxButton
+                                    onPress={onRetrySamePrompt}
+                                    disabled={busy}
+                                    testID="blox-ai-retry-same-prompt"
+                                >
+                                    {t('diagnostics.chat.retrySamePromptButton')}
+                                </FxButton>
+                                <FxSpacer height={4} />
+                                <FxText variant="bodyXSRegular" style={{ opacity: 0.65 }}>
+                                    {t('diagnostics.chat.retrySamePromptHint')}
+                                </FxText>
+                            </>
+                        )}
                         {onStartNewChat && (
                             <>
                                 <FxSpacer height={12} />

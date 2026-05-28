@@ -142,6 +142,33 @@ describe('useAiSession reducer — session lifecycle', () => {
         expect(after.modals.feedbackSessionId).toBe('sess-9');
     });
 
+    test('session/start-requested with non-empty lastPrompt overwrites prior prompt', () => {
+        // Sanity for the retrySamePrompt flow — when the user taps "Try
+        // again with the same question" the hook re-invokes
+        // startSessionInternal(lastPrompt, {scenarioId: lastScenarioId}),
+        // which dispatches session/start-requested. The reducer must
+        // overwrite lastPrompt with the new (identical) value and reset
+        // lastTransportError so the retry doesn't carry residual error
+        // state from the prior failed attempt.
+        const prior: ReturnType<typeof initialState> = {
+            ...initialState(null),
+            lastPrompt: 'old prompt',
+            lastScenarioId: 'disconnected',
+            lastTransportError: { kind: 'sse-aborted' as const, message: 'aborted', transient: true },
+        };
+        const after = reducer(prior, {
+            type: 'session/start-requested',
+            prompt: 'old prompt',
+            scenarioId: 'disconnected',
+            transportKind: 'lan-http',
+        });
+        expect(after.lastPrompt).toBe('old prompt');
+        expect(after.lastScenarioId).toBe('disconnected');
+        expect(after.lastTransportError).toBeNull();
+        expect(after.streaming).toBe(true);
+        expect(after.transcript).toEqual([]);   // fresh transcript
+    });
+
     test('session/clear wipes the transcript + session refs but keeps modals + pending', () => {
         // Build a state that mimics "session ended by user with feedback
         // modal still open, transcript populated, transport error

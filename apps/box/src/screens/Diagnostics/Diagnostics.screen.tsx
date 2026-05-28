@@ -673,6 +673,15 @@ const BloxAiSessionBlock: React.FC<{
                 // rate-and-share button after a normal session end so
                 // users aren't forced through the rate flow to chat again.
                 onStartNewChat={actions.clearSession}
+                // Re-runs the most recent prompt + scenario when the
+                // chat surfaces a SYNTHETIC verdict (root_cause is
+                // no_verdict_emitted or max_turns_exceeded — i.e. the
+                // model couldn't converge). Model sampling is
+                // non-deterministic so a second attempt frequently
+                // produces a real verdict; the button saves the user
+                // from retyping. BloxAIChat only renders the CTA when
+                // the synthetic-verdict condition is met.
+                onRetrySamePrompt={actions.retrySamePrompt}
             />
 
             {/* Quick-start card sits below the chat when no session is
