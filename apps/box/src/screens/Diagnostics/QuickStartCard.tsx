@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 
 import {
     QUICK_START_SCENARIO_LIST,
+    CUSTOM_QUESTION_ENABLED,
     type ScenarioId,
 } from './quickStartPrompts';
 
@@ -97,9 +98,9 @@ export const QuickStartCard: React.FC<QuickStartCardProps> = ({
                     );
                 })}
 
-                <FxSpacer height={12} />
+                {CUSTOM_QUESTION_ENABLED && <FxSpacer height={12} />}
 
-                {showFreeform ? (
+                {CUSTOM_QUESTION_ENABLED && (showFreeform ? (
                     <FxBox>
                         <TextInput
                             testID="quickstart-freeform-input"
@@ -134,7 +135,7 @@ export const QuickStartCard: React.FC<QuickStartCardProps> = ({
                     >
                         {t('diagnostics.quickStart.freeformDisclosure')}
                     </FxButton>
-                )}
+                ))}
             </FxBox>
         </FxCard>
     );

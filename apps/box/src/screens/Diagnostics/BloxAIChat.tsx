@@ -37,6 +37,7 @@ import type {
     RecommendedActionEvent,
     UserQuestionEvent,
 } from '../../utils/bloxAiEvents';
+import { CUSTOM_QUESTION_ENABLED } from './quickStartPrompts';
 
 export interface BloxAIChatProps {
     /** Transcript of events received so far. */
@@ -203,6 +204,14 @@ export const BloxAIChat: React.FC<BloxAIChatProps> = ({
     // No session yet AND not streaming: show CTA (the "type your own
     // prompt" entry point).
     if (!sessionId && transcript.length === 0) {
+        // Free-text ("custom question") entry point — gated off while the
+        // on-device model is decommissioned (BLOX_AI_MODEL_ENABLED=0). With
+        // the flag off, QuickStartCard's preset scenarios (deterministic YAML
+        // trees, no LLM) are the only empty-state entry point. Re-enable by
+        // flipping CUSTOM_QUESTION_ENABLED in quickStartPrompts.ts.
+        if (!CUSTOM_QUESTION_ENABLED) {
+            return null;
+        }
         return (
             <FxCard testID="blox-ai-chat-cta">
                 <FxCard.Title>{t('diagnostics.chat.ctaTitle')}</FxCard.Title>

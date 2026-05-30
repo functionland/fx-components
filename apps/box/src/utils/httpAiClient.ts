@@ -40,6 +40,36 @@ export const DEFAULT_BLOX_AI_PORT = 8083;
 export const HEALTH_TIMEOUT_MS = 1000;
 export const HEALTH_CACHE_TTL_MS = 10_000;
 export const REQUEST_TIMEOUT_MS = 30_000;
+// diag/bundle runs every read tool under a 25s server-side wall-clock
+// budget (it returns partial {error} entries rather than hanging), so the
+// client timeout is just a backstop with headroom over that budget.
+export const DIAG_BUNDLE_TIMEOUT_MS = 35_000;
+// support/wireguard now orchestrates a full lifecycle server-side: status
+// pre-check → (install.sh on demand) → reset-failed → restart → status
+// post-check. The common already-installed path is bounded by the restart's
+// 60s server timeout (~90s incl. the two status checks); the rare cold-install
+// path can run apt and take longer, but the server is authoritative — if this
+// client times out mid-install, install finishes server-side and the
+// idempotent retry completes fast. 120s is a backstop over the common path.
+export const SUPPORT_TIMEOUT_MS = 120_000;
+
+// Client-side fallback for POST /diag/bundle. A blox-ai image that predates the
+// server's bundle aggregator still serves the individual GET /diag/{tool}
+// routes, so when the POST comes back 405/404 we rebuild the snapshot from
+// those. List mirrors the server's ToolName enum minus "summary" (which the
+// server bundle also omits — it re-runs a subset of these).
+export const DIAG_FALLBACK_TOOLS = [
+    'internet', 'relay', 'time', 'power', 'storage', 'containers',
+    'wireguard', 'heartbeat', 'events', 'readiness',
+    'discovery_state', 'systemd_services', 'network_interface',
+    'uniondrive', 'identity_health',
+    'kubo_health', 'fula_go_health', 'image_versions', 'ble_state', 'plugins',
+] as const;
+// Matches the server's per-tool budget (diag/relay ~15s is the slow one).
+const DIAG_FALLBACK_PER_TOOL_TIMEOUT_MS = 18_000;
+// Cap in-flight GETs: each diag tool shells out (docker/wg/subprocess), so
+// firing all ~20 at once could spike load on an already-busy edge device.
+const DIAG_FALLBACK_CONCURRENCY = 5;
 
 export type AiTransportName = 'lan-http' | 'ble';
 
@@ -94,6 +124,67 @@ export interface ExecuteResult {
     error?: AiClientError;
 }
 
+/** Snapshot returned by POST /diag/bundle — one entry per read-only tool. */
+export interface DiagBundle {
+    generated_at: string;
+    /** Keyed by short tool name (e.g. "internet"); value is that tool's
+     * result dict, or `{error: ...}` if it timed out / raised. */
+    tools: Record<string, unknown>;
+}
+
+export interface DiagBundleResult {
+    ok: boolean;
+    payload?: DiagBundle;
+    error?: AiClientError;
+}
+
+/** Parsed output of the host's wireguard/status.sh, surfaced by
+ * /support/wireguard so the app can show verified tunnel state. Every field
+ * is optional — older server builds omit `status` entirely, and status.sh may
+ * be unavailable on a given device. `active` is the ground truth for "is the
+ * tunnel up" (it comes from `ip link show support`, not the lying
+ * `systemctl is-active` on this RemainAfterExit=yes oneshot unit). */
+export interface WireguardStatus {
+    installed?: boolean;
+    registered?: boolean;
+    active?: boolean;
+    endpoint?: string;
+    assigned_ip?: string;
+    peer_id_registered?: boolean;
+    last_handshake_age_sec?: number;
+    rx_bytes?: number;
+    tx_bytes?: number;
+    persistent_keepalive_sec?: number;
+}
+
+/** Body shape of POST /support/wireguard (success, a lifecycle failure, or the
+ * gate-rejection 403s which carry a specific `error` code). */
+export interface RemoteSupportPayload {
+    success?: boolean;
+    exit_code?: number;
+    stdout_excerpt?: string;
+    stderr_excerpt?: string;
+    /** Gate rejection (403): "security_code_invalid" | "support_header_required"
+     * | "security_code_file_missing".
+     * Lifecycle failure (500): "wireguard_not_installed" (the device wasn't set
+     * up and install.sh failed) | "tunnel_inactive_after_restart" (the restart
+     * ran but status.sh still reports no `support` interface — verified down). */
+    error?: string;
+    /** Verified post-restart state from status.sh — the ground truth for "did
+     * the tunnel come up". `null`/absent when status.sh was unavailable or the
+     * server build predates this field. */
+    status?: WireguardStatus | null;
+    /** True when the device wasn't installed and install.sh was run on demand
+     * as part of servicing this request. */
+    installed_on_demand?: boolean;
+}
+
+export interface RemoteSupportResult {
+    ok: boolean;
+    payload?: RemoteSupportPayload;
+    error?: AiClientError;
+}
+
 // Local helpers --------------------------------------------------------------
 
 function isAbortError(e: unknown): boolean {
@@ -140,6 +231,30 @@ async function fetchWithTimeout(
     } finally {
         clearTimeout(timer);
     }
+}
+
+/**
+ * Map `fn` over `items` with at most `limit` calls in flight, returning results
+ * in input order. A fixed pool of workers drains a shared cursor — no external
+ * dependency. (`cursor++` is safe: each worker grabs its index synchronously
+ * before awaiting, and JS is single-threaded.)
+ */
+async function mapWithConcurrency<T, R>(
+    items: readonly T[],
+    limit: number,
+    fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+    const results = new Array<R>(items.length);
+    let cursor = 0;
+    const worker = async (): Promise<void> => {
+        while (cursor < items.length) {
+            const i = cursor++;
+            results[i] = await fn(items[i]);
+        }
+    };
+    const size = Math.max(1, Math.min(limit, items.length));
+    await Promise.all(Array.from({ length: size }, () => worker()));
+    return results;
 }
 
 // Public client --------------------------------------------------------------
@@ -722,6 +837,162 @@ export class HttpAiClient {
             );
         } catch {
             // ignore
+        }
+    }
+
+    /**
+     * Fetch the full read-only diagnostics snapshot via POST /diag/bundle.
+     *
+     * POST (not GET) so the identical call works whether it reaches the
+     * container directly over LAN HTTP or via the core BLE proxy (which
+     * always POSTs json={}). The server runs every diag/* tool concurrently
+     * under its own ~25s wall-clock budget and returns partial results
+     * (per-tool `{error}` entries) rather than failing the whole snapshot,
+     * so the client timeout here is a generous backstop, not the deadline.
+     */
+    public async fetchDiagBundle(): Promise<DiagBundleResult> {
+        try {
+            const res = await fetchWithTimeout(
+                `${this.baseUrl}/diag/bundle`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: '{}',
+                },
+                DIAG_BUNDLE_TIMEOUT_MS,
+            );
+            const raw = await res.text();
+            if (!res.ok) {
+                // A blox-ai image predating the POST /diag/bundle aggregator
+                // still serves the per-tool GET /diag/{tool} routes, so the POST
+                // comes back 405 (method not allowed on the path) or 404 (no
+                // such path). Rebuild the snapshot from the per-tool GETs so Raw
+                // Diagnostics keeps working until the image is updated.
+                if (res.status === 405 || res.status === 404) {
+                    return this.fetchDiagBundleViaTools();
+                }
+                return { ok: false, error: fromHttpStatus(res.status, raw) };
+            }
+            let parsed: unknown;
+            try {
+                parsed = JSON.parse(raw);
+            } catch {
+                return {
+                    ok: false,
+                    error: { kind: 'sse-malformed', message: 'diag/bundle body is not JSON', transient: false },
+                };
+            }
+            return { ok: true, payload: parsed as DiagBundle };
+        } catch (e: any) {
+            if (isAbortError(e)) {
+                return { ok: false, error: networkError('diag/bundle aborted') };
+            }
+            return { ok: false, error: networkError(e?.message ?? 'diag/bundle failed') };
+        }
+    }
+
+    /**
+     * GET a single /diag/{tool}, returning its result dict. Any failure (4xx,
+     * 5xx, timeout, network) collapses to an `{error}` marker so one missing or
+     * slow tool doesn't sink the whole snapshot — the same partial-failure
+     * semantics the server's own bundle uses.
+     */
+    private async fetchDiagTool(tool: string): Promise<unknown> {
+        try {
+            const res = await fetchWithTimeout(
+                `${this.baseUrl}/diag/${tool}`,
+                { method: 'GET' },
+                DIAG_FALLBACK_PER_TOOL_TIMEOUT_MS,
+            );
+            const raw = await res.text();
+            if (!res.ok) {
+                return { error: `HTTP ${res.status}`, http_status: res.status };
+            }
+            try {
+                return JSON.parse(raw);
+            } catch {
+                return { error: 'non-JSON response' };
+            }
+        } catch (e: any) {
+            if (isAbortError(e)) return { error: 'timeout' };
+            return { error: e?.message ?? 'fetch failed' };
+        }
+    }
+
+    /**
+     * Reconstruct a diag bundle from the individual GET /diag/{tool} routes.
+     * Fallback for blox-ai images that predate the POST /diag/bundle aggregator
+     * (they 405/404 the POST but still serve the per-tool GETs). Output is
+     * shape-compatible with the server bundle so callers can't tell which path
+     * produced it. Concurrency-capped to avoid spiking the edge device.
+     */
+    private async fetchDiagBundleViaTools(): Promise<DiagBundleResult> {
+        const values = await mapWithConcurrency(
+            DIAG_FALLBACK_TOOLS,
+            DIAG_FALLBACK_CONCURRENCY,
+            (tool) => this.fetchDiagTool(tool),
+        );
+        const tools: Record<string, unknown> = {};
+        DIAG_FALLBACK_TOOLS.forEach((tool, i) => {
+            tools[tool] = values[i];
+        });
+        // If every single tool failed, the device almost certainly isn't
+        // serving diag at all — surface a network error rather than a "bundle"
+        // that's nothing but {error} entries.
+        const allFailed = values.every(
+            (v) => v != null && typeof v === 'object' && 'error' in (v as object),
+        );
+        if (allFailed) {
+            return { ok: false, error: networkError('no diag tools reachable') };
+        }
+        return {
+            ok: true,
+            payload: { generated_at: new Date().toISOString(), tools },
+        };
+    }
+
+    /**
+     * Start/restart the WireGuard support tunnel via POST /support/wireguard.
+     *
+     * LAN-only by design: the endpoint requires a custom `X-Fula-Support`
+     * header (which forces a CORS preflight, blocking a same-LAN browser
+     * drive-by) plus the tier-3 security code. The core BLE proxy can send
+     * neither a custom header nor a body, so the existing BLE "SUPPORT ON"
+     * button covers the BLE path; this method is the LAN equivalent.
+     *
+     * Returns the parsed body even on a non-2xx so the caller can read the
+     * specific gate-rejection code (e.g. "security_code_invalid").
+     */
+    public async enableRemoteSupport(securityCode: string): Promise<RemoteSupportResult> {
+        try {
+            const res = await fetchWithTimeout(
+                `${this.baseUrl}/support/wireguard`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Fula-Support': 'enable',
+                    },
+                    body: JSON.stringify({ security_code: securityCode }),
+                },
+                SUPPORT_TIMEOUT_MS,
+            );
+            const raw = await res.text();
+            let parsed: RemoteSupportPayload | undefined;
+            try {
+                parsed = JSON.parse(raw) as RemoteSupportPayload;
+            } catch {
+                parsed = undefined;
+            }
+            if (!res.ok) {
+                return { ok: false, error: fromHttpStatus(res.status, raw), payload: parsed };
+            }
+            return { ok: true, payload: parsed };
+        } catch (e: any) {
+            if (isAbortError(e)) {
+                return { ok: false, error: networkError('support/wireguard aborted') };
+            }
+            return { ok: false, error: networkError(e?.message ?? 'support/wireguard failed') };
         }
     }
 }

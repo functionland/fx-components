@@ -54,10 +54,13 @@ describe('Contract ABIs Test', () => {
       .filter((item: any) => item.type === 'function')
       .map((item: any) => item.name);
 
-    expect(functionNames).toContain('joinPool');
-    expect(functionNames).toContain('leavePool');
-    expect(functionNames).toContain('listPools');
-    expect(functionNames).toContain('getUserPool');
+    // The pool contract was redesigned to a request/approval governance model:
+    // the old joinPool/leavePool/listPools/getUserPool API no longer exists.
+    // Assert the equivalent current membership-lifecycle functions instead.
+    expect(functionNames).toContain('createPool');
+    expect(functionNames).toContain('joinPoolRequest');
+    expect(functionNames).toContain('removeMemberPeerId');
+    expect(functionNames).toContain('getPoolMembers');
   });
 
   it('should have required reward functions in ABI', () => {
@@ -67,9 +70,11 @@ describe('Contract ABIs Test', () => {
       .filter((item: any) => item.type === 'function')
       .map((item: any) => item.name);
 
+    // claimRewards survived the reward-engine redesign; getTotalRewards and
+    // getClaimableRewards were replaced by totalRewardsClaimed / getUnclaimedRewards.
     expect(functionNames).toContain('claimRewards');
-    expect(functionNames).toContain('getTotalRewards');
-    expect(functionNames).toContain('getClaimableRewards');
+    expect(functionNames).toContain('getUnclaimedRewards');
+    expect(functionNames).toContain('totalRewardsClaimed');
   });
 });
 

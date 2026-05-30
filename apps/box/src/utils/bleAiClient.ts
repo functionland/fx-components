@@ -40,11 +40,17 @@ import type {
     HealthResult,
     SessionHandle,
     ExecuteResult,
+    DiagBundle,
+    DiagBundleResult,
 } from './httpAiClient';
 
 export const BLE_RUN_AI_TIMEOUT_MS = 300_000;     // 5 min — multi-turn AI sessions can run long
 export const BLE_ONE_SHOT_TIMEOUT_MS = 30_000;
 export const BLE_HEALTH_TIMEOUT_MS = 5_000;       // BLE is slow; give /health more room than HTTP's 1s
+// diag/bundle: core BLE proxy waits up to 30s for the container (which has
+// a 25s internal budget), then relays the result over the slow BLE wire —
+// so the phone-side wait must clear 30s + transfer. Generous backstop.
+export const BLE_DIAG_BUNDLE_TIMEOUT_MS = 45_000;
 
 function bleError(kind: AiClientError['kind'], message: string, transient: boolean): AiClientError {
     return { kind, message, transient };
@@ -293,6 +299,46 @@ export class BleAiClient {
         } catch {
             // ignore
         }
+    }
+
+    /**
+     * Fetch the read-only diagnostics snapshot over BLE via the registered
+     * `diag/bundle` proxy command. The core proxy POSTs json={} to the
+     * container's /diag/bundle and relays the JSON result back as a single
+     * (non-stream) response, so this is a one-shot wait, not a stream.
+     *
+     * Mirrors HttpAiClient.fetchDiagBundle's result shape so the UI can
+     * call it transport-agnostically. NOTE: there is deliberately NO BLE
+     * enableRemoteSupport — that endpoint is LAN-only (custom header +
+     * body the BLE proxy can't send); the Settings "SUPPORT ON" button
+     * covers the BLE path.
+     */
+    public async fetchDiagBundle(): Promise<DiagBundleResult> {
+        let raw: unknown;
+        try {
+            raw = await this.bleManager.writeToBLEAndWaitForResponse(
+                JSON.stringify({ command: 'diag/bundle' }),
+                this.peripheralId, undefined, undefined, BLE_DIAG_BUNDLE_TIMEOUT_MS,
+            );
+        } catch (e) {
+            return { ok: false, error: this.normalizeBleError(e) };
+        }
+        let payload: unknown;
+        try {
+            payload = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        } catch {
+            return {
+                ok: false,
+                error: bleError('sse-malformed', 'BLE diag/bundle body is not JSON', false),
+            };
+        }
+        if (payload && typeof payload === 'object' && 'tools' in (payload as Record<string, unknown>)) {
+            return { ok: true, payload: payload as DiagBundle };
+        }
+        return {
+            ok: false,
+            error: bleError('sse-malformed', 'BLE diag/bundle returned no tools snapshot', false),
+        };
     }
 
     private normalizeBleError(e: unknown): AiClientError {

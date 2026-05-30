@@ -28,7 +28,6 @@ import {
     FxBox,
     FxText,
     FxCard,
-    FxButton,
     FxKeyboardAwareScrollView,
     FxSpacer,
 } from '@functionland/component-library';
@@ -45,14 +44,22 @@ import { Routes } from '../../navigation/navigationConfig';
 import * as Constants from '../../utils/constants';
 // Plan A v2 — A2 wiring.
 import { QuickStartCard } from './QuickStartCard';
+import { ManualIpCard } from './ManualIpCard';
 import { BloxAIChat } from './BloxAIChat';
 import { ApprovalModal } from './ApprovalModal';
 import { SharePhoneContextModal } from './SharePhoneContextModal';
 import { FeedbackModal } from './FeedbackModal';
 import { UploadTranscriptModal } from './UploadTranscriptModal';
 import { PendingActionsPanel } from './PendingActionsPanel';
+import { RawDiagnosticsCard } from './RawDiagnosticsCard';
 import { useAiSession } from './useAiSession';
 import { BleManagerWrapper } from '../../utils/ble';
+import {
+    loadManualBloxIp,
+    saveManualBloxIp,
+    removeManualBloxIp,
+} from '../../utils/manualBloxIp';
+import { HttpAiClient, DEFAULT_BLOX_AI_PORT } from '../../utils/httpAiClient';
 import { gatherContext as gatherPhoneContext } from '../../utils/phoneLogger';
 import type { ScenarioId } from './quickStartPrompts';
 import type { RouteProp } from '@react-navigation/native';
@@ -236,6 +243,18 @@ export const DiagnosticsScreen: React.FC<DiagnosticsScreenProps> = ({ route }) =
     // Plan A v2 wiring: pull peer ids from the existing stores.
     const appPeerId = useUserProfileStore((s) => s.appPeerId) ?? '';
     const currentBloxPeerId = useBloxsStore((s) => s.currentBloxPeerId) ?? '';
+    // ipfs-cluster (pool) peer id for the current blox. Mirrors the store's
+    // getCurrentClusterPeerId() guard: a clusterPeerId equal to the kubo
+    // peerId is a stale v2→v3 migration default, not a real pool id — surface
+    // null in that case so the support bundle doesn't carry a bogus id.
+    // Written as a reactive selector (not the imperative getter) so the Raw
+    // Diagnostics card re-renders if the cluster id resolves after mount.
+    const clusterPeerId = useBloxsStore((s) => {
+        const id = s.currentBloxPeerId;
+        if (!id) return null;
+        const stored = s.bloxs[id]?.clusterPeerId;
+        return stored && stored !== id ? stored : null;
+    });
     // Plan A v2 — A4 prefill from nav route param. Consumed once by
     // the hook; the reducer clears it after first read so focus/remount
     // doesn't re-prefill (codex catch).
@@ -247,6 +266,20 @@ export const DiagnosticsScreen: React.FC<DiagnosticsScreenProps> = ({ route }) =
     const [discoveryStatus, setDiscoveryStatus] = React.useState<ProbeStatus>('checking');
     const [relays, setRelays] = React.useState<RelayInfo[] | null>(null);
     const [pluginPresence, setPluginPresence] = React.useState<PluginPresence>('checking');
+
+    // BLE transport, lifted to the screen so BOTH the AI session block and
+    // the Raw Diagnostics card share one BleManagerWrapper + the discovered
+    // peripheral id (mirrors the BluetoothCommands.screen pattern). A single
+    // wrapper avoids two managers contending for the same adapter.
+    const bleManager = React.useMemo(
+        () => new BleManagerWrapper(() => {
+            // Connection-status changes are a no-op here — neither consumer
+            // renders a live status badge; the next AI/diag attempt surfaces
+            // a dropped peripheral as a transport error.
+        }),
+        [],
+    );
+    const [blePeripheralId, setBlePeripheralId] = React.useState<string | null>(null);
 
     // Phone-side probes run once on mount. Re-fetching on every focus would
     // be nice but adds complexity; Phase 12's chat UX can trigger a refresh
@@ -335,6 +368,28 @@ export const DiagnosticsScreen: React.FC<DiagnosticsScreenProps> = ({ route }) =
                 : 'notInstalledOrUnavailable'
         );
     }, [activePlugins, hasFetched]);
+
+    // Discover an already-connected blox peripheral so BLE is available as a
+    // transport for both the AI session and the Raw Diagnostics fetch. Empty
+    // filter returns ALL connected peripherals; match by the same name
+    // prefixes the BluetoothCommands screen uses. Cheap, no permission prompt;
+    // if BLE perms aren't granted the catch is a no-op and LAN HTTP still works.
+    React.useEffect(() => {
+        let cancelled = false;
+        BleManager.getConnectedPeripherals([]).then((peripherals) => {
+            if (cancelled) return;
+            const blox = peripherals.find((p) => {
+                const n = (p.name || '').toLowerCase();
+                return n === 'fulatower' || n === 'fxblox-rk1' || n.startsWith('fulatower') || n.startsWith('fxblox');
+            });
+            if (blox?.id) {
+                setBlePeripheralId(blox.id);
+            }
+        }).catch(() => {
+            // BLE permissions might not be granted; not an error here.
+        });
+        return () => { cancelled = true; };
+    }, []);
 
     return (
         <FxKeyboardAwareScrollView>
@@ -511,38 +566,23 @@ export const DiagnosticsScreen: React.FC<DiagnosticsScreenProps> = ({ route }) =
                         appPeerId={appPeerId}
                         bloxPeerId={currentBloxPeerId}
                         prefillScenario={prefillScenario}
+                        bleManager={bleManager}
+                        blePeripheralId={blePeripheralId}
                     />
                 )}
 
                 {pluginPresence !== 'checking' && (
-                    <FxCard>
-                        <FxCard.Title>
-                            {t('diagnostics.rawDiagnosticsTitle')}
-                        </FxCard.Title>
-                        <FxBox paddingVertical="8">
-                            {pluginPresence === 'installed' ? (
-                                <>
-                                    <FxText variant="bodySmallRegular">
-                                        {t('diagnostics.rawDiagnosticsComingSoon')}
-                                    </FxText>
-                                    <FxSpacer height={8} />
-                                    <FxButton disabled>
-                                        {t('diagnostics.rawDiagnosticsComingSoonButton')}
-                                    </FxButton>
-                                </>
-                            ) : (
-                                <>
-                                    <FxText variant="bodySmallRegular">
-                                        {t('diagnostics.rawDiagnosticsPluginRequired')}
-                                    </FxText>
-                                    <FxSpacer height={8} />
-                                    <FxButton disabled>
-                                        {t('diagnostics.rawDiagnosticsUnavailable')}
-                                    </FxButton>
-                                </>
-                            )}
-                        </FxBox>
-                    </FxCard>
+                    <RawDiagnosticsCard
+                        pluginInstalled={pluginPresence === 'installed'}
+                        bloxKuboPeerId={currentBloxPeerId}
+                        bloxClusterPeerId={clusterPeerId}
+                        appPeerId={appPeerId}
+                        phoneInternet={phoneInternet}
+                        discoveryStatus={discoveryStatus}
+                        relays={relays}
+                        bleManager={bleManager}
+                        blePeripheralId={blePeripheralId}
+                    />
                 )}
             </FxBox>
         </FxKeyboardAwareScrollView>
@@ -567,55 +607,65 @@ const BloxAiSessionBlock: React.FC<{
     appPeerId: string;
     bloxPeerId: string;
     prefillScenario: ScenarioId | null;
-}> = ({ appPeerId, bloxPeerId, prefillScenario }) => {
-    // BLE wiring (Plan A end-to-end follow-up #1):
-    // useMemo a BleManagerWrapper bound to this screen's lifecycle,
-    // mirroring the BluetoothCommands.screen pattern. On mount, query
-    // for already-connected peripherals (cheap, no permissions
-    // prompt). If the user paired their blox earlier in this app
-    // session, the peripheral.id is already cached by the OS and we
-    // can use it for BLE AI commands. If nothing is connected, BLE
-    // operations return ble-busy/network errors and the hook surfaces
-    // them in the transcript — at least LAN HTTP still works for
-    // users on the same LAN as their blox.
-    const bleManager = React.useMemo(
-        () => new BleManagerWrapper(() => {
-            // Status changes are a no-op for the AI screen — we don't
-            // need to render connection-status badges here; if the
-            // peripheral drops, the next AI session attempt will
-            // surface the failure.
-        }),
-        [],
-    );
-    const [blePeripheralId, setBlePeripheralId] = React.useState<string | null>(null);
+    bleManager: BleManagerWrapper;
+    blePeripheralId: string | null;
+}> = ({ appPeerId, bloxPeerId, prefillScenario, bleManager, blePeripheralId }) => {
+    // Manual LAN-IP fallback: the user-typed IP for THIS blox, loaded from
+    // AsyncStorage. Threaded into useAiSession so the transport selector can
+    // try LAN HTTP at this IP when mDNS auto-discovery finds nothing (go-fula
+    // / zeroconf down so the device IP is never broadcast). null = none saved
+    // → pure auto-discovery.
+    const [manualIp, setManualIp] = React.useState<string | null>(null);
 
+    // (Re)load whenever the active blox changes. Keyed per-blox so a phone
+    // paired with several bloxs keeps an independent IP for each.
     React.useEffect(() => {
         let cancelled = false;
-        // Discover any already-connected blox peripheral. Empty array
-        // filter returns ALL connected peripherals; we match by name
-        // prefix (fulatower / fxblox) — same naming convention the
-        // BluetoothCommands screen uses.
-        BleManager.getConnectedPeripherals([]).then((peripherals) => {
-            if (cancelled) return;
-            const blox = peripherals.find((p) => {
-                const n = (p.name || '').toLowerCase();
-                return n === 'fulatower' || n === 'fxblox-rk1' || n.startsWith('fulatower') || n.startsWith('fxblox');
-            });
-            if (blox?.id) {
-                setBlePeripheralId(blox.id);
-            }
-        }).catch(() => {
-            // BLE permissions might not be granted; not an error for
-            // this screen. LAN HTTP still works.
+        loadManualBloxIp(bloxPeerId).then((ip) => {
+            if (!cancelled) setManualIp(ip);
         });
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+        };
+    }, [bloxPeerId]);
+
+    const handleSaveManualIp = React.useCallback(
+        async (ip: string) => {
+            await saveManualBloxIp(bloxPeerId, ip);
+            setManualIp(ip);
+        },
+        [bloxPeerId],
+    );
+
+    const handleClearManualIp = React.useCallback(async () => {
+        await removeManualBloxIp(bloxPeerId);
+        setManualIp(null);
+    }, [bloxPeerId]);
+
+    // Soft reachability probe for the card's advice line. Uses the same
+    // /health endpoint + default port the selector uses; never throws to the
+    // card (returns false on any error). The IP is persisted regardless — the
+    // selector falls through to mDNS/BLE on a failed probe.
+    const handleProbeManualIp = React.useCallback(async (ip: string) => {
+        try {
+            const probe = await new HttpAiClient(ip, DEFAULT_BLOX_AI_PORT).health();
+            return probe.ok;
+        } catch {
+            return false;
+        }
     }, []);
 
+    // BLE transport (bleManager + blePeripheralId) is owned by the parent
+    // DiagnosticsScreen and passed down so the AI session and the Raw
+    // Diagnostics card share one wrapper + discovered peripheral. If nothing
+    // is connected, blePeripheralId is null and BLE ops surface a transport
+    // error in the transcript — LAN HTTP still works for same-LAN users.
     const { state, actions } = useAiSession({
         appPeerId,
         bloxPeerId,
         bleManager,
         blePeripheralId,
+        manualIp,
         pluginInstalled: true,
         initialPrefilledScenario: prefillScenario,
         // Wire the phone-context gatherer so the "Share my phone's context"
@@ -694,6 +744,17 @@ const BloxAiSessionBlock: React.FC<{
                         onSubmitFreeform={actions.startSession}
                         disabled={state.streaming}
                         prefilledScenario={state.prefilledScenario}
+                    />
+                    {/* Manual LAN-IP entry — fallback for when mDNS
+                        auto-discovery fails. Sits under the quick-start card
+                        so it's available but not in the way. */}
+                    <FxSpacer height={12} />
+                    <ManualIpCard
+                        savedIp={manualIp}
+                        onSave={handleSaveManualIp}
+                        onClear={handleClearManualIp}
+                        onProbe={handleProbeManualIp}
+                        disabled={state.streaming}
                     />
                 </>
             )}

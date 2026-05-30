@@ -7,6 +7,14 @@ module.exports = {
     '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
     '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}',
   ],
+  // setup.ts is the setupFilesAfterEnv entry and mocks/ holds moduleNameMapper
+  // targets — both are support files the first testMatch glob would otherwise
+  // collect as (empty) test suites. Exclude them so they aren't run as tests.
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '<rootDir>/src/__tests__/setup.ts',
+    '<rootDir>/src/__tests__/mocks/',
+  ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

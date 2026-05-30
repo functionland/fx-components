@@ -2,9 +2,13 @@
  * aiTransport — picks the right transport for the Blox AI plugin.
  *
  * Plan HTTP v2.1 — H2 deliverable. Today's chain:
- *   1. LAN HTTP (when mDNS authorizer + RFC1918/link-local IP + 1 s
- *      /health probe all pass)
- *   2. BLE (fallback)
+ *   1. LAN HTTP via mDNS (authorizer + RFC1918/link-local IP + 1 s
+ *      /health probe all pass) — a fresh discovery record always wins
+ *   2. LAN HTTP via a user-typed manual IP — fallback for when mDNS finds
+ *      nothing (e.g. go-fula down so the device IP is never broadcast).
+ *      Same RFC1918/link-local gate + /health probe; tried before the
+ *      active scan and even when peer IDs are unknown.
+ *   3. BLE (fallback)
  *
  * Libp2p slot is reserved for a future plan when someone builds the
  * go-fula libp2p-stream-to-AI bridge; the selector's shape leaves room
@@ -88,6 +92,17 @@ export interface SelectorOptions {
      * with `scanIfEmpty: true`. Most callers should leave this false.
      */
     scanIfEmpty?: boolean;
+    /**
+     * A user-typed LAN IPv4 for the blox, entered as a fallback when mDNS
+     * auto-discovery fails (e.g. go-fula down, so nothing broadcasts the
+     * device IP). When set and it passes the RFC1918/link-local gate it's
+     * tried before the active mDNS scan — and even when `bloxPeerId` /
+     * `appPeerId` are unknown — so it works with every other container
+     * down. A fresh mDNS cache hit still wins over it. A failed /health
+     * probe falls through to the normal mDNS → BLE chain, so a stale value
+     * never strands the user.
+     */
+    manualIp?: string;
 }
 
 /**
@@ -112,15 +127,50 @@ export async function selectAiTransport(
     // Default false to avoid stomping the pairing flow's Zeroconf scan
     // (codex Plan HTTP final-review BLOCK). Opt-in only.
     const scanIfEmpty = opts.scanIfEmpty ?? false;
+    const manualIp = (opts.manualIp ?? '').trim();
 
+    // Probe + qualify a user-typed manual IP. Returns null on a non-LAN IP
+    // or a failed /health probe so the caller falls through to mDNS/BLE — a
+    // stale manual IP (e.g. after a new DHCP lease) must never strand the
+    // user. The RFC1918/link-local gate is re-applied HERE as the hard
+    // backstop even though the UI validates on entry: never POST AI actions
+    // to a non-private address (gemini security review 2026-05-29).
+    const qualifyManual = async (): Promise<AiTransportChoice | null> => {
+        if (!manualIp || !ipIsPrivateLan(manualIp)) return null;
+        const client = new HttpAiClient(manualIp, DEFAULT_BLOX_AI_PORT);
+        const probe = await client.health(probeTimeoutMs);
+        if (!probe.ok) return null;
+        return {
+            kind: 'lan-http',
+            httpClient: client,
+            reason: `manual IP ${manualIp}, /health 200 in ${probe.latencyMs}ms`,
+        };
+    };
+
+    // Without peer IDs we can't match an mDNS record at all. A manual IP is
+    // then the ONLY LAN path — and this (go-fula down, nothing broadcasting
+    // the device IP) is exactly the case manual entry exists for. Try it,
+    // else BLE.
     if (!bloxPeerId || !appPeerId) {
+        const manual = await qualifyManual();
+        if (manual) return manual;
         return { kind: 'ble', reason: 'missing bloxPeerId or appPeerId — cannot qualify LAN HTTP' };
     }
 
     // 1) Try the cache first (fast path; recent scan or external noteRecord).
+    // A FRESH discovery record reflects the current network and always wins
+    // over a possibly-stale manual IP (gemini review 2026-05-29).
     let hit = mdnsCache.findAuthorizedBlox(bloxPeerId, appPeerId, mdnsMaxAgeMs);
 
-    // 2) If empty and caller permits, run a one-shot scan.
+    // 2) Cache miss: try the user's manual IP BEFORE the active scan. On a
+    // go-fula-down device the scan finds nothing anyway, so the IP the user
+    // explicitly typed is both the fast path and the only one that works.
+    if (!hit) {
+        const manual = await qualifyManual();
+        if (manual) return manual;
+    }
+
+    // 3) Still nothing and caller permits: run a one-shot scan.
     if (!hit && scanIfEmpty) {
         await mdnsCache.refreshOnce();
         hit = mdnsCache.findAuthorizedBlox(bloxPeerId, appPeerId, mdnsMaxAgeMs);

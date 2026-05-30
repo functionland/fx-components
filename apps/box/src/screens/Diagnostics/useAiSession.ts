@@ -129,6 +129,14 @@ export interface UseAiSessionOptions {
     bloxPeerId: string;
     appPeerId: string;
     /**
+     * Optional user-typed LAN IPv4 for the blox, used as a fallback when
+     * mDNS auto-discovery fails (e.g. go-fula down so nothing broadcasts
+     * the device IP). Passed straight through to `selectAiTransport`,
+     * which re-validates it against the RFC1918/link-local gate and tries
+     * it before the active mDNS scan. `null`/absent = auto-discovery only.
+     */
+    manualIp?: string | null;
+    /**
      * Caller provides a BLE manager (typically a useMemo'd
      * `BleManagerWrapper` per the existing per-screen pattern). May
      * be `null` if BLE is unavailable on this device (e.g. permissions
@@ -549,6 +557,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
     const {
         bloxPeerId,
         appPeerId,
+        manualIp = null,
         bleManager,
         blePeripheralId,
         pluginInstalled,
@@ -577,6 +586,13 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
     lastPromptRef.current = state.lastPrompt;
     const lastScenarioIdRef = useRef<ScenarioId | 'freeform' | null>(null);
     lastScenarioIdRef.current = state.lastScenarioId;
+    // Mirror the manual IP in a ref so the selectAiTransport call sites
+    // (all useCallback-memoized) read the latest value WITHOUT adding it to
+    // their dep arrays — same closure-staleness dodge as above. The
+    // selector re-validates it against ipIsPrivateLan, so a bad value here
+    // is harmless (it just falls through to mDNS/BLE).
+    const manualIpRef = useRef<string | null>(null);
+    manualIpRef.current = manualIp;
 
     const activeClientRef = useRef<AiClient | null>(null);
     const activeHandleRef = useRef<SessionHandle | null>(null);
@@ -757,6 +773,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
             // disk for the next foreground attempt).
             const choice = await selectAiTransport(bloxPeerId, appPeerId, {
                 scanIfEmpty: true,
+                manualIp: manualIpRef.current ?? undefined,
             });
             if (!mountedRef.current) return;
             if (choice.kind !== 'lan-http' || !choice.httpClient) {
@@ -867,6 +884,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
                 // it's empty on cold start.
                 const choice = await selectAiTransport(bloxPeerId, appPeerId, {
                     scanIfEmpty: true,
+                    manualIp: manualIpRef.current ?? undefined,
                 });
                 chosenKind = choice.kind;
                 if (choice.kind === 'lan-http') {
@@ -930,6 +948,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
 
             const choice = await selectAiTransport(bloxPeerId, appPeerId, {
                 scanIfEmpty: true,
+                manualIp: manualIpRef.current ?? undefined,
             });
             if (choice.kind !== 'lan-http' || !choice.httpClient) {
                 // Tree endpoint is HTTP-only. Fall back to LLM via the
@@ -962,6 +981,7 @@ export function useAiSession(opts: UseAiSessionOptions): UseAiSessionResult {
             if (!trimmed) return;
             const choice = await selectAiTransport(bloxPeerId, appPeerId, {
                 scanIfEmpty: true,
+                manualIp: manualIpRef.current ?? undefined,
             });
             if (choice.kind === 'lan-http' && choice.httpClient) {
                 const sid = await choice.httpClient.classify(trimmed).catch(() => 'other');

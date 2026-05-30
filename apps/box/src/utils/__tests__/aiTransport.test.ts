@@ -60,6 +60,11 @@ describe('ipIsPrivateLan — RFC1918 + link-local accept; loopback reject', () =
         ['192.168.1.1.5',      false, 'too many octets'],
         ['256.0.0.1',          false, 'octet > 255'],
         ['fe80::1',            false, 'IPv6 not handled'],
+        ['0.0.0.0',            false, 'wildcard 0.0.0.0 rejected (default-deny)'],
+        ['255.255.255.255',    false, 'broadcast rejected (default-deny)'],
+        ['192.167.0.1',        false, '192.167 is BELOW 192.168/16'],
+        ['192.169.0.1',        false, '192.169 is ABOVE 192.168/16'],
+        ['localhost',          false, 'hostname rejected — numeric quads only (no DNS rebinding)'],
     ])('%s -> %s (%s)', (ip, expected) => {
         expect(ipIsPrivateLan(ip)).toBe(expected);
     });
@@ -235,5 +240,134 @@ describe('selectAiTransport — port discovery', () => {
         await selectAiTransport('BLOX1', 'APP1', { scanIfEmpty: false });
 
         expect(HttpAiClientMock).toHaveBeenCalledWith('10.0.0.5', 8083);
+    });
+});
+
+describe('selectAiTransport — manual IP fallback', () => {
+    test('a fresh mDNS cache hit wins over a provided manual IP', async () => {
+        findAuthorizedBlox.mockReturnValue({
+            service: {
+                txt: {
+                    bloxPeerIdString: 'BLOX1',
+                    authorizer: 'APP1',
+                    hardwareID: 'HW1',
+                    ipAddress: '192.168.1.50',
+                },
+                host: '192.168.1.50',
+                addresses: ['192.168.1.50'],
+                name: '',
+                fullName: '',
+                port: 8080,
+            },
+            observedAt: Date.now(),
+        });
+        HttpAiClientMock.mockImplementation((ip: string, port: number) => ({
+            ip,
+            port,
+            baseUrl: `http://${ip}:${port}`,
+            health: jest.fn().mockResolvedValue({ ok: true, latencyMs: 12 }),
+        }));
+
+        const choice = await selectAiTransport('BLOX1', 'APP1', {
+            // A (valid) but possibly-stale manual IP must NOT be preferred
+            // over a fresh discovery record (gemini review 2026-05-29).
+            manualIp: '10.0.0.99',
+            scanIfEmpty: false,
+        });
+
+        expect(choice.kind).toBe('lan-http');
+        expect(choice.reason).toMatch(/mDNS verified/);
+        // Only the mDNS IP client was built; the manual IP was never tried.
+        expect(HttpAiClientMock).toHaveBeenCalledTimes(1);
+        expect(HttpAiClientMock).toHaveBeenCalledWith('192.168.1.50', 8083);
+        expect(HttpAiClientMock).not.toHaveBeenCalledWith('10.0.0.99', 8083);
+    });
+
+    test('cache miss → manual IP qualifies and is tried BEFORE the active scan', async () => {
+        findAuthorizedBlox.mockReturnValue(null);
+        HttpAiClientMock.mockImplementation((ip: string, port: number) => ({
+            ip,
+            port,
+            baseUrl: `http://${ip}:${port}`,
+            health: jest.fn().mockResolvedValue({ ok: true, latencyMs: 20 }),
+        }));
+
+        const choice = await selectAiTransport('BLOX1', 'APP1', {
+            manualIp: '192.168.1.77',
+            // Even with scan opt-in, the manual IP is tried first — on a
+            // go-fula-down device the scan finds nothing anyway.
+            scanIfEmpty: true,
+        });
+
+        expect(choice.kind).toBe('lan-http');
+        expect(choice.reason).toMatch(/manual IP 192\.168\.1\.77/);
+        expect(HttpAiClientMock).toHaveBeenCalledWith('192.168.1.77', 8083);
+        // Manual succeeded before the scan — refreshOnce must NOT run.
+        expect(refreshOnce).not.toHaveBeenCalled();
+    });
+
+    test('manual IP present but /health fails → falls through (never strands)', async () => {
+        findAuthorizedBlox.mockReturnValue(null);
+        HttpAiClientMock.mockImplementation((ip: string, port: number) => ({
+            ip,
+            port,
+            baseUrl: `http://${ip}:${port}`,
+            health: jest.fn().mockResolvedValue({ ok: false, latencyMs: 1100 }),
+        }));
+
+        const choice = await selectAiTransport('BLOX1', 'APP1', {
+            manualIp: '192.168.1.77',
+            scanIfEmpty: false,
+        });
+
+        expect(choice.kind).toBe('ble');
+        // A stale manual IP (e.g. after a new DHCP lease) must not strand the
+        // user — selector falls through to the normal mDNS → BLE chain.
+        expect(choice.reason).toMatch(/no fresh mDNS record/);
+        // The probe WAS attempted against the manual IP before falling through.
+        expect(HttpAiClientMock).toHaveBeenCalledWith('192.168.1.77', 8083);
+    });
+
+    test('non-RFC1918 manual IP is rejected without building a client (security backstop)', async () => {
+        findAuthorizedBlox.mockReturnValue(null);
+
+        const choice = await selectAiTransport('BLOX1', 'APP1', {
+            // Public IP — must never be POSTed to even if the user typed it.
+            manualIp: '8.8.8.8',
+            scanIfEmpty: false,
+        });
+
+        expect(choice.kind).toBe('ble');
+        expect(choice.reason).toMatch(/no fresh mDNS record/);
+        expect(HttpAiClientMock).not.toHaveBeenCalled();
+    });
+
+    test('missing peer IDs + valid manual IP → manual IP is the sole LAN path', async () => {
+        // go-fula down: nothing broadcasts the device IP and peer IDs can't be
+        // matched, so the user-typed IP is the only route back to LAN HTTP.
+        HttpAiClientMock.mockImplementation((ip: string, port: number) => ({
+            ip,
+            port,
+            baseUrl: `http://${ip}:${port}`,
+            health: jest.fn().mockResolvedValue({ ok: true, latencyMs: 18 }),
+        }));
+
+        const choice = await selectAiTransport('', 'APP1', {
+            manualIp: '192.168.1.77',
+        });
+
+        expect(choice.kind).toBe('lan-http');
+        expect(choice.reason).toMatch(/manual IP 192\.168\.1\.77/);
+        expect(HttpAiClientMock).toHaveBeenCalledWith('192.168.1.77', 8083);
+        // No peer IDs means the cache is never consulted.
+        expect(findAuthorizedBlox).not.toHaveBeenCalled();
+    });
+
+    test('missing peer IDs + non-RFC1918 manual IP → BLE (missing-peer reason), no client', async () => {
+        const choice = await selectAiTransport('', 'APP1', { manualIp: '8.8.8.8' });
+
+        expect(choice.kind).toBe('ble');
+        expect(choice.reason).toMatch(/missing bloxPeerId or appPeerId/);
+        expect(HttpAiClientMock).not.toHaveBeenCalled();
     });
 });
