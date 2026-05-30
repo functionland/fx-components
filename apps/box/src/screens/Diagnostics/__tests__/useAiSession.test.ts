@@ -275,7 +275,7 @@ describe('useAiSession reducer — modal mutual exclusion', () => {
         };
         // Use the canonical PhoneContext shape from phoneLogger.
         const samplePhoneCtx = {
-            app_version: '2.5.6',
+            app_version: '2.5.7',
             os: 'android' as const,
             os_version: '14',
         };
