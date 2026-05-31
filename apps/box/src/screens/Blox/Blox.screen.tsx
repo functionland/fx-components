@@ -72,6 +72,7 @@ export const BloxScreen = () => {
   const earnings = useUserProfileStore((state) => state.earnings);
   const getEarnings = useUserProfileStore((state) => state.getEarnings);
   const fulaIsReady = useUserProfileStore((state) => state.fulaIsReady);
+  const fulaReadyForPeerId = useUserProfileStore((state) => state.fulaReadyForPeerId);
   const checkFulaReadiness = useUserProfileStore((state) => state.checkFulaReadiness);
   const password = useUserProfileStore((state) => state.password);
   const signiture = useUserProfileStore((state) => state.signiture);
@@ -137,8 +138,14 @@ export const BloxScreen = () => {
       bloxsSpaceInfo?.[currentBloxPeerId]?.used_percentage || 0;
   }, [bloxsSpaceInfo, currentBloxPeerId, divisionSplit]);
 
+  // Only act when the shared native client is ready for THE CURRENTLY SELECTED
+  // blox — not merely "ready for some blox". Prevents firing native calls /
+  // connection checks against a client still pointed at a previous blox during a
+  // switch/init window, which is a source of false DISCONNECTED (audit M4/S2).
+  const readyForCurrent =
+    fulaIsReady && fulaReadyForPeerId === currentBloxPeerId;
   useEffect(() => {
-    if (fulaIsReady && !screenIsLoaded) {
+    if (readyForCurrent && !screenIsLoaded) {
       setScreenIsLoaded(true);
       // Chain operations sequentially to avoid concurrent fula lock conflicts
       (async () => {
@@ -150,10 +157,10 @@ export const BloxScreen = () => {
           console.log('BloxScreen: sequential load error', error);
         }
       })();
-    } else if (fulaIsReady && !bloxsConnectionStatus[currentBloxPeerId]) {
+    } else if (readyForCurrent && !bloxsConnectionStatus[currentBloxPeerId]) {
       checkBloxConnection();
     }
-  }, [fulaIsReady, screenIsLoaded, currentBloxPeerId, bloxsConnectionStatus, updateBloxSpace, updateFulaEarnings, checkBloxConnection]);
+  }, [readyForCurrent, screenIsLoaded, currentBloxPeerId, bloxsConnectionStatus, updateBloxSpace, updateFulaEarnings, checkBloxConnection]);
 
   const updateBloxSpace = async () => {
     try {

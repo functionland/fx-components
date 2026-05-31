@@ -33,7 +33,7 @@ interface UserProfileActions {
   claimRewards: (poolId?: string) => Promise<void>; // New claim function
   getBloxSpace: () => Promise<TBloxFreeSpace>;
   logout: () => boolean;
-  setFulaIsReady: (value: boolean) => void;
+  setFulaIsReady: (value: boolean, peerId?: string) => void;
   checkBloxConnection: (
     maxTries?: number,
     waitBetweenRetries?: number
@@ -68,6 +68,15 @@ export interface UserProfileSlice {
   activeAccount?: TAccount | undefined;
   bloxSpace: TBloxFreeSpace | undefined;
   fulaIsReady: boolean;
+  /**
+   * The blox peerId the shared native client is currently ready FOR. `fulaIsReady`
+   * alone is a single global bool that can't say *which* blox the client points
+   * at; consumers that act on readiness for the selected blox must check
+   * `fulaIsReady && fulaReadyForPeerId === currentBloxPeerId` so a switch/re-init
+   * in flight (or a late readiness callback for a now-superseded blox) can't make
+   * the wrong blox look ready (audit M4/S2). Transient — not persisted.
+   */
+  fulaReadyForPeerId?: string | undefined;
   bloxConnectionStatus: BloxConectionStatus;
   fulaReinitCount: number;
   useLocalIp: string | undefined;
@@ -84,6 +93,7 @@ const initialState: UserProfileSlice = {
   earnings: '0.0',
   bloxSpace: undefined,
   fulaIsReady: false,
+  fulaReadyForPeerId: undefined,
   bloxConnectionStatus: 'CHECKING',
   appPeerId: undefined,
   fulaRoodCID: undefined,
@@ -145,7 +155,7 @@ const createUserProfileSlice: StateCreator<
                     console.log(
                       'Internet is not connected, waiting for connection...'
                     );
-                    set({ fulaIsReady: false });
+                    set({ fulaIsReady: false, fulaReadyForPeerId: undefined });
                     resolve(); // Resolve the promise after updating state
                     return;
                   }
@@ -155,7 +165,14 @@ const createUserProfileSlice: StateCreator<
                 console.log('ready is : ' + ready);
 
                 if (ready || attempts >= maxAttempts) {
-                  set({ fulaIsReady: ready });
+                  // Keep per-blox readiness consistent with the global flag so
+                  // this path can't bypass the M4/S2 invariant (tag readiness
+                  // with the blox it's actually ready for).
+                  const readyPeerId = useBloxsStore.getState().currentBloxPeerId;
+                  set({
+                    fulaIsReady: ready,
+                    fulaReadyForPeerId: ready ? readyPeerId : undefined,
+                  });
 
                   if (attempts >= maxAttempts && !ready) {
                     // Read the current value of useLocalIp
@@ -448,10 +465,25 @@ getEarnings: async (account?: string) => {
           throw error;
         }
       },
-      setFulaIsReady: (value: boolean) => {
-        set({
-          fulaIsReady: value,
-        });
+      setFulaIsReady: (value: boolean, peerId?: string) => {
+        if (!value) {
+          // A switch/re-init is starting (or failed): clear readiness for any
+          // blox. In-flight checks/reads then see "not ready for my peer" and
+          // skip their writes instead of stamping a false DISCONNECTED.
+          set({ fulaIsReady: false, fulaReadyForPeerId: undefined });
+          return;
+        }
+        // Mark ready FOR a specific blox. Default to the current selection when
+        // the caller doesn't pass one (legacy callers). Drop stale late
+        // readiness: if the target is no longer the current blox (e.g. the user
+        // switched during a 5s post-init delay), do NOT mark ready — otherwise
+        // the wrong blox would look ready or a now-current blox's real readiness
+        // would be clobbered (audit M4/S2).
+        const target = peerId ?? useBloxsStore.getState().currentBloxPeerId;
+        if (target && target !== useBloxsStore.getState().currentBloxPeerId) {
+          return;
+        }
+        set({ fulaIsReady: true, fulaReadyForPeerId: target });
       },
       checkBloxConnection: async (
         maxTries = 3,

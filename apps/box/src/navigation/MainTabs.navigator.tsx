@@ -194,7 +194,11 @@ export const MainTabsNavigator = () => {
           .then(async () => {
             // Wait for libp2p to establish relay connections before marking ready
             await new Promise(resolve => setTimeout(resolve, 5000));
-            setFulaIsReady(true);
+            // Pass the blox this init was FOR (closure-captured at effect run).
+            // If the user switched during the 5s wait, the peer-aware setter
+            // drops this stale readiness instead of marking the wrong blox ready
+            // (audit M4/S2).
+            setFulaIsReady(true, currentBloxPeerId);
           })
           .catch(() => {
             setFulaIsReady(false);

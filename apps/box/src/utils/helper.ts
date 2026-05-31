@@ -163,6 +163,73 @@ export const resetInitFula = () => {
   initFulaPromise = null;
 };
 
+/**
+ * Native-client lifecycle epoch. `initFulaGen` bumps on EVERY native client
+ * lifecycle change — both `resetInitFula()` and the start of each `initFula()`
+ * (`const myGen = ++initFulaGen`). Async store ops capture this before their
+ * native call and re-check it after the await: a mismatch means the underlying
+ * `fula` client was reset/recreated mid-call (by a blox switch, a MainTabs
+ * re-init, a fulaReinitCount bump, or removeBlox), so any result is stale and
+ * must not be attributed to the captured blox. This is the single authoritative
+ * epoch for cross-blox mis-attribution guarding (audit M2/M3).
+ */
+export const getInitFulaGen = (): number => initFulaGen;
+
+// ─── Sweep coordination (audit M1) ──────────────────────────────────────────
+// The single shared native `fula` client is cycled (reset + re-init per peerId)
+// by TWO independent paths: the foreground `useBloxsStore.checkAllBloxStatus`
+// and the headless `services/backgroundBloxCheck.performBloxStatusCheck` (fired
+// by react-native-background-fetch). When the app process is alive (foreground
+// or backgrounded-not-killed) both run in the SAME JS context, so a module-level
+// async mutex here serializes them over the one client. (When the app is
+// terminated, the headless task runs in a fresh JS context with no foreground,
+// so there is nothing to race.)
+
+let fulaSweepLock: Promise<void> = Promise.resolve();
+
+/**
+ * Run `fn` with exclusive ownership of the shared native client against any
+ * other sweep also using this lock. Standard single-threaded-JS async mutex:
+ * each caller awaits the previous holder's promise, then installs its own; the
+ * `while`-free design has no `await` between reading and replacing `fulaSweepLock`
+ * so two callers can't both acquire. The lock is ALWAYS released in `finally`,
+ * even if `fn` throws, so a failed sweep can't brick the client. NOTE: callees
+ * that a sweep invokes internally (`switchToBlox`, `checkBloxConnection`) must
+ * NOT take this lock, or the sweep would deadlock on itself.
+ */
+export const withFulaSweepLock = async <T>(fn: () => Promise<T>): Promise<T> => {
+  const prev = fulaSweepLock;
+  let release!: () => void;
+  fulaSweepLock = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await prev;
+  try {
+    return await fn();
+  } finally {
+    release();
+  }
+};
+
+// Set true by the background sweep once it has reset/re-inited the client off
+// the foreground's selected blox; consumed by the foreground on app-resume to
+// decide whether it must reclaim the client (re-init for currentBloxPeerId).
+// The background restore clears it back to false when it successfully returns
+// the client to the current blox (audit M1).
+let sweepMovedClient = false;
+
+/** Mark whether a background sweep has left the shared client off the current blox. */
+export const markSweepMovedClient = (moved: boolean): void => {
+  sweepMovedClient = moved;
+};
+
+/** Read-and-clear the "sweep moved the client" flag (foreground reclaim trigger). */
+export const consumeSweepMovedClient = (): boolean => {
+  const moved = sweepMovedClient;
+  sweepMovedClient = false;
+  return moved;
+};
+
 export const initFula = async ({
   password,
   signiture,

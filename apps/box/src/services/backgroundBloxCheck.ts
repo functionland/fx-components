@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import { fula } from '@functionland/react-native-fula';
 import { Helper, KeyChain } from '../utils';
-import { Platform } from 'react-native';
+import { Platform, AppState } from 'react-native';
 import { TBlox } from '../models';
 
 /**
@@ -17,6 +17,16 @@ import { TBlox } from '../models';
  */
 export async function performBloxStatusCheck(): Promise<void> {
   let foregroundServiceStarted = false;
+
+  // If the app is in the foreground, IT owns the shared native client (and
+  // checks status itself) — a background sweep here would fight it over the one
+  // client. Defer to the foreground (audit M1). This re-checks after the
+  // caller's pre-lock check in case the app became active while we waited for
+  // the sweep lock.
+  if ((AppState.currentState as string) === 'active') {
+    console.log('backgroundBloxCheck: skipped — app is active (foreground owns client)');
+    return;
+  }
 
   try {
     // 1. Ensure notification channels exist (headless context may not have them)
@@ -86,8 +96,22 @@ export async function performBloxStatusCheck(): Promise<void> {
 
     // 5. Check each blox
     const disconnected: string[] = [];
+    let aborted = false;
+
+    // From the first reset/init below, the shared native client is no longer on
+    // whatever blox the foreground last selected. Flag it so the foreground
+    // reclaims the client on its next resume (audit M1).
+    Helper.markSweepMovedClient(true);
 
     for (const peerId of bloxList) {
+      // If the app became active mid-sweep, the foreground now owns the client.
+      // Stop touching it immediately and skip the restore (the foreground will
+      // reclaim it) so we don't tear down a client the user is actively using.
+      if ((AppState.currentState as string) === 'active') {
+        console.log('backgroundBloxCheck: app became active — aborting sweep');
+        aborted = true;
+        break;
+      }
       try {
         Helper.resetInitFula();
         await Helper.initFula({
@@ -109,18 +133,35 @@ export async function performBloxStatusCheck(): Promise<void> {
       }
     }
 
-    // 6. Restore fula to original blox
-    if (originalBloxPeerId && bloxList.length > 1) {
+    // 6. Restore the client to the foreground's CURRENT blox. Skip entirely if
+    // we aborted (the foreground is active and will reclaim the client itself —
+    // touching it here would race the user). Re-read currentBloxPeerId FRESH
+    // from AsyncStorage rather than using the value captured at task start, in
+    // case it changed during the sweep (audit M1).
+    if (aborted) {
+      // Leave sweepMovedClient = true so the foreground reclaims on resume.
+    } else if (bloxList.length > 1) {
       try {
-        Helper.resetInitFula();
-        await Helper.initFula({
-          password,
-          signiture,
-          bloxPeerId: originalBloxPeerId,
-        });
+        const freshRaw = await AsyncStorage.getItem('bloxsModelSlice');
+        const freshCurrent: string | undefined = freshRaw
+          ? JSON.parse(freshRaw)?.state?.currentBloxPeerId
+          : originalBloxPeerId;
+        if (freshCurrent) {
+          Helper.resetInitFula();
+          await Helper.initFula({
+            password,
+            signiture,
+            bloxPeerId: freshCurrent,
+          });
+          // Client is back on the current blox — no foreground reclaim needed.
+          Helper.markSweepMovedClient(false);
+        }
       } catch {
-        // Best effort — app will re-init on next foreground launch
+        // Best effort — leave sweepMovedClient = true so the foreground reclaims.
       }
+    } else {
+      // Single blox: the client is already on the only (== current) blox.
+      Helper.markSweepMovedClient(false);
     }
 
     // 7. Show result notification if any disconnected
@@ -172,7 +213,9 @@ export async function configureBackgroundBloxCheck(
     async (taskId) => {
       console.log('backgroundBloxCheck: task fired', taskId);
       try {
-        await performBloxStatusCheck();
+        // Serialize with the foreground sweep over the single shared client
+        // (audit M1). performBloxStatusCheck also bails if the app is active.
+        await Helper.withFulaSweepLock(() => performBloxStatusCheck());
       } catch (error) {
         console.error('backgroundBloxCheck: error in task', error);
       }
@@ -204,7 +247,10 @@ export async function headlessBloxCheckTask(event: {
   }
   console.log('backgroundBloxCheck: headless task fired', taskId);
   try {
-    await performBloxStatusCheck();
+    // Serialize with any foreground sweep when the app process is still alive
+    // (audit M1). When truly terminated this is a fresh context with no
+    // contention — the lock is uncontended and performBloxStatusCheck runs.
+    await Helper.withFulaSweepLock(() => performBloxStatusCheck());
   } catch (error) {
     console.error('backgroundBloxCheck: headless error', error);
   }

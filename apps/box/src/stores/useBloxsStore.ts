@@ -20,6 +20,39 @@ import {
 let switchGeneration = 0;
 let latestSwitchPeerId: string | null = null;
 
+/**
+ * Map a connection-probe result to the per-blox status to display, MIRRORING the
+ * lower-level `useUserProfileStore.checkBloxConnection` classification instead of
+ * collapsing every non-connected result to a red 'DISCONNECTED' (audit M2/S3):
+ *  - connected        → 'CONNECTED'
+ *  - 'DISCONNECTED'   → 'DISCONNECTED'  (a genuine, fully-retried blox outage)
+ *  - 'NO INTERNET'    → 'NO INTERNET'   (phone offline — NOT a blox outage)
+ *  - 'NO CLIENT'      → 'NO CLIENT'     (fula not ready — NOT a blox outage)
+ *  - anything else    → null = leave the prior status untouched. The lower-level
+ *    leaves 'CHECKING' in place only when its own generation guard cancelled the
+ *    check (a newer check is running), so we must NOT overwrite it with red.
+ * A real outage is therefore ALWAYS surfaced; the not-an-outage and cancelled
+ * cases no longer flash a false 'DISCONNECTED'. Returns the status to write, or
+ * null to leave the prior status as-is.
+ */
+const resolveConnStatus = (
+  connected: boolean,
+  lowerStatus: string | undefined
+): TBloxConectionStatus | null => {
+  if (connected) {
+    return 'CONNECTED';
+  }
+  if (
+    lowerStatus === 'DISCONNECTED' ||
+    lowerStatus === 'NO INTERNET' ||
+    lowerStatus === 'NO CLIENT'
+  ) {
+    return lowerStatus;
+  }
+  // Cancelled / unknown (lower-level left 'CHECKING'): don't overwrite.
+  return null;
+};
+
 async function waitForBloxStatusSettled(
   peerId: string,
   get: () => BloxsModelSlice,
@@ -28,7 +61,13 @@ async function waitForBloxStatusSettled(
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const status = get().bloxsConnectionStatus[peerId];
-    if (status === 'CONNECTED' || status === 'DISCONNECTED') return;
+    // Settled = any terminal verdict, not just CONNECTED/DISCONNECTED. Since the
+    // status writers now mirror the full classification, NO INTERNET / NO CLIENT
+    // are also terminal — treating them as "still settling" would spin this loop
+    // for the full timeout (×N bloxes in checkAllBloxStatus) whenever the phone is
+    // offline or the client isn't ready. Only CHECKING / SWITCHING (and an unset
+    // status) are genuinely in-progress.
+    if (status && status !== 'CHECKING' && status !== 'SWITCHING') return;
     await new Promise((r) => setTimeout(r, 1000));
   }
 }
@@ -152,20 +191,49 @@ const createModeSlice: StateCreator<
       });
     },
     removeBlox: (peerId: string) => {
-      const { bloxs: currentBloxs, bloxsPropertyInfo, bloxsSpaceInfo } = get();
-      delete bloxsPropertyInfo[peerId];
-      delete bloxsSpaceInfo[peerId];
-      delete currentBloxs[peerId];
+      const {
+        bloxs,
+        bloxsPropertyInfo,
+        bloxsSpaceInfo,
+        folderSizeInfo,
+        bloxsConnectionStatus,
+        currentBloxPeerId,
+      } = get();
+
+      // Build NEW objects rather than mutating the refs returned by get()
+      // (in-place delete on persisted state can drop renders / corrupt the
+      // shared reference). Also clear EVERY per-blox map keyed by this peerId
+      // so a removed blox can't keep showing stale status/size (audit H2).
+      const nextBloxs = { ...bloxs };
+      delete nextBloxs[peerId];
+      const nextPropertyInfo = { ...(bloxsPropertyInfo ?? {}) };
+      delete nextPropertyInfo[peerId];
+      const nextSpaceInfo = { ...(bloxsSpaceInfo ?? {}) };
+      delete nextSpaceInfo[peerId];
+      const nextFolderSizeInfo = { ...(folderSizeInfo ?? {}) };
+      delete nextFolderSizeInfo[peerId];
+      const nextConnectionStatus = { ...bloxsConnectionStatus };
+      delete nextConnectionStatus[peerId];
+
+      // If we removed the currently-selected blox, repoint to the first
+      // remaining one (or undefined when none left). Setting currentBloxPeerId
+      // here lets the MainTabs init effect (which depends on currentBloxPeerId)
+      // re-initialize the native client for the new selection — the same path
+      // as its existing "auto-select first blox" net. Without this the app is
+      // stranded on a deleted id.
+      let nextCurrentBloxPeerId = currentBloxPeerId;
+      if (currentBloxPeerId === peerId) {
+        const remaining = Object.keys(nextBloxs);
+        nextCurrentBloxPeerId = remaining.length > 0 ? remaining[0] : undefined;
+      }
+
       set({
-        bloxs: {
-          ...currentBloxs,
-        },
-        bloxsPropertyInfo: {
-          ...bloxsPropertyInfo,
-        },
-        bloxsSpaceInfo: {
-          ...bloxsSpaceInfo,
-        },
+        bloxs: nextBloxs,
+        bloxsPropertyInfo: nextPropertyInfo,
+        bloxsSpaceInfo: nextSpaceInfo,
+        folderSizeInfo: nextFolderSizeInfo,
+        bloxsConnectionStatus: nextConnectionStatus,
+        currentBloxPeerId: nextCurrentBloxPeerId,
       });
     },
     reset: () => {
@@ -182,7 +250,11 @@ const createModeSlice: StateCreator<
         const { Helper } = await import('../utils');
         await Helper.waitForFulaInit();
         await fula.isReady(false);
-        const { bloxsSpaceInfo, currentBloxPeerId } = get();
+        // Capture the target blox + native-client epoch BEFORE the native call,
+        // so we never write one blox's free-space under another's key when a
+        // switch / re-init lands mid-call (audit M3).
+        const capturedPeerId = get().currentBloxPeerId;
+        const startGen = Helper.getInitFulaGen();
         let bloxSpace = await blockchain.bloxFreeSpace();
         console.log('bloxSpace', bloxSpace);
         const emptyBloxSpace: BloxFreeSpaceResponse = {
@@ -196,14 +268,22 @@ const createModeSlice: StateCreator<
           if (!bloxSpace?.size) {
             bloxSpace = emptyBloxSpace;
           }
-          set({
-            bloxsSpaceInfo: {
-              ...bloxsSpaceInfo,
-              [currentBloxPeerId]: {
-                ...bloxSpace,
-              } as TBloxFreeSpace,
-            },
-          });
+          // Only attribute the result if the selection AND the native client are
+          // still the ones we queried; otherwise the value belongs to a
+          // torn-down/other client — skip the write but still return it.
+          const stillValid =
+            get().currentBloxPeerId === capturedPeerId &&
+            Helper.getInitFulaGen() === startGen;
+          if (stillValid && capturedPeerId) {
+            set({
+              bloxsSpaceInfo: {
+                ...get().bloxsSpaceInfo,
+                [capturedPeerId]: {
+                  ...bloxSpace,
+                } as TBloxFreeSpace,
+              },
+            });
+          }
         }
         return bloxSpace as TBloxFreeSpace;
       } catch (error) {
@@ -218,7 +298,11 @@ const createModeSlice: StateCreator<
         const { Helper } = await import('../utils');
         await Helper.waitForFulaInit();
         await fula.isReady(false);
-        const { folderSizeInfo, currentBloxPeerId } = get();
+        // Capture target blox + native-client epoch before the native calls so
+        // a mid-call switch / re-init can't cross-write folder sizes under the
+        // wrong blox key (audit M3).
+        const capturedPeerId = get().currentBloxPeerId;
+        const startGen = Helper.getInitFulaGen();
         let folderSizeInfo_tmp: TBloxFolderSize = {
           fula: '-1',
           chain: '-1',
@@ -263,14 +347,19 @@ const createModeSlice: StateCreator<
             chain: chainFolderInfo.size,
             userOwnData: userOwnDataFolderInfo.size,
           };
-          set({
-            folderSizeInfo: {
-              ...folderSizeInfo,
-              [currentBloxPeerId]: {
-                ...folderSizeInfo_tmp,
-              } as TBloxFolderSize,
-            },
-          });
+          const stillValid =
+            get().currentBloxPeerId === capturedPeerId &&
+            Helper.getInitFulaGen() === startGen;
+          if (stillValid && capturedPeerId) {
+            set({
+              folderSizeInfo: {
+                ...get().folderSizeInfo,
+                [capturedPeerId]: {
+                  ...folderSizeInfo_tmp,
+                } as TBloxFolderSize,
+              },
+            });
+          }
         }
         return folderSizeInfo_tmp;
       } catch (error) {
@@ -312,9 +401,44 @@ const createModeSlice: StateCreator<
       });
     },
     checkBloxConnection: async (maxTries?: number, waitBetweenRetries?: number) => {
-      // Capture peerId once so we always update the correct blox,
-      // even if currentBloxPeerId changes during the async check.
+      // Capture the target blox + native-client epoch once so a switch / re-init
+      // during the async check can't write status under the wrong blox (audit M2).
       const peerId = get().currentBloxPeerId;
+      // No blox selected (none paired / just removed the last one): nothing to
+      // check and no key to write under. Bail before touching the status map.
+      if (!peerId) {
+        return false;
+      }
+      const { Helper } = await import('../utils');
+      const startGen = Helper.getInitFulaGen();
+      // Remember the status before we flip it to CHECKING so a superseded check
+      // can restore it instead of orphaning a phantom 'CHECKING' spinner (see
+      // restorePriorIfSuperseded below).
+      const priorStatus = get().bloxsConnectionStatus[peerId];
+
+      // The result is attributable to `peerId` only if it's still the selected
+      // blox AND the native client wasn't reset/recreated since we started.
+      const stillValid = () =>
+        get().currentBloxPeerId === peerId &&
+        Helper.getInitFulaGen() === startGen;
+
+      // When a switch / re-init superseded this check, we must NOT write its
+      // (now mis-attributed) result — but we also wrote 'CHECKING' at the top, so
+      // simply skipping would strand `peerId` on a permanent CHECKING spinner
+      // (the superseding path writes status for ITS peer, not necessarily this
+      // one). Restore the pre-check status: if it was unset, it returns to
+      // not-checked so the Blox.screen effect re-fires; otherwise it keeps its
+      // last known state rather than a phantom spinner.
+      const restorePriorIfSuperseded = () => {
+        if (!stillValid() && get().bloxsConnectionStatus[peerId] === 'CHECKING') {
+          set({
+            bloxsConnectionStatus: {
+              ...get().bloxsConnectionStatus,
+              [peerId]: priorStatus as TBloxConectionStatus,
+            },
+          });
+        }
+      };
 
       try {
         set({
@@ -328,20 +452,42 @@ const createModeSlice: StateCreator<
           .getState()
           .checkBloxConnection(maxTries, waitBetweenRetries);
 
-        set({
-          bloxsConnectionStatus: {
-            ...get().bloxsConnectionStatus,
-            [peerId]: connected ? 'CONNECTED' : 'DISCONNECTED',
-          },
-        });
+        // Only attribute the result if no switch / re-init interfered (audit M2).
+        // resolveConnStatus mirrors the lower-level classification — NO INTERNET /
+        // NO CLIENT pass through (not red), a cancelled check leaves the prior
+        // status, and only a genuine outage writes DISCONNECTED (audit S3).
+        if (stillValid()) {
+          const lowerStatus = useUserProfileStore.getState().bloxConnectionStatus;
+          const resolved = resolveConnStatus(connected, lowerStatus);
+          if (resolved) {
+            set({
+              bloxsConnectionStatus: {
+                ...get().bloxsConnectionStatus,
+                [peerId]: resolved,
+              },
+            });
+          }
+          // resolved === null means the lower-level was cancelled by a NEWER
+          // same-peer check (it left 'CHECKING'); that newer check owns the final
+          // write, so leaving 'CHECKING' here is correct.
+        } else {
+          restorePriorIfSuperseded();
+        }
         return connected;
       } catch (error) {
-        set({
-          bloxsConnectionStatus: {
-            ...get().bloxsConnectionStatus,
-            [peerId]: 'DISCONNECTED',
-          },
-        });
+        // A thrown error is a genuine failure path (not a not-ready / cancelled
+        // window), so surface DISCONNECTED — but only for the still-current
+        // target; if superseded, restore the prior status (audit M2).
+        if (stillValid()) {
+          set({
+            bloxsConnectionStatus: {
+              ...get().bloxsConnectionStatus,
+              [peerId]: 'DISCONNECTED',
+            },
+          });
+        } else {
+          restorePriorIfSuperseded();
+        }
         return false;
       }
     },
@@ -440,8 +586,10 @@ const createModeSlice: StateCreator<
             return;
           }
 
-          // Mark fula as ready — no 5s relay wait (library handles it)
-          setFulaIsReady(true);
+          // Mark fula as ready FOR this specific blox — no 5s relay wait
+          // (library handles it). Tagging the peerId lets consumers tell which
+          // blox the shared client is ready for (audit M4/S2).
+          setFulaIsReady(true, peerId);
 
           // Transition to CHECKING phase
           set({
@@ -469,10 +617,22 @@ const createModeSlice: StateCreator<
             return;
           }
 
+          // Mirror the lower-level classification rather than collapsing any
+          // non-connected result to red: a NO INTERNET / NO CLIENT during the
+          // post-switch probe should show that, not a false DISCONNECTED (audit
+          // S3). Unlike the checkBloxConnection wrapper, this write MUST be
+          // terminal: `waitForBloxStatusSettled` (used by checkAllBloxStatus)
+          // blocks on it, so a `null` (which would leave the prior 'CHECKING')
+          // could both hang that poll for its full timeout AND swallow a genuine
+          // failure if a concurrent same-peer check raced the global to 'CHECKING'
+          // (the switchGeneration guard only catches a newer SWITCH, not a newer
+          // CHECK). Fall back to DISCONNECTED so the result is always terminal and
+          // a real outage is never hidden.
+          const lowerStatus = useUserProfileStore.getState().bloxConnectionStatus;
           set({
             bloxsConnectionStatus: {
               ...get().bloxsConnectionStatus,
-              [peerId]: connected ? 'CONNECTED' : 'DISCONNECTED',
+              [peerId]: resolveConnStatus(connected, lowerStatus) ?? 'DISCONNECTED',
             },
           });
 
@@ -489,38 +649,56 @@ const createModeSlice: StateCreator<
       })();
     },
     checkAllBloxStatus: async () => {
-      const { bloxs, currentBloxPeerId } = get();
-      const bloxList = Object.keys(bloxs);
-      if (bloxList.length === 0) return;
+      // Re-entry guard: never run two sweeps at once. The BloxManager button is
+      // disabled while `_isCheckingAllStatus`, but that UI gate doesn't cover
+      // other callers or a StrictMode double-invoke — set/read the flag here so
+      // the action itself is idempotent (audit M1). Set synchronously before the
+      // first await so a same-tick second call sees it.
+      if (get()._isCheckingAllStatus) {
+        console.log('checkAllBloxStatus: already running, skipping re-entry');
+        return;
+      }
+      if (Object.keys(get().bloxs).length === 0) return;
 
       set({ _isCheckingAllStatus: true });
 
       try {
-        // 1. Check current blox first (no switching needed)
-        if (currentBloxPeerId && bloxs[currentBloxPeerId]) {
-          await get().checkBloxConnection(1, 5);
-        }
+        const { Helper } = await import('../utils');
+        // Serialize against the headless background sweep (performBloxStatusCheck)
+        // over the single shared native client (audit M1). switchToBlox /
+        // checkBloxConnection are invoked INSIDE and do NOT take this lock, so
+        // there is no self-deadlock.
+        await Helper.withFulaSweepLock(async () => {
+          // Re-read selection + list fresh now that we hold the lock (they may
+          // have changed while we waited for a background sweep to finish).
+          const originalBloxPeerId = get().currentBloxPeerId;
+          const bloxList = Object.keys(get().bloxs);
 
-        // 2. For each non-current blox, switch + check
-        const originalBloxPeerId = currentBloxPeerId;
-        for (const peerId of bloxList) {
-          if (peerId === originalBloxPeerId) continue;
+          // 1. Check current blox first (no switching needed)
+          if (originalBloxPeerId && get().bloxs[originalBloxPeerId]) {
+            await get().checkBloxConnection(1, 5);
+          }
 
-          // switchToBlox handles: initFula + checkBloxConnection + status updates
-          await get().switchToBlox(peerId);
+          // 2. For each non-current blox, switch + check
+          for (const peerId of bloxList) {
+            if (peerId === originalBloxPeerId) continue;
 
-          // Wait for the switch background to complete (poll status)
-          await waitForBloxStatusSettled(peerId, get);
-        }
+            // switchToBlox handles: initFula + checkBloxConnection + status updates
+            await get().switchToBlox(peerId);
 
-        // 3. Switch back to original blox
-        if (
-          originalBloxPeerId &&
-          get().currentBloxPeerId !== originalBloxPeerId
-        ) {
-          await get().switchToBlox(originalBloxPeerId);
-          await waitForBloxStatusSettled(originalBloxPeerId, get);
-        }
+            // Wait for the switch background to complete (poll status)
+            await waitForBloxStatusSettled(peerId, get);
+          }
+
+          // 3. Switch back to original blox
+          if (
+            originalBloxPeerId &&
+            get().currentBloxPeerId !== originalBloxPeerId
+          ) {
+            await get().switchToBlox(originalBloxPeerId);
+            await waitForBloxStatusSettled(originalBloxPeerId, get);
+          }
+        });
       } finally {
         set({ _isCheckingAllStatus: false });
       }
