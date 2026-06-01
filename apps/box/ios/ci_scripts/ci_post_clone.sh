@@ -69,8 +69,31 @@ cd apps/box/ios
 rm -rf "$HOME/.cocoapods/repos/trunk"
 pod repo add-cdn trunk https://cdn.cocoapods.org/
 
-# Install pods
-pod install --repo-update
+# Install pods.
+#
+# The `Fula` pod is sourced from the go-fula `main` branch (a moving target), so
+# whenever upstream bumps its podspec version the version pinned in the committed
+# Podfile.lock no longer matches. `pod install` refuses to rewrite the lock and
+# aborts, asking for `pod update Fula --no-repo-update`. Detect exactly that case
+# and self-heal by re-locking only Fula — so a `pod update Fula` on a Mac is no
+# longer required after every version bump. Any OTHER install failure is left to
+# fail the build (we do not blindly fall back, to avoid masking real problems).
+#
+# Note: if go-fula `main` moves to a version outside react-native-fula's
+# `Fula (~> 1.58.2)` constraint (i.e. >= 1.59.0), `pod update Fula` will still
+# fail with a genuine conflict — that requires a coordinated bump of the
+# @functionland/react-native-fula package and cannot be fixed here.
+set -o pipefail
+if ! pod install --repo-update 2>&1 | tee pod-install.log; then
+  if grep -qE 'compatible versions for pod "Fula"|pod update Fula' pod-install.log; then
+    echo "Fula podspec drifted from Podfile.lock — re-locking Fula only and retrying…"
+    pod update Fula --no-repo-update
+  else
+    echo "pod install failed for a reason unrelated to Fula drift — failing the build."
+    exit 1
+  fi
+fi
+rm -f pod-install.log
 
 # Return to the project root
 cd $CI_WORKSPACE
