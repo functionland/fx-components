@@ -29,6 +29,7 @@ import {
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Modal, ActivityIndicator, Share, Alert } from 'react-native';
 import { Helper } from '../../utils';
+import { resolveAppPeerId } from '../../utils/appPeerId';
 import {
   bloxDeleteFulaConfig,
   bloxFormatDisk,
@@ -60,6 +61,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   const [newClusterPeerId, setNewClusterPeerId] = useState<string | undefined>(undefined);
 
   const setAppPeerId = useUserProfileStore((state) => state.setAppPeerId);
+  const appPeerId = useUserProfileStore((state) => state.appPeerId);
   const signiture = useUserProfileStore((state) => state.signiture);
   const password = useUserProfileStore((state) => state.password);
 
@@ -271,10 +273,13 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
 
   const generateAppPeerId = async () => {
     try {
-      const peerId = await Helper.initFula({
-        password,
-        signiture,
-      });
+      // Reuse the stored (deterministic) app peerId instead of re-initing fula.
+      // initFula tears down + rebuilds the shared native client mid-flight,
+      // racing the still-mounted Blox.screen reads -> Go nil-deref SIGSEGV when
+      // re-setting-up the already-current blox.
+      const peerId = await resolveAppPeerId(appPeerId, () =>
+        Helper.initFula({ password, signiture })
+      );
       setNewPeerId(peerId);
       logger.log('generateAppPeerId:Result', { peerId });
     } catch (error) {

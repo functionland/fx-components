@@ -128,7 +128,9 @@ failures are pre-existing `jest is not defined` issues in an unrelated test file
     native-layer race, still open.
 
 STILL OPEN (not yet fixed): **H1** (CRITICAL — BLE wrong-device: no
-bloxPeerId↔peripheral map), **H3** (iOS native client use-during-shutdown race),
+bloxPeerId↔peripheral map); **H3** native use-during-shutdown race — RESOLVED in
+go-fula `main` 2026-05-31 (functionland/go-fula#240/#241), pending a gomobile
+rebuild to reach devices; see the H3 section,
 L1/L2.
 
 Advisor note: Gemini reviewed the PLAN (validated; flagged "bump the epoch on
@@ -277,18 +279,43 @@ between bloxes" is the **bridge field**: `FulaModule.java:52 fulamobile.Client
 fula` / `Fula.swift:35 var fula: FulamobileClient?`, replaced in
 `newClientInternal` by `shutdownInternal(); self.fula = FulamobileNewClient(cfg)`.
 
-**Android — effectively safe (verified).** `android/.../ThreadUtils.java`:
-`Executors.newSingleThreadExecutor()`; every `@ReactMethod` runs via
-`ThreadUtils.runOnExecutor`, so all native calls (`newClient`, `checkConnection`,
-`logout`, `shutdown`, …) are **serialized FIFO on one thread**. A switch's
-`newClientInternal` cannot interleave with another native call. One narrow
-residual: `checkConnectionInternal` (FulaModule.java:280-302) runs
-`connectToBlox()` on its OWN `newSingleThreadScheduledExecutor` while the main
-executor blocks on `future.get(timeout)`; on **timeout** it calls
-`executor.shutdownNow()` and the outer thread returns — but `shutdownNow()` can't
-interrupt a blocked Go call, so that inner thread may keep using the old client
-while the next queued switch shuts it down. Real but narrow (only on a
-checkConnection timeout). LOW on Android.
+**Android — NOT safe; this "narrow residual" is the CONFIRMED 2026-05-31 crash
+(see the dedicated crash section near the top). Severity raised LOW → HIGH.**
+`android/.../ThreadUtils.java`: `Executors.newSingleThreadExecutor()`; every
+`@ReactMethod` runs via `ThreadUtils.runOnExecutor`, so the *bridge calls* are
+**serialized FIFO on one thread** — but that is NOT sufficient. The escape:
+`checkConnectionInternal` (FulaModule.java:280-302) runs `connectToBlox()` on its
+OWN `newSingleThreadScheduledExecutor` while the main executor blocks on
+`future.get(timeout)`; on **timeout** it calls `executor.shutdownNow()` and the
+outer thread returns `false` — but `shutdownNow()` can't interrupt the in-flight
+cgo call (go-fula `Client.ConnectToBlox` runs its own 60 s context, client.go:131),
+so that orphaned thread keeps using `c.h` while the next FIFO task (`initFula` →
+`Client.Shutdown` → `c.h.Close()`+`c.ds.Close()`, client.go:232-234) frees the
+host/datastore under it → Go runtime abort → SIGABRT on a `pool-NN-thread-`
+(tombstone confirmed). The single-thread executor does NOT protect this precisely
+because `connectToBlox` is deliberately run OFF it.
+
+**RESOLVED 2026-05-31 — durable native fix landed in go-fula `main`** (issue
+functionland/go-fula#240, PR #241 squash-merged as commit e88174b, issue
+auto-closed). `Client.Shutdown` now cancels a shared `opCtx` and DRAINS in-flight
+host ops before closing host/datastore: a new `beginOp()` gate (closed-check +
+`inflight.Add` under a dedicated `lifeMu`, separate from the streams `mu`) returns
+the new `ErrClientClosed` once closed; `ConnectToBlox`/`Ping` derive their context
+from `opCtx`; `Shutdown` CAS-marks `closed` + `opCancel()` + `inflight.Wait()`
+(the lifeMu-around-(check+Add) / -(CAS+cancel) ordering closes the WaitGroup
+add-after-Wait race). Idempotent. Regression test `mobile/client_shutdown_test.go`
+fails on pre-fix main (ConnectToBlox returns nil after Shutdown) and passes after,
+plus cancel-and-drain + idempotency tests; the `unit` CI check is green (the
+repo's Container/Build/Go-Test CI jobs fail identically on `main` at the base
+commit — pre-existing infra, unrelated — so the PR was admin-merged on the green
+`unit` check). Design reviewed by gemini + codex.
+
+⚠️ **NOT on devices yet** — requires a gomobile rebuild of go-fula → bump
+react-native-fula → rebuild the box app. Until that ships the crash is still
+reproducible on the current build. Optional box-app stopgaps before the rebuild
+(not implemented; would also harden the app afterward): (a) suspend Home/Blox fula
+polling while an InitialSetup route is active; (b) skip `initFula` in the setup
+screen when re-setting-up the already-current blox.
 
 **iOS — real native race (verified).** `self.fula` has **no lock** anywhere
 (grepped: the only `DispatchSemaphore` is inside `checkConnectionInternal`,
