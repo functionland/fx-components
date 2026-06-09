@@ -9,11 +9,10 @@ import {
   FxDropdown, // Added for language selector
   FxBottomSheetModalMethods,
 } from '@functionland/component-library';
-import BleManager from 'react-native-ble-manager';
 import { useInitialSetupNavigation } from '../../hooks/useTypedNavigation';
 import { Routes } from '../../navigation/navigationConfig';
 import { EConnectionStatus } from '../../models';
-import { BleManagerWrapper, DiscoveredDevice, ResponseAssembler } from '../../utils/ble';
+import { BleManagerWrapper, DiscoveredDevice, ResponseAssembler, safeGetConnectedPeripherals } from '../../utils/ble';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import axios from 'axios';
 import { API_URL } from '../../api/index';
@@ -115,7 +114,7 @@ export const ConnectToBloxScreen = () => {
 
   const checkApiAvailability = async () => {
     try {
-      const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+      const connectedPeripherals = await safeGetConnectedPeripherals([]);
       console.log({connectedPeripherals});
       const isConnectedBLE = connectedPeripherals.length > 0;
 

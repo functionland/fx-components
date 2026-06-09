@@ -19,11 +19,11 @@ import {
   FxTextInput,
   FxBottomSheetModalMethods,
 } from '@functionland/component-library';
-import BleManager, { Peripheral } from 'react-native-ble-manager';
+import { Peripheral } from 'react-native-ble-manager';
 import { SmallHeaderText } from '../../../components/Text';
 import { useLogger, useRootNavigation } from '../../../hooks';
 import { copyToClipboard } from '../../../utils/clipboard';
-import { BleManagerWrapper, DiscoveredDevice } from '../../../utils/ble';
+import { BleManagerWrapper, DiscoveredDevice, safeGetConnectedPeripherals } from '../../../utils/ble';
 import { EConnectionStatus } from '../../../models';
 import { BleDeviceSelectionBottomSheet, CurrentBloxIndicator } from '../../../components';
 
@@ -229,7 +229,7 @@ export const BluetoothCommandsScreen = () => {
       });
       console.log('BluetoothCommands: bleManager.connect() result:', connected);
       
-      const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+      const connectedPeripherals = await safeGetConnectedPeripherals([]);
       console.log('BluetoothCommands: Connected peripherals:', connectedPeripherals);
       
       const isConnectedBLE = connectedPeripherals.length > 0;

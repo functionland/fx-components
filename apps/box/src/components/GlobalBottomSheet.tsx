@@ -12,8 +12,10 @@ import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../constants/layout';
 import { DynamicIcon } from '../components';
 import { useRootNavigation } from '../hooks';
 import { Routes } from '../navigation/navigationConfig';
-import { usePluginsStore } from '../stores/usePluginsStore'; // Import the plugins store
-import { useUserProfileStore } from '../stores/useUserProfileStore';
+import {
+  useActivePluginsForCurrentBlox,
+  useRefetchActivePluginsOnConnect,
+} from '../hooks/usePluginsForBlox';
 import { SvgUri } from 'react-native-svg';
 
 type Plugin = {
@@ -34,30 +36,39 @@ export const GlobalBottomSheet = React.forwardRef<
   const theme = useFxTheme();
   const itemWidth = (SCREEN_WIDTH - APP_HORIZONTAL_PADDING * 2) / 4;
   const [plugins, setPlugins] = useState<Plugin[]>([]);
-  const { listActivePlugins, activePlugins } = usePluginsStore(); // Use the plugins store
-  const fulaIsReady = useUserProfileStore((state) => state.fulaIsReady);
+  // Installed-plugin list + fetch status for the CURRENTLY selected blox, so
+  // the "Installed" tags reflect the active device and refresh on blox switch.
+  const { plugins: activePlugins, status: activePluginsStatus } =
+    useActivePluginsForCurrentBlox();
+  useRefetchActivePluginsOnConnect();
 
   useEffect(() => {
-    // Fetch available plugins
+    // Fetch the catalogue of available plugins (blox-independent).
     fetch(
       'https://raw.githubusercontent.com/functionland/fula-ota/refs/heads/main/docker/fxsupport/linux/plugins/info.json'
     )
       .then((response) => response.json())
       .then((data: Plugin[]) => setPlugins(data))
       .catch((error) => console.error('Error fetching plugins:', error));
-
-    // Fetch active plugins only when fula is ready
-    if (fulaIsReady) {
-      listActivePlugins().catch((error) =>
-        console.error('Error fetching active plugins:', error)
-      );
-    }
-  }, [listActivePlugins, fulaIsReady]);
+  }, []);
 
   return (
     <FxBottomSheetModal ref={ref}>
       <FxBox height={SCREEN_HEIGHT * 0.75}>
         <FxText variant="bodyMediumRegular">Plugins</FxText>
+        {/* Distinguish "we don't know yet / couldn't reach this blox" from
+            "this blox has no plugins installed" — otherwise an unknown state
+            silently reads as every plugin being not-installed. */}
+        {(activePluginsStatus === 'idle' || activePluginsStatus === 'loading') && (
+          <FxText variant="bodyXSLight" color="content3" marginTop="4">
+            Checking installed plugins…
+          </FxText>
+        )}
+        {activePluginsStatus === 'error' && (
+          <FxText variant="bodyXSLight" color="errorBase" marginTop="4">
+            Couldn't reach this blox — install status unavailable
+          </FxText>
+        )}
         <FxBox paddingVertical="20" flexDirection="row" flexWrap="wrap">
         {plugins.map((plugin) => (
           <FxPressableOpacity

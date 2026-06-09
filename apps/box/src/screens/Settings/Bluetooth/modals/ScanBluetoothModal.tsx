@@ -24,6 +24,7 @@ import BleManager, {
   Peripheral,
 } from 'react-native-ble-manager';
 import { request, PERMISSIONS } from 'react-native-permissions';
+import { safeGetConnectedPeripherals } from '../../../../utils/ble';
 
 const SECONDS_TO_SCAN_FOR = 5;
 const ALLOW_DUPLICATES = false;
@@ -165,7 +166,7 @@ const ScanBluetoothModal = React.forwardRef<
   };
   const updateConnectedPeripherals = async () => {
     try {
-      const connectedDevices = await BleManager.getConnectedPeripherals();
+      const connectedDevices = await safeGetConnectedPeripherals();
       setConnectedPeripherals((map) => {
         connectedDevices.forEach((item) => map.set(item.id, item));
         return new Map(map);

@@ -18,7 +18,10 @@ import { fxblox } from '@functionland/react-native-fula';
 import { useLogger } from '../../hooks';
 import { ActivityIndicator } from 'react-native';
 import { copyToClipboard } from '../../utils/clipboard';
-import { usePluginsStore } from '../../stores/usePluginsStore';
+import {
+  useActivePluginsForCurrentBlox,
+  useRefetchActivePluginsOnConnect,
+} from '../../hooks/usePluginsForBlox';
 import { CurrentBloxIndicator } from '../../components';
 
 export const BloxLogsScreen = () => {
@@ -31,11 +34,10 @@ export const BloxLogsScreen = () => {
   const [showOtherInput, setShowOtherInput] = React.useState<boolean>(false);
   const { queueToast } = useToast();
   const { colors } = useFxTheme();
-  const { listActivePlugins, activePlugins } = usePluginsStore();
-
-  React.useEffect(() => {
-    listActivePlugins();
-  }, [listActivePlugins]);
+  // Plugin log sources for the CURRENTLY selected blox (refreshes on switch /
+  // when the blox connects), instead of a stale global mount-only fetch.
+  const { plugins: activePlugins } = useActivePluginsForCurrentBlox();
+  useRefetchActivePluginsOnConnect();
 
   const sanitizeLogData = (logString: string) => {
     // Regular expression to match non-printable characters except newlines

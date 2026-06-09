@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { API_URL } from './index';
-import BleManager from 'react-native-ble-manager';
-import { ResponseAssembler } from '../utils/ble';
+import { ResponseAssembler, safeGetConnectedPeripherals } from '../utils/ble';
 
 export const getProperties = async () => {
   return axios.get(`${API_URL}/properties`, {
@@ -15,7 +14,7 @@ export const postProperties = async (data) => {
 
 export const getWifiList = async (): Promise<{ data: { essid: string }[] }> => {
   try {
-    const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+    const connectedPeripherals = await safeGetConnectedPeripherals([]);
 
     if (connectedPeripherals.length > 0) {
       const responseAssembler = new ResponseAssembler();
@@ -46,7 +45,7 @@ export const getWifiList = async (): Promise<{ data: { essid: string }[] }> => {
 
 export const getWifiStatus = async () => {
   try {
-    const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+    const connectedPeripherals = await safeGetConnectedPeripherals([]);
 
     if (connectedPeripherals.length > 0) {
       const responseAssembler = new ResponseAssembler();
@@ -79,7 +78,7 @@ export const postWifiConnect = async (data: {
   countryCode: string;
 }) => {
   try {
-    const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+    const connectedPeripherals = await safeGetConnectedPeripherals([]);
 
     if (connectedPeripherals.length > 0) {
       const responseAssembler = new ResponseAssembler();

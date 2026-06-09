@@ -235,6 +235,15 @@ const createModeSlice: StateCreator<
         bloxsConnectionStatus: nextConnectionStatus,
         currentBloxPeerId: nextCurrentBloxPeerId,
       });
+
+      // Drop the removed blox's cached plugin state too (the plugins store keys
+      // installed-plugin lists by peerId). Dynamic import avoids a static
+      // store↔store import cycle (usePluginsStore imports this store).
+      import('./usePluginsStore')
+        .then(({ usePluginsStore }) =>
+          usePluginsStore.getState().removePluginsForBlox(peerId)
+        )
+        .catch(() => {});
     },
     reset: () => {
       set({

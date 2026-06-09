@@ -8,7 +8,7 @@
  *   1. Phone-side connectivity preamble: NetInfo state + a cheap HTTPS probe
  *      to `generate_204` (proves the PHONE is online, distinct from "is the
  *      Blox reachable").
- *   2. Plugin-presence detection via `usePluginsStore.activePlugins` —
+ *   2. Plugin-presence detection via the blox-keyed plugins store —
  *      tolerant of pre-plugin firmwares (modelled as `checking` /
  *      `installed` / `notInstalledOrUnavailable`).
  *   3. Support diagnostics shell — for Phase 5, an inert "Available once
@@ -35,9 +35,11 @@ import { useTranslation } from 'react-i18next';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TcpSocket from 'react-native-tcp-socket';
-import BleManager from 'react-native-ble-manager';
 
-import { usePluginsStore } from '../../stores/usePluginsStore';
+import {
+  useActivePluginsForCurrentBlox,
+  useRefetchActivePluginsOnConnect,
+} from '../../hooks/usePluginsForBlox';
 import { useBloxsStore } from '../../stores/useBloxsStore';
 import { useUserProfileStore } from '../../stores/useUserProfileStore';
 import { Routes } from '../../navigation/navigationConfig';
@@ -53,7 +55,7 @@ import { UploadTranscriptModal } from './UploadTranscriptModal';
 import { PendingActionsPanel } from './PendingActionsPanel';
 import { RawDiagnosticsCard } from './RawDiagnosticsCard';
 import { useAiSession } from './useAiSession';
-import { BleManagerWrapper } from '../../utils/ble';
+import { BleManagerWrapper, safeGetConnectedPeripherals } from '../../utils/ble';
 import {
     loadManualBloxIp,
     saveManualBloxIp,
@@ -239,7 +241,12 @@ type DiagnosticsScreenProps = {
 
 export const DiagnosticsScreen: React.FC<DiagnosticsScreenProps> = ({ route }) => {
     const { t } = useTranslation();
-    const { listActivePlugins, activePlugins } = usePluginsStore();
+    // Blox-keyed plugin state for the CURRENTLY selected blox + its fetch
+    // status, refreshed when the selected blox connects (so switching blox
+    // re-derives Blox AI presence instead of showing the previous blox's).
+    const { plugins: activePlugins, status: pluginsStatus } =
+        useActivePluginsForCurrentBlox();
+    useRefetchActivePluginsOnConnect();
     // Plan A v2 wiring: pull peer ids from the existing stores.
     const appPeerId = useUserProfileStore((s) => s.appPeerId) ?? '';
     const currentBloxPeerId = useBloxsStore((s) => s.currentBloxPeerId) ?? '';
@@ -326,48 +333,28 @@ export const DiagnosticsScreen: React.FC<DiagnosticsScreenProps> = ({ route }) =
     }, []);
 
     // Plugin presence — tolerant of pre-plugin firmware per Codex review:
-    // missing data ≠ "not installed", so the UI copy avoids overclaiming.
-    //
-    // Split into two effects to avoid the infinite-loop trap:
-    //   (1) fetch once on mount — listActivePlugins() updates the store,
-    //       which would re-fire any effect that depends on activePlugins.
-    //   (2) react to store changes — derives pluginPresence from whatever
-    //       activePlugins currently is. No fetching here, so updating
-    //       activePlugins (whether via the mount fetch, an install action
-    //       elsewhere, or a future polling refresh) flips presence without
-    //       re-triggering the fetch.
-    // The previous single-effect form (which called listActivePlugins
-    // inside an effect that depended on activePlugins) looped forever
-    // because the store creates a fresh `[]` reference on every empty
-    // result and zustand's shallow equality flags that as a change.
-    const [hasFetched, setHasFetched] = React.useState(false);
-
+    // missing/unknown data ≠ "not installed", so the UI copy avoids
+    // overclaiming. Fetching is handled by useRefetchActivePluginsOnConnect()
+    // above (fires when the selected blox connects); here we only DERIVE
+    // presence from the blox-keyed list + its per-blox fetch status. Deriving
+    // (no fetching here) keeps this off the old infinite-loop path, and the
+    // status lets us show 'checking' until THIS blox has a confirmed response
+    // instead of flashing "not installed" right after a switch.
     React.useEffect(() => {
-        listActivePlugins()
-            .catch(() => {
-                // listActivePlugins captures its own errors into the store
-            })
-            .finally(() => setHasFetched(true));
-        // listActivePlugins is the zustand setter — referentially stable.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    React.useEffect(() => {
-        // Wait for the mount fetch before deriving presence — without this,
-        // the initial activePlugins=[] from the store would flash a
-        // one-frame "Blox AI not installed" before the real response lands.
-        if (!hasFetched) return;
-        const list = (activePlugins || []) as string[];
-        if (!Array.isArray(list)) {
-            setPluginPresence('notInstalledOrUnavailable');
+        if (pluginsStatus === 'idle' || pluginsStatus === 'loading') {
+            setPluginPresence('checking');
             return;
         }
+        // 'loaded' or 'error': a reachable-but-empty result and an
+        // unreachable/old-firmware result both map to "not installed or
+        // unavailable" (the copy already hedges).
+        const list = Array.isArray(activePlugins) ? activePlugins : [];
         setPluginPresence(
             list.includes(BLOX_AI_PLUGIN_NAME)
                 ? 'installed'
                 : 'notInstalledOrUnavailable'
         );
-    }, [activePlugins, hasFetched]);
+    }, [activePlugins, pluginsStatus]);
 
     // Discover an already-connected blox peripheral so BLE is available as a
     // transport for both the AI session and the Raw Diagnostics fetch. Empty
@@ -376,7 +363,7 @@ export const DiagnosticsScreen: React.FC<DiagnosticsScreenProps> = ({ route }) =
     // if BLE perms aren't granted the catch is a no-op and LAN HTTP still works.
     React.useEffect(() => {
         let cancelled = false;
-        BleManager.getConnectedPeripherals([]).then((peripherals) => {
+        safeGetConnectedPeripherals([]).then((peripherals) => {
             if (cancelled) return;
             const blox = peripherals.find((p) => {
                 const n = (p.name || '').toLowerCase();

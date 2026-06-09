@@ -10,7 +10,15 @@
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "MemberExpression[object.name='BleManager'][property.name='getConnectedPeripherals']",
+            "message": "Use safeGetConnectedPeripherals() from utils/ble instead. Direct BleManager.getConnectedPeripherals() crashes on Android 12+ when BLUETOOTH_CONNECT is not granted (SecurityException thrown on the native thread, uncatchable by a JS try/catch)."
+          }
+        ]
+      }
     },
     {
       "files": ["*.js", "*.jsx"],

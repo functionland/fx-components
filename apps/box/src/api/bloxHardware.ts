@@ -1,8 +1,7 @@
 import axios from 'axios';
 import { API_URL } from './index';
 import { TBloxProperty } from '../models';
-import BleManager from 'react-native-ble-manager';
-import { ResponseAssembler } from '../utils/ble';
+import { ResponseAssembler, safeGetConnectedPeripherals } from '../utils/ble';
 
 export type TBlox = {
   id: string; // peerId?
@@ -70,7 +69,7 @@ export const exchangeConfig = async (data: {
 export const getBloxProperties = async (): Promise<any> => {
   try {
     // Check for BLE connection first
-    const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+    const connectedPeripherals = await safeGetConnectedPeripherals([]);
 
     if (connectedPeripherals.length > 0) {
       // Try BLE first

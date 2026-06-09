@@ -21,6 +21,10 @@ import {
 } from '@functionland/component-library';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { usePluginsStore } from '../stores/usePluginsStore';
+import {
+  useActivePluginsForCurrentBlox,
+  useRefetchActivePluginsOnConnect,
+} from '../hooks/usePluginsForBlox';
 import { copyToClipboard } from '../utils/clipboard';
 import { CopyIcon } from '../components/Icons';
 import { useUserProfileStore } from '../stores/useUserProfileStore';
@@ -88,7 +92,6 @@ export const PluginScreen = () => {
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [outputValues, setOutputValues] = useState<Record<string, string>>({});
   const {
-    activePlugins,
     installPlugin,
     uninstallPlugin,
     listActivePlugins,
@@ -96,7 +99,11 @@ export const PluginScreen = () => {
     getInstallOutput,
     getInstallStatus,
   } = usePluginsStore();
-  const isInstalled = activePlugins.includes(name);
+  // Installed state for the CURRENTLY selected blox (blox-keyed), refreshed
+  // when the blox connects — reflects the active device, not a previous one.
+  const { plugins: activePluginsForBlox } = useActivePluginsForCurrentBlox();
+  useRefetchActivePluginsOnConnect();
+  const isInstalled = activePluginsForBlox.includes(name);
   const { queueToast } = useToast();
   const [isInstalling, setIsInstalling] = useState(false);
   const [isUninstalling, setIsUninstalling] = useState(false);
@@ -228,11 +235,10 @@ export const PluginScreen = () => {
   }, [name, queueToast, isInstalled, fetchInstallStatus]);
 
   useEffect(() => {
+    // Plugin metadata is blox-independent; the installed-state refresh is
+    // handled by useRefetchActivePluginsOnConnect() (per-blox, on connect).
     fetchPluginInfo();
-    if (fulaIsReady) {
-      listActivePlugins();
-    }
-  }, [name, listActivePlugins, installStatus, connectionReady, fulaIsReady]);
+  }, [name, installStatus, connectionReady]);
 
   useEffect(() => {
     console.log('useEffect called');

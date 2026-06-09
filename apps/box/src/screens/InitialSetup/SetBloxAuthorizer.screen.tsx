@@ -12,8 +12,7 @@ import {
   FxWarning,
   useToast,
 } from '@functionland/component-library';
-import BleManager from 'react-native-ble-manager';
-import { ResponseAssembler } from '../../utils/ble';
+import { ResponseAssembler, safeGetConnectedPeripherals } from '../../utils/ble';
 import { useTranslation } from 'react-i18next'; // Import for translations
 
 import {
@@ -83,7 +82,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   );
 
   const blePeerExchange = async (params: { peer_id: string; seed: string }) => {
-    const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+    const connectedPeripherals = await safeGetConnectedPeripherals([]);
     if (connectedPeripherals.length === 0) {
       throw new Error(t('setBloxAuthorizer.noBleDevicesConnected'));
     }
@@ -347,7 +346,7 @@ export const SetBloxAuthorizerScreen = ({ route }: Props) => {
   const handleFormatDisk = async () => {
     try {
       // Check for BLE connection
-      const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+      const connectedPeripherals = await safeGetConnectedPeripherals([]);
       if (connectedPeripherals.length > 0) {
         // Try BLE first
         const responseAssembler = new ResponseAssembler();

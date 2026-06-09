@@ -3,6 +3,67 @@ import { Platform, PermissionsAndroid } from 'react-native';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { EConnectionStatus } from '../models';
 
+/**
+ * Whether the runtime BLUETOOTH_CONNECT permission is currently granted.
+ *
+ * Why this exists: on Android 12+ (API 31+) any native call that reaches
+ * `BluetoothManager.getConnectedDevices()` — e.g. react-native-ble-manager's
+ * `getConnectedPeripherals` — throws `java.lang.SecurityException` when
+ * BLUETOOTH_CONNECT is NOT granted. That throw happens on the native
+ * `mqt_v_native` thread (inside a posted Runnable) and is NOT marshalled back
+ * to JS as a promise rejection, so a JS `try/catch` or `.catch()` can NOT
+ * prevent the resulting hard crash (`FATAL EXCEPTION: mqt_v_native`). The only
+ * reliable guard is to check the permission BEFORE making the call.
+ *
+ * Pre-12 (API < 31) `getConnectedDevices` needs no runtime permission (the
+ * legacy install-time BLUETOOTH permission is auto-granted), and iOS has no
+ * equivalent runtime gate here, so both return `true`.
+ */
+export async function hasBleConnectPermission(): Promise<boolean> {
+    if (Platform.OS !== 'android') return true;
+    const api = Number(Platform.Version);
+    if (!Number.isFinite(api) || api < 31) return true;
+    // Fall back to the literal string in case the RN constant is absent on
+    // some versions of react-native / @types.
+    const BLUETOOTH_CONNECT =
+        (PermissionsAndroid.PERMISSIONS as { BLUETOOTH_CONNECT?: string })
+            .BLUETOOTH_CONNECT ?? 'android.permission.BLUETOOTH_CONNECT';
+    try {
+        return await PermissionsAndroid.check(BLUETOOTH_CONNECT as any);
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Crash-safe replacement for `BleManager.getConnectedPeripherals(...)`.
+ *
+ * Returns `[]` instead of hard-crashing when BLUETOOTH_CONNECT is not granted
+ * (see {@link hasBleConnectPermission} for why the native throw is uncatchable
+ * from JS). EVERY caller in the app must use this instead of calling
+ * `BleManager.getConnectedPeripherals` directly — an ESLint `no-restricted-syntax`
+ * rule enforces it. All current call sites already treat an empty list as
+ * "no BLE peripheral connected" and fall back to HTTP, so returning `[]` is the
+ * correct degraded behaviour when the permission is absent.
+ */
+export async function safeGetConnectedPeripherals(
+    serviceUUIDs: string[] = []
+): Promise<Peripheral[]> {
+    try {
+        if (!(await hasBleConnectPermission())) {
+            console.log(
+                '[BLE] BLUETOOTH_CONNECT not granted — skipping getConnectedPeripherals'
+            );
+            return [];
+        }
+        // eslint-disable-next-line no-restricted-syntax -- the single sanctioned call; all others must route through this wrapper
+        return await BleManager.getConnectedPeripherals(serviceUUIDs);
+    } catch (e) {
+        console.log('[BLE] getConnectedPeripherals failed (returning []):', e);
+        return [];
+    }
+}
+
 export type DiscoveredDevice = {
     peripheral: Peripheral;
     rssi: number;
@@ -500,7 +561,7 @@ export class BleManagerWrapper extends ResponseAssembler {
             await new Promise(resolve => setTimeout(resolve, 2000));
             
             // Check existing connections
-            const connectedPeripherals = await BleManager.getConnectedPeripherals([]);
+            const connectedPeripherals = await safeGetConnectedPeripherals([]);
             const existingDevice = connectedPeripherals.find(device => {
                 const name = (device.name || '').toLowerCase();
                 return name.includes('fulatower') || name.includes('fxblox');
