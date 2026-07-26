@@ -159,7 +159,7 @@
   "resolutions": {
     "elliptic": "^6.6.1",
     "protobufjs": "^7.5.6",
-    "shell-quote": "^1.8.4",
+    "shell-quote": "^1.10.0",
     "axios": "^1.16.0",
     "@babel/plugin-transform-modules-systemjs": "^7.29.4",
     "@isaacs/brace-expansion": "^5.0.1",
