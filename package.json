@@ -164,7 +164,7 @@
     "@babel/plugin-transform-modules-systemjs": "^7.29.4",
     "@isaacs/brace-expansion": "^5.0.1",
     "defu": "^6.1.5",
-    "fast-uri": "^3.1.2",
+    "fast-uri": "^3.1.7",
     "fast-xml-parser": "^4.5.5",
     "flatted": "^3.4.2",
     "h3": "^1.15.6",
